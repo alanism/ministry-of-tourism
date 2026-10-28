@@ -2,6 +2,7 @@ import { buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, e
 import { getTripBlob } from './trip-assets';
 import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
+import { svgPdfTextLayer } from './pdf-text-layer';
 
 export const diagnostics=new DiagnosticLog();
 let lastOperation:OperationState|undefined;
@@ -80,11 +81,12 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
       const context=canvas.getContext('2d');if(!context)throw new Error('This browser could not render the PDF.');
       context.drawImage(image,0,0);
       const pixels=context.getImageData(0,0,canvas.width,canvas.height);
-      pages.push({...rgbPdfImage(pixels.data,canvas.width,canvas.height),pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links,label:page.pattern});
+      const textLayer=await svgPdfTextLayer(page.svg,signal);
+      pages.push({...rgbPdfImage(pixels.data,canvas.width,canvas.height),pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links,label:page.pattern,textLayer});
       onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:false});
     }finally{URL.revokeObjectURL(url);}
   }
-  signal?.throwIfAborted();const bytes=buildPdf(pages,magazine.title);onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:true});return bytes;
+  signal?.throwIfAborted();const bytes=buildPdf(pages,magazine.title,{producer:'Ministry of Tourism'});onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:true});return bytes;
 }
 
 export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',signal?:AbortSignal,options:ArtifactOptions={}):Promise<ExportArtifact> {
