@@ -1,7 +1,7 @@
 import {readAsset,readAllCards,readPresentation,type MagazinePage,type Presentation,type TripSession} from '@writers-board/core';
 import type {EditBox} from './composition-geometry';
 export const DEFAULT_LAYOUT={dx:0,dy:0,scaleX:1,scaleY:1};
-export type SceneObject={key:string;paintGroup:string;pageId:string;pageIndex:number;presentation:Presentation;box:EditBox;local:EditBox;parent:DOMMatrix;label:string;origin?:string;credit?:string;fit:string;sourceWidth:number;sourceHeight:number};
+export type SceneObject={key:string;paintGroup:string;pageId:string;pageIndex:number;presentation:Presentation;box:EditBox;local:EditBox;parent:DOMMatrix;label:string;origin?:string;credit?:string;sourceUrl?:string;retrievedAt?:string;fit:string;sourceWidth:number;sourceHeight:number};
 export function compositionPages(pages:MagazinePage[],session:TripSession){
  const objects:SceneObject[]=[];
  const markup=pages.map((page,pageIndex)=>{
@@ -16,7 +16,8 @@ export function compositionPages(pages:MagazinePage[],session:TripSession){
    const key=`${page.id}:${p.id}`,label=card?.title??asset?.caption??page.artworkLabels?.find(a=>a.assetId===p.assetId)?.label??'Artwork';
    const box={x:centre.x-width/2+pageIndex*1184,y:centre.y-height/2,width,height,rotation:local.rotation+Math.atan2(parent.b,parent.a)*180/Math.PI};
    const paintGroup=page.id+':'+ancestors.map(a=>Array.from(a.parentElement!.children).indexOf(a)).join('/');
-   objects.push({key,paintGroup,pageId:page.id,pageIndex,presentation:p,local,parent,box,label,origin:asset?.source?.cityId,credit:asset?.credit,fit:node.getAttribute('data-fit')??'meet',sourceWidth:asset?.width??0,sourceHeight:asset?.height??0});
+   const source=asset?.source??card?.source,link=source?.canonicalUrl??source?.url;
+   objects.push({key,paintGroup,pageId:page.id,pageIndex,presentation:p,local,parent,box,label,origin:asset?.source?.cityId,credit:asset?.credit,sourceUrl:link&&/^https?:\/\//.test(link)?link:undefined,retrievedAt:source?.retrievedAt,fit:node.getAttribute('data-fit')??'meet',sourceWidth:asset?.width??0,sourceHeight:asset?.height??0});
    node.setAttribute('data-edit-id',key);node.setAttribute('class','mot-composition-object');node.setAttribute('tabindex','0');node.setAttribute('role','button');node.setAttribute('aria-label',`Select ${label}${p.locked?' (locked)':''}`);
   }
   return new XMLSerializer().serializeToString(doc.documentElement);

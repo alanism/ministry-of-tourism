@@ -45,7 +45,6 @@
 .mot-edit-facts dd{margin:0;text-align:right;}
 .mot-dpi{padding:12px;background:color-mix(in srgb,#CBB9B0 16%,#FFFFFF);border-radius:8px;font-size:12px;display:grid;gap:8px;}
 .mot-dpi.soft{background:repeating-linear-gradient(135deg,#F9EDEB,#F9EDEB 8px,color-mix(in srgb,#CBB9B0 16%,#F9EDEB) 8px,color-mix(in srgb,#CBB9B0 16%,#F9EDEB) 10px);}
-.mot-dpi meter{width:100%;accent-color:#CC0000;}
 .mot-edit-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
 .mot-edit-actions .m-btn{font-size:12px;min-height:44px;padding-inline:8px;}
 .mot-editor-layers{display:grid;gap:8px;}
@@ -65,3 +64,7 @@
 /* Gesture confirmations must not intercept the next manipulation beneath them. */
 .mot:has(.mot-composition) .mot-toast{pointer-events:none;}
 .mot:has(.mot-composition) .mot-toast button{pointer-events:auto;}
+.mot-editor-bar input,.mot-composition-tools input[type=range]{accent-color:#000000;}
+.mot-dpi-bar{height:8px;overflow:hidden;border-radius:8px;background:color-mix(in srgb,#CBB9B0 30%,#FFFFFF);}
+.mot-dpi-bar>span{display:block;height:100%;background:#2F4A6B;}
+.mot-dpi.soft .mot-dpi-bar>span{background:#CC0000;}
