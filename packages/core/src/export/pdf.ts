@@ -142,14 +142,17 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
     let content: string;
     if (page.kind === 'image') {
       // Fit the picture inside the margins, centered, with an optional caption under it.
-      const margin = page.fullBleed ? 0 : 36;
+      // Keep full-bleed edges just inside the fractional MediaBox. Exact edge
+      // coordinates can make Poppler add a device-pixel column and resample it.
+      const margin = page.fullBleed ? 0.000001 : 36;
       const room = { w: pw - 2 * margin, h: ph - 2 * margin - (page.caption ? 18 : 0) };
       const scale = Math.min(room.w / page.width, room.h / page.height);
       const w = page.width * scale;
       const h = page.height * scale;
       const x = (pw - w) / 2;
       const y = (ph - h) / 2 + (page.caption ? 9 : 0);
-      content = `q ${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} cm /Im0 Do Q`;
+      const precision = page.fullBleed ? 6 : 2;
+      content = `q ${w.toFixed(precision)} 0 0 ${h.toFixed(precision)} ${x.toFixed(precision)} ${y.toFixed(precision)} cm /Im0 Do Q`;
       if (page.caption) content += `\nBT /F1 10 Tf ${x.toFixed(2)} ${(y - 16).toFixed(2)} Td ${pdfString(page.caption)} Tj ET`;
     } else {
       const parts = ['BT', `/F1 ${FONT_SIZE} Tf`, `${LEADING} TL`, `${MARGIN} ${ph - MARGIN - FONT_SIZE} Td`];

@@ -81,6 +81,38 @@ async function previewPng(page,img,target) {
   const data=await img.evaluate(async image=>{await image.decode();const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;canvas.getContext('2d').drawImage(image,0,0);return canvas.toDataURL('image/png').split(',')[1];});
   fs.writeFileSync(target,Buffer.from(data,'base64'));
 }
+async function rasterPdf(page,pdf,prefix) {
+  const started=performance.now(),timeout=20000,directory=path.dirname(prefix),stem=path.basename(prefix);
+  // Poppler's PNG writer dominates the old timeout. PPM preserves its exact
+  // pixels; browser PNG encoding is checked losslessly before the existing gate.
+  execFileSync(process.env.MOT_PDFTOPPM||'pdftoppm',['-scale-to-x','1184','-scale-to-y','1680',pdf,prefix],{stdio:['ignore','pipe','pipe'],timeout});
+  const renderMs=performance.now()-started;
+  const portable=fs.readdirSync(directory).filter(name=>name.startsWith(`${stem}-`)&&name.endsWith('.ppm')).sort((a,b)=>Number(a.match(/-(\d+)\.ppm$/)[1])-Number(b.match(/-(\d+)\.ppm$/)[1]));
+  const renders=[],pages=[];
+  for(const name of portable) {
+    const pageStarted=performance.now(),data=fs.readFileSync(path.join(directory,name));
+    const header=/^P6\r?\n(\d+) (\d+)\r?\n255\r?\n/.exec(data.subarray(0,64).toString('ascii'));
+    assert(header,'Expected Poppler RGB pixels');
+    const width=Number(header[1]),height=Number(header[2]),rgb=data.subarray(header[0].length);
+    assert.equal(width,1184);assert.equal(height,1680);assert.equal(rgb.length,width*height*3);
+    const encoded=await page.evaluate(async({width,height,pixels})=>{
+      const source=atob(pixels),rgba=new Uint8ClampedArray(width*height*4);
+      for(let i=0,j=0;i<rgba.length;i+=4,j+=3){rgba[i]=source.charCodeAt(j);rgba[i+1]=source.charCodeAt(j+1);rgba[i+2]=source.charCodeAt(j+2);rgba[i+3]=255;}
+      const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+      const context=canvas.getContext('2d');context.putImageData(new ImageData(rgba,width,height),0,0);
+      const png=canvas.toDataURL('image/png'),image=new Image();image.src=png;await image.decode();context.drawImage(image,0,0);
+      const restored=context.getImageData(0,0,width,height).data;
+      for(let i=0;i<rgba.length;i++)if(restored[i]!==rgba[i])throw new Error('PNG serialization changed Poppler pixels');
+      return png.split(',')[1];
+    },{width,height,pixels:rgb.toString('base64')});
+    const target=name.replace(/\.ppm$/,'.png');fs.writeFileSync(path.join(directory,target),Buffer.from(encoded,'base64'));renders.push(target);
+    pages.push({page:Number(name.match(/-(\d+)\.ppm$/)[1]),pngMs:performance.now()-pageStarted,pixelsIdentical:true});
+  }
+  const timing={renderMs,pages,totalMs:performance.now()-started,timeoutMs:timeout};
+  fs.writeFileSync(prefix+'-timings.json',JSON.stringify(timing,null,2));
+  assert(timing.totalMs<timeout,'All-page raster and lossless PNG serialization exceeded the original 20-second limit');
+  return {renders,timing};
+}
 async function personalPdf(page,directory,tag) {
   await view(page,'Keepsakes');
   const studio=page.getByRole('region',{name:'Trip magazine studio',exact:true});
@@ -104,8 +136,7 @@ async function personalPdf(page,directory,tag) {
   assert.equal(receipt.type,'application/pdf');assert.equal(receipt.bytes,bytes.length);
   assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),receipt.sha256);
   const prefix=path.join(directory,`${tag}-pdf-page`);
-  execFileSync(process.env.MOT_PDFTOPPM||'pdftoppm',['-png','-scale-to-x','1184','-scale-to-y','1680',pdf,prefix],{stdio:['ignore','pipe','pipe'],timeout:20000});
-  const renders=fs.readdirSync(directory).filter(name=>name.startsWith(`${tag}-pdf-page-`)&&name.endsWith('.png')).sort((a,b)=>Number(a.match(/-(\d+)\.png$/)[1])-Number(b.match(/-(\d+)\.png$/)[1]));
+  const {renders,timing}=await rasterPdf(page,pdf,prefix);
   assert.equal(renders.length,count,'Actual PDF page count differs from preview');
   const differences=[];
   for(let i=0;i<count;i++) {
@@ -117,7 +148,7 @@ async function personalPdf(page,directory,tag) {
     },{preview,raster});
     assert.ok(mean<8,`PDF page ${i+1} differs from SVG preview: mean RGB error ${mean}`);differences.push(mean);
   }
-  return {file:pdf,byteCount:bytes.length,pageCount:count,pageLabels,receipt,meanRgbDifferences:differences,svgs};
+  return {file:pdf,byteCount:bytes.length,pageCount:count,pageLabels,receipt,meanRgbDifferences:differences,rasterTiming:timing,svgs};
 }
 
 async function runCity(browser,city) {
