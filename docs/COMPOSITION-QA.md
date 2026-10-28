@@ -1,0 +1,21 @@
+# Composition editor verification
+
+MOT-103 edits the canonical magazine SVG over the existing TripSession. Drag, corner resize, rotation, crop, locking, layer order, card linking and card text all use trip commands. A pointer gesture changes only a temporary SVG preview until pointer-up, then commits one command. Cancel restores the preview; a changed trip revision refuses the stale gesture. Keyboard changes use the current document even while a preview is being prepared.
+
+An optional `Presentation.magazineLayout` records manual offsets in page units, scale and paint order. Without it the automatic layouts are unchanged. Card placements can name their canonical page with `pageId`. The original placement geometry, source, credit and image bytes remain intact. The new field is validated, saved, included in scope-filtered packages and restored on import. Older readers that reject unknown presentation fields need the current app to open these edited placements.
+
+The editor prepares verified image bytes once per board, destination, selected asset set and asset metadata. Geometry edits reuse those bytes and run the same pure renderer; they do not fetch unchanged art again. A new asset, changed hash/metadata, destination or explicit retry prepares fresh assets. Actual exports still read and verify their source bytes. No private content is uploaded by the editor.
+
+The desktop shows the facing pages; at 760 px and below, Left/Right chooses one page with the inspector beneath it. Selection handles stay on the pasteboard above the trim. The six-column/twelve-row grid, snapping guides, placed-size DPI and grid-break warning are advisory. Low DPI and a second break do not block editing. Forward/Back operates among the pictures in the same frame, retaining the magazine's masks and paper panels. Generated mastheads and captions remain derived from trip content rather than becoming a second editable document.
+
+Run `npm run check` and the web production build. With a local Vite server, set `MOT_TEST_ORIGIN`, `MOT_ART_FIXTURES`, optional `MOT_PLAYWRIGHT_MODULE`, and `MOT_EVIDENCE_DIR` as in [MAGAZINE-QA.md](MAGAZINE-QA.md). Use licensed real image bytes and fictional notes; do not commit the fixture or evidence.
+
+- `node scripts/test-mot-composition.cjs bangkok`: real mouse manipulation, a 45-degree snapped turn, crop zoom, locked drag refusal, keyboard unlocking, 30 rapid mixed actions and exact Undo/Redo by buttons and shortcuts; touch move/resize/rotate/crop/Undo at 375 px; screenshots and overflow checks at 1920/768/375/280. It checks that a gesture writes only on release and that geometry edits make no new artwork requests. The rich fixture needs a facade and three classified apparel variants.
+- Add `--retry` to inject one failed image decode, then recover through Try again without a document write.
+- Add `--card` to place a fictional traveler card, edit it, and verify the same title in the lanes and canonical magazine with the same board ID.
+- Add `--smoke` for every spread at four widths; run San Sebastián with deliberately sparse selected art.
+- `node scripts/test-mot-composition-export.cjs bangkok`: save a chosen tee, edit crop/rotation/geometry/order/lock through the revision-checked command contract, download actual PDF/ZIP bytes, compare the edited PDF page against the canonical SVG at the unchanged 4/255 limit, reopen the ZIP in a clean preloaded offline context, and require byte-identical PDF re-export.
+
+Each script records its own elapsed time. Interaction and artifact checks are separate so each iteration remains below one minute without increasing a timeout. The earlier `test-mot-art-roundtrip.cjs` describes the former numeric-control UI; its prior all-page Poppler timeout remains recorded in the integration ledger and is not relabelled as a pass. The current gesture and artifact scripts replace its numeric-control interaction path; the existing core privacy/migration/package suite remains in `npm run check`.
+
+Browser plugin not available in the implementation environment; verification uses fresh sandboxed Playwright Chromium contexts. These are builder checks, not device performance measurements or independent design approval. Opus owns design sign-off. R6/R7 findings and live apparel classification are separate from this editor change.

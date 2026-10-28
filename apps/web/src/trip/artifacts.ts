@@ -29,7 +29,7 @@ async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:A
   signal?.throwIfAborted();onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:true});return bytes;
 }
 
-export async function prepareMagazine(session:TripSession,signal?:AbortSignal,includePrivate=true,options:Pick<ArtifactOptions,'variant'|'onProgress'>={}):Promise<MagazineDocument> {
+export async function prepareMagazine(session:TripSession,signal?:AbortSignal,includePrivate=true,options:Pick<ArtifactOptions,'variant'|'onProgress'>&{onPrepared?:(assets:NonNullable<Parameters<typeof buildMagazine>[1]>)=>void}={}):Promise<MagazineDocument> {
   const doc=loadTrip(encodeTrip(session.doc));
   try {
     const urls=new Map<string,string>(),dimensions=new Map<string,{width:number;height:number}>();
@@ -62,7 +62,7 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
     }catch(error){if(signal?.aborted)throw error;apparel=[...cached];warnings.push(cached.length?'FCC is unavailable; your cached tee choice is kept.':'FCC tee pages are unavailable; your trip pages are kept.');}
     options.onProgress?.({stage:'layout',completed:0,unit:'pages',done:false});
     const renderOptions:NonNullable<Parameters<typeof buildMagazine>[1]>&{artwork:readonly unknown[]}={assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:apparel};
-    const magazine=buildMagazine(doc,renderOptions);magazine.warnings.push(...warnings);
+    const magazine=buildMagazine(doc,renderOptions);magazine.warnings.push(...warnings);signal?.throwIfAborted();options.onPrepared?.(renderOptions);
     options.onProgress?.({stage:'layout',completed:magazine.pages.length,total:magazine.pages.length,unit:'pages',done:true});return magazine;
   } finally {doc.destroy();}
 }

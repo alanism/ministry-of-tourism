@@ -116,6 +116,7 @@ export const presentationFieldsSchema = z.object({
   x: z.number().min(0).max(1), y: z.number().min(0).max(1),
   width: z.number().positive().max(1), height: z.number().positive().max(1),
   crop: cropSchema, rotation: z.number().finite(), zIndex: z.number().int(), locked: z.boolean(), scope: z.enum(SCOPES),
+  magazineLayout:z.object({dx:z.number().finite().min(-2).max(2),dy:z.number().finite().min(-2).max(2),scaleX:z.number().positive().max(4),scaleY:z.number().positive().max(4),order:z.number().int().optional(),pageId:id.optional()}).strict().optional(),
   pattern:z.enum(PRESENTATION_PATTERNS).optional(),
   magazineRole:z.enum(MAGAZINE_ART_ROLES).optional(),
 }).strict();

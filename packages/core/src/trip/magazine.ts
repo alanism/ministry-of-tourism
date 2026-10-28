@@ -1,7 +1,7 @@
 // Digital A5 editorial layout. Pure, offline, audience-filtered; no producer classification inference.
 import type * as Y from 'yjs';
 import { readAllCards, readTripMeta, tripParts } from './model.ts';
-import { cropSchema, MAGAZINE_ART_ROLES, PRESENTATION_PATTERNS, type MagazineArtRole, type Presentation, type TripCard } from './schema.ts';
+import { cropSchema, presentationFieldsSchema, MAGAZINE_ART_ROLES, PRESENTATION_PATTERNS, type MagazineArtRole, type Presentation, type TripCard } from './schema.ts';
 import { fccShopUrl, selectCityApparel, type ApparelArtRef } from './merch.ts';
 import { isPublicFccUrl } from './city-source.ts';
 import { MAGAZINE, PAPER, INK, RED, BLUSH, BLUE, TAUPE, PU, M, L, G, COL, column, escapeXml as esc, magazineLabel, wrap, flowText, rows, kicker, shell } from './magazine-style.ts';
@@ -54,6 +54,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     if((!personal&&['unknown','restricted'].includes(String(rights)))&&!(typeof credit==='string'&&credit.trim()))throw new Error(`Artwork ${assetId} needs its actual credit before a shared export. Add the source credit and retry.`);
     const href=options.assetUrls?.get(assetId);if(!href||!RASTER.test(href))throw new MissingMagazineAssetError(assetId);
     const supplied=options.assetDimensions?.get(assetId),width=supplied?.width??Number(raw.width??stored?.get('width')),height=supplied?.height??Number(raw.height??stored?.get('height'));
+    if(layer?.magazineLayout&&!presentationFieldsSchema.shape.magazineLayout.safeParse(layer.magazineLayout).success)throw new Error(`Artwork placement ${layer.id} has invalid magazine layout`);
     if(layer&&!cropSchema.safeParse(layer.crop).success)throw new Error(`Artwork placement ${layer.id} has invalid crop`);
     if(layer&&![layer.x,layer.y,layer.width,layer.height,layer.rotation].every(Number.isFinite))throw new Error(`Artwork placement ${layer.id} has invalid geometry`);
     if(layer&&!(width>0&&height>0)&&layer.crop.some((v,i)=>v!==[0,0,1,1][i]))throw new Error(`Artwork ${assetId} needs original dimensions to preserve its crop`);
@@ -91,8 +92,17 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const tees=candidates.filter(c=>c.kind==='apparel-mockup');
   const chosenTee=tees.find(c=>c.assetId===meta.magazine?.wornTeeAssetId);
   const jacketTees=tees.filter(c=>!chosenTee||!c.identities.some(id=>chosenTee.identities.includes(id)));
+  const pictureFragments:{markup:string;order:number}[]=[];
+  const placedBox=(c:Candidate|undefined,b:Box):Box=>{const v=c?.layer?.magazineLayout;return v?{x:b.x+v.dx*1184,y:b.y+v.dy*1680,width:b.width*v.scaleX,height:b.height*v.scaleY}:b;};
+  function paintPictures(content:string){
+    const parents:number[]=[],groups=new Map<string,number[]>();let seq=0;
+    for(const m of content.matchAll(/<!--picture:\d+-->|<\/?[a-zA-Z][^>]*>/g)){const tag=m[0];if(tag.startsWith('<!--picture:')){const key=parents.join('/');groups.set(key,[...(groups.get(key)??[]),Number(tag.match(/\d+/)![0])]);}else if(tag.startsWith('</'))parents.pop();else if(!tag.endsWith('/>'))parents.push(seq++);}
+    const replacements=new Map<number,number>();for(const ids of groups.values()){const sorted=[...ids].sort((a,b)=>pictureFragments[a]!.order-pictureFragments[b]!.order);ids.forEach((id,i)=>replacements.set(id,sorted[i]!));}
+    return content.replace(/<!--picture:(\d+)-->/g,(_,id)=>pictureFragments[replacements.get(Number(id))??Number(id)]!.markup);
+  }
   function picture(c:Candidate|undefined,b:Box,rotation=0,clipCircle=false,fit:'meet'|'slice'='meet'):string{
     if(!c)return '';
+    b=placedBox(c,b);
     const p=c.layer,crop=p?.crop??[0,0,1,1],angle=(p?.rotation??0)+rotation;
     const cropWidth=c.width*crop[2]!,cropHeight=c.height*crop[3]!;
     const scale=fit==='slice'?Math.max(b.width/cropWidth,b.height/cropHeight):Math.min(b.width/cropWidth,b.height/cropHeight);
@@ -100,7 +110,8 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     if(!previous||effectiveDpi<previous.effectiveDpi)pictureDpi.set(c.identity,{assetId:c.assetId,identity:c.identity,effectiveDpi,crop:[...crop] as [number,number,number,number],placedWidthMm:b.width/1184*148,placedHeightMm:b.height/1680*210});
     const provenance=p?` data-placement="${esc(p.id)}" data-crop="${crop.join(',')}" data-locked="${p.locked}" data-pattern="${p.pattern??''}" data-source-geometry="${[p.x,p.y,p.width,p.height].join(',')}"`:'';
     const clip=`round-${pages.length}-${current.usedSlots.findIndex(s=>s.assetId===c.assetId)}`;
-    return `<g data-art="${esc(c.assetId)}" data-fit="${fit}"${provenance} transform="rotate(${angle} ${b.x+b.width/2} ${b.y+b.height/2})"${c.kind==='photo'||c.kind==='apparel-mockup'?'':' style="mix-blend-mode:multiply"'}>${clipCircle?`<defs><clipPath id="${clip}"><ellipse cx="${b.x+b.width/2}" cy="${b.y+b.height/2}" rx="${b.width/2}" ry="${b.height/2}"/></clipPath></defs><g clip-path="url(#${clip})">`:''}<svg x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" viewBox="${crop[0]!*c.width} ${crop[1]!*c.height} ${crop[2]!*c.width} ${crop[3]!*c.height}" preserveAspectRatio="xMidYMid ${fit}" overflow="hidden"><image href="${options.assetUrls!.get(c.assetId)}" width="${c.width}" height="${c.height}" preserveAspectRatio="xMidYMid meet"/></svg>${clipCircle?'</g>':''}</g>`;
+    const markup=`<g data-editor-box="${[b.x,b.y,b.width,b.height].join(',')}" data-editor-angle="${angle}" data-art="${esc(c.assetId)}" data-fit="${fit}"${provenance} transform="rotate(${angle} ${b.x+b.width/2} ${b.y+b.height/2})"${c.kind==='photo'||c.kind==='apparel-mockup'?'':' style="mix-blend-mode:multiply"'}>${clipCircle?`<defs><clipPath id="${clip}"><ellipse cx="${b.x+b.width/2}" cy="${b.y+b.height/2}" rx="${b.width/2}" ry="${b.height/2}"/></clipPath></defs><g clip-path="url(#${clip})">`:''}<svg x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" viewBox="${crop[0]!*c.width} ${crop[1]!*c.height} ${crop[2]!*c.width} ${crop[3]!*c.height}" preserveAspectRatio="xMidYMid ${fit}" overflow="hidden"><image href="${options.assetUrls!.get(c.assetId)}" width="${c.width}" height="${c.height}" preserveAspectRatio="xMidYMid meet"/></svg>${clipCircle?'</g>':''}</g>`;
+    const index=pictureFragments.push({markup,order:p?.magazineLayout?.order??0})-1;return `<!--picture:${index}-->`;
   }
   const origin=(c:Candidate)=>c.originCityId&&c.originCityId!==meta.cityId&&c.originCityId!==meta.city?`Origin: ${titleCase(c.originCityId)}`:undefined;
   const caption=(c:Candidate|undefined,n:number,x:number,y:number,width=1018)=>!c?'':rows(wrap(`Nº ${n} ${c.label}`,Math.floor(width/15)),x,y,2.1*PU,L,'IBM Plex Sans',400,INK,false,width);
@@ -113,7 +124,8 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const folio=pages.length+1,id=`${current.id}:${side}${current.pageIds.length>1?':'+current.pageIds.length:''}`;
     const textProvenance=layers.filter(p=>!p.assetId&&sourceCards.some(c=>c.id===p.cardId)).map(p=>`<g data-placement="${esc(p.id)}" data-locked="${p.locked}" data-source-geometry="${[p.x,p.y,p.width,p.height].join(',')}" transform="rotate(${p.rotation} 592 840)"/>`).join('');
     const creditY=usedImages.some(c=>c.kind==='apparel-mockup')?1480:1540;
-    const svg=shell(content+textProvenance+rows(creditChunk.lines,M,creditY,1.9*PU,26,'IBM Plex Mono',400,INK,false,1018,creditSource.slice(0,creditSource.length-creditChunk.rest.length)).replace('<text','<text data-credits="true"'),title,current.section.endsWith('cover')?undefined:folio,side,paper);
+    const manualText=layers.filter(p=>p.cardId&&!p.assetId&&p.magazineLayout?.pageId===id).map(p=>{const c=cards.find(c=>c.id===p.cardId)!;return `<g data-placement="${esc(p.id)}" data-editor-box="${[p.x*1184,p.y*1680,p.width*1184,p.height*1680].join(',')}" data-editor-angle="${p.rotation}" transform="rotate(${p.rotation} ${(p.x+p.width/2)*1184} ${(p.y+p.height/2)*1680})">${text(c.title,p.x*1184,p.y*1680+38,p.width*1184,38,3,'IBM Plex Serif',600)+text(c.body,p.x*1184,p.y*1680+165,p.width*1184,29.6,Math.max(1,Math.floor((p.height*1680-165)/L)))}</g>`;}).join('');
+    const svg=shell(paintPictures(content)+manualText+textProvenance+rows(creditChunk.lines,M,creditY,1.9*PU,26,'IBM Plex Mono',400,INK,false,1018,creditSource.slice(0,creditSource.length-creditChunk.rest.length)).replace('<text','<text data-credits="true"'),title,current.section.endsWith('cover')?undefined:folio,side,paper);
     const normalizedLinks=links?.map(link=>({...link,x:link.x/1184,y:link.y/1680,width:link.width/1184,height:link.height/1680}));
     current.pageIds.push(id);pages.push({id,pattern,folio,svg,assetIds:usedImages.map(c=>c.assetId),credits,spreadId:current.id,side,section:current.section,title,slots:spreads.flatMap(s=>s.usedSlots).filter(s=>usedImages.some(c=>c.assetId===s.assetId)),sourceCardIds:sourceCards.map(c=>c.id),artworkLabels:usedImages.map(c=>({assetId:c.assetId,label:c.label})),...(normalizedLinks?{links:normalizedLinks}:{})});
   }
@@ -178,7 +190,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const interior=take('interior',role('interior'));
     const lead=specimen??facade??interior??second;
     const leadLabel=lead?.label??'';
-    const leadBox=specimen?{x:-308,y:16*PU,width:1397,height:1397}:{x:0,y:0,width:1184,height:1350},anchor={x:leadBox.x+leadBox.width/2,y:leadBox.y+leadBox.height/2};
+    const leadBox=specimen?{x:-308,y:16*PU,width:1397,height:1397}:{x:0,y:0,width:1184,height:1350},noteBox=placedBox(lead,leadBox),anchor={x:noteBox.x+noteBox.width/2,y:noteBox.y+noteBox.height/2};
     const leader=specimen?`<g data-specimen-note="true"><path d="M910 285 Q920 435 ${anchor.x} ${anchor.y}" fill="none" stroke="${INK}" stroke-width="2"/><circle cx="${anchor.x}" cy="${anchor.y}" r="4" fill="${INK}"/>${rows(['Nº 1'],910,260,3.2*PU,L,'IBM Plex Serif',400,INK,true)}</g>`:'';
     page('left','food-culture',kicker('Eat and look')+picture(lead,leadBox,0,false,specimen?'meet':'slice')+leader+(!specimen?`<rect x="${M}" y="1195" width="1018" height="280" fill="${PAPER}"/>`:'')+rows(['Nº 1'],M,1400,10.6*PU,L,'IBM Plex Sans Condensed',600,RED)+head(leadLabel,M,1490,1018,4.05*PU,1),[lead],[],specimen?BLUSH:PAPER);
     const rightArt=[facade,second,interior].filter((c):c is Candidate=>!!c&&c!==lead);
