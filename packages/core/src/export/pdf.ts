@@ -4,7 +4,9 @@
 import { zlibSync } from 'fflate';
 
 export interface PdfLink {url:string;x:number;y:number;width:number;height:number;}
-export type PdfImagePage = {kind:'image';width:number;height:number;caption?:string;pageSize?:[number,number];fullBleed?:boolean;links?:PdfLink[];label?:string}
+/** Visible SVG lines, in image pixels; x/y is the baseline and rotation is clockwise. */
+export interface PdfTextRun {text:string;x:number;y:number;width:number;height:number;rotation?:number;}
+export type PdfImagePage = {kind:'image';width:number;height:number;caption?:string;pageSize?:[number,number];fullBleed?:boolean;links?:PdfLink[];label?:string;textLayer?:PdfTextRun[]}
   & ({jpeg:Uint8Array;deflatedRgb?:never}|{jpeg?:never;deflatedRgb:Uint8Array});
 export type PdfPage = PdfImagePage | { kind: 'text'; lines: string[]; header?: string; pageNumber?: number };
 
@@ -106,7 +108,21 @@ export function manuscriptPages(text: string, header: string): PdfPage[] {
   return pages;
 }
 
-export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Array {
+const unicodeHex=(value:string)=>Array.from({length:value.length},(_,i)=>value.charCodeAt(i).toString(16).padStart(4,'0')).join('');
+const metadataString=(value:string)=>/[^\x20-\x7e]/.test(value)?`<feff${unicodeHex(value)}>`:pdfString(value);
+
+export function buildPdf(pages: PdfPage[], title = 'Writer’s Board', options:{producer?:string}={}): Uint8Array {
+  const characters=new Map<string,{bank:number;code:number}>(),banks:string[][]=[];
+  for(const page of pages)if(page.kind==='image'&&page.textLayer!==undefined){
+    if(!Array.isArray(page.textLayer)||page.textLayer.length>2000)throw new Error('PDF text layer has too many lines.');
+    for(const run of page.textLayer){
+      if(!run||typeof run.text!=='string'||run.text.length>10000||/[\x00-\x1f\x7f]/.test(run.text)||![run.x,run.y,run.width,run.height,run.rotation??0].every(Number.isFinite)||run.width<=0||run.height<=0||Math.max(Math.abs(run.x),Math.abs(run.y),run.width,run.height)>1e6)throw new Error('PDF text line or geometry is invalid.');
+      for(const char of run.text)if(!characters.has(char)){
+        if(!banks.length||banks.at(-1)!.length===255)banks.push([]);
+        banks.at(-1)!.push(char);characters.set(char,{bank:banks.length-1,code:banks.at(-1)!.length});
+      }
+    }
+  }
   const labels=pages.map(page=>page.kind==='image'?page.label:undefined);
   if(labels.some(label=>label!==undefined&&typeof label!=='string'))throw new Error('PDF page labels must be text.');
   const pageLabels=labels.some(label=>label!==undefined)?` /PageLabels << /Nums [${labels.map((label,index)=>`${index} << ${label?`/P ${pdfString(label+' ')} `:''}/S /D /St ${index+1} >>`).join(' ')}] >>`:'';
@@ -118,7 +134,7 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
     chunks.push(bytes);
     length += bytes.length;
   };
-  // Object numbers: 1 catalog, 2 pages, 3 font, 4 info, then per page: page, content, [image].
+  // Object numbers: 1 catalog, 2 pages, 3 legacy font, 4 info; optional text resources follow.
   const objects: (() => void)[] = [];
   const object = (n: number, body: () => void) => {
     objects[n] = () => {
@@ -131,7 +147,10 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
 
   const pageIds: number[] = [];
   let next = 5;
-  for (const page of pages) {
+  const fontIds=banks.map(()=>({font:next++,cmap:next++})),glyphId=banks.length?next++:0;
+  const structureId=banks.length?next++:0,parentTreeId=banks.length?next++:0,documentId=banks.length?next++:0;
+  const sections:{id:number;page:number;paragraphs:number[]}[]=[];
+  for (const [pageIndex,page] of pages.entries()) {
     const pageId = next++;
     const contentId = next++;
     const imageId = page.kind === 'image' ? next++ : 0;
@@ -139,6 +158,9 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
     const [pw, ph] = page.kind === 'image' ? page.pageSize ?? [LETTER[1], LETTER[0]] : LETTER;
     const links=page.kind==='image'?pageLinks(page.links,pw,ph):[];
     const linkIds=links.map(()=>next++);
+    const runs=page.kind==='image'?(page.textLayer??[]).filter(run=>run.text.length):[];
+    const section=runs.length?{id:next++,page:pageId,paragraphs:runs.map(()=>next++)}:undefined;
+    if(section)sections.push(section);
     let content: string;
     if (page.kind === 'image') {
       // Fit the picture inside the margins, centered, with an optional caption under it.
@@ -153,6 +175,27 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
       const y = (ph - h) / 2 + (page.caption ? 9 : 0);
       const precision = page.fullBleed ? 6 : 2;
       content = `q ${w.toFixed(precision)} 0 0 ${h.toFixed(precision)} ${x.toFixed(precision)} ${y.toFixed(precision)} cm /Im0 Do Q`;
+      if(section){
+        content=`/Artifact BMC\n${content}\nEMC`;
+        for(const [mcid,run] of runs.entries()){
+          const chars=Array.from(run.text),angle=(run.rotation??0)*Math.PI/180,cos=Math.cos(angle),sin=Math.sin(angle);
+          const size=run.height*scale,stretch=run.width/chars.length/run.height*100;
+          const segments:{bank:number;codes:string;offset:number;count:number}[]=[];
+          for(const [index,char] of chars.entries()){
+            const mapped=characters.get(char)!;
+            if(segments.at(-1)?.bank!==mapped.bank)segments.push({bank:mapped.bank,codes:'',offset:index,count:0});
+            const segment=segments.at(-1)!;segment.codes+=mapped.code.toString(16).padStart(2,'0');segment.count++;
+          }
+          content+=`\n/P << /MCID ${mcid} >> BDC`;
+          for(const segment of segments){
+            const offset=segment.offset/chars.length*run.width*scale;
+            content+=`\nBT /FT${segment.bank} ${size.toFixed(4)} Tf 3 Tr ${stretch.toFixed(4)} Tz ${cos.toFixed(6)} ${(-sin).toFixed(6)} ${sin.toFixed(6)} ${cos.toFixed(6)} ${(x+run.x*scale+offset*cos).toFixed(3)} ${(y+h-run.y*scale-offset*sin).toFixed(3)} Tm <${segment.codes}> Tj ET`;
+          }
+          content+='\nEMC';
+        }
+        object(section.id,()=>write(`<< /Type /StructElem /S /Sect /P ${documentId} 0 R /Pg ${pageId} 0 R /K [${section.paragraphs.map(id=>`${id} 0 R`).join(' ')}] >>`));
+        section.paragraphs.forEach((id,mcid)=>object(id,()=>write(`<< /Type /StructElem /S /P /P ${section.id} 0 R /Pg ${pageId} 0 R /K ${mcid} >>`)));
+      }
       if (page.caption) content += `\nBT /F1 10 Tf ${x.toFixed(2)} ${(y - 16).toFixed(2)} Td ${pdfString(page.caption)} Tj ET`;
     } else {
       const parts = ['BT', `/F1 ${FONT_SIZE} Tf`, `${LEADING} TL`, `${MARGIN} ${ph - MARGIN - FONT_SIZE} Td`];
@@ -164,7 +207,7 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
     }
     object(pageId, () =>
       write(
-        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Contents ${contentId} 0 R /Resources << /Font << /F1 3 0 R >>${
+        `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pw} ${ph}] /Contents ${contentId} 0 R${section?` /StructParents ${pageIndex}`:''} /Resources << /Font << ${page.kind==='text'||page.caption||!section?'/F1 3 0 R ':''}${section?fontIds.map((ids,i)=>`/FT${i} ${ids.font} 0 R`).join(' '):''} >>${
           imageId ? ` /XObject << /Im0 ${imageId} 0 R >>` : ''
         } >>${linkIds.length?` /Annots [${linkIds.map(id=>`${id} 0 R`).join(' ')}]`:''} >>`,
       ),
@@ -186,10 +229,25 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
       links.forEach((link,index)=>object(linkIds[index]!,()=>write(`<< /Type /Annot /Subtype /Link /Rect [${link.rect}] /Border [0 0 0] /A << /S /URI /URI ${pdfString(link.url)} >> >>`)));
     }
   }
-  object(1, () => write(`<< /Type /Catalog /Pages 2 0 R${pageLabels} >>`));
+  banks.forEach((chars,index)=>{
+    const ids=fontIds[index]!;
+    // A valid, embedded Type 3 font whose glyph paints nothing. Unicode is independent of visual font coverage.
+    object(ids.font,()=>write(`<< /Type /Font /Subtype /Type3 /FontBBox [0 -200 1000 800] /FontMatrix [0.001 0 0 0.001 0 0] /FirstChar 1 /LastChar ${chars.length} /Widths [${chars.map(()=>1000).join(' ')}] /Encoding << /Type /Encoding /Differences [1 ${chars.map((_,i)=>`/g${i+1}`).join(' ')}] >> /CharProcs << ${chars.map((_,i)=>`/g${i+1} ${glyphId} 0 R`).join(' ')} >> /Resources << >> /ToUnicode ${ids.cmap} 0 R >>`));
+    const mappings=[];
+    for(let i=0;i<chars.length;i+=100)mappings.push(`${Math.min(100,chars.length-i)} beginbfchar\n${chars.slice(i,i+100).map((char,j)=>`<${(i+j+1).toString(16).padStart(2,'0')}> <${unicodeHex(char)}>`).join('\n')}\nendbfchar`);
+    const cmap=`/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /MoTText${index} def\n/CMapType 2 def\n1 begincodespacerange\n<00> <ff>\nendcodespacerange\n${mappings.join('\n')}\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend`;
+    object(ids.cmap,()=>write(`<< /Length ${cmap.length} >>\nstream\n${cmap}\nendstream`));
+  });
+  if(glyphId){
+    object(glyphId,()=>write('<< /Length 10 >>\nstream\n1000 0 d0\n\nendstream'));
+    object(structureId,()=>write(`<< /Type /StructTreeRoot /K [${documentId} 0 R] /ParentTree ${parentTreeId} 0 R /ParentTreeNextKey ${pages.length} >>`));
+    object(documentId,()=>write(`<< /Type /StructElem /S /Document /P ${structureId} 0 R /K [${sections.map(s=>`${s.id} 0 R`).join(' ')}] >>`));
+    object(parentTreeId,()=>write(`<< /Nums [${sections.map(s=>`${pageIds.indexOf(s.page)} [${s.paragraphs.map(id=>`${id} 0 R`).join(' ')}]`).join(' ')}] >>`));
+  }
+  object(1, () => write(`<< /Type /Catalog /Pages 2 0 R${pageLabels}${structureId?` /MarkInfo << /Marked true >> /StructTreeRoot ${structureId} 0 R`:''} >>`));
   object(2, () => write(`<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`));
   object(3, () => write('<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>'));
-  object(4, () => write(`<< /Title ${pdfString(title)} /Producer (Writer's Board) >>`));
+  object(4, () => write(`<< /Title ${options.producer?metadataString(title):pdfString(title)} /Producer ${metadataString(options.producer??"Writer's Board")} >>`));
 
   write('%PDF-1.4\n%âãÏÓ\n');
   for (let n = 1; n < next; n++) objects[n]!();
