@@ -50,7 +50,7 @@ function pdfString(text: string): string {
   return `(${out})`;
 }
 
-function publicLinkUrl(value:string):string{
+export function publicLinkUrl(value:string):string{
   let url:URL;try{url=new URL(value);}catch{throw new Error('PDF link must use a public HTTPS URL');}
   const host=url.hostname.toLowerCase().replace(/\.$/,'');
   const ip=host.split('.').map(Number),ipv4=ip.length===4&&ip.every(part=>Number.isInteger(part)&&part>=0&&part<=255);

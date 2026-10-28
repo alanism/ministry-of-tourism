@@ -4,6 +4,7 @@ import { readAllCards, readTripMeta, tripParts } from './model.ts';
 import { cropSchema, presentationFieldsSchema, MAGAZINE_ART_ROLES, PRESENTATION_PATTERNS, type MagazineArtRole, type Presentation, type TripCard } from './schema.ts';
 import { fccShopUrl, selectCityApparel, type ApparelArtRef } from './merch.ts';
 import { isPublicFccUrl } from './city-source.ts';
+import { publicLinkUrl } from '../export/pdf.ts';
 import { MAGAZINE, PAPER, INK, RED, BLUSH, BLUE, TAUPE, PU, M, L, G, COL, column, escapeXml as esc, magazineLabel, wrap, flowText, rows, kicker, shell } from './magazine-style.ts';
 export { MAGAZINE, magazineLabel } from './magazine-style.ts';
 export const SPREAD_PATTERNS=PRESENTATION_PATTERNS;
@@ -250,8 +251,9 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   for(const c of candidates.filter(c=>c.identities.some(id=>used.has(id))))if(c.credit&&wrap(c.credit,70).length>3)creditAppendix.push(c.label+'\n'+c.credit);
   const notebook=cards.map(c=>{
     const tail=remainingText.get(c.id+':body')??'',note=remainingText.get(c.id+':travelerNote')??'';
+    const printedTail=isArticle(c)&&(c.provenance==='fcc'||c.source?.provider==='fcc')?tail.replace(/[ \t]*\[(?:S\d+|C)\]/g,''):tail;
     const title=isArticle(c)?`${c.provenance==='fcc'||c.source?.provider==='fcc'?'FCC article':'Source article'} · ${c.title}`:c.title;
-    return [tail||note||c.title.length>40?title:'',tail,note?`Traveler note\n${note}`:'',...(c.currentFacts??[]).map(f=>`${f.field}: ${f.value}\nObserved ${f.observedAt}\nSource ${f.evidenceUrl}`),c.source?.canonicalUrl??c.source?.url??''].filter(Boolean).join('\n\n');
+    return [printedTail||note||(!c.source&&c.title.length>40)?title:'',printedTail,note?`Traveler note\n${note}`:'',...(c.currentFacts??[]).map(f=>`${f.field}: ${f.value}\nObserved ${f.observedAt}`)].filter(Boolean).join('\n\n');
   }).filter(Boolean).join('\n\n');
   const notebookChunks:{lines:string[];source:string}[]=[];
   let notebookTail=[notebook,...creditAppendix].filter(Boolean).join('\n\n');
@@ -262,6 +264,27 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
       if(i%2===0){spread('appendix',i?'Trip notebook · continued':'Trip notebook');current.id=`appendix-${i/2+1}`;}
       page(count===1||(i===count-1&&count%2)?'single':i%2?'right':'left','correspondence',kicker(i?'Trip notebook · continued':'Trip notebook')+rows(notebookChunks[i]!.lines,M,4*L,2.5*PU,L,'IBM Plex Sans',400,INK,false,1018,notebookChunks[i]!.source),[],cards);
     }
+  }
+  const sources=cards.flatMap(card=>{
+    const url=card.source?.canonicalUrl??card.source?.url,items:{title:string;detail:string;url?:string;card:TripCard}[]=[];
+    if(card.source)items.push({title:card.title,detail:[card.source.provider==='fcc'||card.provenance==='fcc'?'Foreign Clubbers Correspondence':'Source',card.source.publishedAt?`Published ${card.source.publishedAt.slice(0,10)}`:'',`Retrieved ${card.source.retrievedAt.slice(0,10)}`].filter(Boolean).join(' · '),url,card});
+    for(const fact of card.currentFacts??[])items.push({title:`${card.title} · ${fact.field}`,detail:`Observed ${fact.observedAt}`,url:fact.evidenceUrl,card});
+    return items;
+  });
+  for(let i=0;i<sources.length;){
+    const links:NonNullable<MagazinePage['links']>=[],batch:TripCard[]=[];
+    spread('appendix',i?'Sources · continued':'Sources');current.id=`sources-${i+1}`;
+    let content=kicker(i?'Sources · continued':'Sources'),y=4*L;
+    while(i<sources.length){
+      const source=sources[i]!,title=wrap(magazineLabel(source.title),55),detail=wrap(source.detail,78),height=title.length*L+detail.length*26+.6*L;
+      if(batch.length&&y+height>1460)break;
+      const label=rows(title,M,y,2.5*PU,L,'IBM Plex Sans',600);let url:string|undefined;
+      if(source.url)try{url=publicLinkUrl(source.url);}catch{/* Keep the source label when its URL cannot be safely linked. */}
+      if(url)links.push({url,x:M,y:y-2.5*PU,width:1018,height:title.length*L});
+      content+=(url?`<a href="${esc(url)}">${label}</a>`:label)+rows(detail,M,y+title.length*L,1.9*PU,26,'IBM Plex Mono');
+      batch.push(source.card);y+=height;i++;
+    }
+    page('single','correspondence',content,[],batch,PAPER,'Sources',links);
   }
   spread('back-cover',backTee?'Advertisement':meta.city);
   if(backTee&&backSlot)current.usedSlots.push(backSlot);else current.droppedSlots.push('back-cover-tee');
