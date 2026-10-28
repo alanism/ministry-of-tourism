@@ -1,0 +1,8 @@
+# Writer's Board
+
+> A whiteboard for planning and writing that a person and an AI agent can share. Boards live in the person's browser. Agents can read the board as JSON, add cards and notes, check quotes against sources, and carry a board between sessions with board_export and board_import.
+
+The writer's own words stay theirs: agents are refused when they try to write the writer's prose, and every agent change is labeled and can be undone.
+
+- [Notes for AI agents: what this is, how to use it, rules and FAQ](/agents.md)
+- [Plain page for browsers without WebGL](/?view=agent)

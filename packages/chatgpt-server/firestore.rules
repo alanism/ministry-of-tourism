@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // OAuth credentials are available only to the function's Admin SDK.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

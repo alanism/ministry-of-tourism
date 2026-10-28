@@ -1,0 +1,51 @@
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),assert=require('node:assert/strict');
+const {pathToFileURL}=require('node:url');
+const {chromium}=require(process.env.MOT_PLAYWRIGHT_MODULE||'playwright');
+const plan=process.env.MOT_PLAN_PATH;
+if(!plan)throw new Error('Set MOT_PLAN_PATH to the canonical production Kanban HTML.');
+const original=fs.readFileSync(plan,'utf8');
+const sourceTasks=JSON.parse(original.match(/<script[^>]*id="task-data"[^>]*>([\s\S]*?)<\/script>/)[1]);
+const scratch=fs.mkdtempSync(path.join(os.tmpdir(),'mot-kanban-regression-'));
+const cases=[];
+(async()=>{
+  const browser=await chromium.launch({headless:true,chromiumSandbox:true});
+  const context=await browser.newContext({viewport:{width:1440,height:1000}});
+  await context.route(/^https?:/,route=>route.abort());
+  const fresh=async(change=()=>{})=>{
+    const tasks=structuredClone(sourceTasks);for(const task of tasks){task.status='planned';task.records=[];}change(tasks);
+    const html=original.replace(/(<script[^>]*id="task-data"[^>]*>)[\s\S]*?(<\/script>)/,(_,start,end)=>start+JSON.stringify(tasks).replace(/</g,'\\u003c')+end);
+    const file=path.join(scratch,`fixture-${cases.length}.html`);fs.writeFileSync(file,html);
+    const page=await context.newPage();await page.goto(pathToFileURL(file).href);await page.locator('article.task').first().waitFor();return page;
+  };
+  const task=(page,id)=>page.locator('article.task').filter({has:page.locator('.id').filter({hasText:new RegExp('^'+id+'$')})});
+  const data=async(page,id)=>JSON.parse(await page.locator('#'+id).textContent());
+  try{
+    let page=await fresh();
+    await task(page,'MOT-69').locator('select[aria-label^="Status for"]').selectOption('complete');
+    await task(page,'MOT-69').getByRole('button',{name:'Record status',exact:true}).click();
+    assert.equal((await data(page,'task-data')).find(task=>task.id==='MOT-69').status,'planned');cases.push('blank Complete evidence rejected');await page.close();
+    page=await fresh();
+    await task(page,'MOT-70').locator('select[aria-label^="Status for"]').selectOption('implemented');
+    await task(page,'MOT-70').locator('#rec-commit-MOT-70').fill('abcdef1 · fixture check passed');
+    await task(page,'MOT-70').locator('#rec-by-MOT-70').fill('Fixture checker');
+    await task(page,'MOT-70').locator('#rec-model-MOT-70').selectOption('gpt-6.1-sol');
+    await task(page,'MOT-70').getByRole('button',{name:'Record status',exact:true}).click();
+    assert.equal((await data(page,'task-data')).find(task=>task.id==='MOT-70').status,'planned');cases.push('unmet dependency prevents status promotion');await page.close();
+    page=await fresh(tasks=>{tasks.find(task=>task.id==='MOT-76').status='doing';});
+    assert.match(await task(page,'MOT-76').innerText(),/Waiting on .*MOT-75/);cases.push('in-progress preparation still labels unmet dependencies');await page.close();
+    page=await fresh(tasks=>{for(const id of ['MOT-72','MOT-94'])tasks.find(task=>task.id===id).status='complete';});
+    const a13=page.locator('#checks .chk').filter({has:page.getByText('A13',{exact:true})});assert.match(await a13.innerText(),/Held/);cases.push('self-reported Complete cannot pass A13');await page.close();
+    page=await fresh();
+    const reviews=await data(page,'review-data'),models=await data(page,'model-data');
+    await page.locator('#import-text').fill(JSON.stringify({reviewer:'Fixture',model:'Never add invalid model',findings:[{severity:'major',text:'Invalid typed task list',tasks:'MOT-69'}]}));await page.locator('#import-btn').click();
+    assert.deepEqual(await data(page,'review-data'),reviews);assert.deepEqual(await data(page,'model-data'),models);cases.push('malformed review import is atomic');
+    await page.locator('#import-text').fill(JSON.stringify({reviewer:'Fixture',model:'gpt-6.1-sol',findings:[{severity:'major',text:'Resolution must be recorded',tasks:['MOT-69']}]}));await page.locator('#import-btn').click();
+    const imported=(await data(page,'review-data')).at(-1),id=imported.findings[0].id;
+    await page.getByRole('combobox',{name:`Disposition of finding ${id}`,exact:true}).first().selectOption('applied');
+    assert.equal((await data(page,'review-data')).at(-1).findings[0].disposition,'open');cases.push('resolution note required before closure');await page.close();
+    const broken=path.join(scratch,'broken-json.html');fs.writeFileSync(broken,original.replace(/(<script[^>]*id="task-data"[^>]*>)[\s\S]*?(<\/script>)/,'$1{invalid$2'));
+    page=await context.newPage();await page.goto(pathToFileURL(broken).href);assert.match(await page.locator('#warnings').innerText(),/#task-data.*not valid JSON/);cases.push('malformed embedded JSON names the failed block');await page.close();
+    fs.writeFileSync(path.join(scratch,'result.json'),JSON.stringify({plan,cases,canonicalUnchanged:fs.readFileSync(plan,'utf8')===original},null,2));
+    assert.equal(fs.readFileSync(plan,'utf8'),original);console.log(JSON.stringify({passed:cases.length,evidence:path.join(scratch,'result.json')}));
+  }finally{await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});

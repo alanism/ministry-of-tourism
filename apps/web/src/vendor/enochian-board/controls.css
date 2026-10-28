@@ -1,0 +1,40 @@
+/* Adapted from Enochian UI UX Elements, alanism / UnCommon Core.
+   Earlier upstream notice: CC BY-NC 4.0. Owner-authorized MIT code copy in MoT,
+   2026-10-28; see root LICENSE and THIRD_PARTY_NOTICES.md. Upstream unchanged.
+   volume-3/index.html: .pcb-sock/.pcb, .dmp, .jp-base/.jp, and the .fx Ivory plate.
+   Source: https://uiux-nonhumanintelligence.web.app/UIUX */
+.enochian-controls, .enochian-draw {
+  --eno-well: #e7e7ea;
+  --eno-signal: #cc0000;
+  color: #111;
+}
+.enochian-controls {
+  --control-height: calc(var(--view-bar-height, 52px) * 1.25);
+  display: grid;
+  height: var(--control-height);
+  grid-template-columns: minmax(120px, 180px) calc(var(--control-height) - 18px);
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+}
+.enochian-draw, .enochian-pan { display: flex; flex-direction: column; align-items: center; }
+.enochian-lamp { position: absolute; top: -1px; right: 0; width: 4px; height: 4px; border-radius: 50%; background: #cfcfd3; }
+.enochian-lamp.is-lit { background: var(--eno-signal); box-shadow: 0 0 8px #cc000066; }
+.enochian-socket { width: calc(var(--draw-height) + 6px); height: calc(var(--draw-height) + 6px); border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle, #2a2a2e 0 60%, #0b0b0c 70%); box-shadow: 0 3px 7px #00000047; }
+.enochian-push { width: var(--draw-height); height: var(--draw-height); border-radius: 50%; border: 0; padding: 4px; cursor: pointer; color: #111; font: 700 10px/1 var(--ui); white-space: nowrap; background: radial-gradient(circle at 42% 34%, #fff, #ebebed 55%, #cfcfd3); box-shadow: 0 2px 0 #9d9da2, 0 3px 5px #00000059, inset 0 1px 1px #fff; transition: transform .06s ease, box-shadow .06s ease; touch-action: manipulation; }
+.enochian-push:active { transform: translateY(1px); box-shadow: 0 0 0 #9d9da2, 0 1px 2px #00000059, inset 0 1px 3px #00000026; }
+.enochian-push:focus-visible, .enochian-slider:focus-visible, .enochian-joystick:focus-visible { outline: 3px solid var(--eno-signal); outline-offset: 6px; }
+.enochian-zoom { display: flex; min-width: 0; flex-direction: column; gap: 0; }
+.enochian-readout { display: flex; justify-content: space-between; gap: 12px; font: 600 9px/1.2 var(--mono); letter-spacing: .04em; text-transform: uppercase; }
+.enochian-readout output { font-variant-numeric: tabular-nums; }
+.enochian-scale, .enochian-pan > .enochian-readout { display: none; }
+.enochian-slider { appearance: none; -webkit-appearance: none; display: block; width: 100%; height: 32px; margin: 0; border: 0; border-radius: 16px; cursor: grab; background: transparent; touch-action: none; }
+.enochian-slider::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(to right, #cc000038 var(--zoom-progress), var(--eno-well) var(--zoom-progress)); box-shadow: inset 0 2px 3px #00000021, inset 0 -1px 1px #ffffffd9; }
+.enochian-slider::-moz-range-track { height: 8px; border-radius: 4px; background: linear-gradient(to right, #cc000038 var(--zoom-progress), var(--eno-well) var(--zoom-progress)); box-shadow: inset 0 2px 3px #00000021, inset 0 -1px 1px #ffffffd9; }
+.enochian-slider::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 40px; height: 24px; margin-top: -8px; border: 0; border-radius: 12px; background: radial-gradient(circle, #8f0000 0 .7px, transparent 1px) 0 0 / 4px 4px, radial-gradient(circle at 40% 25%, #d94040, #cc0000 60%, #ad0000); box-shadow: 0 3px 6px #cc000059, inset 0 1px 1px #ffffff59; }
+.enochian-slider::-moz-range-thumb { width: 40px; height: 24px; border: 0; border-radius: 12px; background: radial-gradient(circle, #8f0000 0 .7px, transparent 1px) 0 0 / 4px 4px, radial-gradient(circle at 40% 25%, #d94040, #cc0000 60%, #ad0000); box-shadow: 0 3px 6px #cc000059, inset 0 1px 1px #ffffff59; }
+.enochian-joystick { position: relative; width: calc(var(--control-height) - 18px); height: calc(var(--control-height) - 18px); border-radius: 50%; display: grid; place-items: center; background: var(--eno-well); box-shadow: inset 0 2px 5px #00000021, inset 0 -1px 1px #ffffffd9; touch-action: none; cursor: grab; }
+.enochian-stick { position: relative; width: 64%; height: 64%; border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 40% 30%, #fff, #e4e4e7 60%, #bdbdc2); box-shadow: 0 3px 6px #00000047, inset 0 1px 1px #fff; transition: transform .1s ease-out; }
+.enochian-stick::after { content: ''; position: absolute; inset: 16%; border-radius: 50%; background: radial-gradient(circle at 50% 65%, #fff, #ececee 70%); box-shadow: inset 0 4px 8px #0000002e; }
+.enochian-joystick:active, .enochian-slider:active { cursor: grabbing; }
+@media (prefers-reduced-motion: reduce) { .enochian-push, .enochian-stick { transition: none; } }

@@ -1,0 +1,459 @@
+{
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "NOUNS",
+      "label": "Nouns",
+      "color": "#4D4D4D"
+    },
+    {
+      "id": "IDEA",
+      "label": "Idea",
+      "color": "#9A9A9A"
+    },
+    {
+      "id": "FORM",
+      "label": "Form",
+      "color": "#CBB9B0"
+    },
+    {
+      "id": "VOICE",
+      "label": "Voice",
+      "color": "#E8A3B4"
+    }
+  ],
+  "cards": [
+    {
+      "id": "nouns.character",
+      "category": "NOUNS",
+      "name": "Character",
+      "order": 1,
+      "starter": true,
+      "question": "Who is involved, and what makes them matter to this piece?",
+      "lesson": "Character grounds the essay in human stakes. Even analytical writing becomes more memorable when tied to a person—yourself, someone you saw, someone who shaped your idea. A character doesn’t need a full biography; they just need one or two defining traits or moments that connect to your theme. Ask: Who embodies this idea? Who represents the tension or contradiction? What does this person want, fear, misunderstand, or reveal? Even in nonfiction, characters clarify meaning because readers understand ideas through people. Choose individuals who highlight your thesis—not necessarily the most dramatic, but the most revealing."
+    },
+    {
+      "id": "nouns.setting",
+      "category": "NOUNS",
+      "name": "Setting",
+      "order": 2,
+      "starter": true,
+      "question": "Where does this happen, and what atmosphere does that place create?",
+      "lesson": "Setting creates the mood and context for your essay. It can be a physical location, a social environment, or an emotional space. A strong setting gives readers something to stand on—a sensory anchor that makes your idea tangible. You don’t need long descriptions; a few sharp details carry more weight than a full panorama. Ask: What does this place smell like? Sound like? What tension or feeling exists here? A well-chosen setting shapes the reader’s expectations and subtly points them toward the deeper meaning of the piece."
+    },
+    {
+      "id": "nouns.object",
+      "category": "NOUNS",
+      "name": "Object",
+      "order": 3,
+      "starter": true,
+      "question": "What physical item carries meaning, tension, or memory?",
+      "lesson": "Objects hold symbolic weight. A chipped mug, a childhood photo, a cracked screen—these artifacts can contain entire stories. An object can anchor a memory, mirror a conflict, or serve as a motif. Choose an item that interacts with the emotional core of your essay: something kept, lost, broken, or found. Ask: Why does this object matter? What memory does it trigger? What truth does it quietly reveal? Objects make abstract ideas feel real and help readers connect emotionally without requiring long explanation."
+    },
+    {
+      "id": "nouns.desire",
+      "category": "NOUNS",
+      "name": "Desire",
+      "order": 4,
+      "starter": false,
+      "question": "What does the character want most?",
+      "lesson": "Desire gives essays momentum. It doesn’t need to be dramatic; even small wants—clarity, connection, safety, approval—shape experience. Ask: What is this person reaching toward? What outcome do they hope for? When the reader understands the character’s desire, they immediately understand the stakes. Desire creates direction and emotional grounding for the piece."
+    },
+    {
+      "id": "nouns.obstacle",
+      "category": "NOUNS",
+      "name": "Obstacle",
+      "order": 5,
+      "starter": false,
+      "question": "What stands in the way of what they want?",
+      "lesson": "Obstacle introduces friction—the force that resists desire. It may be another person, a belief, an environment, a limitation, or an internal contradiction. Obstacle creates tension, the essential fuel of narrative and reflection. Identify the specific force blocking progress. This helps readers understand what’s at stake without requiring dramatic storytelling."
+    },
+    {
+      "id": "nouns.role",
+      "category": "NOUNS",
+      "name": "Role",
+      "order": 6,
+      "starter": false,
+      "question": "What role does this character play in the idea?",
+      "lesson": "Role defines how the character functions in the essay. Are they a mirror? A warning? A catalyst? A contradiction? Clarifying the role helps you use the character intentionally—not as decoration, but as thematic support. A clear role keeps the essay focused and elevates the meaning behind the moment."
+    },
+    {
+      "id": "nouns.time",
+      "category": "NOUNS",
+      "name": "Time",
+      "order": 7,
+      "starter": false,
+      "question": "When does this moment happen, and why now?",
+      "lesson": "Time is emotional context. Morning vs. midnight, childhood vs. adulthood, during transition vs. after loss—these differences shape the reader’s understanding. Time anchors events and colors meaning. Ask: At what moment does this matter most? The right timing deepens resonance and clarity."
+    },
+    {
+      "id": "nouns.weather",
+      "category": "NOUNS",
+      "name": "Weather",
+      "order": 8,
+      "starter": false,
+      "question": "What natural conditions shape the atmosphere?",
+      "lesson": "Weather sets tone. Rain can suggest tension or cleansing; heat suggests pressure; cold suggests isolation or clarity. Weather works because it subtly parallels internal states. Use a single strong detail to create atmosphere—no need for elaborate description. Think of weather as emotional background music."
+    },
+    {
+      "id": "nouns.texture",
+      "category": "NOUNS",
+      "name": "Texture",
+      "order": 9,
+      "starter": false,
+      "question": "What tactile detail helps the scene feel real?",
+      "lesson": "Texture activates the reader’s senses. Rough pavement, soft fabric, cold metal, sticky air—tactile details make writing physical and vivid. Texture brings ideas out of abstraction and into the body. Ask: What did this moment feel like against the skin? A single fragment of texture can make the essay unforgettable."
+    },
+    {
+      "id": "nouns.symbol",
+      "category": "NOUNS",
+      "name": "Symbol",
+      "order": 10,
+      "starter": false,
+      "question": "What detail carries a deeper meaning?",
+      "lesson": "A symbol is an object or detail that represents something beyond itself. A locked door might symbolize fear; a cracked bowl might symbolize repair. Symbols work best when they arise naturally from the material. Choose something already present and let its meaning expand through context and repetition."
+    },
+    {
+      "id": "nouns.tool",
+      "category": "NOUNS",
+      "name": "Tool",
+      "order": 11,
+      "starter": false,
+      "question": "What object is actively used in the moment?",
+      "lesson": "Tools reveal agency—someone doing something. A notebook, broom, map, keycard, or laptop shows intention and action. Tools are verbs disguised as nouns; they push the moment forward without requiring explanation. Adding a tool instantly increases clarity and narrative motion."
+    },
+    {
+      "id": "nouns.artifact",
+      "category": "NOUNS",
+      "name": "Artifact",
+      "order": 12,
+      "starter": false,
+      "question": "What item from the past influences the present?",
+      "lesson": "Artifacts connect memory to meaning. They’re objects carrying emotional residue—photos, receipts, medals, notes, documents. An artifact can spark reflection, reframe the present, or reveal something unresolved. Ask: What item from the past still shapes this moment? Artifacts are powerful entry points for essays because they hold both story and symbolism."
+    },
+    {
+      "id": "idea.material",
+      "category": "IDEA",
+      "name": "Material",
+      "order": 1,
+      "starter": true,
+      "question": "What raw memories, facts, or experiences relate to your idea?",
+      "lesson": "Material is the raw clay of your piece—the unfiltered memories, observations, examples, facts, or sensory moments that spark your thinking. Don’t edit here; collect freely. Strong material usually feels vivid or emotionally charged. A single strong moment can carry an entire essay. Ask: What stayed with me? What bothered me? What won’t leave my mind? When you gather honest raw material, your thesis becomes clearer because it rises naturally from lived detail rather than abstract brainstorming."
+    },
+    {
+      "id": "idea.thesis",
+      "category": "IDEA",
+      "name": "Thesis",
+      "order": 2,
+      "starter": true,
+      "question": "What is the single most important sentence your reader must take away?",
+      "lesson": "Your thesis is the North Star of your essay—the clearest expression of what you believe and why it matters. A strong thesis is not a topic but a claim with tension, specificity, and point of view. Good theses make readers think, “I never saw it that way.” You don’t need perfection on the first try—draft a working thesis now and refine it as the essay evolves. Let your material shape the clarity and confidence of your argument."
+    },
+    {
+      "id": "idea.title",
+      "category": "IDEA",
+      "name": "Title",
+      "order": 3,
+      "starter": true,
+      "question": "What phrase or metaphor captures the essence?",
+      "lesson": "A title is a promise. It sets tone, creates curiosity, and hints at deeper meaning. Avoid purely descriptive titles—lean into metaphor, contrast, or a surprising phrase. A good title often arrives late in the process, once the emotional truth is clear. Try pairing a concrete noun with an abstract theme. Let the title feel slightly poetic or intriguing, something that makes the reader lean forward."
+    },
+    {
+      "id": "idea.experience",
+      "category": "IDEA",
+      "name": "Experience",
+      "order": 4,
+      "starter": false,
+      "question": "What lived moment helps reveal your idea?",
+      "lesson": "Experience is the doorway into meaning. A single concrete moment can illuminate a complex idea better than a paragraph of explanation. Choose an episode that contains emotional charge or contradiction. Ask: What moment first made me notice this idea? What experience continues to echo? Use experience as an anchor—not decoration—to reveal insight."
+    },
+    {
+      "id": "idea.argument",
+      "category": "IDEA",
+      "name": "Argument",
+      "order": 5,
+      "starter": false,
+      "question": "What case are you building?",
+      "lesson": "Argument is the logical structure beneath your idea. It is not confrontation—it is clarity. Identify your main claim, then the key supports. Strong arguments combine reasoning with narrative or example. Ask: What do I believe? Why? What evidence or moments support this? Build the idea step by step, making the logic feel natural and inevitable."
+    },
+    {
+      "id": "idea.references",
+      "category": "IDEA",
+      "name": "References",
+      "order": 6,
+      "starter": false,
+      "question": "What outside sources or voices support your idea?",
+      "lesson": "References provide context, credibility, and connection. They can be books, studies, conversations, cultural moments, or historical parallels. Choose references that sharpen—not overload—your idea. The best references expand meaning or introduce contrast. Ask: What perspective is relevant here? What outside voice helps clarify the truth I’m reaching for?"
+    },
+    {
+      "id": "idea.microcosm",
+      "category": "IDEA",
+      "name": "Microcosm",
+      "order": 7,
+      "starter": false,
+      "question": "What small example reflects a larger truth?",
+      "lesson": "A microcosm is a small scene or detail that mirrors a universal idea. It’s the tiny story that reveals the big story. A single moment—a gesture, an exchange, a quiet observation—can represent a broader pattern. Microcosms are powerful because they compress meaning. Ask: What little thing reveals something big?"
+    },
+    {
+      "id": "idea.response",
+      "category": "IDEA",
+      "name": "Response",
+      "order": 8,
+      "starter": false,
+      "question": "How do you react to the idea or moment?",
+      "lesson": "Response is your emotional or intellectual reaction—the meaning you make in the moment. It reveals your viewpoint and deepens authenticity. Ask: What surprised me? What confused me? What moved me? This adds warmth and honesty, bridging experience and insight."
+    },
+    {
+      "id": "idea.catalyst",
+      "category": "IDEA",
+      "name": "Catalyst",
+      "order": 9,
+      "starter": false,
+      "question": "What moment changed your thinking?",
+      "lesson": "A catalyst is the moment that shifts your understanding. It can be small or unexpected, but it alters the direction of the essay. Identifying the catalyst clarifies the arc of your thinking. Ask: When did this idea first snap into focus?"
+    },
+    {
+      "id": "idea.mystery",
+      "category": "IDEA",
+      "name": "Mystery",
+      "order": 10,
+      "starter": false,
+      "question": "What question remains unresolved?",
+      "lesson": "Mystery adds depth. It signals that the idea is bigger than the essay itself. Reflect on what remains unknown or open-ended. This invites readers into curiosity rather than forcing closure."
+    },
+    {
+      "id": "idea.target",
+      "category": "IDEA",
+      "name": "Target",
+      "order": 11,
+      "starter": false,
+      "question": "What is the specific focus of the idea?",
+      "lesson": "Target narrows your aim. It helps you decide what belongs and what doesn’t. A sharp target makes the essay feel intentional. Ask: What exactly am I exploring here?"
+    },
+    {
+      "id": "idea.phonetics",
+      "category": "IDEA",
+      "name": "Phonetics",
+      "order": 12,
+      "starter": false,
+      "question": "What word or phrase carries the sound of the idea?",
+      "lesson": "Phonetics enhances meaning through sound. A well-chosen phrase can capture the mood or motion of your thesis. Consider alliteration, smoothness vs. sharpness, or the rhythm of a central sentence."
+    },
+    {
+      "id": "form.paragraphs",
+      "category": "FORM",
+      "name": "Paragraphs",
+      "order": 1,
+      "starter": true,
+      "question": "What scenes or chunks of meaning could form separate paragraphs?",
+      "lesson": "Paragraphs are containers of meaning. Each should hold a single idea, moment, or shift. Don’t polish yet—break your thinking into natural chunks. A paragraph may capture a scene, argument, memory, or contrast. The goal is clarity: if someone skimmed only the first sentence of each paragraph, the shape of the essay should still be visible."
+    },
+    {
+      "id": "form.structure",
+      "category": "FORM",
+      "name": "Structure",
+      "order": 2,
+      "starter": true,
+      "question": "How should these sections be ordered?",
+      "lesson": "Structure determines how readers experience your ideas. Strong structure creates momentum and clarity. You might organize chronologically, logically, emotionally, or in reverse. Think about where you want to begin and where you want to land—a shift, a realization, or a synthesis. A good structure feels inevitable in hindsight but surprising in the moment."
+    },
+    {
+      "id": "form.tension",
+      "category": "FORM",
+      "name": "Tension",
+      "order": 3,
+      "starter": true,
+      "question": "What conflicts or oppositions add energy?",
+      "lesson": "Tension is the friction between forces—belief vs. reality, desire vs. fear, old self vs. new self. Even quiet essays need tension. Identify the central opposition and let it run through the piece. Tension gives writing urgency and emotional charge, shaping structure and pacing."
+    },
+    {
+      "id": "form.frame",
+      "category": "FORM",
+      "name": "Frame",
+      "order": 4,
+      "starter": false,
+      "question": "How will you open and close the piece?",
+      "lesson": "The frame is the doorway in and out of your essay. A strong opening sets tone or raises a question; a strong closing returns with deeper understanding. Frames create symmetry and resonance. Let the beginning and ending echo each other in meaning or image."
+    },
+    {
+      "id": "form.flow",
+      "category": "FORM",
+      "name": "Flow",
+      "order": 5,
+      "starter": false,
+      "question": "How smoothly does one section lead to the next?",
+      "lesson": "Flow is pacing—the way ideas glide from one to another. Good flow feels effortless. Use transitions, sentence rhythm, and emotional progression to create movement. If a jump feels abrupt, adjust. Flow isn’t about polish; it’s about clarity of movement."
+    },
+    {
+      "id": "form.finale",
+      "category": "FORM",
+      "name": "Finale",
+      "order": 6,
+      "starter": false,
+      "question": "What emotional or intellectual shift ends the piece?",
+      "lesson": "The finale is the moment of change—not a summary. It reveals what shifted, deepened, or crystallized. A strong ending feels earned: it echoes something from earlier while leaving space for reflection. Aim for resonance, not explanation."
+    },
+    {
+      "id": "form.sequence",
+      "category": "FORM",
+      "name": "Sequence",
+      "order": 7,
+      "starter": false,
+      "question": "What is the most effective order of moments?",
+      "lesson": "Sequence is about shaping the emotional and logical path. Changing the order of moments can change meaning. Experiment with beginnings—start at the end, in the middle, or with a microcosm. Sequence determines buildup and payoff."
+    },
+    {
+      "id": "form.cohesion",
+      "category": "FORM",
+      "name": "Cohesion",
+      "order": 8,
+      "starter": false,
+      "question": "What threads hold the whole piece together?",
+      "lesson": "Cohesion is unity—the sense that everything belongs. It comes from repeated images, questions, or ideas that return with variation. Identify your central thread and let it weave quietly across paragraphs. Cohesion turns fragments into a whole."
+    },
+    {
+      "id": "form.modularity",
+      "category": "FORM",
+      "name": "Modularity",
+      "order": 9,
+      "starter": false,
+      "question": "Which sections can stand alone or be rearranged?",
+      "lesson": "Modularity gives flexibility. Think of paragraphs as movable blocks that can be rearranged to test different structures. If a block feels weak, cut it. If it feels strong but misplaced, move it. Modularity empowers experimentation."
+    },
+    {
+      "id": "form.conflict",
+      "category": "FORM",
+      "name": "Conflict",
+      "order": 10,
+      "starter": false,
+      "question": "What internal or external pressures shape this piece?",
+      "lesson": "Conflict intensifies tension. It’s a pressure point—identity, belief, belonging, certainty. Even quiet conflicts (self-doubt, hesitation, discomfort) can deepen meaning. Clarify what force pushes against the character or idea."
+    },
+    {
+      "id": "form.threads",
+      "category": "FORM",
+      "name": "Threads",
+      "order": 11,
+      "starter": false,
+      "question": "Which recurring ideas, images, or moments return?",
+      "lesson": "Threads create rhythm and depth. They’re repeated elements that evolve as the essay progresses. Choose one or two threads—an image, phrase, or question—that gain meaning through repetition."
+    },
+    {
+      "id": "form.hook",
+      "category": "FORM",
+      "name": "Hook",
+      "order": 12,
+      "starter": false,
+      "question": "What opening line will make a reader lean in?",
+      "lesson": "A hook sparks curiosity. Begin with a surprising detail, contradiction, or emotional moment. Avoid generic statements. A good hook pulls the reader in and sets the emotional temperature for the entire piece."
+    },
+    {
+      "id": "voice.spirit",
+      "category": "VOICE",
+      "name": "Spirit",
+      "order": 1,
+      "starter": true,
+      "question": "What emotional core or human truth sits beneath this piece?",
+      "lesson": "Spirit is the heartbeat of the essay—the feeling at its center. It expresses why the idea matters to you and what human truth you’re exploring. Spirit isn’t plot or argument; it’s emotional gravity. Identify the core feeling early so every decision—tone, structure, imagery—aligns with it."
+    },
+    {
+      "id": "voice.sound",
+      "category": "VOICE",
+      "name": "Sound",
+      "order": 2,
+      "starter": true,
+      "question": "What tone or rhythm do you hear for this writing?",
+      "lesson": "Sound is tone and cadence. It’s how the writing feels in the ear: sharp or soft, fast or reflective, playful or somber. Reading aloud helps you catch rhythm and tone. Sound supports the emotional truth of the essay—let it be intentional."
+    },
+    {
+      "id": "voice.sight",
+      "category": "VOICE",
+      "name": "Sight",
+      "order": 3,
+      "starter": true,
+      "question": "What imagery helps the reader visualize the idea?",
+      "lesson": "Sight anchors the reader in sensory experience. A single strong image can make an abstract idea tangible. Use specific details that reveal emotion or meaning. Humans think in pictures—give them something to see."
+    },
+    {
+      "id": "voice.tone",
+      "category": "VOICE",
+      "name": "Tone",
+      "order": 4,
+      "starter": false,
+      "question": "What attitude toward the subject does the writing express?",
+      "lesson": "Tone is emotional coloring—warm, skeptical, amused, reverent, tense. Tone arises from word choice and pacing. Consistency matters, but intentional contrast can create nuance. Ask how you want the reader to feel moment by moment."
+    },
+    {
+      "id": "voice.perspective",
+      "category": "VOICE",
+      "name": "Perspective",
+      "order": 5,
+      "starter": false,
+      "question": "From what point of view is the story or argument told?",
+      "lesson": "Perspective is the lens of the essay. First-person is intimate; second-person is immersive; third-person offers distance. But perspective is also stance: Are you writing from memory, uncertainty, authority, or reflection? Perspective shapes meaning."
+    },
+    {
+      "id": "voice.subtext",
+      "category": "VOICE",
+      "name": "Subtext",
+      "order": 6,
+      "starter": false,
+      "question": "What is implied but never explicitly said?",
+      "lesson": "Subtext is the unspoken message beneath the surface. It appears in pauses, contradictions, repeated details, or what’s left out. Subtext invites readers to infer meaning rather than receiving it outright, adding depth and subtlety."
+    },
+    {
+      "id": "voice.repetition",
+      "category": "VOICE",
+      "name": "Repetition",
+      "order": 7,
+      "starter": false,
+      "question": "What idea or phrase returns to build meaning?",
+      "lesson": "Repetition creates pattern and emphasis. Each return should evolve—adding nuance, contrast, or emotional weight. Choose a phrase, image, or question that can grow as the essay unfolds. Subtle repetition strengthens voice."
+    },
+    {
+      "id": "voice.rhythm",
+      "category": "VOICE",
+      "name": "Rhythm",
+      "order": 8,
+      "starter": false,
+      "question": "How does sentence pacing create movement?",
+      "lesson": "Rhythm is musical flow—short sentences sharpen, long sentences stretch. A mix creates momentum. Rhythm should mirror emotion: tense moments feel clipped; reflective ones lengthen. Read your writing aloud to feel its beat."
+    },
+    {
+      "id": "voice.rhyme",
+      "category": "VOICE",
+      "name": "Rhyme",
+      "order": 9,
+      "starter": false,
+      "question": "Where do sounds or word patterns subtly repeat?",
+      "lesson": "Rhyme doesn’t mean poetry—it means sonic echoes: alliteration, consonance, internal rhyme. These patterns create subtle musicality. Use sparingly. Good rhyme should be felt, not noticed."
+    },
+    {
+      "id": "voice.imagery",
+      "category": "VOICE",
+      "name": "Imagery",
+      "order": 10,
+      "starter": false,
+      "question": "What sensory details bring the moment alive?",
+      "lesson": "Imagery uses sensory detail to make ideas experiential. Choose details that reveal emotion or tension. One strong sensory moment is more effective than a list of descriptors. Imagery turns abstract thought into lived reality."
+    },
+    {
+      "id": "voice.words",
+      "category": "VOICE",
+      "name": "Words",
+      "order": 11,
+      "starter": false,
+      "question": "Which words sharpen the meaning or feeling?",
+      "lesson": "Word choice shapes clarity and emotion. Strong essays use precise, vivid words—especially verbs. Replace vague language with specific detail. Words are your tools; choose the sharpest ones."
+    },
+    {
+      "id": "voice.motif",
+      "category": "VOICE",
+      "name": "Motif",
+      "order": 12,
+      "starter": false,
+      "question": "What recurring symbol or element gives the essay unity?",
+      "lesson": "A motif is a recurring symbol, idea, or image that gains significance through repetition. It deepens resonance and ties the essay together. Choose something small but meaningful—an object, gesture, or phrase—and let its meaning expand."
+    }
+  ]
+}

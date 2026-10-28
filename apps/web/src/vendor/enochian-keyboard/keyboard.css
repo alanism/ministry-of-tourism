@@ -1,0 +1,59 @@
+/* Enochian typing keyboard, copied unchanged from typing-keyboard/index.html.
+   Based on Enochian UI UX Elements by alanism / UnCommon Core
+   (https://github.com/alanism/Enochian-UI-UX-Elements).
+   Earlier upstream notice: CC BY-NC 4.0. Owner-authorized MIT code copy in MoT,
+   2026-10-28; see root LICENSE and THIRD_PARTY_NOTICES.md. Upstream unchanged. */
+/* Enochian typing keyboard — copy this scoped block with its markup and script. */
+.mk-rig,.mk-rig *{box-sizing:border-box}
+.mk-rig{--mk-deck-inset:4px;font-family:"IBM Plex Sans",Arial,sans-serif}
+.mk-rig{--mk-accent:#CC0000;--mk-case:#a8a8aa;--mk-case-high:#d6d6d8;--mk-case-low:#919194;--mk-cap:#e9e9eb;--mk-cap-high:#fafafa;--mk-cap-low:#c9c9cd;--mk-ink:#36363a;--mk-edge:#aeafb3;--mk-highlight:rgba(255,255,255,.85);--mk-dish:rgba(60,60,65,.18);--mk-light:.8;--mk-knob-high:#fff;--mk-knob-low:#e4e4e7;--mk-ring:#e4e4e7;--mk-tick:#333337;width:100%;min-width:0}
+.mk-rig[data-finish="obsidian"]{--mk-case:#555559;--mk-case-high:#727276;--mk-case-low:#424246;--mk-cap:#29292d;--mk-cap-high:#444448;--mk-cap-low:#19191c;--mk-ink:#f3f3f5;--mk-edge:#161619;--mk-highlight:rgba(255,255,255,.17);--mk-dish:rgba(0,0,0,.6);--mk-knob-high:#3b3b3f;--mk-knob-low:#171719;--mk-ring:#39393d;--mk-tick:#e1e1e4}
+.mk-toolbar{display:flex;justify-content:space-between;gap:12px;margin:0 0 16px;flex-wrap:wrap}
+.mk-finishes,.mk-actions{display:flex;gap:5px}
+.mk-toolbar button{min-width:64px;min-height:44px;padding:8px 14px;border:1px solid #d0d0d4;border-radius:4px;background:transparent;color:#4d4d52;font:600 10px "IBM Plex Mono",monospace;letter-spacing:.8px;cursor:pointer}
+.mk-toolbar button[aria-pressed="true"]{background:#252527;color:#fff;border-color:#252527}
+.mk-toolbar button:focus-visible,.mk-scroll:focus-visible{outline:2px solid var(--mk-accent);outline-offset:3px}
+.mk-output{display:block;resize:vertical;width:100%;min-height:82px;max-height:240px;margin:0 0 26px;padding:18px 22px;border:1px solid #d2d2d6;border-radius:9px;color:#303034;background:#fff;box-shadow:inset 0 2px 5px rgba(0,0,0,.045);font:15px/1.6 "IBM Plex Mono",monospace;caret-color:var(--mk-accent)}
+.mk-output::placeholder{color:#74747a}
+.mk-output:focus{outline:2px solid var(--mk-accent);outline-offset:2px}
+.mk-scroll{width:100%;overflow-x:auto;padding:14px 4px 40px;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#99999f transparent}
+.mk-board{position:relative;display:grid;grid-template-columns:60fr 4fr;gap:6px;aspect-ratio:2.54;width:100%;min-width:1020px;padding:15px;border-radius:21px;border:1px solid #818186;background:linear-gradient(155deg,var(--mk-case-high),var(--mk-case) 32%,var(--mk-case-low));box-shadow:inset 0 1px 2px #fff,inset 0 -2px 2px rgba(0,0,0,.25),0 5px 0 #747479,0 21px 28px -9px rgba(0,0,0,.29),0 40px 40px -25px rgba(0,0,0,.18);isolation:isolate}
+.mk-board:focus-visible{outline:3px solid var(--mk-accent);outline-offset:6px}
+.mk-board::before{content:"";position:absolute;width:13px;height:5px;top:-5px;left:6%;background:var(--mk-accent);border-radius:2px 2px 0 0;box-shadow:inset 0 1px 1px rgba(255,255,255,.4)}
+.mk-keys{display:grid;grid-template-columns:repeat(60,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr));gap:6px;padding:var(--mk-deck-inset);border-radius:8px;background:#19191c;box-shadow:0 0 0 1px #75757a,inset 0 2px 5px #050506;min-height:0}
+.mk-key{position:relative;min-width:0;min-height:0;padding:0;border:1px solid var(--mk-edge);border-radius:7px;background:linear-gradient(150deg,var(--mk-cap-high),var(--mk-cap) 42%,var(--mk-cap-low));color:var(--mk-ink);font:400 13px "IBM Plex Sans",Arial,sans-serif;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 #707076,0 4px 5px rgba(0,0,0,.6),inset 0 1px 1px var(--mk-highlight);transition:transform 90ms ease,box-shadow 90ms ease;user-select:none;-webkit-user-select:none}
+.mk-key::before{content:"";position:absolute;inset:5px 5px 7px;border-radius:9px;background:radial-gradient(ellipse at 50% 40%,var(--mk-cap) 30%,var(--mk-cap-low) 100%);box-shadow:inset 3px 4px 6px var(--mk-dish),inset -3px -3px 5px var(--mk-highlight),0 1px 2px var(--mk-highlight);pointer-events:none}
+.mk-key[data-accent]{--mk-cap:#CC0000;--mk-cap-high:#e93939;--mk-cap-low:#930000;--mk-edge:#6d0000;--mk-ink:#fff;--mk-highlight:rgba(255,255,255,.28);--mk-dish:rgba(75,0,0,.35);box-shadow:0 3px 0 #650000,0 4px 5px rgba(0,0,0,.6),inset 0 1px 1px var(--mk-highlight)}
+.mk-key[data-down="true"]{transform:translateY(3px);box-shadow:0 0 0 #555,0 1px 2px rgba(0,0,0,.6),inset 0 3px 5px var(--mk-dish)}
+.mk-key:focus-visible{outline:2px solid var(--mk-accent);outline-offset:2px;z-index:3}
+.mk-key[aria-pressed="true"] .mk-primary::after{content:"";position:absolute;left:50%;top:20px;width:5px;height:5px;border-radius:50%;background:var(--mk-accent)}
+.mk-primary,.mk-secondary{position:absolute;left:0;right:0;z-index:1;text-align:center;pointer-events:none}
+.mk-primary{top:22%;line-height:1.1}.mk-secondary{bottom:23%;font-size:12px;line-height:1;opacity:.88}
+.mk-key[data-wide] .mk-primary{top:31%}
+.mk-key[data-code="Space"] .mk-primary{display:none}
+.mk-key[data-code="KeyF"]::after,.mk-key[data-code="KeyJ"]::after{content:"";position:absolute;bottom:14%;left:35%;right:35%;height:3px;border-radius:3px;background:var(--mk-cap-high);box-shadow:0 1px 2px rgba(0,0,0,.38);pointer-events:none}
+.mk-enter{clip-path:polygon(0 0,100% 0,100% 100%,21% 100%,21% 49%,0 49%);border-radius:7px}
+.mk-enter::before{inset:5px 5px 7px;clip-path:polygon(0 0,100% 0,100% 100%,21% 100%,21% 49%,0 49%);border-radius:8px}
+.mk-enter .mk-primary{top:13%;left:10%}
+.mk-arrow .mk-primary{top:36%}
+.mk-icon{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle}
+.mk-meta{font-weight:600;font-size:16px}
+.mk-rail{display:grid;grid-template-rows:repeat(6,minmax(0,1fr));gap:6px;min-width:0;min-height:0;padding:var(--mk-deck-inset) var(--mk-deck-inset) var(--mk-deck-inset) 0;margin-left:calc(0px - var(--mk-deck-inset))}
+.mk-dial{position:relative;touch-action:none;cursor:grab;min-width:0;min-height:0;align-self:center;justify-self:center;aspect-ratio:1;height:100%;width:auto;max-width:100%;border-radius:50%;--mk-angle:-27deg}
+.mk-dial:active{cursor:grabbing}.mk-dial:focus-visible{outline:2px solid var(--mk-accent);outline-offset:2px}
+.mk-ticks{position:absolute;inset:0;overflow:visible;pointer-events:none;color:var(--mk-tick)}
+.mk-base{position:absolute;inset:8%;border-radius:50%;background:linear-gradient(145deg,var(--mk-knob-high),var(--mk-ring) 75%);border:1px solid #d2d2d5;box-shadow:3px 5px 7px rgba(0,0,0,.3),inset 0 1px 1px var(--mk-highlight)}
+.mk-knob{position:absolute;inset:24%;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--mk-knob-high),var(--mk-knob-low) 75%);box-shadow:3px 4px 5px rgba(0,0,0,.32),inset 0 1px 1px var(--mk-highlight);transform:rotate(var(--mk-angle));pointer-events:none}
+.mk-marker{position:absolute;left:50%;top:13%;width:3px;height:10px;border-radius:3px;background:var(--mk-accent);transform:translateX(-50%)}
+.mk-dot .mk-marker{width:5px;height:5px;top:14%;border-radius:50%}
+.mk-screen{grid-row:3/span 3;position:relative;overflow:hidden;border:1px solid #d3d3d5;border-radius:19px;padding:5px;background:#0e0e10;box-shadow:0 0 0 2px #363639,inset 0 1px 2px #050506}
+.mk-illumination{position:absolute;inset:5px;border-radius:14px;background:linear-gradient(180deg,var(--mk-accent),#ed9494 42%,#f4f4f6 94%);opacity:var(--mk-light);transition:opacity 160ms ease;pointer-events:none}
+.mk-clock{position:relative;border-radius:13px;background:#0b0b0d;color:#fff;min-height:42px;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:7px 0;line-height:1.2}
+.mk-clock time{font-size:19px;font-weight:500;letter-spacing:-.8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mk-clock small{font-size:7px;white-space:nowrap;color:#dedee2;margin-top:2px}
+.mk-rail>.mk-key{grid-row:6}
+.mk-status{display:flex;justify-content:space-between;gap:14px;margin-top:0;font:11px/1.7 "IBM Plex Mono",monospace;color:#5b5b62}
+.mk-status [data-keyboard-status]{color:#29292e}
+.mk-pan-hint{display:none}
+@media(max-width:1070px){.mk-pan-hint{display:inline}.mk-status{flex-wrap:wrap}.mk-output{font-size:14px}.mk-key{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.mk-rig *{transition:none!important}}

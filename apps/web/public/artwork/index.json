@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "styles": [
+    {
+      "id": "fcc-editorial",
+      "label": "FCC · Fashion, travel & lifestyle",
+      "manifest": "/artwork/fcc/manifest.json"
+    }
+  ]
+}

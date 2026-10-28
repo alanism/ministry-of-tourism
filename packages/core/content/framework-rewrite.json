@@ -1,0 +1,318 @@
+{
+  "status": "draft",
+  "note": "Proposed wording for review. Names, categories and order do not change. Apply with `node scripts/apply-rewrite.ts` once approved.",
+  "cards": [
+    {
+      "id": "nouns.character",
+      "question": "Who is in this piece, and why do they matter?",
+      "lesson": "People make ideas stick. Pick one or two traits or moments that tie this person to your point; they don't need a life story. Ask what they want, fear, misunderstand or reveal.",
+      "tips": [
+        { "coach": "storyteller", "tip": "Show them through what they do, not what they think." },
+        { "coach": "read-aloud-coach", "tip": "Name your character right away." }
+      ]
+    },
+    {
+      "id": "nouns.setting",
+      "question": "Where does this happen, and how does the place feel?",
+      "lesson": "Setting gives readers somewhere to stand. A few sharp details beat a full panorama. Ask what the place sounds, smells and feels like, and what tension hangs in the air.",
+      "tips": [{ "coach": "storyteller", "tip": "Colors, sounds and smells pull readers into the scene." }]
+    },
+    {
+      "id": "nouns.object",
+      "question": "What thing carries meaning, tension or memory?",
+      "lesson": "Objects hold stories: a chipped mug, an old photo, a cracked screen. Choose something kept, lost, broken or found that touches the heart of your piece. Ask why it matters and what it quietly reveals.",
+      "tips": []
+    },
+    {
+      "id": "nouns.desire",
+      "question": "What does the character want most?",
+      "lesson": "Desire gives a piece direction. It can be small: approval, safety, an answer. Once readers know what someone wants, they understand what is at stake.",
+      "tips": []
+    },
+    {
+      "id": "nouns.obstacle",
+      "question": "What stands in the way of what they want?",
+      "lesson": "An obstacle pushes back against desire. It can be a person, a rule, a place or a doubt inside. Name the exact force in the way, and the stakes become clear.",
+      "tips": []
+    },
+    {
+      "id": "nouns.role",
+      "question": "What job does this character do in your idea?",
+      "lesson": "Every character should earn their place. Are they a mirror, a warning, a spark or a contradiction? Naming their role keeps them from being decoration.",
+      "tips": []
+    },
+    {
+      "id": "nouns.time",
+      "question": "When does this happen, and why does that moment matter?",
+      "lesson": "Time colors meaning. Midnight feels different from morning, and childhood different from now. Pick the moment when this matters most and let readers know when they are.",
+      "tips": []
+    },
+    {
+      "id": "nouns.weather",
+      "question": "What conditions in the air set the mood?",
+      "lesson": "Weather works like background music. Rain can mean tension or relief, heat means pressure, and cold means distance or clarity. One strong detail is enough.",
+      "tips": []
+    },
+    {
+      "id": "nouns.texture",
+      "question": "What would this moment feel like to touch?",
+      "lesson": "Touch makes writing physical: rough pavement, soft wool, cold metal, sticky air. One detail of texture pulls an idea out of your head and into the reader's body.",
+      "tips": [{ "coach": "storyteller", "tip": "Keep it physical and outside the character's head." }]
+    },
+    {
+      "id": "nouns.symbol",
+      "question": "What detail stands for something bigger?",
+      "lesson": "A symbol is a detail that means more than itself, like a locked door for fear. The best symbols come from things already in your material. Let the meaning grow each time it returns.",
+      "tips": [{ "coach": "storyteller", "tip": "Every detail should reflect the theme." }]
+    },
+    {
+      "id": "nouns.tool",
+      "question": "What is someone using in this moment?",
+      "lesson": "Tools show people doing things: a notebook, a broom, a map, a laptop. A tool in someone's hand moves the moment forward without extra explanation.",
+      "tips": []
+    },
+    {
+      "id": "nouns.artifact",
+      "question": "What object from the past still shapes the present?",
+      "lesson": "Artifacts carry memory: photos, receipts, medals, letters. They can spark reflection or reveal something unresolved. They make strong openings because they hold both a story and a symbol.",
+      "tips": []
+    },
+    {
+      "id": "idea.material",
+      "question": "What memories, facts or experiences feed this idea?",
+      "lesson": "Material is raw clay. Collect freely and don't edit yet. Ask what stayed with you, what bothered you and what won't leave your mind. A clear thesis grows out of honest, vivid material.",
+      "tips": [
+        { "coach": "essay-architect", "tip": "Draw on your own life, your inner reflection and the wider world." },
+        { "coach": "explainer", "tip": "Save stray curiosities and let them sit until they connect." }
+      ]
+    },
+    {
+      "id": "idea.thesis",
+      "question": "What one idea must your reader take away?",
+      "lesson": "Your thesis is the center everything else turns around. It is a claim, not a topic: specific, with a point of view and some tension. Write a working version now and sharpen it as you go.",
+      "tips": [
+        { "coach": "essay-architect", "tip": "Make it concrete, contextual and catalytic." },
+        { "coach": "explainer", "tip": "Find the silent question in your reader's head, and answer it." }
+      ]
+    },
+    {
+      "id": "idea.title",
+      "question": "What phrase captures the heart of the piece?",
+      "lesson": "A title is a promise. Skip plain labels and try a surprising phrase, a contrast, or a concrete thing paired with a big idea. Good titles often arrive last, once you know what the piece is really about.",
+      "tips": [{ "coach": "essay-architect", "tip": "Aim for mystery, the right reader and a good sound." }]
+    },
+    {
+      "id": "idea.experience",
+      "question": "What moment you lived shows this idea?",
+      "lesson": "One concrete moment can explain more than a page of argument. Pick an episode with feeling or contradiction in it. Ask when you first noticed this, and use that moment as an anchor, not decoration.",
+      "tips": []
+    },
+    {
+      "id": "idea.argument",
+      "question": "What case are you building?",
+      "lesson": "Argument is the logic under your idea. It is clarity, not a fight. Name your main claim, then the reasons and examples that hold it up, step by step, until the conclusion feels natural.",
+      "tips": []
+    },
+    {
+      "id": "idea.references",
+      "question": "What outside sources or voices support your idea?",
+      "lesson": "References add context and credibility: books, studies, conversations, history. Choose a few that sharpen your point or add contrast, not a pile that buries it.",
+      "tips": [{ "coach": "storyteller", "tip": "Keep one card per source: theme on top, details and page number below." }]
+    },
+    {
+      "id": "idea.microcosm",
+      "question": "What small example shows a much bigger truth?",
+      "lesson": "A microcosm is the tiny story that reveals the big one: one gesture, one festival, one person. Zooming in tight gives you the detail that makes a large idea believable.",
+      "tips": [{ "coach": "essay-architect", "tip": "Zoom in on one thing instead of describing the whole view." }]
+    },
+    {
+      "id": "idea.response",
+      "question": "How do you answer this idea or moment?",
+      "lesson": "Your response is the meaning you make: what surprised, confused or moved you, or what you would say back to an idea already out in the world. It shows your point of view.",
+      "tips": []
+    },
+    {
+      "id": "idea.catalyst",
+      "question": "What moment changed your thinking?",
+      "lesson": "A catalyst is the moment your understanding shifted. It can be small or unexpected. Finding it shows the arc of your thinking, and a good one can shift your reader's thinking too.",
+      "tips": []
+    },
+    {
+      "id": "idea.mystery",
+      "question": "What question is still unanswered?",
+      "lesson": "Mystery tells readers the idea is bigger than the page. Name what you still don't know. An open question invites curiosity instead of forcing a neat ending.",
+      "tips": [{ "coach": "storyteller", "tip": "Don't reveal where you're headed too early." }]
+    },
+    {
+      "id": "idea.target",
+      "question": "What exactly are you aiming at, and who is it for?",
+      "lesson": "Target narrows your aim so you know what belongs and what doesn't. Name the exact focus and the reader you're writing for. A sharp target makes every paragraph feel intentional.",
+      "tips": [
+        { "coach": "read-aloud-coach", "tip": "Match words, lines and length to your reader's age." },
+        { "coach": "explainer", "tip": "Interesting means new and important to that reader." }
+      ]
+    },
+    {
+      "id": "idea.phonetics",
+      "question": "What word or phrase sounds like your idea?",
+      "lesson": "Sound carries meaning. A well-chosen phrase can match the mood of your thesis: smooth or sharp, quick or slow. Try alliteration, or read your central sentence aloud and listen.",
+      "tips": [{ "coach": "rhetorician", "tip": "Alliteration makes even a plain phrase stick." }]
+    },
+    {
+      "id": "form.paragraphs",
+      "question": "What chunks of meaning could each be a paragraph?",
+      "lesson": "A paragraph holds one idea, moment or turn. Break your thinking into natural chunks before you polish. If someone read only the first line of each paragraph, they should still see the shape of the piece.",
+      "tips": [{ "coach": "essay-architect", "tip": "Each paragraph needs a hook to enter and a punchline to leave." }]
+    },
+    {
+      "id": "form.structure",
+      "question": "In what order should these parts go?",
+      "lesson": "Structure decides how readers move through your ideas. You can go by time, by logic, by feeling, or backward. Decide where to start and where to land. Good structure feels obvious afterward and surprising along the way.",
+      "tips": [{ "coach": "essay-architect", "tip": "Draft first, then find the structure; don't copy a template." }]
+    },
+    {
+      "id": "form.tension",
+      "question": "What forces push against each other here?",
+      "lesson": "Tension is friction: belief against reality, desire against fear, old self against new. Even quiet pieces need it. Find the central opposition and let it run through the whole piece.",
+      "tips": [{ "coach": "essay-architect", "tip": "Look for intention, obstacle and consequence." }]
+    },
+    {
+      "id": "form.frame",
+      "question": "How will you open and close the piece?",
+      "lesson": "The frame is the way in and the way out. A strong opening sets the tone or raises a question, and a strong ending comes back to it with deeper understanding. Let the first and last images echo.",
+      "tips": []
+    },
+    {
+      "id": "form.flow",
+      "question": "How does each part lead into the next?",
+      "lesson": "Flow is how ideas move from one to the next. Use transitions, sentence rhythm and rising feeling to carry readers along. If a jump feels sudden, add a bridge or change the order.",
+      "tips": []
+    },
+    {
+      "id": "form.finale",
+      "question": "What shift happens at the end?",
+      "lesson": "The finale is a change, not a summary. Show what shifted, deepened or came clear. A strong ending feels earned: it echoes something from earlier and leaves room to think.",
+      "tips": [
+        { "coach": "read-aloud-coach", "tip": "Write the last page first." },
+        { "coach": "rhetorician", "tip": "Let the key line land after the build-up." }
+      ]
+    },
+    {
+      "id": "form.sequence",
+      "question": "What order of moments works best?",
+      "lesson": "Order changes meaning. Try starting at the end, in the middle, or with one small telling moment. Sequence controls the build-up and the payoff.",
+      "tips": []
+    },
+    {
+      "id": "form.cohesion",
+      "question": "What holds the whole piece together?",
+      "lesson": "Cohesion is the feeling that everything belongs. It comes from images, questions or ideas that return with a twist. Find your central thread and weave it quietly through every section.",
+      "tips": [{ "coach": "essay-architect", "tip": "Every paragraph should answer a question that serves the thesis." }]
+    },
+    {
+      "id": "form.modularity",
+      "question": "Which parts could stand alone or move around?",
+      "lesson": "Treat paragraphs as blocks you can rearrange to test different structures. If a block is weak, cut it. If it is strong but in the wrong place, move it.",
+      "tips": []
+    },
+    {
+      "id": "form.conflict",
+      "question": "What pressures push on the character or idea?",
+      "lesson": "Conflict is pressure: identity, belief, belonging, certainty. Quiet conflicts like doubt or hesitation count too. Name what pushes against your character or idea.",
+      "tips": [{ "coach": "storyteller", "tip": "Choose moments with real stakes." }]
+    },
+    {
+      "id": "form.threads",
+      "question": "What ideas, images or moments keep coming back?",
+      "lesson": "Threads are repeated elements that change as the piece goes on. Choose one or two, such as an image, a phrase or a question, and let them gain meaning each time they return.",
+      "tips": []
+    },
+    {
+      "id": "form.hook",
+      "question": "What opening will make a reader lean in?",
+      "lesson": "A hook sparks curiosity. Start with a surprising detail, a contradiction or a moment of feeling, not a general statement. It sets the emotional temperature for everything after.",
+      "tips": [
+        { "coach": "storyteller", "tip": "Open with a story, not an abstraction." },
+        { "coach": "rhetorician", "tip": "Your first paragraph sets the voice readers will hear." }
+      ]
+    },
+    {
+      "id": "voice.spirit",
+      "question": "What feeling or human truth sits under this piece?",
+      "lesson": "Spirit is the heartbeat: the feeling at the center and why it matters to you. It isn't plot or argument. Find it early so tone, structure and images all line up with it.",
+      "tips": []
+    },
+    {
+      "id": "voice.sound",
+      "question": "What tone and rhythm do you hear in this writing?",
+      "lesson": "Sound is how writing feels in the ear: sharp or soft, fast or slow, playful or serious. Read it aloud to hear it, and make sure it fits what you mean.",
+      "tips": [
+        { "coach": "rhetorician", "tip": "If it doesn't sound good aloud, it isn't finished." },
+        { "coach": "read-aloud-coach", "tip": "If a reader stumbles, change it." }
+      ]
+    },
+    {
+      "id": "voice.sight",
+      "question": "What image helps the reader see your idea?",
+      "lesson": "People think in pictures. One strong, specific image can make an abstract idea real. Choose details that show feeling or meaning, and give readers something to see.",
+      "tips": [{ "coach": "storyteller", "tip": "Give one sight, one sound and one action." }]
+    },
+    {
+      "id": "voice.tone",
+      "question": "What attitude toward the subject does the writing show?",
+      "lesson": "Tone is emotional color: warm, doubtful, amused, respectful, tense. It comes from word choice and pace. Keep it steady or shift it on purpose, and ask how you want readers to feel at each moment.",
+      "tips": [{ "coach": "storyteller", "tip": "Present, don't judge; let readers decide." }]
+    },
+    {
+      "id": "voice.perspective",
+      "question": "From whose point of view is this told?",
+      "lesson": "Perspective is the lens. First person feels close, second person pulls readers in, and third person gives distance. It is also your stance: are you writing from memory, doubt, authority or reflection?",
+      "tips": []
+    },
+    {
+      "id": "voice.subtext",
+      "question": "What is meant but never said?",
+      "lesson": "Subtext is the message under the surface. It shows in pauses, contradictions, repeated details and what is left out. Letting readers work it out gives the piece depth.",
+      "tips": [{ "coach": "storyteller", "tip": "Held-back feeling is stronger than venting." }]
+    },
+    {
+      "id": "voice.repetition",
+      "question": "What idea or phrase comes back to build meaning?",
+      "lesson": "Repetition creates pattern and emphasis. Each return should add something: a new shade, a contrast, more weight. Pick a phrase, image or question that can grow as the piece goes on.",
+      "tips": [{ "coach": "rhetorician", "tip": "Try three beats, or end lines on the same word." }]
+    },
+    {
+      "id": "voice.rhythm",
+      "question": "How does the pace of your sentences create movement?",
+      "lesson": "Short sentences sharpen. Long sentences stretch and carry. Mix them to keep momentum, and match the pace to the feeling: clipped when tense, longer when reflective.",
+      "tips": [
+        { "coach": "rhetorician", "tip": "Read it aloud to feel the beat." },
+        { "coach": "read-aloud-coach", "tip": "For young readers, the rhythm must never trip." }
+      ]
+    },
+    {
+      "id": "voice.rhyme",
+      "question": "Where do sounds or patterns quietly echo?",
+      "lesson": "Rhyme isn't only for poems. It is any echo of sound: alliteration, matching consonants, rhymes inside a line. Use it lightly; good rhyme is felt more than noticed.",
+      "tips": [{ "coach": "read-aloud-coach", "tip": "Use pure end rhymes, and invent a word if you're stuck." }]
+    },
+    {
+      "id": "voice.imagery",
+      "question": "What sensory details bring the moment to life?",
+      "lesson": "Imagery turns ideas into experience. One strong sensory moment beats a list of descriptions. Choose details that carry feeling or tension.",
+      "tips": [{ "coach": "storyteller", "tip": "Colors, sounds and smells." }]
+    },
+    {
+      "id": "voice.words",
+      "question": "Which words make the meaning sharper?",
+      "lesson": "Precise, vivid words, especially verbs, do the heavy lifting. Swap vague words for specific ones. Big words aren't smart; clear ones are.",
+      "tips": [{ "coach": "explainer", "tip": "Simple is smart. Cut the jargon." }]
+    },
+    {
+      "id": "voice.motif",
+      "question": "What recurring symbol or element ties the piece together?",
+      "lesson": "A motif is a symbol, idea or image that gains meaning each time it appears. Choose something small, like an object, a gesture or a phrase, and let it grow across the piece.",
+      "tips": []
+    }
+  ]
+}

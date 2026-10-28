@@ -1,0 +1,44 @@
+{
+  "coaches": [
+    {
+      "id": "essay-architect",
+      "role": "Essay Architect",
+      "dimension": "Structure",
+      "question": "How does it move?",
+      "sourceKey": "Dean",
+      "file": "Michael_Dean_essay_architecture_lens.md"
+    },
+    {
+      "id": "explainer",
+      "role": "Explainer",
+      "dimension": "Meaning",
+      "question": "What are you trying to say?",
+      "sourceKey": "Thompson",
+      "file": "Derek_Thompson_journalism_lens.md"
+    },
+    {
+      "id": "rhetorician",
+      "role": "Rhetorician",
+      "dimension": "Memory",
+      "question": "What will stick?",
+      "sourceKey": "Forsyth",
+      "file": "Mark_Forsyth_rhetoric_lens.md"
+    },
+    {
+      "id": "storyteller",
+      "role": "Storyteller",
+      "dimension": "Scene",
+      "question": "What can the reader experience?",
+      "sourceKey": "Greene",
+      "file": "Robert_Greene_historical_narratives_lens.md"
+    },
+    {
+      "id": "read-aloud-coach",
+      "role": "Read-Aloud Coach",
+      "dimension": "Sound",
+      "question": "How does it land in the ear?",
+      "sourceKey": "Rabe",
+      "file": "Tish_Rabe_childrens_books_lens.md"
+    }
+  ]
+}

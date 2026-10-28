@@ -1,0 +1,27 @@
+.dialog.artwork-picker { width: min(820px, 100%); }
+.artwork-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.artwork-heading button, .artwork-message button, .artwork-pagination button { padding: 7px 12px; border: 1px solid var(--line); border-radius: 5px; background: var(--white); color: var(--ink); cursor: pointer; }
+.artwork-picker .dialog-note { margin-top: 6px; }
+.artwork-style { max-width: 320px; }
+.artwork-filters { display: flex; flex-wrap: wrap; gap: 12px; }
+.artwork-filters .field { flex: 1 1 150px; min-width: 0; }
+.artwork-filters select, .artwork-filters input { width: 100%; min-width: 0; }
+.artwork-count { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+.artwork-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.artwork-tile { display: flex; flex-direction: column; gap: 8px; padding: 8px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--white); color: var(--ink); cursor: pointer; text-align: left; }
+.artwork-tile:hover { border-color: var(--ink); background: var(--wash); }
+.artwork-preview { height: 132px; width: 100%; display: flex; justify-content: center; align-items: center; overflow: hidden; background: var(--paper); border-radius: 4px; }
+.artwork-crop { display: block; position: relative; overflow: hidden; height: 100%; max-width: 100%; }
+.artwork-crop img { position: absolute; max-width: none; object-fit: fill; }
+.artwork-label { font: 500 12px/1.35 var(--ui); overflow-wrap: anywhere; }
+.artwork-message { padding: 24px 0; color: var(--muted); }
+.artwork-thumb-error { font-size: 11px; color: var(--muted); }
+.artwork-notice { padding: 8px 12px; background: var(--wash); border-radius: 5px; }
+.artwork-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; font-size: 12px; }
+@media (max-width: 600px) {
+  .dialog.artwork-picker { padding: 16px; }
+  .artwork-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .artwork-preview { height: 126px; }
+  .artwork-filters .field { flex-basis: calc(50% - 6px); }
+  .artwork-filters .artwork-search { flex-basis: 100%; }
+}

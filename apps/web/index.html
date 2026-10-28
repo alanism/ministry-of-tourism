@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Writer's Board</title>
+    <meta name="description" content="A whiteboard for planning and writing that a person and an AI agent can share. Notes for AI agents are at /agents.md." />
+    <link rel="alternate" type="text/markdown" href="/agents.md" title="Notes for AI agents" />
+    <style>
+      /* A small, quiet note for AI agents. People don't need it, so it stays folded. */
+      .agent-notes { position: fixed; left: 6px; bottom: 2px; z-index: 6; font: 10px/1.2 'IBM Plex Mono', ui-monospace, monospace; color: #4d4d4d; }
+      .agent-notes[open] { z-index: 25; }
+      .agent-notes summary { padding: 2px 6px; opacity: 0.7; cursor: pointer; list-style: none; }
+      .agent-notes summary::-webkit-details-marker { display: none; }
+      .agent-notes summary:hover, .agent-notes[open] summary { opacity: 1; }
+      .agent-notes summary:focus-visible { outline: 2px solid #cc0000; outline-offset: 1px; }
+      .agent-notes-body { position: absolute; left: 0; bottom: 100%; width: min(640px, calc(100vw - 16px)); max-height: 70vh; overflow: auto; padding: 4px 18px 14px; background: #fff; color: #000; border: 1px solid #9a9a9a; border-radius: 6px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14); font: 13px/1.55 'IBM Plex Sans', system-ui, sans-serif; }
+      .agent-notes-body h2 { margin: 14px 0 4px; font: 500 20px 'IBM Plex Serif', Georgia, serif; }
+      .agent-notes-body h3 { margin: 16px 0 4px; font: 600 11px 'IBM Plex Mono', monospace; letter-spacing: 0.12em; text-transform: uppercase; color: #4d4d4d; }
+      .agent-notes-body p, .agent-notes-body ul, .agent-notes-body ol { margin: 4px 0 8px; }
+      .agent-notes-body code { font: 12px 'IBM Plex Mono', monospace; background: #f4f2ee; padding: 0 3px; border-radius: 3px; }
+      .agent-notes-body a { color: #cc0000; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!--agent-notes-->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,66 @@
+// Real-browser acceptance path. Supply a locally installed Playwright or MOT_PLAYWRIGHT_MODULE.
+const {chromium}=require(process.env.MOT_PLAYWRIGHT_MODULE||'playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const { createTripThroughDestination, exportThroughSurface } = require('./mot-browser-contracts.cjs');
+const origin=process.env.MOT_TEST_ORIGIN||'http://127.0.0.1:5173';
+const evidence=process.env.MOT_EVIDENCE_DIR||path.join(require('node:os').tmpdir(),'mot-integration-evidence');
+fs.mkdirSync(evidence,{recursive:true});
+(async()=>{
+  const browser=await chromium.launch({headless:true,chromiumSandbox:true});
+  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
+  const page=await context.newPage(),errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  try {
+    await page.goto(origin+'/?view=trip');
+    await createTripThroughDestination(page, { city: 'San Sebastián' });
+    const initial=await page.evaluate(()=>({probe:window.motTrip.probe(),read:window.motTrip.read(),writer:!!window.writersBoard}));
+    assert.equal(initial.writer,false);
+    assert.equal(initial.read.cards.length,0,'New destination must not contain sample Bangkok cards');
+    assert.equal(initial.read.meta.city,'San Sebastián');
+    const dbs=await page.evaluate(async()=> (await indexedDB.databases()).map(db=>db.name));
+    assert(!dbs.some(name=>name.startsWith('writers-board:')),'Trip route initialized a hidden writer board');
+    await page.getByLabel('New card title').fill('A personal note');
+    await page.getByRole('button',{name:'Add card',exact:true}).click();
+    const later=await page.evaluate(()=>window.motTrip.probe());
+    assert.equal(later.boardId,initial.probe.boardId);assert(later.revision>initial.probe.revision);
+    await page.getByRole('button',{name:'Composition',exact:true}).click();
+    await page.screenshot({path:path.join(evidence,'composition-desktop.png')});
+    const uiPdf = await exportThroughSurface(page, 'pdf');
+    const pdfDownloadEvent = page.waitForEvent('download');
+    await uiPdf.card.getByRole('button', { name: 'Download', exact: true }).click();
+    const pdfDownload = await pdfDownloadEvent;
+    await pdfDownload.saveAs(path.join(evidence, 'surface-magazine.pdf'));
+    assert.equal(fs.statSync(path.join(evidence, 'surface-magazine.pdf')).size, uiPdf.receipt.bytes);
+    assert(fs.readFileSync(path.join(evidence, 'surface-magazine.pdf')).subarray(0, 8).toString().startsWith('%PDF-'));
+    const uiZip = await exportThroughSurface(page, 'zip');
+    const zipDownloadEvent = page.waitForEvent('download');
+    await uiZip.card.getByRole('button', { name: 'Download', exact: true }).click();
+    const zipDownload = await zipDownloadEvent;
+    await zipDownload.saveAs(path.join(evidence, 'surface-package.mot.zip'));
+    assert.equal(fs.statSync(path.join(evidence, 'surface-package.mot.zip')).size, uiZip.receipt.bytes);
+    assert.equal(fs.readFileSync(path.join(evidence, 'surface-package.mot.zip')).subarray(0, 2).toString(), 'PK');
+    await page.screenshot({ path: path.join(evidence, 'export-desktop.png') });
+    const artifact=await page.evaluate(async()=>{
+      const receipt=await window.motTrip.exportArtifact('pdf');
+      const response=await fetch(receipt.url),bytes=await response.arrayBuffer();
+      return {receipt,header:new TextDecoder().decode(bytes.slice(0,8)),actualBytes:bytes.byteLength};
+    });
+    assert(artifact.header.startsWith('%PDF-'));assert.equal(artifact.actualBytes,artifact.receipt.byteCount);
+    assert.equal(artifact.receipt.scope, 'stay', 'Agent export must remain shared');
+    await page.reload();
+    await page.getByRole('button',{name:'Composition',exact:true}).waitFor();
+    assert.equal(await page.evaluate(()=>window.motTrip.read().cards.length),1,'Durable reload lost the note');
+    await page.setViewportSize({width:375,height:812});
+    await page.screenshot({path:path.join(evidence,'trip-mobile.png')});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),375,'Mobile document overflows');
+    const writer=await context.newPage();writer.on('pageerror',error=>errors.push(error.message));
+    await writer.goto(origin+'/?view=agent');await writer.locator('[data-agent-view="board"]').waitFor();
+    assert.equal(await writer.evaluate(()=>typeof window.writersBoard?.tools),'function');
+    await writer.goto(origin+'/?view=board');await writer.locator('.app .stage').waitFor();
+    await writer.close();
+    assert.deepEqual(errors,[]);
+    fs.writeFileSync(path.join(evidence,'browser-result.json'),JSON.stringify({origin,initial,later,dbs,artifact,uiPdf:uiPdf.receipt,uiZip:uiZip.receipt,writerAndAgentRoutes:true,errors},null,2));
+  } finally {await browser.close();}
+})().catch(error=>{console.error(error);process.exitCode=1;});
