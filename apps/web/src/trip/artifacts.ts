@@ -80,7 +80,7 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
       const context=canvas.getContext('2d');if(!context)throw new Error('This browser could not render the PDF.');
       context.drawImage(image,0,0);
       const pixels=context.getImageData(0,0,canvas.width,canvas.height);
-      pages.push({...rgbPdfImage(pixels.data,canvas.width,canvas.height),pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links});
+      pages.push({...rgbPdfImage(pixels.data,canvas.width,canvas.height),pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links,label:page.pattern});
       onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:false});
     }finally{URL.revokeObjectURL(url);}
   }

@@ -177,7 +177,8 @@ describe('R4 real editorial spreads',()=>{
   it('warns about effective cropped resolution rather than calling a large cropped original print-ready',()=>{
     const session=fixture();session.doc.getMap('tripPresentations').set('crop',{id:'crop',boardId:session.boardId,assetId:'cropped',magazineRole:'backdrop',x:0,y:0,width:1,height:1,crop:[.1,.1,.1,.1],rotation:0,zIndex:0,locked:false,scope:'guide'});
     const issue=buildMagazine(session.doc,{assetUrls:new Map([['cropped',png]]),assetDimensions:new Map([['cropped',{width:5000,height:5000}]])});
-    expect(issue.warnings.some(w=>/cropped.*300 dpi/.test(w))).toBe(true);
+    expect(issue.warnings.some(w=>/300 dpi/.test(w))).toBe(true);
+    expect(issue.pictureDpi.find(p=>p.assetId==='cropped')!.effectiveDpi).toBeLessThan(300);
   });
   it('reserves a distinct labelled jacket photo and never repeats a tee as illustration',()=>{
     const tees=teeArtwork();

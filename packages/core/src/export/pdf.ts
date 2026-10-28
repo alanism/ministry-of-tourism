@@ -4,7 +4,7 @@
 import { zlibSync } from 'fflate';
 
 export interface PdfLink {url:string;x:number;y:number;width:number;height:number;}
-export type PdfImagePage = {kind:'image';width:number;height:number;caption?:string;pageSize?:[number,number];fullBleed?:boolean;links?:PdfLink[]}
+export type PdfImagePage = {kind:'image';width:number;height:number;caption?:string;pageSize?:[number,number];fullBleed?:boolean;links?:PdfLink[];label?:string}
   & ({jpeg:Uint8Array;deflatedRgb?:never}|{jpeg?:never;deflatedRgb:Uint8Array});
 export type PdfPage = PdfImagePage | { kind: 'text'; lines: string[]; header?: string; pageNumber?: number };
 
@@ -107,6 +107,9 @@ export function manuscriptPages(text: string, header: string): PdfPage[] {
 }
 
 export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Array {
+  const labels=pages.map(page=>page.kind==='image'?page.label:undefined);
+  if(labels.some(label=>label!==undefined&&typeof label!=='string'))throw new Error('PDF page labels must be text.');
+  const pageLabels=labels.some(label=>label!==undefined)?` /PageLabels << /Nums [${labels.map((label,index)=>`${index} << ${label?`/P ${pdfString(label+' ')} `:''}/S /D /St ${index+1} >>`).join(' ')}] >>`:'';
   const chunks: Uint8Array[] = [];
   const offsets: number[] = [];
   let length = 0;
@@ -180,7 +183,7 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board'): Uint8Arr
       links.forEach((link,index)=>object(linkIds[index]!,()=>write(`<< /Type /Annot /Subtype /Link /Rect [${link.rect}] /Border [0 0 0] /A << /S /URI /URI ${pdfString(link.url)} >> >>`)));
     }
   }
-  object(1, () => write('<< /Type /Catalog /Pages 2 0 R >>'));
+  object(1, () => write(`<< /Type /Catalog /Pages 2 0 R${pageLabels} >>`));
   object(2, () => write(`<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`));
   object(3, () => write('<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>'));
   object(4, () => write(`<< /Title ${pdfString(title)} /Producer (Writer's Board) >>`));

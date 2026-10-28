@@ -11,8 +11,9 @@ export type SpreadPattern=(typeof SPREAD_PATTERNS)[number];
 export type MagazineSection='front-cover'|'feature'|'plate'|'route'|'style'|'letters'|'appendix'|'back-cover';
 export interface MagazineSlot { name:string;assetId:string;identity:string;sharedAcrossPages?:boolean; }
 export interface MagazineSpread { id:string;section:MagazineSection;title:string;pageIds:string[];usedSlots:MagazineSlot[];droppedSlots:string[]; }
-export interface MagazinePage {id:string;pattern:SpreadPattern|'merch'|'tee-advert';folio:number;svg:string;assetIds:string[];credits:string[];links?:{url:string;x:number;y:number;width:number;height:number}[];spreadId?:string;side?:'single'|'left'|'right';section?:MagazineSection;title?:string;slots?:MagazineSlot[];sourceCardIds?:string[];artworkLabels?:{assetId:string;label:string}[];}
-export interface MagazineDocument {title:string;boardId:string;revision:number;pages:MagazinePage[];warnings:string[];spreads:MagazineSpread[];unusedAssetIds:string[];apparel?:ApparelArtRef[];cityId?:string;cityName?:string;}
+export interface MagazinePage {id:string;pattern:SpreadPattern|'merch'|'tee-advert'|'back-cover';folio:number;svg:string;assetIds:string[];credits:string[];links?:{url:string;x:number;y:number;width:number;height:number}[];spreadId?:string;side?:'single'|'left'|'right';section?:MagazineSection;title?:string;slots?:MagazineSlot[];sourceCardIds?:string[];artworkLabels?:{assetId:string;label:string}[];}
+export interface MagazinePictureDpi {assetId:string;identity:string;effectiveDpi:number;crop:[number,number,number,number];placedWidthMm:number;placedHeightMm:number;}
+export interface MagazineDocument {title:string;boardId:string;revision:number;pages:MagazinePage[];warnings:string[];pictureDpi:MagazinePictureDpi[];spreads:MagazineSpread[];unusedAssetIds:string[];apparel?:ApparelArtRef[];cityId?:string;cityName?:string;}
 export interface MagazineOptions {assetUrls?:ReadonlyMap<string,string>;assetDimensions?:ReadonlyMap<string,{width:number;height:number}>;includePrivate?:boolean;variant?:'guide'|'stay'|'personal';artwork?:readonly unknown[];}
 interface Box{x:number;y:number;width:number;height:number;}
 const PRESETS:Record<SpreadPattern,Box>={
@@ -35,8 +36,12 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const layers=[...doc.getMap<Presentation>('tripPresentations').values()].filter(p=>p.boardId===meta.boardId&&visible(p.scope)&&(!p.cardId||visibleIds.has(p.cardId))).sort((a,b)=>a.zIndex-b.zIndex||a.id.localeCompare(b.id));
   const selected=new Set([...cards.flatMap(c=>c.assetIds),...layers.flatMap(p=>p.assetId?[p.assetId]:[])]);
   const allOwned=new Set([...readAllCards(parts).flatMap(c=>c.assetIds),...[...doc.getMap<Presentation>('tripPresentations').values()].flatMap(p=>p.assetId?[p.assetId]:[])]);
-  const pages:MagazinePage[]=[],spreads:MagazineSpread[]=[],warnings:string[]=[],creditAppendix:string[]=[];
-  const result=():MagazineDocument=>({title:meta.title,boardId:meta.boardId,revision:Number(parts.clock.get('boardRev')??0),pages,spreads,unusedAssetIds:[],warnings:[...new Set(warnings)],cityId:meta.cityId,cityName:meta.city});
+  const pages:MagazinePage[]=[],spreads:MagazineSpread[]=[],creditAppendix:string[]=[],pictureDpi=new Map<string,MagazinePictureDpi>();
+  const result=():MagazineDocument=>{
+    const detail=[...pictureDpi.values()],low=detail.filter(p=>p.effectiveDpi<300);
+    const warnings=low.length?[`${low.length} ${low.length===1?'picture prints':'pictures print'} below 300 dpi; lowest ${Math.floor(Math.min(...low.map(p=>p.effectiveDpi)))}. Digital output is not print-ready.`]:[];
+    return {title:meta.title,boardId:meta.boardId,revision:Number(parts.clock.get('boardRev')??0),pages,spreads,unusedAssetIds:[],warnings,pictureDpi:detail,cityId:meta.cityId,cityName:meta.city};
+  };
   const sourceData=(raw:unknown):Record<string,unknown>=>raw&&typeof raw==='object'?raw as Record<string,unknown>:{};
   const rawRefs=(options.artwork??[]).map(sourceData);
   const apparel=meta.cityId?selectCityApparel(meta.cityId,rawRefs):[];
@@ -91,23 +96,24 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const p=c.layer,crop=p?.crop??[0,0,1,1],angle=(p?.rotation??0)+rotation;
     const cropWidth=c.width*crop[2]!,cropHeight=c.height*crop[3]!;
     const scale=fit==='slice'?Math.max(b.width/cropWidth,b.height/cropHeight):Math.min(b.width/cropWidth,b.height/cropHeight);
-    if(1184/(148/25.4)/scale<300)warnings.push(`Artwork ${c.assetId} is below 300 dpi after crop and placement; digital output is not print-ready.`);
+    const effectiveDpi=1184/(148/25.4)/scale,previous=pictureDpi.get(c.identity);
+    if(!previous||effectiveDpi<previous.effectiveDpi)pictureDpi.set(c.identity,{assetId:c.assetId,identity:c.identity,effectiveDpi,crop:[...crop] as [number,number,number,number],placedWidthMm:b.width/1184*148,placedHeightMm:b.height/1680*210});
     const provenance=p?` data-placement="${esc(p.id)}" data-crop="${crop.join(',')}" data-locked="${p.locked}" data-pattern="${p.pattern??''}" data-source-geometry="${[p.x,p.y,p.width,p.height].join(',')}"`:'';
     const clip=`round-${pages.length}-${current.usedSlots.findIndex(s=>s.assetId===c.assetId)}`;
     return `<g data-art="${esc(c.assetId)}" data-fit="${fit}"${provenance} transform="rotate(${angle} ${b.x+b.width/2} ${b.y+b.height/2})"${c.kind==='photo'||c.kind==='apparel-mockup'?'':' style="mix-blend-mode:multiply"'}>${clipCircle?`<defs><clipPath id="${clip}"><ellipse cx="${b.x+b.width/2}" cy="${b.y+b.height/2}" rx="${b.width/2}" ry="${b.height/2}"/></clipPath></defs><g clip-path="url(#${clip})">`:''}<svg x="${b.x}" y="${b.y}" width="${b.width}" height="${b.height}" viewBox="${crop[0]!*c.width} ${crop[1]!*c.height} ${crop[2]!*c.width} ${crop[3]!*c.height}" preserveAspectRatio="xMidYMid ${fit}" overflow="hidden"><image href="${options.assetUrls!.get(c.assetId)}" width="${c.width}" height="${c.height}" preserveAspectRatio="xMidYMid meet"/></svg>${clipCircle?'</g>':''}</g>`;
   }
   const origin=(c:Candidate)=>c.originCityId&&c.originCityId!==meta.cityId&&c.originCityId!==meta.city?`Origin: ${titleCase(c.originCityId)}`:undefined;
-  const caption=(c:Candidate|undefined,n:number,x:number,y:number,width=1018)=>!c?'':rows(wrap(`Nº ${n} ${c.label}`,Math.floor(width/15)),x,y,2.1*PU,L,'IBM Plex Sans',400,INK);
-  const text=(value:string,x:number,y:number,width=1018,size=2.5*PU,limit=99,family='IBM Plex Sans',weight:400|600=400)=>rows(wrap(value,Math.max(1,Math.floor(width/(size*.57)))).slice(0,limit),x,y,size,size>=10*PU?3*L:size>=6*PU?2*L:size>=4*PU?1.5*L:L,family,weight);
+  const caption=(c:Candidate|undefined,n:number,x:number,y:number,width=1018)=>!c?'':rows(wrap(`Nº ${n} ${c.label}`,Math.floor(width/15)),x,y,2.1*PU,L,'IBM Plex Sans',400,INK,false,width);
+  const text=(value:string,x:number,y:number,width=1018,size=2.5*PU,limit=99,family='IBM Plex Sans',weight:400|600=400)=>rows(wrap(value,Math.max(1,Math.floor(width/(size*.57)))).slice(0,limit),x,y,size,size>=10*PU?3*L:size>=6*PU?2*L:size>=4*PU?1.5*L:L,family,weight,INK,false,width,value);
   const head=(value:string,x=M,y=3*L,width=1018,size=6.55*PU,limit=3)=>text(value,x,y,width,size,limit,'IBM Plex Serif',600);
   function page(side:'single'|'left'|'right',pattern:MagazinePage['pattern'],content:string,images:(Candidate|undefined)[]=[],sourceCards:TripCard[]=[],paper=PAPER,title=current.title,links?:MagazinePage['links']){
     const usedImages=[...new Map(images.filter((c):c is Candidate=>!!c).map(c=>[c.assetId,c])).values()];
     const credits=[...new Set(usedImages.flatMap(c=>[c.credit,origin(c)].filter((s):s is string=>!!s)))];
-    const creditLines=credits.flatMap(c=>wrap(c,70));
+    const creditSource=credits.join('\n'),creditChunk=flowText(creditSource,70,3);
     const folio=pages.length+1,id=`${current.id}:${side}${current.pageIds.length>1?':'+current.pageIds.length:''}`;
     const textProvenance=layers.filter(p=>!p.assetId&&sourceCards.some(c=>c.id===p.cardId)).map(p=>`<g data-placement="${esc(p.id)}" data-locked="${p.locked}" data-source-geometry="${[p.x,p.y,p.width,p.height].join(',')}" transform="rotate(${p.rotation} 592 840)"/>`).join('');
     const creditY=usedImages.some(c=>c.kind==='apparel-mockup')?1480:1540;
-    const svg=shell(content+textProvenance+rows(creditLines.slice(0,3),M,creditY,1.9*PU,26,'IBM Plex Mono'),title,current.section.endsWith('cover')?undefined:folio,side,paper);
+    const svg=shell(content+textProvenance+rows(creditChunk.lines,M,creditY,1.9*PU,26,'IBM Plex Mono',400,INK,false,1018,creditSource.slice(0,creditSource.length-creditChunk.rest.length)).replace('<text','<text data-credits="true"'),title,current.section.endsWith('cover')?undefined:folio,side,paper);
     const normalizedLinks=links?.map(link=>({...link,x:link.x/1184,y:link.y/1680,width:link.width/1184,height:link.height/1680}));
     current.pageIds.push(id);pages.push({id,pattern,folio,svg,assetIds:usedImages.map(c=>c.assetId),credits,spreadId:current.id,side,section:current.section,title,slots:spreads.flatMap(s=>s.usedSlots).filter(s=>usedImages.some(c=>c.assetId===s.assetId)),sourceCardIds:sourceCards.map(c=>c.id),artworkLabels:usedImages.map(c=>({assetId:c.assetId,label:c.label})),...(normalizedLinks?{links:normalizedLinks}:{})});
   }
@@ -118,11 +124,11 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const noteField=(c:TripCard)=>c.travelerNote?.trim()?'travelerNote':'body';
   const remainingText=new Map(cards.flatMap(c=>[[c.id+':body',c.body],[c.id+':travelerNote',c.travelerNote??'']]));
   function body(card:TripCard|undefined,x:number,y:number,width:number,max:number,field:'body'|'travelerNote'='body',size=2.5*PU){
-    if(!card)return '';const key=card.id+':'+field,chunk=flowText(remainingText.get(key)??'',Math.floor(width/(size*.57)),max);remainingText.set(key,chunk.rest);return rows(chunk.lines,x,y,size,L);
+    if(!card)return '';const key=card.id+':'+field,source=remainingText.get(key)??'',chunk=flowText(source,Math.floor(width/(size*.57)),max);remainingText.set(key,chunk.rest);return rows(chunk.lines,x,y,size,L,'IBM Plex Sans',400,INK,false,width,source.slice(0,source.length-chunk.rest.length));
   }
   function letters(x:number,y:number,width:number,max:number){
     let output='',usedLines=0;
-    for(const c of notes){const field=noteField(c);if(!(remainingText.get(c.id+':'+field)??'').trim()||usedLines+3>=max)continue;const heading=[c.day,c.title].filter(Boolean).join(' · ');output+=text(heading,x,y+usedLines*L,width,2.1*PU,2,'IBM Plex Mono',600);usedLines+=2;const chunk=flowText(remainingText.get(c.id+':'+field)??'',Math.floor(width/(2.5*PU*.57)),max-usedLines);remainingText.set(c.id+':'+field,chunk.rest);output+=rows(chunk.lines,x,y+usedLines*L,2.5*PU,L);usedLines+=chunk.lines.length+1;}
+    for(const c of notes){const field=noteField(c);if(!(remainingText.get(c.id+':'+field)??'').trim()||usedLines+3>=max)continue;const heading=[c.day,c.title].filter(Boolean).join(' · ');output+=text(heading,x,y+usedLines*L,width,2.1*PU,2,'IBM Plex Mono',600);usedLines+=2;const source=remainingText.get(c.id+':'+field)??'',chunk=flowText(source,Math.floor(width/(2.5*PU*.57)),max-usedLines);remainingText.set(c.id+':'+field,chunk.rest);output+=rows(chunk.lines,x,y+usedLines*L,2.5*PU,L,'IBM Plex Sans',400,INK,false,width,source.slice(0,source.length-chunk.rest.length));usedLines+=chunk.lines.length+1;}
     return output;
   }
 
@@ -134,13 +140,19 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const backdrop=take('backdrop',[...role('backdrop'),...art.filter(c=>!c.role)]),foreground=take('foreground',role('foreground')),tag=take('spine-tag',role('tag'),true);
   const mastheadSize=Math.min(17.1*PU,86*PU/(Math.max(1,Array.from(meta.city).length)*.6));
   const issueTitle=meta.title!==meta.city?meta.title:first?.title??'';
+  const shortPhrase=(title:string)=>{
+    const label=magazineLabel(title).replace(/\s+/g,' ').trim();if(Array.from(label).length<=38)return label;
+    let prefix='';for(const word of label.split(' ')){const next=prefix?`${prefix} ${word}`:word;if(Array.from(next).length>37)break;prefix=next;}
+    return prefix?prefix+'…':'';
+  };
+  const coverLines=[...places,...cards.filter(c=>c.kind==='task')].filter(c=>!isArticle(c)).map(card=>({card,label:shortPhrase(card.title)})).filter(item=>item.label).slice(0,3);
   const dateHeader=dates?`<text x="${1184-M}" y="${1.2*L}" text-anchor="end" font-family="IBM Plex Mono" font-size="${2.1*PU}" font-weight="600" fill="${INK}">${esc(dates)}</text>`:'';
   // One flat-jacket drawing in back-left/front-right coordinates. Each physical page clips its half.
   const stampY=.38*1680+148,stampLines=[meta.city.toUpperCase(),...wrap(dates,16)].filter(Boolean),stampLeading=2.1*PU*1.35;
   const spine=tag?picture(tag,{x:1184-.21*1184,y:.47*1680,width:.36*1184,height:.36*1184},-9):`<g transform="rotate(-14 1184 ${stampY})" style="mix-blend-mode:multiply"><circle cx="1184" cy="${stampY}" r="148" fill="none" stroke="${RED}" stroke-width="${.006*1184}"/><circle cx="1184" cy="${stampY}" r="${148-1.6*PU}" fill="none" stroke="${RED}" stroke-width="1"/><text x="1184" y="${stampY-(stampLines.length-1)*stampLeading/2+2.1*PU/3}" text-anchor="middle" font-family="IBM Plex Mono" font-size="${2.1*PU}" font-weight="600" fill="${RED}">${stampLines.map((line,i)=>`<tspan x="1184" dy="${i?stampLeading:0}">${esc(line)}</tspan>`).join('')}</text></g>`;
   const jacketSpine=(side:'front'|'back')=>`<g data-jacket-spine="${tag?'tag':'postmark'}" data-jacket-side="${side}" transform="translate(${side==='front'?-1184:0} 0)">${spine}</g>`;
   const tagMark=jacketSpine('front');
-  page('single','personal-cover',picture(backdrop,{x:0,y:0,width:1184,height:1680},0,false,'slice')+kicker('Ministry of Tourism · personal issue',M,1.2*L)+dateHeader+rows([meta.city.toUpperCase()],M,2.1*L+mastheadSize*.86,mastheadSize,mastheadSize,'IBM Plex Sans Condensed',600)+rows(wrap(issueTitle,45).slice(0,2),M,4.2*L+mastheadSize*.7,3.2*PU,L,'IBM Plex Serif',400,INK,true)+picture(foreground,{x:0,y:504,width:1184,height:1176})+tagMark+cards.slice(0,3).map((c,i)=>`<rect x="${column(3)}" y="${1230+i*65}" width="${1184-M-column(3)}" height="52" fill="${PAPER}"/>${rows(wrap(c.title,38).slice(0,1),column(3)+12,1265+i*65,2.5*PU,L,'IBM Plex Serif',600)}`).join(''),[backdrop,foreground,tag],cards.slice(0,3));
+  page('single','personal-cover',picture(backdrop,{x:0,y:0,width:1184,height:1680},0,false,'slice')+kicker('Ministry of Tourism · personal issue',M,1.2*L)+dateHeader+rows([meta.city.toUpperCase()],M,2.1*L+mastheadSize*.86,mastheadSize,mastheadSize,'IBM Plex Sans Condensed',600)+rows(wrap(issueTitle,45).slice(0,2),M,4.2*L+mastheadSize*.7,3.2*PU,L,'IBM Plex Serif',400,INK,true)+picture(foreground,{x:0,y:504,width:1184,height:1176})+tagMark+coverLines.map(({label},i)=>`<g data-reader-block="cover-line"><rect x="${column(3)}" y="${1230+i*65}" width="${1184-M-column(3)}" height="52" fill="${PAPER}"/>${rows([label],column(3)+12,1265+i*65,2.5*PU,L,'IBM Plex Serif',600,INK,false,1184-M-column(3)-24)}</g>`).join(''),[backdrop,foreground,tag],coverLines.map(item=>item.card));
 
   if(featureLead||role('city-ink').length){
     spread('feature',meta.city);
@@ -150,7 +162,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const headingColumns=Math.floor(1018/(6.55*PU*.57)),headingLines=wrap(opening,headingColumns),visibleHeading=headingLines.slice(0,panorama?5:12),headingY=panorama?970:4*L;
     if(visibleHeading.length<headingLines.length)visibleHeading[visibleHeading.length-1]=Array.from(visibleHeading.at(-1)!).slice(0,headingColumns-1).join('')+'…';
     const leadBodyY=Math.max(panorama?1260:0,headingY+visibleHeading.length*2*L),bodyLines=Math.min(panorama?4:Infinity,Math.max(0,Math.floor((1490-leadBodyY)/L)+1));
-    page('left','city-feature',panoramaImage(false)+kicker(meta.city,M,panorama?850:2*L)+rows(visibleHeading,M,headingY,6.55*PU,2*L,'IBM Plex Serif',600)+body(featureLead,M,leadBodyY,1018,bodyLines),[panorama],featureLead?[featureLead]:[]);
+    page('left','city-feature',panoramaImage(false)+kicker(meta.city,M,panorama?850:2*L)+rows(visibleHeading,M,headingY,6.55*PU,2*L,'IBM Plex Serif',600,INK,false,1018,visibleHeading.length===headingLines.length?opening:visibleHeading.join(' '))+body(featureLead,M,leadBodyY,1018,bodyLines),[panorama],featureLead?[featureLead]:[]);
     const facts=cards.flatMap(c=>(c.currentFacts??[]).filter(()=>c.source?.kind==='almanac').map(f=>({f,c}))).slice(0,3);
     const factsSvg=facts.map(({f},i)=>kicker(f.field,M,1260+i*86,RED)+text(`${f.value} · ${f.observedAt}`,M,1298+i*86,1018,2.1*PU,1)).join('');
     const contents=cards.slice(0,5).map((c,i)=>`${i+1}. ${c.title}`).join('\n');
@@ -166,8 +178,9 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const interior=take('interior',role('interior'));
     const lead=specimen??facade??interior??second;
     const leadLabel=lead?.label??'';
-    const leader=specimen?`<path d="M910 285 Q920 435 780 480" fill="none" stroke="${INK}" stroke-width="2"/><circle cx="780" cy="480" r="4" fill="${INK}"/>${rows(['Nº 1'],910,260,3.2*PU,L,'IBM Plex Serif',400,INK,true)}`:'';
-    page('left','food-culture',kicker('Eat and look')+picture(lead,specimen?{x:-308,y:16*PU,width:1397,height:1397}:{x:0,y:0,width:1184,height:1350},0,false,specimen?'meet':'slice')+leader+(!specimen?`<rect x="${M}" y="1195" width="1018" height="280" fill="${PAPER}"/>`:'')+rows(['Nº 1'],M,1400,10.6*PU,L,'IBM Plex Sans Condensed',600,RED)+head(leadLabel,M,1490,1018,4.05*PU,1),[lead],[],specimen?BLUSH:PAPER);
+    const leadBox=specimen?{x:-308,y:16*PU,width:1397,height:1397}:{x:0,y:0,width:1184,height:1350},anchor={x:leadBox.x+leadBox.width/2,y:leadBox.y+leadBox.height/2};
+    const leader=specimen?`<g data-specimen-note="true"><path d="M910 285 Q920 435 ${anchor.x} ${anchor.y}" fill="none" stroke="${INK}" stroke-width="2"/><circle cx="${anchor.x}" cy="${anchor.y}" r="4" fill="${INK}"/>${rows(['Nº 1'],910,260,3.2*PU,L,'IBM Plex Serif',400,INK,true)}</g>`:'';
+    page('left','food-culture',kicker('Eat and look')+picture(lead,leadBox,0,false,specimen?'meet':'slice')+leader+(!specimen?`<rect x="${M}" y="1195" width="1018" height="280" fill="${PAPER}"/>`:'')+rows(['Nº 1'],M,1400,10.6*PU,L,'IBM Plex Sans Condensed',600,RED)+head(leadLabel,M,1490,1018,4.05*PU,1),[lead],[],specimen?BLUSH:PAPER);
     const rightArt=[facade,second,interior].filter((c):c is Candidate=>!!c&&c!==lead);
     const right=rightArt.length?head('Food and culture',M,2.5*L,1018,4.05*PU,2)
       +(facade&&facade!==lead?picture(facade,{x:M,y:220,width:1018,height:605},0,false,'slice')+caption(facade,2,M,875):'')
@@ -186,10 +199,10 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const points=shown.map((c,i)=>({c,x:i%2?column(5)+COL/2:column(2)+COL/2,y:400+i*step}));
     const path=points.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(' ');
     const grid=`<defs><pattern id="route-dots" width="${L}" height="${L}" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="${TAUPE}"/></pattern></defs><rect width="1184" height="1680" fill="url(#route-dots)"/>`;
-    const route=points.map((p,i)=>{const dayFirst=i===0||p.c.day!==shown[i-1]?.day;return `<circle cx="${p.x}" cy="${p.y}" r="29" fill="${dayFirst?RED:INK}"/>${rows([String(i+1)],p.x-10,p.y+10,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)}${text(p.c.title,p.x+(i%2?-245:48),p.y-40,240,2.5*PU,2)}`;}).join('');
-    page('left','map',grid+kicker('The route')+head(meta.city,M,4*L)+`<path d="M-90 1140 C260 1370 700 850 1270 1190" fill="none" stroke="${BLUE}" stroke-width="120"/><path d="${path}" fill="none" stroke="${INK}" stroke-width="3" stroke-dasharray="12 12"/>`+route+picture(marker,{x:785,y:1250,width:300,height:190},marker?.role==='vehicle'?45:0)+kicker('not to scale · not geographic',M,1490),[marker],shown);
+    const route=points.map((p,i)=>{const dayFirst=i===0||p.c.day!==shown[i-1]?.day;return `<g data-route-node="true" data-route-x="${p.x}" data-route-y="${p.y}"><circle cx="${p.x}" cy="${p.y}" r="29" fill="${dayFirst?RED:INK}"/>${rows([String(i+1)],p.x-10,p.y+10,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)}${text(p.c.title,p.x+(i%2?-245:48),p.y-40,240,2.5*PU,2)}</g>`;}).join('');
+    page('left','map',grid+kicker('The route')+head(meta.city,M,4*L)+`<g data-route-diagram="true"><path d="M-90 1140 C260 1370 700 850 1270 1190" fill="none" stroke="${BLUE}" stroke-width="120"/><path data-route-line="true" d="${path}" fill="none" stroke="${INK}" stroke-width="3" stroke-dasharray="12 12"/>`+route+'</g>'+picture(marker,{x:785,y:1250,width:300,height:190},marker?.role==='vehicle'?45:0)+kicker('not to scale · not geographic',M,1490),[marker],shown);
     const blockHeight=Math.min(5*L,850/Math.max(1,shown.length));
-    const timetable=shown.map((c,i)=>{const y=7*L+i*blockHeight,dayFirst=i===0||c.day!==shown[i-1]?.day;return `<circle cx="${M+27}" cy="${y-11}" r="27" fill="${dayFirst?RED:INK}"/>`+rows([String(i+1)],M+17,y,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)+text(c.title,M+80,y,938,2.5*PU,shown.length>4?1:2,'IBM Plex Sans',600)+text([c.day,c.time].filter(Boolean).join(' · '),M+80,y+(shown.length>4?L:2*L),938,2.1*PU,1)+body(c,M+80,y+3*L,938,Math.max(0,Math.floor(blockHeight/L)-3));}).join('');
+    const timetable=shown.map((c,i)=>{const y=7*L+i*blockHeight,dayFirst=i===0||c.day!==shown[i-1]?.day;return `<g data-reader-block="true"><circle cx="${M+27}" cy="${y-11}" r="27" fill="${dayFirst?RED:INK}"/>`+rows([String(i+1)],M+17,y,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)+text(c.title,M+80,y,938,2.5*PU,shown.length>4?1:2,'IBM Plex Sans',600)+text([c.day,c.time].filter(Boolean).join(' · '),M+80,y+(shown.length>4?L:2*L),938,2.1*PU,1)+body(c,M+80,y+3*L,938,Math.max(0,Math.floor(blockHeight/L)-3))+'</g>';}).join('');
     page('right','map',kicker('Days and places')+head('The route',M,4*L)+timetable+picture(vignette,{x:column(2),y:1230,width:668,height:260}),[vignette],shown);
   }
 
@@ -216,7 +229,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const hasLetterPage=notes.some(c=>(remainingText.get(c.id+':'+noteField(c))??'').trim()),vignette=hasLetterPage?take('letter-vignette',role('vignette')):undefined;
     if(!hasWords)current.droppedSlots.push('postcard-back','stamp');
     if(!hasLetterPage)current.droppedSlots.push('facing-letter','letter-vignette');
-    const postmark=hasLetterPage?`<g transform="rotate(-9 1100 1180)"><circle cx="1100" cy="1180" r="98" fill="none" stroke="${RED}" stroke-width="3"/>${kicker('MoT',1065,1190,RED)}<path d="M1180 1120h90 M1190 1160h90 M1195 1200h90" stroke="${RED}" stroke-width="3"/></g>`:'';
+    const postmark=hasLetterPage?`<g data-shared-postmark="true" transform="rotate(-9 1100 1180)"><circle cx="1100" cy="1180" r="98" fill="none" stroke="${RED}" stroke-width="3"/>${kicker('MoT',1065,1190,RED)}<path d="M1180 1120h90 M1190 1160h90 M1195 1200h90" stroke="${RED}" stroke-width="3"/></g>`:'';
     page('left','correspondence',front+back+postmark,[postcard,stamp],notes.slice(0,1),TAUPE);
     if(hasLetterPage)page('right','correspondence',`<g transform="translate(-1184 0)">${postmark}</g>`+kicker('Correspondence')+head(meta.city,M,4*L)+letters(M,7*L,1018,vignette?18:25)+picture(vignette,{x:column(2),y:1230,width:668,height:260}),[vignette],notes);
   }
@@ -228,17 +241,19 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const title=isArticle(c)?`${c.provenance==='fcc'||c.source?.provider==='fcc'?'FCC article':'Source article'} · ${c.title}`:c.title;
     return [tail||note||c.title.length>40?title:'',tail,note?`Traveler note\n${note}`:'',...(c.currentFacts??[]).map(f=>`${f.field}: ${f.value}\nObserved ${f.observedAt}\nSource ${f.evidenceUrl}`),c.source?.canonicalUrl??c.source?.url??''].filter(Boolean).join('\n\n');
   }).filter(Boolean).join('\n\n');
-  const notebookLines=wrap([notebook,...creditAppendix].filter(Boolean).join('\n\n'),60);
-  if(notebookLines.some(s=>s.trim())){
-    const count=Math.ceil(notebookLines.length/27);
+  const notebookChunks:{lines:string[];source:string}[]=[];
+  let notebookTail=[notebook,...creditAppendix].filter(Boolean).join('\n\n');
+  while(notebookTail.trim()){const chunk=flowText(notebookTail,60,27);notebookChunks.push({lines:chunk.lines,source:notebookTail.slice(0,notebookTail.length-chunk.rest.length)});notebookTail=chunk.rest;}
+  if(notebookChunks.length){
+    const count=notebookChunks.length;
     for(let i=0;i<count;i++){
       if(i%2===0){spread('appendix',i?'Trip notebook · continued':'Trip notebook');current.id=`appendix-${i/2+1}`;}
-      page(count===1||(i===count-1&&count%2)?'single':i%2?'right':'left','correspondence',kicker(i?'Trip notebook · continued':'Trip notebook')+rows(notebookLines.slice(i*27,(i+1)*27),M,4*L,2.5*PU,L),[],cards);
+      page(count===1||(i===count-1&&count%2)?'single':i%2?'right':'left','correspondence',kicker(i?'Trip notebook · continued':'Trip notebook')+rows(notebookChunks[i]!.lines,M,4*L,2.5*PU,L,'IBM Plex Sans',400,INK,false,1018,notebookChunks[i]!.source),[],cards);
     }
   }
   spread('back-cover',backTee?'Advertisement':meta.city);
   if(backTee&&backSlot)current.usedSlots.push(backSlot);else current.droppedSlots.push('back-cover-tee');
   const shop=backTee&&meta.cityId?fccShopUrl(meta.cityId):undefined;
-  page('single',backTee?'tee-advert':'personal-cover',(backTee?picture(backTee,{x:0,y:0,width:1184,height:1680},0,false,'slice')+`<rect x="${M}" y="1230" width="1018" height="320" fill="${PAPER}"/>`+kicker('FCC · Advertisement',M,2*L)+head(`Take ${meta.city} with you.`,M+24,1320,970,4.05*PU,2)+(shop?`<a href="${esc(shop)}">${kicker('Order on FCC →',M+24,1430)}</a>`:''):kicker('Ministry of Tourism')+head(meta.city,M,7*L,1018,10.6*PU,4)+(dates?text(dates,M,13*L):'')+text(cards.map(c=>c.title).join('\n'),M,18*L,1018,2.5*PU,10))+jacketSpine('back'),[backTee,tag],[],PAPER,backTee?'Advertisement':meta.city,shop?[{url:shop,x:M,y:1380,width:1018,height:95}]:undefined);
+  page('single',backTee?'tee-advert':'back-cover',(backTee?picture(backTee,{x:0,y:0,width:1184,height:1680},0,false,'slice')+`<rect x="${M}" y="1230" width="1018" height="320" fill="${PAPER}"/>`+kicker('FCC · Advertisement',M,2*L)+head(`Take ${meta.city} with you.`,M+24,1320,970,4.05*PU,2)+(shop?`<a href="${esc(shop)}">${kicker('Order on FCC →',M+24,1430)}</a>`:''):kicker('Ministry of Tourism')+head(meta.city,M,7*L,1018,10.6*PU,4)+(dates?text(dates,M,13*L):'')+text(cards.map(c=>c.title).join('\n'),M,18*L,1018,2.5*PU,10))+jacketSpine('back'),[backTee,tag],[],PAPER,backTee?'Advertisement':meta.city,shop?[{url:shop,x:M,y:1380,width:1018,height:95}]:undefined);
   const output=result();output.apparel=apparel;output.unusedAssetIds=candidates.filter(c=>!c.identities.some(id=>used.has(id))).map(c=>c.assetId);return output;
 }

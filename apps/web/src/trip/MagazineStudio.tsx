@@ -2,9 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { fccShopUrl, readAllCards, readPresentations, readTripMeta, type ApparelArtRef, type MagazineDocument, type TripSession } from '@writers-board/core';
 import { prepareMagazine } from './artifacts';
 import { postcardPreviewSvg } from './magazine-view';
+import { readableMagazineSvg } from './magazine-reading';
 import { selectMagazineTee } from './magazine-controls';
 import { useAssetUrl } from './trip-assets';
 import './magazine.css';
+
+function PageImage({svg,alt,printLayout}:{svg:string;alt:string;printLayout:boolean}){
+  const ref=useRef<HTMLImageElement>(null),[width,setWidth]=useState(0),[reading,setReading]=useState(''),[failure,setFailure]=useState('');
+  useEffect(()=>{const element=ref.current;if(!element)return;const observer=new ResizeObserver(([entry])=>setWidth(Math.floor(entry!.contentRect.width)));observer.observe(element);return()=>observer.disconnect();},[]);
+  useEffect(()=>{const controller=new AbortController();setReading('');setFailure('');if(width>0&&!printLayout)void readableMagazineSvg(svg,width,controller.signal).then(value=>{if(!controller.signal.aborted)setReading(value);},error=>{if(!controller.signal.aborted)setFailure(error instanceof Error?error.message:'Page fitting failed.');});return()=>controller.abort();},[svg,width,printLayout]);
+  const ready=printLayout||width>=440||!!reading;
+  return <><img ref={ref} data-reading-ready={ready} src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(reading||svg)}`} alt={alt} />{failure&&<p role="alert">{failure} Read the trip text above.</p>}</>;
+}
 
 function TeeChoice({session,art,chosen,busy,onChoose}:{session:TripSession;art:ApparelArtRef;chosen:boolean;busy:boolean;onChoose:()=>void}){
   const cached=useAssetUrl(session,art.assetId);
@@ -36,7 +45,7 @@ export function MagazineStudio({session,tick,onExport}:{session:TripSession;tick
   return <section className="mot-magazine-studio" aria-label="Trip magazine studio">
     <header className="mot-issue-heading"><div><h2>Your trip magazine</h2><p className="m-muted">Your artwork, places and notes, composed as an issue.</p></div><button type="button" className="m-btn primary" onClick={onExport}>Open Export</button></header>
     <label className="mot-issue-privacy"><input type="checkbox" checked={includePrivate} onChange={event=>setIncludePrivate(event.target.checked)} /> Include private notes and artwork in this preview</label>
-    <div className="mot-issue-view"><label><input type="checkbox" checked={fitPages} onChange={event=>setFitPages(event.target.checked)} /> Fit whole pages on a narrow screen</label><p className="m-muted">Text pages stay readable by default. On a phone, swipe within a page to read across it.</p></div>
+    <div className="mot-issue-view"><label><input type="checkbox" checked={fitPages} onChange={event=>setFitPages(event.target.checked)} /> Show the fixed print layout</label><p className="m-muted">On a phone, words wrap within the page. The PDF keeps the A5 print layout.</p></div>
     <details className="mot-issue-transcript"><summary>Read the trip text</summary>{readAllCards(session.parts).filter(card=>includePrivate||card.scope!=='private').map(card=><article key={card.id}><h3>{card.title}</h3>{card.day&&<p className="m-muted">{card.day}{card.time?` · ${card.time}`:''}</p>}<p>{card.body}</p>{card.travelerNote&&<p>{card.travelerNote}</p>}</article>)}</details>
     {error&&<p role="alert">{error}</p>}
     {!magazine&&!error&&<p role="status">Composing your issue…</p>}
@@ -45,12 +54,11 @@ export function MagazineStudio({session,tick,onExport}:{session:TripSession;tick
       <nav className="mot-issue-contents" aria-label="Magazine contents"><h3>In this issue</h3>{groups.map((group,index)=><a href={`#issue-${group.id}`} key={group.id}><span>{String(index+1).padStart(2,'0')}</span>{group.title}</a>)}<p className="m-muted">{magazine!.pages.length} pages · revision {magazine!.revision}</p>{new Set(specimens.map(layer=>layer.assetId)).size>1&&<button type="button" className="m-btn small" onClick={swapSpecimen}>Swap lead specimen</button>}</nav>
       <div className="mot-issue-spreads">{groups.map((group,index)=>{
         const pages=group.pageIds.flatMap(id=>magazine!.pages.filter(page=>page.id===id));
-        const textPages=pages.some(page=>page.svg.includes('font-family="IBM Plex Sans" font-size="29.6"'));
         return <article className="mot-issue-spread" id={`issue-${group.id}`} key={group.id} aria-label={group.title}>
           <header><span>{String(index+1).padStart(2,'0')}</span><h3>{group.title}</h3></header>
-          <div className={`mot-issue-paper${pages.length===1?' single':''}${group.id==='jacket'?' jacket':''}${textPages&&!fitPages?' readable':''}`}>{pages.map(page=>{
+          <div className={`mot-issue-paper${pages.length===1?' single':''}${group.id==='jacket'?' jacket':''}`}>{pages.map(page=>{
             const postcard=page.svg.includes('data-postcard-face="front"')&&page.svg.includes('data-postcard-face="back"');
-            const image=<img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(postcard?postcardPreviewSvg(page.svg,turned):page.svg)}`} alt={`${page.title??group.title} · page ${page.folio}`} />;
+            const image=<PageImage svg={postcard?postcardPreviewSvg(page.svg,turned):page.svg} alt={`${page.title??group.title} · page ${page.folio}`} printLayout={fitPages} />;
             return <figure className={page.section==='front-cover'?'front':''} key={page.id}>{postcard?<button className="mot-issue-postcard" type="button" aria-label="Turn the postcard over" aria-pressed={turned} onClick={()=>setTurned(value=>!value)}>{image}</button>:image}<figcaption>Page {page.folio}{postcard?' · Tap the postcard to turn it over':''}</figcaption></figure>;
           })}</div>
           {group.section==='style'&&!!magazine?.apparel?.length&&<div className="mot-issue-tee-choices" aria-label="Choose the tee in your issue"><h4>Choose the tee</h4><div>{magazine.apparel.map(art=><TeeChoice key={art.assetId} session={session} art={art} chosen={wornTee===art.assetId} busy={choosingTee} onChoose={()=>void chooseTee(art)} />)}</div>{choosingTee&&<p role="status">Keeping the original tee images… <button type="button" className="m-btn small" onClick={()=>teeController.current?.abort()}>Cancel tee selection</button></p>}</div>}

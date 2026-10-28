@@ -2,6 +2,7 @@
 const {chromium}=require(process.env.MOT_PLAYWRIGHT_MODULE||'playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {execFileSync}=require('node:child_process');
+const {checkMagazineReading,captureMagazineSpreads,checkReadingNegativeControls}=require('./mot-magazine-reading-check.cjs');
 const city=process.argv[2]||'bangkok',root=process.env.MOT_EVIDENCE_DIR||path.join(require('node:os').tmpdir(),'mot-magazine-qa');
 const fixtureRoot=process.env.MOT_ART_FIXTURES;
 if(!fixtureRoot)throw new Error('Set MOT_ART_FIXTURES to a directory of explicit, licensed <city>-fixture.json files. See docs/MAGAZINE-QA.md.');
@@ -24,7 +25,7 @@ const apparel=fixture.assets.filter(a=>a.kind==='apparel-mockup').map(a=>({asset
   await page.goto(origin+'/?view=trip',{waitUntil:'domcontentloaded'});
   await page.evaluate(async({fixture,coreUrl})=>{
    const core=await import(coreUrl),store=await import('/src/trip/trip-store.ts'),media=await import('/src/trip/trip-assets.ts');
-   const trip=await store.openTrip(`r4-real-art-${fixture.cityId}`,{title:`${fixture.name}, our way`,city:fixture.name,cityId:fixture.cityId,countryCode:fixture.countryCode,timeZone:null,dates:{start:'2026-11-13',end:'2026-11-16'}}),session=new core.TripSession(trip.doc),actor={kind:'human',id:'traveler-1',name:'QA owner'};
+   const trip=await store.openTrip(`r4-real-art-${fixture.cityId}`,{title:`${fixture.name}, our way`,city:fixture.name,cityId:fixture.cityId,countryCode:fixture.countryCode,timeZone:null,dates:{start:'2026-11-13',end:'2026-11-16'}}),session=new core.TripSession(trip.doc,{newId:(()=>{let id=0;return()=>`fixture-${String(++id).padStart(4,'0')}`;})()}),actor={kind:'human',id:'traveler-1',name:'QA owner'};
    for(const article of fixture.articles)session.execute(actor,'trip_card_create',{kind:'note',title:article.title,body:article.body.split(/\n\n/)[0],source:{id:article.id,url:article.canonicalUrl,provider:'fcc',cityId:fixture.cityId,kind:'article',retrievedAt:'2026-10-28',origin:'editorial'},scope:'stay',stage:'explore',provenance:'fcc'});
    for(const item of fixture.places)session.execute(actor,'trip_card_create',{kind:'place',title:item.name,body:'',source:{id:item.id,url:item.canonicalUrl,provider:'fcc',cityId:fixture.cityId,kind:'venue',retrievedAt:'2026-10-28',origin:'catalogue'},scope:'stay',stage:'plan',provenance:'fcc'});
    for(const note of fixture.notes??[])session.execute(actor,'trip_card_create',{kind:'note',title:note.title,body:note.body,day:note.day,scope:'stay',stage:'remember',provenance:'traveler'});
@@ -47,8 +48,9 @@ const apparel=fixture.assets.filter(a=>a.kind==='apparel-mockup').map(a=>({asset
   const result=await page.evaluate(async(coreUrl)=>{
    const store=await import('/src/trip/trip-store.ts'),core=await import(coreUrl),delivery=await import('/src/trip/artifacts.ts');
    const probe=window.motTrip.probe(),trip=await store.openTrip(probe.boardId),session=new core.TripSession(trip.doc);
-   try{const magazine=await delivery.prepareMagazine(session,undefined,false);const bytes=await delivery.magazinePdf(magazine);let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return{magazine,pdf:btoa(binary)};}finally{session.destroy();trip.destroy();}
+   try{const magazine=await delivery.prepareMagazine(session,undefined,false);const bytes=await delivery.magazinePdf(magazine);let binary='';for(const byte of bytes)binary+=String.fromCharCode(byte);return{magazine,pdf:btoa(binary),gates:core.auditMagazinePages(magazine)};}finally{session.destroy();trip.destroy();}
   },coreUrl);
+  assert.deepEqual(result.gates,{frontFirst:true,backLast:true,repeats:[]});
   const {magazine}=result;assert.equal(magazine.pages[0].section,'front-cover');assert.equal(magazine.pages.at(-1).section,'back-cover');
   const identities=magazine.spreads.flatMap(s=>s.usedSlots.map(a=>a.identity));assert.equal(new Set(identities).size,identities.length,'An editorial image slot was repeated');
   for(const section of['feature','plate','route','style','letters']){const spread=magazine.spreads.find(s=>s.section===section);if(spread)assert.equal(spread.pageIds.length,2,`${section} is not a real pair`);}
@@ -56,13 +58,15 @@ const apparel=fixture.assets.filter(a=>a.kind==='apparel-mockup').map(a=>({asset
   assert(!magazine.pages.some(p=>/font-family="(?:Arial|Georgia)|Â·|· Version \d/.test(p.svg)));
   const pdfFile=path.join(directory,'issue.pdf');fs.writeFileSync(pdfFile,Buffer.from(result.pdf,'base64'));fs.writeFileSync(path.join(directory,'magazine.json'),JSON.stringify(magazine));
   for(let index=0;index<magazine.pages.length;index++)fs.writeFileSync(path.join(directory,`page-${String(index+1).padStart(2,'0')}.svg`),magazine.pages[index].svg);
+  const reading=[];
   for(const width of[1920,1280,768,375,280]){
    await page.setViewportSize({width,height:1080});await page.evaluate(()=>document.querySelector('main.mot').scrollTop=0);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`Global overflow ${width}`);
    if(width<=1000){const jacket=await page.locator('#issue-jacket .mot-issue-paper').evaluate(paper=>{const front=paper.querySelector('.front'),back=paper.querySelector('figure:not(.front)');return{front:front.getBoundingClientRect().top,back:back.getBoundingClientRect().top};});assert(jacket.front<jacket.back,`Front cover must precede the back cover when pages stack at ${width}px`);}
    if(width<=600){const cover=await page.locator('#issue-jacket .mot-issue-paper').evaluate(paper=>{const image=paper.querySelector('.front img').getBoundingClientRect(),box=paper.getBoundingClientRect(),style=getComputedStyle(paper);return{left:image.left,right:image.right,min:box.left+parseFloat(style.paddingLeft),max:box.right-parseFloat(style.paddingRight)};});assert(cover.left>=cover.min-1&&cover.right<=cover.max+1,`The entire front cover must fit without panning at ${width}px`);}
    await page.screenshot({path:path.join(directory,`studio-${width}.png`)});
-   if(width<=600){const minimum=await page.locator('.mot-issue-paper.readable figure:not(.front) img').evaluateAll(images=>Math.min(...images.map(image=>image.getBoundingClientRect().width*.025)));assert(minimum>=10.99,`Body is smaller than 11px at ${width}: ${minimum}`);}
-   if(width===1920||width===375)for(const section of['jacket','feature','plate','style','letters']){const spread=page.locator(`#issue-${section}`);if(await spread.count()){await spread.scrollIntoViewIfNeeded();await spread.screenshot({path:path.join(directory,`${section}-${width}.png`)});}}
+   if(width===375||width===280)reading.push({width,...await checkMagazineReading(page,width,directory)});
+   if(city==='bangkok'&&width===375)await checkReadingNegativeControls(page,width,directory);
+   if([1920,375,280].includes(width))await captureMagazineSpreads(page,width,directory);
   }
   const comparison=[];
   const checked=[...new Set([0,...['feature','plate','style','letters'].map(section=>magazine.pages.findIndex(p=>p.section===section)),magazine.pages.length-1].filter(index=>index>=0))];
@@ -87,7 +91,7 @@ const apparel=fixture.assets.filter(a=>a.kind==='apparel-mockup').map(a=>({asset
     const expected=crypto.createHash('sha256').update(fs.readFileSync(pdfFile)).digest('hex');assert.equal(actual,expected,'Chosen-tee PDF changed after clean offline ZIP reopen');offlineRoundTrip={byteIdentical:true,sha256:actual};
    }finally{await cleanContext.close();}
   }
-  const output={city,pages:magazine.pages.length,sections:magazine.spreads.map(s=>s.section),uniqueEditorialSlots:identities.length,actualPhotos:apparel.length,classificationTransportFixture:true,livePublicationClaim:false,assetChoicesSource:'Explicit caller-supplied FCC art descriptors',notesAreFictional:fixture.notesAreFictional===true,bodyMinimumPx:11,readingMode:'Narrow text pages pan within an explicit readable viewport; whole-page fit is optional',comparison,chosenTee:mono?.assetId,postcardFlip:await flip.count()>0,offlineRoundTrip,pdfBytes:fs.statSync(pdfFile).size,sha256:crypto.createHash('sha256').update(fs.readFileSync(pdfFile)).digest('hex'),errors};
+  const output={city,pages:magazine.pages.length,sections:magazine.spreads.map(s=>s.section),uniqueEditorialSlots:identities.length,actualPhotos:apparel.length,classificationTransportFixture:true,livePublicationClaim:false,assetChoicesSource:'Explicit caller-supplied FCC art descriptors',notesAreFictional:fixture.notesAreFictional===true,bodyMinimumPx:11,readingMode:'Canonical SVG text wraps to the phone width at 11px or larger; the same spreads may grow taller; fixed A5 export is unchanged',reading,g8NegativeControls:city==='bangkok'?['same-element-overlap','unmarked-overflow','opaque-panel-cover']:[],gates:result.gates,comparison,chosenTee:mono?.assetId,postcardFlip:await flip.count()>0,offlineRoundTrip,pdfBytes:fs.statSync(pdfFile).size,sha256:crypto.createHash('sha256').update(fs.readFileSync(pdfFile)).digest('hex'),errors};
   output.pageIdentity={url:page.url(),title:await page.title()};output.consoleMessages=consoleMessages;
   assert.deepEqual(errors,[]);fs.writeFileSync(path.join(directory,'result.json'),JSON.stringify(output,null,2));console.log(JSON.stringify(output));
  }catch(error){await page.screenshot({path:path.join(directory,'failure.png')}).catch(()=>{});throw error;}finally{await browser.close();}
