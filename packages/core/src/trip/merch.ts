@@ -27,7 +27,8 @@ export function selectCityApparel(cityId: string, rawEntries: unknown): ApparelA
   slug.parse(cityId);
   if (!Array.isArray(rawEntries)) throw new Error('FCC apparel entries must be an array.');
   const selected = new Map<string, ApparelArtRef>();
-  for (const raw of rawEntries) {
+  for (const entry of rawEntries) {
+    const raw=entry&&typeof entry==='object'&&'artRef' in entry?entry.artRef:entry;
     if (!raw || typeof raw !== 'object' || raw.kind !== 'apparel-mockup') continue;
     const artwork = apparelArtRefSchema.parse(raw);
     if (artwork.originCityId !== cityId) continue;
@@ -45,10 +46,12 @@ export function fccShopUrl(cityId: string): string {
 }
 
 const localCatalog = z.string().regex(/^\/artwork\/[a-zA-Z0-9/_-]+\.json$/);
-const registry = z.object({ version: z.literal(1), styles: z.array(z.object({ id, label: z.string().min(1).max(300), manifest: localCatalog }).strict()).max(100) }).strict();
+const rightsMetadata={credit:z.string().min(1).max(1000).optional(),rightsStatus:z.enum(['approved','unknown','restricted']).optional()};
+const registry = z.object({ version: z.literal(1), styles: z.array(z.object({ id, label: z.string().min(1).max(300), manifest: localCatalog,...rightsMetadata }).strict()).max(100) }).strict();
 const manifest = z.object({
   version: z.literal(1), styleId: id, subjects: z.array(z.object({ id, label: z.string().max(300) }).strict()), cities: z.array(z.object({ id, label: z.string().max(300) }).strict()),
   catalogs: z.array(z.object({ subject: id, city: slug.optional(), url: localCatalog, count: z.number().int().nonnegative() }).strict()),
+  ...rightsMetadata,
 }).strict();
 const rawCatalog = z.object({ version: z.literal(1), styleId: id, items: z.array(z.unknown()).max(5000) }).strict();
 async function fourWorkers<T, R>(values: readonly T[], work: (value: T) => Promise<R>): Promise<R[]> {
@@ -78,7 +81,8 @@ export async function loadCityApparel(cityId: string, options: { fetcher?: typeo
     const references = (await fourWorkers(styles.styles, async style => {
       const data = await read(style.manifest, manifest);
       if (data.styleId !== style.id) throw new Error('FCC apparel style identity does not match.');
-      return data.catalogs.filter(catalog => catalog.city === cityId && catalog.count > 0).map(catalog => ({ ...catalog, styleId: style.id }));
+      const dedicated=data.subjects.some(subject=>subject.id==='apparel');
+      return data.catalogs.filter(catalog => catalog.city === cityId && catalog.count > 0&&(!dedicated||catalog.subject==='apparel')).map(catalog => ({ ...catalog, styleId: style.id }));
     })).flat();
     const catalogs = await fourWorkers(references, async reference => {
       const data = await read(reference.url, rawCatalog);

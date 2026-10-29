@@ -4,7 +4,9 @@
     {
       "id": "fcc-editorial",
       "label": "FCC · Fashion, travel & lifestyle",
-      "manifest": "/artwork/fcc/manifest.json"
+      "manifest": "/artwork/fcc/manifest.json",
+      "credit": "Foreign Clubbers Correspondence",
+      "rightsStatus": "unknown"
     }
   ]
 }
