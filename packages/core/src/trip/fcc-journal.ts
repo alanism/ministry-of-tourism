@@ -1,7 +1,9 @@
 import type * as Y from 'yjs';
+import { z } from 'zod';
 import { readAllCards, readPresentations, readTripMeta, tripParts } from './model.ts';
-import { exportTripPackage, type ExportOptions } from './package.ts';
+import { exportTripPackage, sha256Hex, type ExportOptions } from './package.ts';
 import { importTripPackage } from './import.ts';
+import { TripSession } from './session.ts';
 type Card = ReturnType<typeof readAllCards>[number];
 const FCC_FORMAT = 'fcc.b.travel.v2';
 const FCC_SCHEMA = 'fcc.journal/1';
@@ -11,7 +13,7 @@ function dayMs(s: string) { return Date.parse(s+'T00:00:00Z'); }
 function dayStr(ms: number) { return new Date(ms).toISOString().slice(0, 10); }
 interface FccNote {id:string;type:'note';page:'L'|'R';spread:number;x:number;y:number;w:number;r:number;z:number;text:string;}
 interface FccDay {id:string;n:number;date:string;spreadCount:number;items:FccNote[];}
-export interface FccJournalCopy {format:typeof FCC_FORMAT;nb:{schema:typeof FCC_SCHEMA;city:string;rev:number;trip:{party:string[]};title:string;days:FccDay[]};media:Record<string,never>;artwork:Record<string,never>;}
+export interface FccJournalCopy {format:typeof FCC_FORMAT;nb:{schema:typeof FCC_SCHEMA;proto:'city';city:string;rev:number;seq:number;places:never[];trip:{party:string[];motSource:{format:'mot.fcc/1';packageSha256:string}};title:string;days:FccDay[]};media:Record<string,never>;artwork:Record<string,never>;}
 function textOf(c:Card):string {
   return [c.title,c.provenance==='agent'?'Muse suggestion · not checked':'',c.body?(c.sourceText?'Saved excerpt: '+c.body:c.body):'',c.sourceText?'Source snapshot: '+c.sourceText:'',c.travelerNote?'Traveler note: '+c.travelerNote:'',c.source?`Source: ${c.source.canonicalUrl??c.source.url??'Not provided'}\nRetrieved: ${c.source.retrievedAt}\nVersion: ${c.source.version??c.source.contentHash??'Not provided'}`:'',...(c.currentFacts??[]).map(f=>`Checked fact: ${f.field} — ${f.value}\nObserved: ${f.observedAt}\nEvidence: ${f.evidenceUrl}`)].filter(Boolean).join('\n\n');
 }
@@ -56,9 +58,66 @@ export async function exportFccJournal(doc: Y.Doc, assetBytes: Map<string, Uint8
       return { id: `day-${di + 1}`, n: di + 1, date, spreadCount: 1, items };
     });
     if (n === 0) unsupported.push({ path: 'fcc/nb/days', reason: 'No dated in-range cards mapped; nothing claimed as converted, originals kept in native ZIP.' });
-    unsupported.push({ path: 'fcc', reason: 'FCC edits are not merged back; reopening the original native ZIP is a separate lossless restoration. No automatic bidirectional edit round-trip.' });
-    const fcc:FccJournalCopy = { format: FCC_FORMAT, nb: { schema: FCC_SCHEMA, city: cityId, rev: 0, trip: { party: cleanParty }, title: meta.title, days }, media: {}, artwork: {} };
+    unsupported.push({ path: 'fcc', reason: 'FCC edits return only as traveler annotations with this original scoped ZIP. Source snapshots and native cards are preserved; FCC deletions, layout, ink and media do not replace native content.' });
+    const fcc:FccJournalCopy = { format: FCC_FORMAT, nb: { schema: FCC_SCHEMA, proto:'city', city: cityId, rev: 0, seq:n, places:[], trip: { party: cleanParty, motSource:{format:'mot.fcc/1',packageSha256:await sha256Hex(originalPackage)} }, title: meta.title, days }, media: {}, artwork: {} };
     if (new TextEncoder().encode(JSON.stringify(fcc)).length > FCC_LIMIT) throw new Error('FCC JSON exceeds its 25000000 byte importer cap; nothing was exported.');
     return { fcc, idMap, originalPackage, unsupported };
   } finally { reopened.doc.destroy(); }
+}
+
+// The FCC editor persists trip metadata, whereas unknown notebook-root fields may be discarded.
+// A digest pairs this backup with its companion ZIP; it does not authenticate either file.
+const backupSchema=z.object({
+  format:z.literal(FCC_FORMAT),
+  nb:z.object({
+    schema:z.literal(FCC_SCHEMA),city:z.string(),seq:z.number().int().nonnegative().safe(),
+    trip:z.object({motSource:z.object({format:z.literal('mot.fcc/1'),packageSha256:z.string().regex(/^[a-f0-9]{64}$/)}).strict()}).passthrough(),
+    days:z.array(z.object({id:z.string().regex(/^day-\d+$/),date:z.string().regex(DAY_RE).refine(s=>Number.isFinite(dayMs(s))&&dayStr(dayMs(s))===s),
+      items:z.array(z.object({id:z.string().regex(/^[a-z]-\d+$/),type:z.enum(['clip','note','sticker','photo','stamp','ink','outfit','tape']),text:z.string().max(FCC_LIMIT).optional()}).passthrough()),
+    }).passthrough()).min(1).max(30),
+  }).passthrough(),media:z.record(z.string(),z.unknown()).optional(),artwork:z.record(z.string(),z.unknown()).optional(),
+}).passthrough();
+
+/** Reopen a NEW native trip and retain FCC text edits as annotations. Never mutates an open trip. */
+export async function importFccJournal(bytes:Uint8Array,originalPackage:Uint8Array):Promise<{doc:Y.Doc;assets:Map<string,Uint8Array>;originalFcc:Uint8Array;unsupported:Array<{path:string;reason:string}>}> {
+  if(bytes.length>FCC_LIMIT)throw new Error('FCC JSON exceeds its 25000000 byte importer cap.');
+  const value=backupSchema.parse(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));
+  if(value.nb.trip.motSource.packageSha256!==await sha256Hex(originalPackage))throw new Error('FCC backup does not match this original scoped ZIP.');
+  const ids=new Set<string>(),days=new Set<string>();
+  for(const day of value.nb.days){
+    if(days.has(day.id))throw new Error('Duplicate FCC day identity.');days.add(day.id);
+    for(const item of day.items){
+      if(ids.has(item.id)||Number(item.id.slice(2))>value.nb.seq)throw new Error('Duplicate FCC entry identity or invalid sequence.');ids.add(item.id);
+      if(item.type==='note'&&typeof item.text!=='string')throw new Error('FCC note is missing its text.');
+    }
+  }
+  const imported=await importTripPackage(originalPackage),session=new TripSession(imported.doc);
+  try{
+    const meta=readTripMeta(imported.doc);
+    if(value.nb.city!==meta.cityId||!meta.dates)throw new Error('FCC backup city does not match its original trip.');
+    const span=(dayMs(meta.dates.end)-dayMs(meta.dates.start))/86400000+1;
+    if(!Number.isInteger(span)||span<1||span>30)throw new Error('Original calendar range must be 1-30 days.');
+    const cards=readAllCards(session.parts),mapped=new Map<string,Card>();let n=0;
+    for(let ms=dayMs(meta.dates.start);ms<=dayMs(meta.dates.end);ms+=86400000)for(const card of cards)if(card.day===dayStr(ms))mapped.set(`n-${++n}`,card);
+    const unsupported:Array<{path:string;reason:string}>=[{path:'nb',reason:'FCC dates, party, notebook settings and visual arrangement do not overwrite the native trip; the complete FCC backup is retained in originalFcc.'}];
+    const ops:Array<{command:string;input:unknown}>=[];
+    for(const day of value.nb.days)for(const item of day.items){
+      if(item.type!=='note'){unsupported.push({path:`entry/${item.id}`,reason:`FCC ${item.type} remains in originalFcc; no native visual equivalent is implied.`});continue;}
+      const card=mapped.get(item.id),text=item.text!;
+      if(card){
+        if(text===textOf(card)&&day.date===card.day)continue;
+        const travelerNote=[card.travelerNote,`FCC Journal edit (${day.date}):\n${text}`].filter(Boolean).join('\n\n');
+        if(travelerNote.length>20000)throw new Error(`FCC edit ${item.id} exceeds the traveler annotation limit; nothing was imported.`);
+        ops.push({command:'trip_card_update',input:{id:card.id,travelerNote}});
+      }else{
+        if(text.length>20000)throw new Error(`FCC note ${item.id} exceeds the traveler annotation limit; nothing was imported.`);
+        ops.push({command:'trip_card_create',input:{kind:'note',title:'FCC Journal note',travelerNote:text,day:day.date,provenance:'traveler',scope:'stay'}});
+      }
+    }
+    for(const id of mapped.keys())if(!ids.has(id))unsupported.push({path:`entry/${id}`,reason:'FCC entry is missing or deleted; the original native card is retained.'});
+    for(const key of ['media','artwork'] as const)if(Object.keys(value[key]??{}).length)unsupported.push({path:key,reason:`FCC ${key} remains in originalFcc; original native assets are retained separately.`});
+    // All edits are validated on a throwaway document before the first write (including a late overlong note).
+    session.executeAll({kind:'human',id:'fcc-import',name:'FCC Journal import'},ops);
+    return{doc:imported.doc,assets:imported.assets,originalFcc:bytes.slice(),unsupported};
+  }catch(error){imported.doc.destroy();throw error;}finally{session.destroy();}
 }
