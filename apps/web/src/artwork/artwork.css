@@ -77,6 +77,24 @@
 .art-source-record a { display: inline-flex; align-items: center; min-height: 44px; color: var(--m-ink); }
 .art-add-row { position: sticky; bottom: 0; background: var(--m-surface); display: grid; gap: 12px; border-top: 1px solid var(--m-line); padding: 12px 0; margin-top: auto; }
 .art-add-row .primary { width: 100%; }
+.art-scope { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px; border: 1px solid var(--m-line); border-radius: 12px; background: var(--m-wash); margin-bottom: 12px; }
+.art-scope button { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.art-scope button small { display: block; font: 400 12px/16px var(--m-sans); }
+.art-scope button[aria-pressed='true'] { border-color: var(--m-ink); font-weight: 600; }
+.art-categories { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+.trip-artwork .art-categories button { min-height: 36px; padding: 6px 12px; border-radius: 999px; font: 400 12px/16px var(--m-sans); }
+.art-categories button b { margin-left: 4px; }
+.art-categories button.zero { border-style: dashed; }
+.art-categories button[aria-pressed='true'] { background: var(--m-ink); color: var(--m-surface); border-color: var(--m-ink); }
+.art-scope-notice { display: grid; gap: 12px; padding: 24px; border: 1px solid var(--m-line); border-radius: 12px; background: var(--m-paper); }
+.art-scope-notice p { font: 400 15px/20px var(--m-sans); overflow-wrap: anywhere; }
+.art-notice-actions, .art-country-options { display: flex; flex-wrap: wrap; gap: 12px; }
+.artwork-result { min-width: 0; display: flex; flex-direction: column; }
+.artwork-result .artwork-tile { flex: 1; width: 100%; }
+.trip-artwork .art-tile-source { min-height: 44px; padding: 6px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; color: var(--m-ink-2); font: 400 12px/16px var(--m-mono); overflow-wrap: anywhere; }
+.trip-artwork .artwork-message[role='alert'] { padding: 12px; background: var(--m-red-wash); border: 1px solid var(--m-line); border-radius: 12px; }
+.trip-artwork .artwork-message button { margin: 12px 6px 0 0; }
+.trip-artwork .artwork-grid { margin-top: 12px; }
 @media (max-width: 1000px) {
  .trip-art-panes { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); }
  .trip-artwork .artwork-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

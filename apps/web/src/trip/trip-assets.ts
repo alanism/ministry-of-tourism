@@ -79,6 +79,17 @@ export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:A
 }
 
 /** Stage original bytes in this tab, attach atomically, then persist them by hash. */
+export async function placeTripUpload(session:TripSession,actor:Actor,file:File,signal:AbortSignal):Promise<void>{
+  if(!/^image\/(png|jpeg|webp|gif|avif)$/.test(file.type))throw new Error('Choose a PNG, JPEG, WebP, GIF or AVIF image.');
+  const image=await createImageBitmap(file),pixels={width:image.width,height:image.height};image.close();signal.throwIfAborted();
+  const ratio=pixels.height/pixels.width*148/210,width=Math.min(.38,.65/ratio),height=width*ratio;
+  await commitTripBlob(file,hash=>{const assetId=crypto.randomUUID();session.executeAll(actor,[
+    {command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:file.type,role:'original',caption:file.name,...pixels}}},
+    {command:'trip_presentation_create',input:{assetId,x:.08,y:.08,width,height,crop:[0,0,1,1],scope:'private'}},
+  ]);},signal);
+}
+
+/** Stage original bytes in this tab, attach atomically, then persist them by hash. */
 export async function attachPhoto(session: TripSession, actor: Actor, cardId: string, blob: Blob): Promise<void> {
   if (!blob.type.startsWith('image/')) throw new Error('Choose an image file.');
   await commitTripBlob(blob,hash=>session.execute(actor, 'trip_asset_attach', { cardId, asset: { id: crypto.randomUUID(), hash, mime: blob.type, role: 'original' } }));

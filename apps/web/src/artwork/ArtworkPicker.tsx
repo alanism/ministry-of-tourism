@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { z } from 'zod';
 import { useUi } from '../state/ui';
 import { artworkSchema, catalogSchema, manifestSchema, registrySchema, readCatalog, type Artwork, type Manifest, type StylePack } from './catalog';
@@ -7,6 +7,8 @@ import './artwork.css';
 import CountryArtworkBrowser from './CountryArtworkBrowser';
 import type { ArtDestination } from './country-art';
 import ArtworkPreview from './ArtworkPreview';
+import ArtworkThumbnail from './ArtworkThumbnail';
+import TripArtworkBrowser from './TripArtworkBrowser';
 import {decorativeArtwork} from './art-preview';
 interface TripArtContext {destination:{cityId?:string;city:string;countryCode?:string};destinations:readonly ArtDestination[];}
 const normalizedCity=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -15,37 +17,32 @@ const PAGE_SIZE = 12;
 
 function useCatalog<T>(url: string, schema: z.ZodType<T>) {
   const [attempt, setAttempt] = useState(0);
-  const [state, setState] = useState<{ url: string; data?: T; error?: string }>();
+  const [state, setState] = useState<{ url: string; data?: T; error?: string;cachedAt?:string }>();
   useEffect(() => {
     if (!url) return;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(new Error('Artwork took too long to load. Please retry.')), 20000);
+    const cacheKey='mot-public-art-meta:'+url;
+    const cacheable=url==='/artwork/index.json'||url.endsWith('/manifest.json');
+    let cached:{data:T;retrievedAt:string}|undefined;
+    try{const raw=cacheable?localStorage.getItem(cacheKey):null;if(raw&&raw.length<512*1024){const saved=JSON.parse(raw);if(typeof saved.retrievedAt==='string'&&Number.isFinite(Date.parse(saved.retrievedAt)))cached={data:schema.parse(saved.data),retrievedAt:saved.retrievedAt};}}catch{}
     let live = true;
     setState({ url });
     readCatalog(url, schema, controller.signal).then(data => {
-      if (live) setState({ url, data });
+      if(live){setState({url,data});if(cacheable)try{const saved=JSON.stringify({data,retrievedAt:new Date().toISOString()});if(saved.length<512*1024)localStorage.setItem(cacheKey,saved);}catch{}}
     }).catch(error => {
-      if (live) setState({ url, error: controller.signal.aborted ? 'Artwork took too long to load. Please retry.' : error instanceof Error ? error.message : 'Could not load artwork. Please retry.' });
+      if (live) setState({ url,...(cached?{data:cached.data,cachedAt:cached.retrievedAt}:{}), error: controller.signal.aborted ? 'Artwork took too long to load. Please retry.' : error instanceof Error ? error.message : 'Could not load artwork. Please retry.' });
     }).finally(() => clearTimeout(timer));
     return () => { live = false; clearTimeout(timer); controller.abort(); };
   }, [url, schema, attempt]);
-  return { data: state?.url === url ? state.data : undefined, error: state?.url === url ? state.error : undefined, retry: () => setAttempt(value => value + 1) };
+  return { data: state?.url === url ? state.data : undefined, error: state?.url === url ? state.error : undefined, cachedAt:state?.url===url?state.cachedAt:undefined,retry:attempt<3?() => setAttempt(value => value + 1):undefined };
 }
 
-function LoadState({ error, retry }: { error?: string; retry: () => void }) {
-  return error ? <div role="alert" className="artwork-message"><p>{error}</p><button type="button" onClick={retry}>Retry</button></div>
+function LoadState({ error, retry }: { error?: string; retry?: () => void }) {
+  return error ? <div role="alert" className="artwork-message"><p>{error}</p>{retry?<button type="button" onClick={retry}>Retry</button>:<p>Three retries failed. Reopen when connected.</p>}</div>
     : <p className="artwork-message" role="status">Loading artwork…</p>;
 }
 
-function Thumbnail({ artwork }: { artwork: Artwork }) {
-  const [failed, setFailed] = useState(false);
-  const [x, y, w, h] = artwork.crop ?? [0, 0, 1, 1];
-  const style: CSSProperties = { width: `${100 / w}%`, height: `${100 / h}%`, left: `${-100 * x / w}%`, top: `${-100 * y / h}%` };
-  return <span className="artwork-preview"><span className="artwork-crop" style={{ aspectRatio: (artwork.width * w) / (artwork.height * h) }}>
-    {failed ? <span className="artwork-thumb-error">Preview unavailable</span>
-      : <img src={artwork.thumb} alt="" loading="lazy" decoding="async" style={style} onError={() => setFailed(true)} />}
-  </span></span>;
-}
 
 function CatalogBrowser({ manifest, onPick, busy,trip }: { manifest: Manifest; onPick: (artwork: Artwork) => void; busy: boolean;trip?:TripArtContext }) {
   const subjects=manifest.subjects.filter(subject=>subject.id!=='apparel');
@@ -87,7 +84,7 @@ function CatalogBrowser({ manifest, onPick, busy,trip }: { manifest: Manifest; o
         <p className="artwork-count" role="status">{items.length} images · {trip?'Select an image to preview it.':'Select an image to add it to your board.'}</p>
         {items.length ? <div className="artwork-grid" aria-label="Artwork images">
           {items.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE).map(item => <button type="button" key={item.id} className="artwork-tile" aria-label={`${trip?'Preview':'Add'} ${item.label}`} disabled={busy} onClick={() => choose(artworkSchema.parse(item))}>
-            <Thumbnail artwork={item} /><span className="artwork-label">{item.label}</span>{trip&&<><span className="artwork-label art-meta">{trip.destination.cityId&&item.city!==trip.destination.cityId?'From ':''}{manifest.cities.find(city=>city.id===item.city)?.label??item.city??'Origin unknown'}</span><span className="artwork-label art-meta">{item.artRef?.credit??'Credit not supplied'}</span></>}
+            <ArtworkThumbnail artwork={item} /><span className="artwork-label">{item.label}</span>{trip&&<><span className="artwork-label art-meta">{trip.destination.cityId&&item.city!==trip.destination.cityId?'From ':''}{manifest.cities.find(city=>city.id===item.city)?.label??item.city??'Origin unknown'}</span><span className="artwork-label art-meta">{item.artRef?.credit??'Credit not supplied'}</span></>}
           </button>)}
         </div> : <p className="artwork-message">No images match that search.</p>}
         {totalPages > 1 && <nav className="artwork-pagination" aria-label="Artwork pages">
@@ -102,19 +99,20 @@ function CatalogBrowser({ manifest, onPick, busy,trip }: { manifest: Manifest; o
   return <div className={'trip-art-panes'+(selected?' has-preview':'')}><div className="trip-art-browse">{browse}</div>{selected?<ArtworkPreview key={selected.id} artwork={selected} origin={trip.destinations.find(city=>city.id===selected.city)?.name??manifest.cities.find(city=>city.id===selected.city)?.label??selected.city??'Origin unknown'} away={!!selected.city&&selected.city!==ownId} busy={busy} onBack={back} onAdd={()=>onPick(selected)}/>:<aside className="trip-art-preview art-preview-empty"><h3>Pick a picture to preview it</h3><p>See who drew it, where it’s from and how large its pixels print.</p></aside>}</div>;
 }
 
-function PackBrowser({ pack, onPick, busy,trip }: { pack: StylePack; onPick: (artwork: Artwork) => void; busy: boolean;trip?:TripArtContext }) {
+function PackBrowser({ pack, onPick, busy,trip,onUpload }: { pack: StylePack; onPick: (artwork: Artwork) => void; busy: boolean;trip?:TripArtContext;onUpload?:()=>void }) {
   const resource = useCatalog(pack.manifest, manifestSchema);
   if (!resource.data) return <LoadState error={resource.error} retry={resource.retry} />;
   if (resource.data.styleId !== pack.id) return <p className="artwork-message" role="alert">This style catalog could not be matched. Please choose another style.</p>;
-  return <CatalogBrowser key={pack.id} manifest={resource.data} onPick={onPick} busy={busy} trip={trip} />;
+  return <>{resource.cachedAt&&<p className="artwork-count">Saved catalogue · {new Date(resource.cachedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} · couldn’t refresh. Artwork copies keep their own dates.</p>}{trip&&pack.id==='fcc-editorial'?<TripArtworkBrowser manifest={resource.data} trip={trip} onPick={onPick} busy={busy} onUpload={onUpload}/>:<CatalogBrowser key={pack.id} manifest={resource.data} onPick={onPick} busy={busy} trip={trip}/>}</>;
 }
 
-export default function ArtworkPicker({onInsert,onClose,trip}:{onInsert?:(artwork:Artwork,signal:AbortSignal)=>Promise<void>;onClose?:()=>void;trip?:TripArtContext}={}) {
+export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload?:(file:File,signal:AbortSignal)=>Promise<void>;onInsert?:(artwork:Artwork,signal:AbortSignal)=>Promise<void>;onClose?:()=>void;trip?:TripArtContext}={}) {
   const registry = useCatalog('/artwork/index.json', registrySchema);
   const [styleId, setStyleId] = useState('');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const section = useRef<HTMLElement>(null);
+  const fileInput=useRef<HTMLInputElement>(null);
   const insertion = useRef<AbortController | null>(null);
   const close = onClose??(()=>useUi.getState().setDialog(null));
   useEffect(()=>{
@@ -130,13 +128,13 @@ export default function ArtworkPicker({onInsert,onClose,trip}:{onInsert?:(artwor
     section.current?.querySelector<HTMLButtonElement>('button')?.focus();
     return () => { insertion.current?.abort(); if(previous?.isConnected&&previous!==document.body)previous.focus();else trigger?.focus(); };
   }, []);
-  const pick = async (artwork: Artwork) => {
+  const pick = async (artwork: Artwork|File) => {
     if (insertion.current) return;
     const controller = new AbortController();
     insertion.current = controller;
     const timer = setTimeout(() => controller.abort(new Error('Download took too long. Please try again.')), 30000);
-    setBusy(artwork.label); setError('');
-    try { await (onInsert??placeArtwork)(artwork, controller.signal); close(); }
+    setBusy(artwork instanceof File?artwork.name:artwork.label); setError('');
+    try { if(artwork instanceof File){if(!onUpload)throw Error('Photo uploads are unavailable here.');await onUpload(artwork,controller.signal);}else await (onInsert??placeArtwork)(artwork, controller.signal); close(); }
     catch (cause) {
       if (!controller.signal.aborted || cause instanceof Error && cause.name !== 'AbortError') {
         setError(controller.signal.aborted ? 'Download took too long. Please try again.' : cause instanceof Error ? cause.message : 'Could not add artwork. Please try again.');
@@ -158,11 +156,13 @@ export default function ArtworkPicker({onInsert,onClose,trip}:{onInsert?:(artwor
       <p className="dialog-note">{trip?'Drawings for your trip. Choose a picture, then add its original.':'People, places and objects for your ideas. Images load as you browse.'}</p>
       {busy && <p className="artwork-notice" role="status">Adding {busy}…</p>}
       {error && <p className="dialog-error" role="alert">{error}</p>}
+      {onUpload&&<input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" hidden onChange={event=>{const file=event.target.files?.[0];event.target.value='';if(file)void pick(file);}}/>}
       {!registry.data ? <LoadState error={registry.error} retry={registry.retry} /> : <>
+        {registry.cachedAt&&<p className="artwork-count">Saved style list · {new Date(registry.cachedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</p>}
         <label className="field artwork-style"><span>Style</span><select value={pack?.id} disabled={!!busy} onChange={event => { setStyleId(event.target.value); setError(''); }}>
           {registry.data.styles.map(value => <option key={value.id} value={value.id}>{value.label}</option>)}
         </select></label>
-        {pack && <PackBrowser key={pack.id} pack={pack} onPick={artwork => void pick(artwork)} busy={!!busy} trip={trip} />}
+        {pack && <PackBrowser key={pack.id} pack={pack} onPick={artwork => void pick(artwork)} busy={!!busy} trip={trip} onUpload={onUpload?()=>fileInput.current?.click():undefined} />}
       </>}
     </section>
   </div>;

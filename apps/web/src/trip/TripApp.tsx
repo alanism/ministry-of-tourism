@@ -10,7 +10,7 @@ import { Keepsakes } from './Keepsakes.tsx';
 import { GuestCopyPanel } from './GuestCopyPanel.tsx';
 import { Diamond, FocusSheet, Icon, Logo, Menu, Toast, type MenuEntry } from './ui';
 import { STORAGE_ERROR_EVENT, STORAGE_STATUS_EVENT, forgetLastBoard, lastBoardId, listBoards, openTrip, type OpenTrip, type SavedStatus } from './trip-store.ts';
-import { hasEphemeralAssets, placeTripArtwork, storeImportedAssets } from './trip-assets';
+import { hasEphemeralAssets, placeTripArtwork, placeTripUpload, storeImportedAssets } from './trip-assets';
 import { BRIEF_TEMPLATE, cityLabel, isSample, parseBrief, tripSubtitle } from './sample';
 import { enableMetrics, readMetrics, recordOutcome } from './metrics';
 import { DestinationPicker, type DestinationRow } from './DestinationPicker';
@@ -288,7 +288,7 @@ export function TripApp() {
       {panel === 'review' && <FocusSheet label="Review changes" onClose={() => setPanel(null)}><ProposalReview key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={() => setPanel(null)} pending={pending} focus={focusOp} onPending={setPending} /></FocusSheet>}
       {panel === 'guest' && host && <FocusSheet label="Create a guest copy" onClose={() => setPanel(null)}><GuestCopyPanel key={meta.boardId} session={session} onCreate={(t, ids) => void guestCopy(t, ids)} onClose={() => setPanel(null)} /></FocusSheet>}
       {panel==='destination'&&<FocusSheet label="Change destination" onClose={()=>setPanel(null)}><DestinationPicker current={meta} kind={meta.kind} {...destinationProps} preservedCards={readAllCards(session.parts).map(card=>({id:card.id,title:card.title,sourceCity:destinations.find(row=>row.id===card.source?.cityId)?.name??card.source?.cityId}))} onClose={()=>setPanel(null)} onSave={details=>{try{session.execute(YOU,'trip_meta_update',{city:details.city,cityId:details.cityId,countryCode:details.countryCode,timeZone:details.timeZone,dates:details.dates});setPanel(null);refresh();notify('Destination changed. Existing cards keep their sources; refresh FCC content when ready.');}catch(error){notify(error instanceof Error?error.message:'Destination could not be changed.');}}} /></FocusSheet>}
-      {panel==='art'&&<Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{destination:meta,destinations}} onClose={()=>setPanel(null)} onInsert={async(artwork,signal)=>{await placeTripArtwork(session,YOU,artwork,signal);refresh();setTab('composition');notify('Artwork added to your trip.',{label:'Undo',run:undo});}} /></Suspense>}
+      {panel==='art'&&<Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{destination:meta,destinations}} onClose={()=>setPanel(null)} onUpload={async(file,signal)=>{await placeTripUpload(session,YOU,file,signal);refresh();setTab('composition');notify('Photo added to your trip.',{label:'Undo',run:undo});}} onInsert={async(artwork,signal)=>{await placeTripArtwork(session,YOU,artwork,signal);refresh();setTab('composition');notify('Artwork added to your trip.',{label:'Undo',run:undo});}} /></Suspense>}
       {panel==='muse'&&<FocusSheet label="Muse trip plan" onClose={()=>setPanel(null)}><MusePlan session={session} actor={YOU} content={cityContent} onAvailability={setMuseAvailable} refresh={refresh} notify={notify} /></FocusSheet>}
       {toast && panel!=='art' && <Toast message={toast.message} action={toast.action} onClose={() => setToast(null)} />}
       <div className="mot-foot">
