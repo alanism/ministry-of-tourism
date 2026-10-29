@@ -20,6 +20,12 @@ An optional second argument to either generator selects a separate output direct
 
 The source currently supplies no flat-map or sticker category; do not claim a 50-flat-map sample. The publication regression samples 50 real cities' mono/color tee entries and validates that they remain apparel. All generated entries are parsed by the full catalog regression.
 
+For the complete MOT-84 audit, run `node scripts/verify-mot-artrefs.mjs <public-root> <receipt.json>` separately against the bundle and each isolated rebuild. It validates every ArtRef, display/origin/country binding, collection classification, unique identity and nonempty manifest shard. Four deliberately corrupted entries must fail, including a schema-valid tee disguised as a map. Compare the two receipts' complete `files` maps for byte identity. `stablePayloadSha256` excludes only identity, retrieval date and source version, so a newer publisher epoch can be distinguished from a changed image/crop/credit without silently refreshing saved artwork. The generator's own metadata digest covers a different file set; do not equate the two digest formats.
+
+An isolated `policy-fixture` run may seed the manifest/pack with `credit: "QA PACK CREDIT — FIXTURE ONLY"` and `rightsStatus: "approved"`, then invoke the verifier with a third argument `policy-fixture`. This is synthetic policy-inheritance evidence, never an actual rights grant or publishable catalog. The real default remains unknown unless the source explicitly grants rights. Existing unit checks separately cover entry-level restrictions and credit overrides.
+
+`node scripts/test-mot-art-absence.cjs`, with the usual browser environment variables below, checks actual bundled San Sebastián/Spain zero-map and zero-sticker labels, truthful clothing guidance, empty image results and an unchanged trip at six widths. It makes no provider request. Zero published flat maps means the literal 50-flat-map sample is unavailable; report the actual map-tee corpus and labelled negative controls instead.
+
 ## Browser check
 
 Start the normal Vite server, then set `MOT_TEST_ORIGIN`, `MOT_FCC_SOURCE`, optional `MOT_PLAYWRIGHT_MODULE` and `MOT_EVIDENCE_DIR`:
