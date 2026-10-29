@@ -5,7 +5,7 @@ checkpoint based on `51c5100` plus this follow-up. **MOT-100 remains In progress
 the final desktop run includes an 8.105-second uncached art result against the
 unchanged four-second limit, and physical iOS/Safari remains unmeasured.
 
-## Unchanged budgets and actual final-build results
+## Unchanged budgets and preserved ccb4f5d results
 
 First decoded art: **4,000 ms**. Cached decoded art: **2,000 ms**.
 Exactly 12-page, art-rich PDF: **60,000 ms**. No limit was revised.
@@ -99,6 +99,49 @@ system activity were not controlled. No validator, fixture, test, worker setting
 or deadline was changed to force a pass; the intermittent runner issue remains
 unresolved. Empirical retry date: 30 April 2027; no automation was scheduled.
 
+## First-art network diagnosis (30 October follow-up)
+
+A new eight-process desktop probe reproduced **8,132.8 ms**, including a
+**7,678.139 ms** thumbnail request. Chrome reported **7,219.172 ms in proxy
+resolution**, before DNS, connection and transfer. Its first grid was ready at
+931.4 ms; no long-task entries were recorded during the view, and measured host CPU
+busy time was 11.3%. The other seven fresh-browser views took 753.3–952.7 ms,
+with proxy phases of 3.462–3.790 ms. OS/CDN/proxy caches and other system activity
+were not reset or controlled; these are small observations, not percentiles.
+
+[Chrome's protocol definition](https://github.com/ChromeDevTools/devtools-protocol/blob/master/pdl/domains/Network.pdl)
+defines `proxyStart` / `proxyEnd` as proxy-resolution boundaries in milliseconds
+relative to request time. This identifies the long phase in the **new reproduction**.
+The original 8,105.1 ms sample lacks a network trace, so its cause cannot be proven
+from the old data. Both failed samples remain failures against 4,000 ms. No proxy
+settings or reference profile was changed, and no proxy duration is subtracted.
+
+The benchmark now records `firstImageRequests` separately for each first/cached
+view: request duration, proxy, DNS, connection, TLS, header-wait, encoded bytes and
+reported cache flags. This observer issues no requests. Start/end timing, fixture,
+PDF samples, existing assertions and 4/2/60-second limits stay the same. All 14
+application JavaScript bundles are byte-identical to the prior measured build.
+TLS is part of connection time; do not sum overlapping phases. Missing phases are
+`null`. An empty request list means no new request was observed for that view; it
+does not claim a particular cache source or reuse the first view's network timing.
+Redirected requests retain total duration but suppress unsupported per-hop phases.
+
+Only FCC HTTPS image requests are observed. Output drops query strings, fragments,
+headers and cookies, refuses credentialed/non-FCC URLs, and omits its internal
+query-sensitive identity digest. A RED/GREEN replay of the actual slow trace plus
+view-isolation, missing-phase, redirect, privacy and distinct-query identity checks
+is available as `node scripts/test-mot-art-network.cjs`. The observer is disposed
+before the PDF timing samples.
+
+The final instrumented rerun recorded desktop first/cached **896.4 / 144.8 ms**
+and phone emulation **2,282.5 / 1,229.7 ms**. Its three desktop PDFs took
+**8.718 / 7.761 / 7.863 s**, and phone PDFs **40.856 / 35.530 / 35.972 s**;
+all six retained the exact 12-page byte count and checksum above. That run exits 0.
+It validates the observer and current samples; it does not erase either recorded
+four-second failure, establish a speedup, reset OS/proxy caches or satisfy physical
+iOS/Safari acceptance. MOT-100 remains In progress. Actual Meta Spark static review
+approved the observer/report with no findings; it did not execute the measurements.
+
 ## Reproduce
 
 Use installed dependencies and a writable external evidence directory. Do not
@@ -117,6 +160,7 @@ profile. Its 120-second observation guard permits recording failures; the produc
 budget stays 60 seconds. Preserve exit 2 and its receipts when a budget is missed.
 
 ```powershell
+node scripts/test-mot-art-network.cjs
 node scripts/test-mot-export-boundaries.cjs
 node scripts/test-mot-export-bitmap-cancel.cjs
 node scripts/measure-mot-performance-12.cjs
