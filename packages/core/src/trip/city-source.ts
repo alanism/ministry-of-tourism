@@ -113,32 +113,45 @@ export function createFccAdapter(options: FccAdapterOptions) {
     let url: string;
     try { url = options.feedUrl(cityId); } catch { return unavailable(err('invalid_url', 'An FCC feed URL has not been configured.')); }
     if (!isPublicFccUrl(url)) return unavailable(err('invalid_url', 'The configured source must be a public FCC HTTPS URL.'));
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'FCC loading was cancelled.'));
+    const controller = new AbortController(), cancel = () => controller.abort();
+    request.signal?.addEventListener('abort', cancel, { once: true });
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, Math.min(20000, options.timeoutMs ?? 20000)));
+    let interrupt!: () => void;
+    const interrupted = new Promise<never>((_resolve, reject) => { interrupt = () => reject(new Error('cancelled')); controller.signal.addEventListener('abort', interrupt, { once: true }); });
     let failure = err('network', 'FCC could not be reached. Retry or use the dated cache.');
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const response = await fetcher(url, { signal: request.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} });
-        if (request.signal?.aborted) { failure = err('cancelled', 'FCC loading was cancelled.'); break; }
-        if (response.status === 304 && previous) return result(previous, 'cached');
-        if (!response.ok) {
-          failure = err(response.status === 404 ? 'not_found' : 'http', response.status === 404 ? 'This FCC city feed is not published. Your trip remains available.' : 'FCC returned an error. Retry or use the dated cache.', response.status);
-          if (response.status >= 500 && attempt < retries) continue;
-          break;
+    try {
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          const transport = fetcher(url, { signal: controller.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} }).then(response => {
+            if (controller.signal.aborted) { void response.body?.cancel().catch(() => {}); throw new Error('cancelled'); }
+            return response;
+          });
+          const response = await Promise.race([transport, interrupted]);
+          if (controller.signal.aborted) throw new Error('cancelled');
+          if (response.status === 304 && previous) return result(previous, 'cached');
+          if (!response.ok) {
+            failure = err(response.status === 404 ? 'not_found' : 'http', response.status === 404 ? 'This FCC city feed is not published. Your trip remains available.' : 'FCC returned an error. Retry or use the dated cache.', response.status);
+            if (response.status >= 500 && attempt < retries) continue;
+            break;
+          }
+          let raw: unknown;
+          try { raw = await Promise.race([response.json(), interrupted]); } catch { if (controller.signal.aborted) throw new Error('cancelled'); failure = err('invalid_feed', 'FCC returned an unreadable city feed. The previous issue was kept.'); break; }
+          const parsed = fccCityFeedSchema.safeParse(raw);
+          if (!parsed.success || parsed.data.city.id !== cityId) { failure = err('invalid_feed', 'FCC returned an invalid or different-city feed. The previous issue was kept.'); break; }
+          if (controller.signal.aborted) throw new Error('cancelled');
+          const entry: CachedFeed = { feed: parsed.data, retrievedAt: now().toISOString(), ...(response.headers.get('ETag') ? { etag: response.headers.get('ETag')! } : {}) };
+          // Usable fetched content does not imply caching succeeded; never clear existing content to make space.
+          try { await cache.write(cityId, entry); } catch { /* Existing board and cached issue remain untouched. */ }
+          return result(entry, 'ready');
+        } catch {
+          failure = request.signal?.aborted ? err('cancelled', 'FCC loading was cancelled.') : timedOut ? err('network', 'FCC loading timed out. Retry or use the dated cache.') : err('network', 'FCC could not be reached. Retry or use the dated cache.');
+          if (controller.signal.aborted) break;
         }
-        let raw: unknown;
-        try { raw = await response.json(); } catch { failure = err('invalid_feed', 'FCC returned an unreadable city feed. The previous issue was kept.'); break; }
-        const parsed = fccCityFeedSchema.safeParse(raw);
-        if (!parsed.success || parsed.data.city.id !== cityId) { failure = err('invalid_feed', 'FCC returned an invalid or different-city feed. The previous issue was kept.'); break; }
-        if (request.signal?.aborted) { failure = err('cancelled', 'FCC loading was cancelled.'); break; }
-        const entry: CachedFeed = { feed: parsed.data, retrievedAt: now().toISOString(), ...(response.headers.get('ETag') ? { etag: response.headers.get('ETag')! } : {}) };
-        // Usable fetched content does not imply caching succeeded; never clear existing content to make space.
-        try { await cache.write(cityId, entry); } catch { /* Existing board and cached issue remain untouched. */ }
-        return result(entry, 'ready');
-      } catch {
-        failure = request.signal?.aborted ? err('cancelled', 'FCC loading was cancelled.') : err('network', 'FCC could not be reached. Retry or use the dated cache.');
-        if (failure.code === 'cancelled') break;
       }
-    }
-    options.onDiagnostic?.({ operation: 'fcc-city-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) });
+    } finally { clearTimeout(timer); request.signal?.removeEventListener('abort', cancel); controller.signal.removeEventListener('abort', interrupt); }
+    try { options.onDiagnostic?.({ operation: 'fcc-city-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) }); } catch { /* Diagnostics cannot discard the dated issue or replace a typed failure. */ }
     if (failure.code === 'cancelled') return unavailable(failure);
     return previous ? result(previous, 'stale', failure) : unavailable(failure);
   }
