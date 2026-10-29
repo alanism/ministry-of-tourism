@@ -29,6 +29,7 @@ export function DestinationPicker({ kind = 'traveler', current, onSave, onClose,
   const status = registryStatus ?? (registry.length ? 'ready' : 'unavailable');
   const countryResults = countryChoices(countryQuery);
   useEffect(() => { if (step === 'city') search.current?.focus(); else if (step === 'country') countrySearch.current?.focus(); else preview.current?.focus(); }, [step]);
+  useEffect(()=>{if(step==='city'&&showResults)document.getElementById(`${listId}-${activeOption}`)?.scrollIntoView({block:'nearest'});},[step,showResults,listId,activeOption]);
   const chooseCity = (row: DestinationRow) => { setSelection({ city: row.name, countryCode: row.countryCode, destination: row }); setError(''); setStep('preview'); };
   const chooseTyped = () => { if (!query.trim()) return; setSelection({ city: query.trim(), countryCode: '' }); setCountryQuery(''); setError(''); setStep('country'); };
   const chooseCountry = (code: string) => { if (selection) { setSelection({ ...selection, countryCode: code }); setError(''); setStep('preview'); } };
@@ -57,7 +58,7 @@ export function DestinationPicker({ kind = 'traveler', current, onSave, onClose,
                 if (event.key === 'Enter') { event.preventDefault(); chooseOption(activeOption); }
               }} />
           </label>
-          <div className="mot-destination-status" role="status"><i className={status === 'ready' ? '' : 'off'} />{status === 'loading' ? 'Loading the destination list… You can still type a city.' : registry.length ? `${status === 'cached' ? 'Saved destination list' : 'FCC destination list'} · ${registry.length} cities${registryUpdatedAt ? ` · ${registryUpdatedAt.slice(0, 10)}` : ''}` : 'FCC destination list not yet available · name any city to continue'}</div>
+          <div className="mot-destination-status" role="status"><i className={status === 'ready' ? '' : 'off'} />{status === 'loading' ? 'Loading the destination list… You can still type a city.' : registry.length ? `${status === 'bundled'?'Included FCC list':status === 'cached' ? 'Saved destination list' : 'FCC destination list'} · ${registry.length} cities${registryUpdatedAt ? ` · ${registryUpdatedAt.slice(0, 10)}` : ''} · works offline` : 'FCC destination list not yet available · name any city to continue'}</div>
           {(status === 'unavailable' || registryError) && <p className="mot-destination-muted">{registryError ?? 'The city list is waiting on FCC publication. Your trip can still start with a city and a country you choose.'}{onRetryRegistry && <> <button type="button" className="mot-destination-text-button" onClick={onRetryRegistry}>Retry the list</button></>}</p>}
           {showResults ? <ul className="mot-destination-results" id={listId} role="listbox" aria-label="Destinations">
             {results.map(({ row, via }, index) => <li role="none" key={row.id}><button type="button" id={`${listId}-${index}`} className="mot-destination-result" role="option" aria-selected={activeOption === index} tabIndex={-1} onClick={() => chooseCity(row)}>

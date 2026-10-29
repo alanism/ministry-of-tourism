@@ -15,6 +15,7 @@ import { BRIEF_TEMPLATE, cityLabel, isSample, parseBrief, tripSubtitle } from '.
 import { enableMetrics, readMetrics, recordOutcome } from './metrics';
 import { DestinationPicker, type DestinationRow } from './DestinationPicker';
 import { loadDestinations } from './destination';
+import bundledDestinationText from './destination-bundle.json?raw';
 import { Composition } from './Composition';
 import { MagazineStudio } from './MagazineStudio';
 import { installTripApi } from './agentApi';
@@ -25,6 +26,7 @@ import { FccBrowser } from './FccBrowser';
 import { MusePlan } from './MusePlan';
 
 const ArtworkPicker=lazy(()=>import('../artwork/ArtworkPicker'));
+const bundledDestinations:unknown=JSON.parse(bundledDestinationText).cities;
 
 const YOU: Actor = { kind: 'human', id: 'traveler-1', name: 'You' };
 type Tab = 'board' | 'composition' | 'fcc' | 'today' | 'map' | 'keepsakes' | 'export';
@@ -82,6 +84,7 @@ export function TripApp() {
   const [destinationIndex,setDestinationIndex]=useState<Awaited<ReturnType<typeof loadDestinations>>>();
   const [registryAttempt,setRegistryAttempt]=useState(0);
   const registryRef=useRef<DestinationRow[]>([]);
+  const startingTrip=useRef(false);
   const [cityContent,setCityContent]=useState<FccCityContent>();
   const [museAvailable,setMuseAvailable]=useState(false);
   const providers=useRef({fcc:false,muse:false});providers.current={fcc:!!cityContent,muse:museAvailable};
@@ -106,11 +109,14 @@ export function TripApp() {
     catch (e) { notify(e instanceof Error ? e.message : 'Could not open that board.'); }
   };
   const start = async (details:NewTrip) => {
+    if(startingTrip.current)return;
+    startingTrip.current=true;
     try {
       const trip = await openTrip(crypto.randomUUID(), details);
       recordOutcome('board_created');
       adopt(trip);setCreating(null); setTab('board');
     } catch (e) { notify(e instanceof Error ? e.message : 'Could not start the trip.'); }
+    finally { startingTrip.current=false; }
   };
   const newBoard = () => { forgetLastBoard(); setOpen(null); setSession(null); };
 
@@ -122,7 +128,7 @@ export function TripApp() {
   },[]);
   useEffect(()=>{
     const controller=new AbortController();let alive=true;setDestinationIndex(undefined);
-    void loadDestinations({signal:controller.signal}).then(index=>{if(alive){registryRef.current.splice(0,registryRef.current.length,...index.cities);setDestinations(index.cities);setDestinationIndex(index);}});
+    void loadDestinations({signal:controller.signal,bundled:bundledDestinations,offline:!navigator.onLine}).then(index=>{if(alive){registryRef.current.splice(0,registryRef.current.length,...index.cities);setDestinations(index.cities);setDestinationIndex(index);}});
     return()=>{alive=false;controller.abort();};
   },[registryAttempt]);
   useEffect(()=>{if(!session||!open)return;const cleanup=installTripApi(session,{onChange:refresh,providers:()=>providers.current,whenSaved:async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are in this tab only. Download a package before closing.');},onDiagnostic:receipt=>diagnostics.record(receipt),exportState:currentTripOperation,exportArtifact:(format,signal)=>createTripArtifact(session,format,signal,{includePrivate:false})});const updated=()=>refresh();session.doc.on('update',updated);return()=>{cleanup();session.doc.off('update',updated);session.destroy();};},[session,open]);
@@ -146,7 +152,7 @@ export function TripApp() {
   useEffect(() => { document.title = title ? `${title} · MOT` : 'MOT · Ministry of Tourism'; }, [title]);
   useEffect(() => { shellRef.current?.scrollTo(0, 0);shellRef.current?.querySelector<HTMLElement>('.mot-nav button[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'}); }, [tab, open]);
 
-  const destinationProps={registry:destinations,registryStatus:destinationIndex?.status??'loading' as const,registryUpdatedAt:destinationIndex?.retrievedAt,registryError:destinationIndex?.error,onRetryRegistry:()=>setRegistryAttempt(attempt=>attempt+1)};
+  const destinationProps={registry:destinations,registryStatus:destinationIndex?.status??'loading' as const,registryUpdatedAt:destinationIndex?.retrievedAt,registryError:destinationIndex?.error,onRetryRegistry:registryAttempt<3?()=>setRegistryAttempt(attempt=>attempt+1):undefined};
   if (booting) return <main className="mot" />;
   if (!open || !session) return <><FirstScreen onStart={(kind) => { setLost(false);setCreating(kind); }} boards={listBoards()} onOpen={(id) => void switchTo(id)}
     notice={lost ? 'Your last board is no longer in this browser’s storage. It may have been cleared by the browser or by you. If you exported a ZIP backup, import it to get the board back.' : undefined} />{creating&&<FocusSheet label="Choose destination" onClose={()=>setCreating(null)}><DestinationPicker kind={creating} {...destinationProps} onClose={()=>setCreating(null)} onSave={details=>void start(details)} /></FocusSheet>}</>;

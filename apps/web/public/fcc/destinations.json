@@ -7,91 +7,117 @@
       "name": "Abu Dhabi",
       "aliases": [],
       "countryCode": "AE",
-      "timeZone": "Asia/Dubai"
+      "timeZone": "Asia/Dubai",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/abu-dhabi/illustrations/abu-dhabi-airport-tag-15a99e1352-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "accra",
       "name": "Accra",
       "aliases": [],
       "countryCode": "GH",
-      "timeZone": "Africa/Accra"
+      "timeZone": "Africa/Accra",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/accra/illustrations/accra-airport-tag-635bf1310e-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "addis-ababa",
       "name": "Addis Ababa",
       "aliases": [],
       "countryCode": "ET",
-      "timeZone": "Africa/Addis_Ababa"
+      "timeZone": "Africa/Addis_Ababa",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/addis-ababa/illustrations/addis-ababa-airport-tag-aa38aeba1f-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "amsterdam",
       "name": "Amsterdam",
       "aliases": [],
       "countryCode": "NL",
-      "timeZone": "Europe/Amsterdam"
+      "timeZone": "Europe/Amsterdam",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/amsterdam/illustrations/amsterdam-airport-tag-c25933b96f-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "antalya",
       "name": "Antalya",
       "aliases": [],
       "countryCode": "TR",
-      "timeZone": "Europe/Istanbul"
+      "timeZone": "Europe/Istanbul",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/antalya/illustrations/antalya-airport-tag-6d95c64b94-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "aspen",
       "name": "Aspen",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Denver"
+      "timeZone": "America/Denver",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/aspen/illustrations/aspen-airport-tag-e9b05380c0-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "athens",
       "name": "Athens",
       "aliases": [],
       "countryCode": "GR",
-      "timeZone": "Europe/Athens"
+      "timeZone": "Europe/Athens",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/athens/illustrations/athens-airport-tag-6fa09535a3-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "atlanta",
       "name": "Atlanta",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/New_York"
+      "timeZone": "America/New_York",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/atlanta/illustrations/atlanta-airport-tag-fea520b0cb-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "auckland",
       "name": "Auckland",
       "aliases": [],
       "countryCode": "NZ",
-      "timeZone": "Pacific/Auckland"
+      "timeZone": "Pacific/Auckland",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/auckland/illustrations/auckland-airport-tag-e9b0372f73-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "austin",
       "name": "Austin",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Chicago"
+      "timeZone": "America/Chicago",
+      "tagUrl": null,
+      "artworkCount": 21
     },
     {
       "id": "banff",
       "name": "Banff",
       "aliases": [],
       "countryCode": "CA",
-      "timeZone": "America/Edmonton"
+      "timeZone": "America/Edmonton",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/banff/illustrations/banff-airport-tag-b3623abf83-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "bangkok",
       "name": "Bangkok",
       "aliases": [],
       "countryCode": "TH",
-      "timeZone": "Asia/Bangkok"
+      "timeZone": "Asia/Bangkok",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/bangkok/illustrations/bangkok-airport-tag-059918a856-480w.webp",
+      "artworkCount": 29
     },
     {
       "id": "barcelona",
       "name": "Barcelona",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/barcelona/illustrations/barcelona-airport-tag-0d8b5e7427-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "basseterre-st-kitts",
@@ -101,182 +127,234 @@
         "St Kitts"
       ],
       "countryCode": "KN",
-      "timeZone": "America/St_Kitts"
+      "timeZone": "America/St_Kitts",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "beijing",
       "name": "Beijing",
       "aliases": [],
       "countryCode": "CN",
-      "timeZone": "Asia/Shanghai"
+      "timeZone": "Asia/Shanghai",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/beijing/illustrations/beijing-airport-tag-4ff251b702-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "berlin",
       "name": "Berlin",
       "aliases": [],
       "countryCode": "DE",
-      "timeZone": "Europe/Berlin"
+      "timeZone": "Europe/Berlin",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/berlin/illustrations/berlin-airport-tag-084e8c6e90-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "biarritz",
       "name": "Biarritz",
       "aliases": [],
       "countryCode": "FR",
-      "timeZone": "Europe/Paris"
+      "timeZone": "Europe/Paris",
+      "tagUrl": null,
+      "artworkCount": 17
     },
     {
       "id": "bocas-del-toro",
       "name": "Bocas del Toro Town",
       "aliases": [],
       "countryCode": "PA",
-      "timeZone": "America/Panama"
+      "timeZone": "America/Panama",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "bogota",
       "name": "Bogotá",
       "aliases": [],
       "countryCode": "CO",
-      "timeZone": "America/Bogota"
+      "timeZone": "America/Bogota",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/bogota/illustrations/bogota-airport-tag-d775ab7989-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "bologna",
       "name": "Bologna",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/bologna/illustrations/bologna-airport-tag-dc500ea5ab-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "boquete",
       "name": "Boquete",
       "aliases": [],
       "countryCode": "PA",
-      "timeZone": "America/Panama"
+      "timeZone": "America/Panama",
+      "tagUrl": null,
+      "artworkCount": 13
     },
     {
       "id": "boracay",
       "name": "Boracay",
       "aliases": [],
       "countryCode": "PH",
-      "timeZone": "Asia/Manila"
+      "timeZone": "Asia/Manila",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/boracay/illustrations/boracay-airport-tag-a84adb5793-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "boston",
       "name": "Boston",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/New_York"
+      "timeZone": "America/New_York",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/boston/illustrations/boston-airport-tag-968e2f809d-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "brisbane",
       "name": "Brisbane",
       "aliases": [],
       "countryCode": "AU",
-      "timeZone": "Australia/Brisbane"
+      "timeZone": "Australia/Brisbane",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/brisbane/illustrations/brisbane-airport-tag-c71ed5c4bb-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "brussels",
       "name": "Brussels",
       "aliases": [],
       "countryCode": "BE",
-      "timeZone": "Europe/Brussels"
+      "timeZone": "Europe/Brussels",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/brussels/illustrations/brussels-airport-tag-35c1d37419-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "budapest",
       "name": "Budapest",
       "aliases": [],
       "countryCode": "HU",
-      "timeZone": "Europe/Budapest"
+      "timeZone": "Europe/Budapest",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/budapest/illustrations/budapest-airport-tag-1c4466cad3-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "buenos-aires",
       "name": "Buenos Aires",
       "aliases": [],
       "countryCode": "AR",
-      "timeZone": "America/Argentina/Buenos_Aires"
+      "timeZone": "America/Argentina/Buenos_Aires",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/buenos-aires/illustrations/buenos-aires-airport-tag-b014dff435-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "busan",
       "name": "Busan",
       "aliases": [],
       "countryCode": "KR",
-      "timeZone": "Asia/Seoul"
+      "timeZone": "Asia/Seoul",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/busan/illustrations/busan-airport-tag-406dd65739-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "cairns",
       "name": "Cairns",
       "aliases": [],
       "countryCode": "AU",
-      "timeZone": "Australia/Brisbane"
+      "timeZone": "Australia/Brisbane",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cairns/illustrations/cairns-airport-tag-622f07b519-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "cairo",
       "name": "Cairo",
       "aliases": [],
       "countryCode": "EG",
-      "timeZone": "Africa/Cairo"
+      "timeZone": "Africa/Cairo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cairo/illustrations/cairo-airport-tag-95aa4e3a30-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "cancun",
       "name": "Cancún",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Cancun"
+      "timeZone": "America/Cancun",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cancun/illustrations/cancun-airport-tag-4f2a461730-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "canggu",
       "name": "Canggu",
       "aliases": [],
       "countryCode": "ID",
-      "timeZone": "Asia/Makassar"
+      "timeZone": "Asia/Makassar",
+      "tagUrl": null,
+      "artworkCount": 24
     },
     {
       "id": "cannes",
       "name": "Cannes",
       "aliases": [],
       "countryCode": "FR",
-      "timeZone": "Europe/Paris"
+      "timeZone": "Europe/Paris",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "cape-town",
       "name": "Cape Town",
       "aliases": [],
       "countryCode": "ZA",
-      "timeZone": "Africa/Johannesburg"
+      "timeZone": "Africa/Johannesburg",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cape-town/illustrations/cape-town-airport-tag-cc8045a958-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "cartagena",
       "name": "Cartagena",
       "aliases": [],
       "countryCode": "CO",
-      "timeZone": "America/Bogota"
+      "timeZone": "America/Bogota",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "casablanca",
       "name": "Casablanca",
       "aliases": [],
       "countryCode": "MA",
-      "timeZone": "Africa/Casablanca"
+      "timeZone": "Africa/Casablanca",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/casablanca/illustrations/casablanca-airport-tag-daabefc9c0-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "cebu",
       "name": "Cebu",
       "aliases": [],
       "countryCode": "PH",
-      "timeZone": "Asia/Manila"
+      "timeZone": "Asia/Manila",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cebu/illustrations/cebu-airport-tag-ef2c3e4781-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "chamonix",
       "name": "Chamonix",
       "aliases": [],
       "countryCode": "FR",
-      "timeZone": "Europe/Paris"
+      "timeZone": "Europe/Paris",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/chamonix/illustrations/chamonix-airport-tag-65654c1e33-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "chania",
       "name": "Chania, Crete",
       "aliases": [],
       "countryCode": "GR",
-      "timeZone": "Europe/Athens"
+      "timeZone": "Europe/Athens",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "charlestown-nevis",
@@ -286,266 +364,342 @@
         "Nevis"
       ],
       "countryCode": "KN",
-      "timeZone": "America/St_Kitts"
+      "timeZone": "America/St_Kitts",
+      "tagUrl": null,
+      "artworkCount": 13
     },
     {
       "id": "chiang-mai",
       "name": "Chiang Mai",
       "aliases": [],
       "countryCode": "TH",
-      "timeZone": "Asia/Bangkok"
+      "timeZone": "Asia/Bangkok",
+      "tagUrl": null,
+      "artworkCount": 24
     },
     {
       "id": "chicago",
       "name": "Chicago",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Chicago"
+      "timeZone": "America/Chicago",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/chicago/illustrations/chicago-airport-tag-76fbbde297-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "copenhagen",
       "name": "Copenhagen",
       "aliases": [],
       "countryCode": "DK",
-      "timeZone": "Europe/Copenhagen"
+      "timeZone": "Europe/Copenhagen",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/copenhagen/illustrations/copenhagen-airport-tag-1c0eeca6f8-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "cortina-dampezzo",
       "name": "Cortina d’Ampezzo",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cortina-dampezzo/illustrations/cortina-dampezzo-airport-tag-0d7d70b8fd-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "da-nang",
       "name": "Da Nang",
       "aliases": [],
       "countryCode": "VN",
-      "timeZone": "Asia/Ho_Chi_Minh"
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/da-nang/illustrations/da-nang-airport-tag-698d57e62d-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "dallas",
       "name": "Dallas",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Chicago"
+      "timeZone": "America/Chicago",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/dallas/illustrations/dallas-airport-tag-e3e4ada6f8-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "delhi",
       "name": "Delhi",
       "aliases": [],
       "countryCode": "IN",
-      "timeZone": "Asia/Kolkata"
+      "timeZone": "Asia/Kolkata",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/delhi/illustrations/delhi-airport-tag-0b82d9c271-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "denpasar",
       "name": "Denpasar",
       "aliases": [],
       "countryCode": "ID",
-      "timeZone": "Asia/Makassar"
+      "timeZone": "Asia/Makassar",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/denpasar/illustrations/denpasar-airport-tag-85051e1037-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "doha",
       "name": "Doha",
       "aliases": [],
       "countryCode": "QA",
-      "timeZone": "Asia/Qatar"
+      "timeZone": "Asia/Qatar",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/doha/illustrations/doha-airport-tag-f79196e8e2-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "dubai",
       "name": "Dubai",
       "aliases": [],
       "countryCode": "AE",
-      "timeZone": "Asia/Dubai"
+      "timeZone": "Asia/Dubai",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/dubai/illustrations/dubai-airport-tag-5ec4511f68-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "dublin",
       "name": "Dublin",
       "aliases": [],
       "countryCode": "IE",
-      "timeZone": "Europe/Dublin"
+      "timeZone": "Europe/Dublin",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/dublin/illustrations/dublin-airport-tag-fab38b64bc-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "dubrovnik",
       "name": "Dubrovnik",
       "aliases": [],
       "countryCode": "HR",
-      "timeZone": "Europe/Zagreb"
+      "timeZone": "Europe/Zagreb",
+      "tagUrl": null,
+      "artworkCount": 17
     },
     {
       "id": "dunmore-town",
       "name": "Dunmore Town, Harbour Island",
       "aliases": [],
       "countryCode": "BS",
-      "timeZone": "America/Nassau"
+      "timeZone": "America/Nassau",
+      "tagUrl": null,
+      "artworkCount": 13
     },
     {
       "id": "edinburgh",
       "name": "Edinburgh",
       "aliases": [],
       "countryCode": "GB",
-      "timeZone": "Europe/London"
+      "timeZone": "Europe/London",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/edinburgh/illustrations/edinburgh-airport-tag-eac8238ae7-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "el-nido",
       "name": "El Nido",
       "aliases": [],
       "countryCode": "PH",
-      "timeZone": "Asia/Manila"
+      "timeZone": "Asia/Manila",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/el-nido/illustrations/el-nido-airport-tag-0120b6e076-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "florence",
       "name": "Florence",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/florence/illustrations/florence-airport-tag-235b94e843-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "frankfurt",
       "name": "Frankfurt",
       "aliases": [],
       "countryCode": "DE",
-      "timeZone": "Europe/Berlin"
+      "timeZone": "Europe/Berlin",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/frankfurt/illustrations/frankfurt-airport-tag-6ebc37515a-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "fukuoka",
       "name": "Fukuoka",
       "aliases": [],
       "countryCode": "JP",
-      "timeZone": "Asia/Tokyo"
+      "timeZone": "Asia/Tokyo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/fukuoka/illustrations/fukuoka-airport-tag-dbfa9a5437-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "funchal",
       "name": "Funchal",
       "aliases": [],
       "countryCode": "PT",
-      "timeZone": "Atlantic/Madeira"
+      "timeZone": "Atlantic/Madeira",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "galle",
       "name": "Galle",
       "aliases": [],
       "countryCode": "LK",
-      "timeZone": "Asia/Colombo"
+      "timeZone": "Asia/Colombo",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "gold-coast",
       "name": "Gold Coast",
       "aliases": [],
       "countryCode": "AU",
-      "timeZone": "Australia/Brisbane"
+      "timeZone": "Australia/Brisbane",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/gold-coast/illustrations/gold-coast-airport-tag-66c3fbf114-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "grand-anse-praslin",
       "name": "Grand Anse, Praslin",
       "aliases": [],
       "countryCode": "SC",
-      "timeZone": "Indian/Mahe"
+      "timeZone": "Indian/Mahe",
+      "tagUrl": null,
+      "artworkCount": 13
     },
     {
       "id": "grand-baie",
       "name": "Grand Baie",
       "aliases": [],
       "countryCode": "MU",
-      "timeZone": "Indian/Mauritius"
+      "timeZone": "Indian/Mauritius",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "guadalajara",
       "name": "Guadalajara",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Mexico_City"
+      "timeZone": "America/Mexico_City",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/guadalajara/illustrations/guadalajara-airport-tag-1e1ddb1227-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "guangzhou",
       "name": "Guangzhou",
       "aliases": [],
       "countryCode": "CN",
-      "timeZone": "Asia/Shanghai"
+      "timeZone": "Asia/Shanghai",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/guangzhou/illustrations/guangzhou-airport-tag-998408d857-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "hakuba",
       "name": "Hakuba",
       "aliases": [],
       "countryCode": "JP",
-      "timeZone": "Asia/Tokyo"
+      "timeZone": "Asia/Tokyo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/hakuba/illustrations/hakuba-airport-tag-aa9e3d3778-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "hamburg",
       "name": "Hamburg",
       "aliases": [],
       "countryCode": "DE",
-      "timeZone": "Europe/Berlin"
+      "timeZone": "Europe/Berlin",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/hamburg/illustrations/hamburg-airport-tag-c21f0ee788-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "hanoi",
       "name": "Hanoi",
       "aliases": [],
       "countryCode": "VN",
-      "timeZone": "Asia/Ho_Chi_Minh"
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/hanoi/illustrations/hanoi-airport-tag-a7603be5c2-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "helsinki",
       "name": "Helsinki",
       "aliases": [],
       "countryCode": "FI",
-      "timeZone": "Europe/Helsinki"
+      "timeZone": "Europe/Helsinki",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/helsinki/illustrations/helsinki-airport-tag-06695323a3-480w.webp",
+      "artworkCount": 28
     },
     {
       "id": "heraklion",
       "name": "Heraklion",
       "aliases": [],
       "countryCode": "GR",
-      "timeZone": "Europe/Athens"
+      "timeZone": "Europe/Athens",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/heraklion/illustrations/heraklion-airport-tag-18ce66992a-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "ho-chi-minh-city",
       "name": "Ho Chi Minh City",
       "aliases": [],
       "countryCode": "VN",
-      "timeZone": "Asia/Ho_Chi_Minh"
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/ho-chi-minh-city/illustrations/ho-chi-minh-city-airport-tag-cc3d4c8b2a-480w.webp",
+      "artworkCount": 15
     },
     {
       "id": "hoi-an",
       "name": "Hội An",
       "aliases": [],
       "countryCode": "VN",
-      "timeZone": "Asia/Ho_Chi_Minh"
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "tagUrl": null,
+      "artworkCount": 16
     },
     {
       "id": "hong-kong",
       "name": "Hong Kong SAR",
       "aliases": [],
       "countryCode": "CN",
-      "timeZone": "Asia/Hong_Kong"
+      "timeZone": "Asia/Hong_Kong",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/hong-kong/illustrations/hong-kong-airport-tag-060ff6f122-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "honolulu",
       "name": "Honolulu",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "Pacific/Honolulu"
+      "timeZone": "Pacific/Honolulu",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/honolulu/illustrations/honolulu-airport-tag-1961d4a1b9-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "houston",
       "name": "Houston",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Chicago"
+      "timeZone": "America/Chicago",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/houston/illustrations/houston-airport-tag-e0d6c27cbf-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "hurghada",
       "name": "Hurghada",
       "aliases": [],
       "countryCode": "EG",
-      "timeZone": "Africa/Cairo"
+      "timeZone": "Africa/Cairo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/hurghada/illustrations/hurghada-airport-tag-0910f98590-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "hvar-town",
       "name": "Hvar Town",
       "aliases": [],
       "countryCode": "HR",
-      "timeZone": "Europe/Zagreb"
+      "timeZone": "Europe/Zagreb",
+      "tagUrl": null,
+      "artworkCount": 16
     },
     {
       "id": "ibiza-town",
@@ -555,294 +709,378 @@
         "Ibiza Town / Eivissa"
       ],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": null,
+      "artworkCount": 25
     },
     {
       "id": "innsbruck",
       "name": "Innsbruck",
       "aliases": [],
       "countryCode": "AT",
-      "timeZone": "Europe/Vienna"
+      "timeZone": "Europe/Vienna",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/innsbruck/illustrations/innsbruck-airport-tag-1754dadb71-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "istanbul",
       "name": "Istanbul",
       "aliases": [],
       "countryCode": "TR",
-      "timeZone": "Europe/Istanbul"
+      "timeZone": "Europe/Istanbul",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/istanbul/illustrations/istanbul-airport-tag-df7ffdd5af-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "jakarta",
       "name": "Jakarta",
       "aliases": [],
       "countryCode": "ID",
-      "timeZone": "Asia/Jakarta"
+      "timeZone": "Asia/Jakarta",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/jakarta/illustrations/jakarta-airport-tag-9e00dc1e3d-480w.webp",
+      "artworkCount": 22
     },
     {
       "id": "johannesburg",
       "name": "Johannesburg",
       "aliases": [],
       "countryCode": "ZA",
-      "timeZone": "Africa/Johannesburg"
+      "timeZone": "Africa/Johannesburg",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/johannesburg/illustrations/johannesburg-airport-tag-0b5de70be8-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "johor-bahru",
       "name": "Johor Bahru",
       "aliases": [],
       "countryCode": "MY",
-      "timeZone": "Asia/Kuala_Lumpur"
+      "timeZone": "Asia/Kuala_Lumpur",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/johor-bahru/illustrations/johor-bahru-airport-tag-712f17b04c-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "kitzbuhel",
       "name": "Kitzbühel",
       "aliases": [],
       "countryCode": "AT",
-      "timeZone": "Europe/Vienna"
+      "timeZone": "Europe/Vienna",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/kitzbuhel/illustrations/kitzbuhel-airport-tag-a3cad8e19c-480w.webp",
+      "artworkCount": 22
     },
     {
       "id": "koh-phangan",
       "name": "Koh Phangan",
       "aliases": [],
       "countryCode": "TH",
-      "timeZone": "Asia/Bangkok"
+      "timeZone": "Asia/Bangkok",
+      "tagUrl": null,
+      "artworkCount": 16
     },
     {
       "id": "koh-samui",
       "name": "Koh Samui",
       "aliases": [],
       "countryCode": "TH",
-      "timeZone": "Asia/Bangkok"
+      "timeZone": "Asia/Bangkok",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/koh-samui/illustrations/koh-samui-airport-tag-10ab6a537c-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "kotor",
       "name": "Kotor",
       "aliases": [],
       "countryCode": "ME",
-      "timeZone": "Europe/Podgorica"
+      "timeZone": "Europe/Podgorica",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "krabi",
       "name": "Krabi",
       "aliases": [],
       "countryCode": "TH",
-      "timeZone": "Asia/Bangkok"
+      "timeZone": "Asia/Bangkok",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/krabi/illustrations/krabi-airport-tag-25ef3d27a3-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "krakow",
       "name": "Kraków",
       "aliases": [],
       "countryCode": "PL",
-      "timeZone": "Europe/Warsaw"
+      "timeZone": "Europe/Warsaw",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/krakow/illustrations/krakow-airport-tag-e60c321237-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "kuala-lumpur",
       "name": "Kuala Lumpur",
       "aliases": [],
       "countryCode": "MY",
-      "timeZone": "Asia/Kuala_Lumpur"
+      "timeZone": "Asia/Kuala_Lumpur",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/kuala-lumpur/illustrations/kuala-lumpur-airport-tag-71076c57de-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "kyoto",
       "name": "Kyoto",
       "aliases": [],
       "countryCode": "JP",
-      "timeZone": "Asia/Tokyo"
+      "timeZone": "Asia/Tokyo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/kyoto/illustrations/kyoto-airport-tag-e1fa24fe72-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "lagos",
       "name": "Lagos",
       "aliases": [],
       "countryCode": "NG",
-      "timeZone": "Africa/Lagos"
+      "timeZone": "Africa/Lagos",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/lagos/illustrations/lagos-airport-tag-4915caca76-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "langkawi",
       "name": "Langkawi",
       "aliases": [],
       "countryCode": "MY",
-      "timeZone": "Asia/Kuala_Lumpur"
+      "timeZone": "Asia/Kuala_Lumpur",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/langkawi/illustrations/langkawi-airport-tag-7c9ddd34de-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "las-palmas-de-gran-canaria",
       "name": "Las Palmas de Gran Canaria",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Atlantic/Canary"
+      "timeZone": "Atlantic/Canary",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "las-vegas",
       "name": "Las Vegas",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Los_Angeles"
+      "timeZone": "America/Los_Angeles",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/las-vegas/illustrations/las-vegas-airport-tag-2e1f7548bc-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "lima",
       "name": "Lima",
       "aliases": [],
       "countryCode": "PE",
-      "timeZone": "America/Lima"
+      "timeZone": "America/Lima",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/lima/illustrations/lima-airport-tag-8c0c7854b6-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "lisbon",
       "name": "Lisbon",
       "aliases": [],
       "countryCode": "PT",
-      "timeZone": "Europe/Lisbon"
+      "timeZone": "Europe/Lisbon",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/lisbon/illustrations/lisbon-airport-tag-9f610d4728-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "london",
       "name": "London",
       "aliases": [],
       "countryCode": "GB",
-      "timeZone": "Europe/London"
+      "timeZone": "Europe/London",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/london/illustrations/london-airport-tag-ad5be4282d-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "los-angeles",
       "name": "Los Angeles",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Los_Angeles"
+      "timeZone": "America/Los_Angeles",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/los-angeles/illustrations/los-angeles-airport-tag-5120522e51-480w.webp",
+      "artworkCount": 28
     },
     {
       "id": "luang-prabang",
       "name": "Luang Prabang",
       "aliases": [],
       "countryCode": "LA",
-      "timeZone": "Asia/Vientiane"
+      "timeZone": "Asia/Vientiane",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "macau",
       "name": "Macau SAR",
       "aliases": [],
       "countryCode": "CN",
-      "timeZone": "Asia/Macau"
+      "timeZone": "Asia/Macau",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/macau/illustrations/macau-airport-tag-5493ff5460-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "madrid",
       "name": "Madrid",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/madrid/illustrations/madrid-airport-tag-950ee092b8-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "malaga",
       "name": "Málaga",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": null,
+      "artworkCount": 16
     },
     {
       "id": "male",
       "name": "Malé",
       "aliases": [],
       "countryCode": "MV",
-      "timeZone": "Indian/Maldives"
+      "timeZone": "Indian/Maldives",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/male/illustrations/male-airport-tag-d48a838e37-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "manila",
       "name": "Manila",
       "aliases": [],
       "countryCode": "PH",
-      "timeZone": "Asia/Manila"
+      "timeZone": "Asia/Manila",
+      "tagUrl": null,
+      "artworkCount": 22
     },
     {
       "id": "marbella",
       "name": "Marbella",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "marrakech",
       "name": "Marrakech",
       "aliases": [],
       "countryCode": "MA",
-      "timeZone": "Africa/Casablanca"
+      "timeZone": "Africa/Casablanca",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/marrakech/illustrations/marrakech-airport-tag-d5ecc774ef-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "mecca",
       "name": "Mecca",
       "aliases": [],
       "countryCode": "SA",
-      "timeZone": "Asia/Riyadh"
+      "timeZone": "Asia/Riyadh",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/mecca/illustrations/mecca-airport-tag-3c56e4a825-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "medellin",
       "name": "Medellín",
       "aliases": [],
       "countryCode": "CO",
-      "timeZone": "America/Bogota"
+      "timeZone": "America/Bogota",
+      "tagUrl": null,
+      "artworkCount": 23
     },
     {
       "id": "medina",
       "name": "Medina",
       "aliases": [],
       "countryCode": "SA",
-      "timeZone": "Asia/Riyadh"
+      "timeZone": "Asia/Riyadh",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/medina/illustrations/medina-airport-tag-f5244b8f5c-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "melbourne",
       "name": "Melbourne",
       "aliases": [],
       "countryCode": "AU",
-      "timeZone": "Australia/Melbourne"
+      "timeZone": "Australia/Melbourne",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/melbourne/illustrations/melbourne-airport-tag-407db35932-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "mexico-city",
       "name": "Mexico City",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Mexico_City"
+      "timeZone": "America/Mexico_City",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/mexico-city/illustrations/mexico-city-airport-tag-82ede627e6-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "miami",
       "name": "Miami",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/New_York"
+      "timeZone": "America/New_York",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/miami/illustrations/miami-airport-tag-da5efb66d8-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "milan",
       "name": "Milan",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/milan/illustrations/milan-airport-tag-1eab840b5a-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "monterrey",
       "name": "Monterrey",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Mexico_City"
+      "timeZone": "America/Mexico_City",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/monterrey/illustrations/monterrey-airport-tag-3ccce991d3-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "montreal",
       "name": "Montreal",
       "aliases": [],
       "countryCode": "CA",
-      "timeZone": "America/Toronto"
+      "timeZone": "America/Toronto",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/montreal/illustrations/montreal-airport-tag-60ed091426-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "mugla",
       "name": "Muğla",
       "aliases": [],
       "countryCode": "TR",
-      "timeZone": "Europe/Istanbul"
+      "timeZone": "Europe/Istanbul",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/mugla/illustrations/mugla-airport-tag-9fafa23fb6-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "munich",
       "name": "Munich",
       "aliases": [],
       "countryCode": "DE",
-      "timeZone": "Europe/Berlin"
+      "timeZone": "Europe/Berlin",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/munich/illustrations/munich-airport-tag-3f0084a0d5-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "muscat",
       "name": "Muscat",
       "aliases": [],
       "countryCode": "OM",
-      "timeZone": "Asia/Muscat"
+      "timeZone": "Asia/Muscat",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/muscat/illustrations/muscat-airport-tag-1dd5989ea0-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "mykonos-town",
@@ -852,14 +1090,18 @@
         "Mykonos Town / Chora"
       ],
       "countryCode": "GR",
-      "timeZone": "Europe/Athens"
+      "timeZone": "Europe/Athens",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "nairobi",
       "name": "Nairobi",
       "aliases": [],
       "countryCode": "KE",
-      "timeZone": "Africa/Nairobi"
+      "timeZone": "Africa/Nairobi",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/nairobi/illustrations/nairobi-airport-tag-a2519cff88-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "nassau",
@@ -869,238 +1111,306 @@
         "Paradise Island"
       ],
       "countryCode": "BS",
-      "timeZone": "America/Nassau"
+      "timeZone": "America/Nassau",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "new-york",
       "name": "New York",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/New_York"
+      "timeZone": "America/New_York",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/new-york/illustrations/new-york-airport-tag-c5ccdd3ed5-480w.webp",
+      "artworkCount": 17
     },
     {
       "id": "nha-trang",
       "name": "Nha Trang",
       "aliases": [],
       "countryCode": "VN",
-      "timeZone": "Asia/Ho_Chi_Minh"
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/nha-trang/illustrations/nha-trang-airport-tag-056bc58c0b-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "nice",
       "name": "Nice",
       "aliases": [],
       "countryCode": "FR",
-      "timeZone": "Europe/Paris"
+      "timeZone": "Europe/Paris",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/nice/illustrations/nice-airport-tag-44260247fd-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "niseko",
       "name": "Niseko",
       "aliases": [],
       "countryCode": "JP",
-      "timeZone": "Asia/Tokyo"
+      "timeZone": "Asia/Tokyo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/niseko/illustrations/niseko-airport-tag-671c39f2e6-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "nosara",
       "name": "Nosara",
       "aliases": [],
       "countryCode": "CR",
-      "timeZone": "America/Costa_Rica"
+      "timeZone": "America/Costa_Rica",
+      "tagUrl": null,
+      "artworkCount": 16
     },
     {
       "id": "oaxaca-city",
       "name": "Oaxaca City",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Mexico_City"
+      "timeZone": "America/Mexico_City",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "orlando",
       "name": "Orlando",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/New_York"
+      "timeZone": "America/New_York",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/orlando/illustrations/orlando-airport-tag-0d554118cb-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "osaka",
       "name": "Osaka",
       "aliases": [],
       "countryCode": "JP",
-      "timeZone": "Asia/Tokyo"
+      "timeZone": "Asia/Tokyo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/osaka/illustrations/osaka-airport-tag-6db37c2cc4-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "oslo",
       "name": "Oslo",
       "aliases": [],
       "countryCode": "NO",
-      "timeZone": "Europe/Oslo"
+      "timeZone": "Europe/Oslo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/oslo/illustrations/oslo-airport-tag-72a2177696-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "palma-de-mallorca",
       "name": "Palma de Mallorca",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/palma-de-mallorca/illustrations/palma-de-mallorca-airport-tag-30f84f3f0b-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "panama-city",
       "name": "Panama City",
       "aliases": [],
       "countryCode": "PA",
-      "timeZone": "America/Panama"
+      "timeZone": "America/Panama",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "paris",
       "name": "Paris",
       "aliases": [],
       "countryCode": "FR",
-      "timeZone": "Europe/Paris"
+      "timeZone": "Europe/Paris",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/paris/illustrations/paris-airport-tag-4f1d39900a-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "pattaya-chonburi",
       "name": "Pattaya-Chonburi",
       "aliases": [],
       "countryCode": "TH",
-      "timeZone": "Asia/Bangkok"
+      "timeZone": "Asia/Bangkok",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/pattaya-chonburi/illustrations/pattaya-chonburi-airport-tag-ea4e91c7c4-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "perth",
       "name": "Perth",
       "aliases": [],
       "countryCode": "AU",
-      "timeZone": "Australia/Perth"
+      "timeZone": "Australia/Perth",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/perth/illustrations/perth-airport-tag-c560291f52-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "philadelphia",
       "name": "Philadelphia",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/New_York"
+      "timeZone": "America/New_York",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/philadelphia/illustrations/philadelphia-airport-tag-8b6a178a24-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "phuket",
       "name": "Phuket",
       "aliases": [],
       "countryCode": "TH",
-      "timeZone": "Asia/Bangkok"
+      "timeZone": "Asia/Bangkok",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/phuket/illustrations/phuket-airport-tag-07d2610c56-480w.webp",
+      "artworkCount": 29
     },
     {
       "id": "placencia",
       "name": "Placencia",
       "aliases": [],
       "countryCode": "BZ",
-      "timeZone": "America/Belize"
+      "timeZone": "America/Belize",
+      "tagUrl": null,
+      "artworkCount": 13
     },
     {
       "id": "playa-del-carmen",
       "name": "Playa del Carmen",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Cancun"
+      "timeZone": "America/Cancun",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "port-louis",
       "name": "Port Louis",
       "aliases": [],
       "countryCode": "MU",
-      "timeZone": "Indian/Mauritius"
+      "timeZone": "Indian/Mauritius",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/port-louis/illustrations/port-louis-airport-tag-81bbea1ac1-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "porto",
       "name": "Porto",
       "aliases": [],
       "countryCode": "PT",
-      "timeZone": "Europe/Lisbon"
+      "timeZone": "Europe/Lisbon",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/porto/illustrations/porto-airport-tag-97e9ff93af-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "prague",
       "name": "Prague",
       "aliases": [],
       "countryCode": "CZ",
-      "timeZone": "Europe/Prague"
+      "timeZone": "Europe/Prague",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/prague/illustrations/prague-airport-tag-6c8d928f78-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "puerto-escondido",
       "name": "Puerto Escondido",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Mexico_City"
+      "timeZone": "America/Mexico_City",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "punta-cana",
       "name": "Punta Cana",
       "aliases": [],
       "countryCode": "DO",
-      "timeZone": "America/Santo_Domingo"
+      "timeZone": "America/Santo_Domingo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/punta-cana/illustrations/punta-cana-airport-tag-133f21e73e-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "queenstown",
       "name": "Queenstown",
       "aliases": [],
       "countryCode": "NZ",
-      "timeZone": "Pacific/Auckland"
+      "timeZone": "Pacific/Auckland",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/queenstown/illustrations/queenstown-airport-tag-f8699fdd76-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "rhodes",
       "name": "Rhodes",
       "aliases": [],
       "countryCode": "GR",
-      "timeZone": "Europe/Athens"
+      "timeZone": "Europe/Athens",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/rhodes/illustrations/rhodes-airport-tag-2d6334084e-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "rio-de-janeiro",
       "name": "Rio de Janeiro",
       "aliases": [],
       "countryCode": "BR",
-      "timeZone": "America/Sao_Paulo"
+      "timeZone": "America/Sao_Paulo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/rio-de-janeiro/illustrations/rio-de-janeiro-airport-tag-b898c08b82-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "riyadh",
       "name": "Riyadh",
       "aliases": [],
       "countryCode": "SA",
-      "timeZone": "Asia/Riyadh"
+      "timeZone": "Asia/Riyadh",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/riyadh/illustrations/riyadh-airport-tag-3162a3edf3-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "rome",
       "name": "Rome",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/rome/illustrations/rome-airport-tag-ac8d56c02d-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "saint-tropez",
       "name": "Saint-Tropez",
       "aliases": [],
       "countryCode": "FR",
-      "timeZone": "Europe/Paris"
+      "timeZone": "Europe/Paris",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "san-francisco",
       "name": "San Francisco",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Los_Angeles"
+      "timeZone": "America/Los_Angeles",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/san-francisco/illustrations/san-francisco-airport-tag-e7ed8b9304-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "san-jose-del-cabo",
       "name": "San José del Cabo",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Mazatlan"
+      "timeZone": "America/Mazatlan",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "san-miguel-de-allende",
       "name": "San Miguel de Allende",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Mexico_City"
+      "timeZone": "America/Mexico_City",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "san-pedro",
       "name": "San Pedro, Ambergris Caye",
       "aliases": [],
       "countryCode": "BZ",
-      "timeZone": "America/Belize"
+      "timeZone": "America/Belize",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "san-sebastian",
@@ -1110,315 +1420,405 @@
         "San Sebastián / Donostia"
       ],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": null,
+      "artworkCount": 14
     },
     {
       "id": "santa-teresa",
       "name": "Santa Teresa",
       "aliases": [],
       "countryCode": "CR",
-      "timeZone": "America/Costa_Rica"
+      "timeZone": "America/Costa_Rica",
+      "tagUrl": null,
+      "artworkCount": 23
     },
     {
       "id": "santiago",
       "name": "Santiago",
       "aliases": [],
       "countryCode": "CL",
-      "timeZone": "America/Santiago"
+      "timeZone": "America/Santiago",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/santiago/illustrations/santiago-airport-tag-839acecd9b-480w.webp",
+      "artworkCount": 22
     },
     {
       "id": "sao-paulo",
       "name": "São Paulo",
       "aliases": [],
       "countryCode": "BR",
-      "timeZone": "America/Sao_Paulo"
+      "timeZone": "America/Sao_Paulo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/sao-paulo/illustrations/sao-paulo-airport-tag-c10863acab-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "sapporo",
       "name": "Sapporo",
       "aliases": [],
       "countryCode": "JP",
-      "timeZone": "Asia/Tokyo"
+      "timeZone": "Asia/Tokyo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/sapporo/illustrations/sapporo-airport-tag-c4b9c990ea-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "seattle",
       "name": "Seattle",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Los_Angeles"
+      "timeZone": "America/Los_Angeles",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/seattle/illustrations/seattle-airport-tag-5d2f7810a7-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "seminyak",
       "name": "Seminyak",
       "aliases": [],
       "countryCode": "ID",
-      "timeZone": "Asia/Makassar"
+      "timeZone": "Asia/Makassar",
+      "tagUrl": null,
+      "artworkCount": 24
     },
     {
       "id": "seoul",
       "name": "Seoul",
       "aliases": [],
       "countryCode": "KR",
-      "timeZone": "Asia/Seoul"
+      "timeZone": "Asia/Seoul",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/seoul/illustrations/seoul-airport-tag-4fb7c4779a-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "seville",
       "name": "Seville",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/seville/illustrations/seville-airport-tag-9811c5314b-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "shanghai",
       "name": "Shanghai",
       "aliases": [],
       "countryCode": "CN",
-      "timeZone": "Asia/Shanghai"
+      "timeZone": "Asia/Shanghai",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/shanghai/illustrations/shanghai-airport-tag-e658e7ffa3-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "sharm-el-sheikh",
       "name": "Sharm El Sheikh",
       "aliases": [],
       "countryCode": "EG",
-      "timeZone": "Africa/Cairo"
+      "timeZone": "Africa/Cairo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/sharm-el-sheikh/illustrations/sharm-el-sheikh-airport-tag-4db1793543-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "shenzhen",
       "name": "Shenzhen",
       "aliases": [],
       "countryCode": "CN",
-      "timeZone": "Asia/Shanghai"
+      "timeZone": "Asia/Shanghai",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/shenzhen/illustrations/shenzhen-airport-tag-c2432279f7-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "singapore",
       "name": "Singapore",
       "aliases": [],
       "countryCode": "SG",
-      "timeZone": "Asia/Singapore"
+      "timeZone": "Asia/Singapore",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/singapore/illustrations/singapore-airport-tag-b6610191c5-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "split",
       "name": "Split",
       "aliases": [],
       "countryCode": "HR",
-      "timeZone": "Europe/Zagreb"
+      "timeZone": "Europe/Zagreb",
+      "tagUrl": null,
+      "artworkCount": 16
     },
     {
       "id": "st-moritz",
       "name": "St. Moritz",
       "aliases": [],
       "countryCode": "CH",
-      "timeZone": "Europe/Zurich"
+      "timeZone": "Europe/Zurich",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/st-moritz/illustrations/st-moritz-airport-tag-e266a20afc-480w.webp",
+      "artworkCount": 22
     },
     {
       "id": "stockholm",
       "name": "Stockholm",
       "aliases": [],
       "countryCode": "SE",
-      "timeZone": "Europe/Stockholm"
+      "timeZone": "Europe/Stockholm",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/stockholm/illustrations/stockholm-airport-tag-d51f54be59-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "sydney",
       "name": "Sydney",
       "aliases": [],
       "countryCode": "AU",
-      "timeZone": "Australia/Sydney"
+      "timeZone": "Australia/Sydney",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/sydney/illustrations/sydney-airport-tag-b33d44f5b4-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "taipei",
       "name": "Taipei",
       "aliases": [],
       "countryCode": "TW",
-      "timeZone": "Asia/Taipei"
+      "timeZone": "Asia/Taipei",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/taipei/illustrations/taipei-airport-tag-91b2f24b39-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "tamarindo",
       "name": "Tamarindo",
       "aliases": [],
       "countryCode": "CR",
-      "timeZone": "America/Costa_Rica"
+      "timeZone": "America/Costa_Rica",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "taormina",
       "name": "Taormina",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "tbilisi",
       "name": "Tbilisi",
       "aliases": [],
       "countryCode": "GE",
-      "timeZone": "Asia/Tbilisi"
+      "timeZone": "Asia/Tbilisi",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/tbilisi/illustrations/tbilisi-airport-tag-7fed6efcce-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "thessaloniki",
       "name": "Thessaloniki",
       "aliases": [],
       "countryCode": "GR",
-      "timeZone": "Europe/Athens"
+      "timeZone": "Europe/Athens",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/thessaloniki/illustrations/thessaloniki-airport-tag-2838ddb734-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "tokyo",
       "name": "Tokyo",
       "aliases": [],
       "countryCode": "JP",
-      "timeZone": "Asia/Tokyo"
+      "timeZone": "Asia/Tokyo",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/tokyo/illustrations/tokyo-airport-tag-334263aadb-480w.webp",
+      "artworkCount": 27
     },
     {
       "id": "toronto",
       "name": "Toronto",
       "aliases": [],
       "countryCode": "CA",
-      "timeZone": "America/Toronto"
+      "timeZone": "America/Toronto",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/toronto/illustrations/toronto-airport-tag-f32969360b-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "tulum",
       "name": "Tulum",
       "aliases": [],
       "countryCode": "MX",
-      "timeZone": "America/Cancun"
+      "timeZone": "America/Cancun",
+      "tagUrl": null,
+      "artworkCount": 24
     },
     {
       "id": "ubud",
       "name": "Ubud",
       "aliases": [],
       "countryCode": "ID",
-      "timeZone": "Asia/Makassar"
+      "timeZone": "Asia/Makassar",
+      "tagUrl": null,
+      "artworkCount": 23
     },
     {
       "id": "uluwatu",
       "name": "Uluwatu",
       "aliases": [],
       "countryCode": "ID",
-      "timeZone": "Asia/Makassar"
+      "timeZone": "Asia/Makassar",
+      "tagUrl": null,
+      "artworkCount": 17
     },
     {
       "id": "vail",
       "name": "Vail",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/Denver"
+      "timeZone": "America/Denver",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/vail/illustrations/vail-airport-tag-6bb77839ff-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "val-disere",
       "name": "Val d’Isère",
       "aliases": [],
       "countryCode": "FR",
-      "timeZone": "Europe/Paris"
+      "timeZone": "Europe/Paris",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/val-disere/illustrations/val-disere-airport-tag-b110772caf-480w.webp",
+      "artworkCount": 22
     },
     {
       "id": "valencia",
       "name": "Valencia",
       "aliases": [],
       "countryCode": "ES",
-      "timeZone": "Europe/Madrid"
+      "timeZone": "Europe/Madrid",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/valencia/illustrations/valencia-airport-tag-c692a99033-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "vancouver",
       "name": "Vancouver",
       "aliases": [],
       "countryCode": "CA",
-      "timeZone": "America/Vancouver"
+      "timeZone": "America/Vancouver",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/vancouver/illustrations/vancouver-airport-tag-d5fcab8153-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "venice",
       "name": "Venice",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/venice/illustrations/venice-airport-tag-4a3f6a21a6-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "verbier",
       "name": "Verbier",
       "aliases": [],
       "countryCode": "CH",
-      "timeZone": "Europe/Zurich"
+      "timeZone": "Europe/Zurich",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/verbier/illustrations/verbier-airport-tag-5659063374-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "verona",
       "name": "Verona",
       "aliases": [],
       "countryCode": "IT",
-      "timeZone": "Europe/Rome"
+      "timeZone": "Europe/Rome",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/verona/illustrations/verona-airport-tag-ee184ac136-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "victoria-seychelles",
       "name": "Victoria",
       "aliases": [],
       "countryCode": "SC",
-      "timeZone": "Indian/Mahe"
+      "timeZone": "Indian/Mahe",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/victoria-seychelles/illustrations/victoria-seychelles-airport-tag-6b20f5cac3-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "vienna",
       "name": "Vienna",
       "aliases": [],
       "countryCode": "AT",
-      "timeZone": "Europe/Vienna"
+      "timeZone": "Europe/Vienna",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/vienna/illustrations/vienna-airport-tag-c12d766bda-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "vilnius",
       "name": "Vilnius",
       "aliases": [],
       "countryCode": "LT",
-      "timeZone": "Europe/Vilnius"
+      "timeZone": "Europe/Vilnius",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/vilnius/illustrations/vilnius-airport-tag-c1ec84ed06-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "warsaw",
       "name": "Warsaw",
       "aliases": [],
       "countryCode": "PL",
-      "timeZone": "Europe/Warsaw"
+      "timeZone": "Europe/Warsaw",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/warsaw/illustrations/warsaw-airport-tag-c9995331ab-480w.webp",
+      "artworkCount": 25
     },
     {
       "id": "washington",
       "name": "Washington",
       "aliases": [],
       "countryCode": "US",
-      "timeZone": "America/New_York"
+      "timeZone": "America/New_York",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/washington/illustrations/washington-airport-tag-5960230f86-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "weligama",
       "name": "Weligama",
       "aliases": [],
       "countryCode": "LK",
-      "timeZone": "Asia/Colombo"
+      "timeZone": "Asia/Colombo",
+      "tagUrl": null,
+      "artworkCount": 15
     },
     {
       "id": "whistler",
       "name": "Whistler",
       "aliases": [],
       "countryCode": "CA",
-      "timeZone": "America/Vancouver"
+      "timeZone": "America/Vancouver",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/whistler/illustrations/whistler-airport-tag-ba9128745c-480w.webp",
+      "artworkCount": 26
     },
     {
       "id": "zanzibar-city",
       "name": "Zanzibar City",
       "aliases": [],
       "countryCode": "TZ",
-      "timeZone": "Africa/Dar_es_Salaam"
+      "timeZone": "Africa/Dar_es_Salaam",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/zanzibar-city/illustrations/zanzibar-city-airport-tag-17aa9a8286-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "zermatt",
       "name": "Zermatt",
       "aliases": [],
       "countryCode": "CH",
-      "timeZone": "Europe/Zurich"
+      "timeZone": "Europe/Zurich",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/zermatt/illustrations/zermatt-airport-tag-80552627af-480w.webp",
+      "artworkCount": 24
     },
     {
       "id": "zhuhai",
       "name": "Zhuhai",
       "aliases": [],
       "countryCode": "CN",
-      "timeZone": "Asia/Shanghai"
+      "timeZone": "Asia/Shanghai",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/zhuhai/illustrations/zhuhai-airport-tag-1aa3758ec6-480w.webp",
+      "artworkCount": 23
     },
     {
       "id": "zurich",
       "name": "Zurich",
       "aliases": [],
       "countryCode": "CH",
-      "timeZone": "Europe/Zurich"
+      "timeZone": "Europe/Zurich",
+      "tagUrl": "https://foreignclubberscorespondence.web.app/assets/generated/zurich/illustrations/zurich-airport-tag-b64fdcb842-480w.webp",
+      "artworkCount": 24
     }
   ]
 }
