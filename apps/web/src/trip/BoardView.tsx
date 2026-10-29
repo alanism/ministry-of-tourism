@@ -1,13 +1,15 @@
 // Board, Today and Map: three views of the same cards, all drawn with one card brick.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { STAGES, boardProjection, localDateFor, mapPins, readTripMeta, todayProjection, type Actor, type BoardKind, type RevCard, type Scope, type Stage, type TripSession } from '@writers-board/core';
-import { Icon, Menu, type MenuEntry } from './ui';
+import { FocusSheet, Icon, Menu, type MenuEntry } from './ui';
+import { CardContent, CheckedFacts, EditedExcerpt, SourceLink, SourceRecord } from './SourceContent';
+import { cardEditInput, editsSourceNote, sourceHref, sourceKey, sourceTextFor } from './source-card';
 import { attachPhoto, coverAssetId, pickPhoto, useAssetUrl } from './trip-assets';
 import { HOST_LANES, cardProvenanceLabel, STAGE_NAME, dayLabel, longDayLabel } from './sample';
 import { recordOutcome } from './metrics';
 import type { Ghost } from './ProposalReview';
 
-export interface ViewProps { session: TripSession; actor: Actor; tick: number; refresh: () => void; notify: (m: string) => void; }
+export interface ViewProps { session: TripSession; actor: Actor; tick: number; refresh: () => void; notify: (m: string) => void; updatedSources?:ReadonlySet<string>; }
 
 const CARD_TYPE = 'application/x-mot-card';
 const SCOPE_LABEL: Record<Scope, string> = { guide: 'Guide', stay: 'Stay only', private: 'Private' };
@@ -38,7 +40,7 @@ function Photo({ session, assetId }: { session: TripSession; assetId: string | u
 /** How a card arrived on this render: moved from another lane, or new (an applied suggestion lands stamped). */
 type Landing = 'moved' | 'new';
 
-export function TripCardView({ card, session, actor, kind, refresh, notify, autoEdit = false, isNext = false, landing }: { card: RevCard; kind: BoardKind; autoEdit?: boolean; isNext?: boolean; landing?: Landing } & Omit<ViewProps, 'tick'>) {
+export function TripCardView({ card, session, actor, kind, refresh, notify, autoEdit = false, isNext = false, landing,updatedSources }: { card: RevCard; kind: BoardKind; autoEdit?: boolean; isNext?: boolean; landing?: Landing } & Omit<ViewProps, 'tick'>) {
   const [editing, setEditing] = useState(autoEdit);
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -47,16 +49,15 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
     ref.current?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: still ? 'auto' : 'smooth' });
   }, [landing]);
   const [dragging, setDragging] = useState(false);
-  const [draft, setDraft] = useState({ title: card.title, body: card.body, day: card.day ?? '', time: card.time ?? '', scope: card.scope });
+  const [draft, setDraft] = useState({ title: card.title, body: card.body, travelerNote:card.travelerNote??'',day: card.day ?? '', time: card.time ?? '', scope: card.scope });
   const names = stageNames(kind);
   const run = (name: string, input: Record<string, unknown>, message: string) => {
-    try { session.execute(actor, name, input); if (name === 'trip_task_set_status' && input.status === 'done') recordOutcome('task_completed'); refresh(); notify(message); }
-    catch (e) { notify(e instanceof Error ? e.message : 'That did not work. Nothing changed.'); }
+    try { session.execute(actor, name, input); if (name === 'trip_task_set_status' && input.status === 'done') recordOutcome('task_completed'); refresh(); notify(message);return true; }
+    catch (e) { notify(e instanceof Error ? e.message : 'That did not work. Nothing changed.');return false; }
   };
-  const edit = () => { setDraft({ title: card.title, body: card.body, day: card.day ?? '', time: card.time ?? '', scope: card.scope }); setEditing(true); };
+  const edit = () => { setDraft({ title: card.title, body: card.body, travelerNote:card.travelerNote??'',day: card.day ?? '', time: card.time ?? '', scope: card.scope }); setEditing(true); };
   const save = () => {
-    run('trip_card_update', { id: card.id, title: draft.title.trim() || card.title, body: draft.body, day: draft.day || null, time: draft.time || null, scope: draft.scope }, 'Card updated');
-    setEditing(false);
+    if(run('trip_card_update',cardEditInput(card,draft),'Card updated'))setEditing(false);
   };
   const addPhoto = () => pickPhoto((file) => {
     void attachPhoto(session, actor, card.id, file).then(() => { refresh(); notify('Photo added'); }, (e: unknown) => notify(e instanceof Error ? e.message : 'Could not add that photo.'));
@@ -64,7 +65,7 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
   const lanes = kind === 'host_guide' ? HOST_LANES.map((l) => l.stage) : [...STAGES];
   const menu: MenuEntry[] = [
     { label: 'Edit', onSelect: edit },
-    ...(card.source?.canonicalUrl||card.source?.url?[{label:'Open source',onSelect:()=>{window.open(card.source?.canonicalUrl??card.source?.url,'_blank','noopener,noreferrer');}}]:[]),
+    ...(sourceHref(card.source?.canonicalUrl??card.source?.url)?[{label:'Open source',onSelect:()=>{window.open(sourceHref(card.source?.canonicalUrl??card.source?.url),'_blank','noopener,noreferrer');}}]:[]),
     ...(card.kind === 'task' ? [{ label: card.status === 'done' ? 'Mark as open' : 'Mark as done', onSelect: () => run('trip_task_set_status', { id: card.id, status: card.status === 'done' ? 'open' : 'done' }, card.status === 'done' ? 'Reopened' : 'Done') }] : []),
     { label: card.assetIds.length ? 'Replace photo' : 'Add photo', onSelect: addPhoto },
     { heading: 'Move to' },
@@ -73,14 +74,21 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
     { label: 'Delete card', danger: true, onSelect: () => run('trip_card_delete', { id: card.id }, 'Card deleted. Undo brings it back.') },
   ];
   const showStatus = card.kind === 'task' && (card.stage === 'plan' || card.stage === 'prepare');
-  const className = ['m-card', editing && 'editing', dragging && 'dragging', card.status === 'done' && 'done', isNext && 'next', landing && 'landed'].filter(Boolean).join(' ');
+  const sourceCard=editsSourceNote(card);
+  const sourceWasOpen=useRef(false);
+  useEffect(()=>{
+    if(sourceCard&&sourceWasOpen.current&&!editing)ref.current?.querySelector<HTMLButtonElement>('.m-card-title button')?.focus();
+    sourceWasOpen.current=sourceCard&&editing;
+  },[sourceCard,editing]);
+  const className = ['m-card', editing && !sourceCard && 'editing', dragging && 'dragging', card.status === 'done' && 'done', isNext && 'next', landing && 'landed'].filter(Boolean).join(' ');
 
-  if (editing) {
-    return (
-      <article className={className} aria-label={`Editing ${card.title}`}>
-        <div className="m-card-top"><span className="m-eyebrow">{cardProvenanceLabel(card)}</span></div>
-        <input className="m-edit-title" aria-label="Title" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus={autoEdit} />
-        <textarea className="m-edit-body" aria-label="Notes" value={draft.body} autoFocus={!autoEdit} onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+  const fields=editing?(<>
+        {sourceCard&&<><header className="mot-source-detail-head"><h2>{card.title}</h2><button type="button" className="m-icon-btn" aria-label="Close card details" onClick={()=>setEditing(false)}>×</button></header><div className="mot-source-lock" role="region" aria-label="Source text"><span className="m-label">From the issue · kept as published</span>{sourceTextFor(card)?<blockquote className="mot-source-quote">{sourceTextFor(card)}</blockquote>:<p>No source excerpt was saved. Open the original source.</p>}</div><SourceRecord card={card}/><CheckedFacts card={card}/></>}
+        {sourceCard&&<EditedExcerpt card={card}/>}
+        {sourceCard?<label htmlFor={`title-${card.id}`}>Card title</label>:<div className="m-card-top"><span className="m-eyebrow">{cardProvenanceLabel(card)}</span></div>}
+        <input id={sourceCard?`title-${card.id}`:undefined} className="m-edit-title" aria-label="Title" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus={autoEdit} />
+        {sourceCard&&<label htmlFor={`note-${card.id}`}>Your note <span className="m-muted">Your words · source unchanged</span></label>}
+        <textarea id={sourceCard?`note-${card.id}`:undefined} className="m-edit-body" aria-label={sourceCard?'Your note':'Notes'} value={sourceCard?draft.travelerNote:draft.body} maxLength={20000} autoFocus={!autoEdit&&!sourceCard} onChange={(e) => setDraft({ ...draft, [sourceCard?'travelerNote':'body']: e.target.value })}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) save(); if (e.key === 'Escape') setEditing(false); }} />
         <div className="m-edit-grid">
           <label>Day<input type="date" value={draft.day} onChange={(e) => setDraft({ ...draft, day: e.target.value })} /></label>
@@ -92,14 +100,21 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
             {scopeChoices(kind, card.scope).map((c) => <button key={c.scope} type="button" aria-pressed={draft.scope === c.scope} onClick={() => setDraft({ ...draft, scope: c.scope })}>{c.label}</button>)}
           </div>
         </fieldset>
+    </>):null;
+  const editor=editing?(
+      <article className={sourceCard?'mot-source-editor':className} aria-label={`Editing ${card.title}`}>
+        {sourceCard?<div className="mot-source-fields">{fields}</div>:fields}
         <div className="m-edit-actions">
-          <button type="button" className="m-btn primary" onClick={save}>Done</button>
+          <button type="button" className="m-btn primary" onClick={save}>{sourceCard?'Save changes':'Done'}</button>
           <button type="button" className="m-btn" onClick={() => setEditing(false)}>Cancel</button>
+          {sourceCard&&<SourceLink url={card.source?.canonicalUrl??card.source?.url}/>}
+          {sourceCard&&<button type="button" className="m-btn" onClick={()=>run('trip_card_delete',{id:card.id},'Card removed. Undo brings it back.')}>Remove from board</button>}
         </div>
       </article>
-    );
-  }
+    ):null;
+  if(editing&&!sourceCard)return editor;
   return (
+    <>
     <article ref={ref} className={className} draggable
       onDragStart={(e) => { e.dataTransfer.setData(CARD_TYPE, card.id); e.dataTransfer.effectAllowed = 'move'; setDragging(true); }}
       onDragEnd={() => setDragging(false)}>
@@ -112,7 +127,7 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
       {landing === 'new' && card.provenance === 'agent' && <span className="mot-stamp landing on-card" aria-hidden="true">Approved</span>}
       <h3 className="m-card-title"><button type="button" onClick={edit}>{card.title || 'Untitled'}</button></h3>
       <Photo session={session} assetId={coverAssetId(card)} />
-      {card.body && <p className="m-card-body">{card.body}</p>}
+      <CardContent card={card} updated={updatedSources?.has(sourceKey(card.source)??'')}/>
       {(isNext || showStatus || card.day || (kind !== 'host_guide' && card.scope === 'private')) && (
         <div className="m-chips">
           {isNext && <span className="m-chip tag next">Next up</span>}
@@ -122,6 +137,8 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
         </div>
       )}
     </article>
+    {editing&&sourceCard&&<FocusSheet label={`Card details · ${card.title}`} onClose={()=>setEditing(false)}>{editor}</FocusSheet>}
+    </>
   );
 }
 
@@ -130,12 +147,11 @@ function GhostCard({ ghost, session, onReview }: { ghost: Ghost; session: TripSe
   const url = useAssetUrl(session, ghost.assetId);
   return (
     <article className="m-card ghost" aria-label={`Suggestion, not on your board yet: ${ghost.title}`}>
-      <div className="m-card-top"><span className="m-eyebrow"><Icon name="sparkle" /> {ghost.label??'Suggestion · not added'}</span></div>
+      <div className="m-card-top"><span className="m-eyebrow"><Icon name="sparkle" /> Suggestion · not added</span></div>
       <h3 className="m-card-title"><span>{ghost.title}</span></h3>
       {url && <div className="m-card-photo wide"><img src={url} alt="" draggable={false} /></div>}
       {ghost.body && <p className="m-card-body">{ghost.body}</p>}
-      {ghost.citation&&<a className="mot-muse-citation" href={ghost.citation.url} target="_blank" rel="noopener noreferrer">{ghost.citation.title}</a>}
-      {(ghost.review||onReview) && <button type="button" className="m-btn small mot-ghost-review" onClick={() => ghost.review?ghost.review():onReview?.(ghost.index)}>Review <Icon name="arrowRight" /></button>}
+      {onReview && <button type="button" className="m-btn small mot-ghost-review" onClick={() => onReview(ghost.index)}>Review <Icon name="arrowRight" /></button>}
     </article>
   );
 }
@@ -192,7 +208,7 @@ function NextUp({ card, session, onOpenDay }: { card: RevCard; session: TripSess
   );
 }
 
-export function BoardView({ session, actor, tick, refresh, notify, header, top, onOpenDay, ghosts = [], onReview }: ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void }) {
+export function BoardView({ session, actor, tick, refresh, notify, header, top, onOpenDay, ghosts = [], onReview,updatedSources }: ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void }) {
   void tick;
   const meta = readTripMeta(session.doc);
   const kind = meta.kind;
@@ -231,7 +247,7 @@ export function BoardView({ session, actor, tick, refresh, notify, header, top, 
               {kind === 'host_guide' && <button type="button" className="mot-add-row" onClick={() => addHere(stage)}><Icon name="plus" /> Add a card</button>}
               <div className="mot-lane-cards">
                 {waiting.map((g) => <GhostCard key={`ghost-${g.index}`} ghost={g} session={session} onReview={onReview} />)}
-                {cards.map((c) => <TripCardView key={c.id} card={c} kind={kind} autoEdit={c.id === fresh} isNext={c.id === next?.id} landing={landed.get(c.id)} session={session} actor={actor} refresh={refresh} notify={notify} />)}
+                {cards.map((c) => <TripCardView key={c.id} card={c} kind={kind} autoEdit={c.id === fresh} isNext={c.id === next?.id} landing={landed.get(c.id)} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} />)}
                 {cards.length + waiting.length === 0 && <p className="mot-lane-empty">Drop a card here.</p>}
               </div>
             </section>
@@ -242,7 +258,7 @@ export function BoardView({ session, actor, tick, refresh, notify, header, top, 
   );
 }
 
-export function TodayView({ session, actor, tick, refresh, notify }: ViewProps) {
+export function TodayView({ session, actor, tick, refresh, notify,updatedSources }: ViewProps) {
   void tick;
   const meta = readTripMeta(session.doc);
   if(!meta.timeZone)return <section className="m-panel mot-day" aria-label="Today"><h2>Timezone unknown</h2><p>Choose the destination timezone before using Today. Your dated cards are unchanged.</p></section>;
@@ -268,7 +284,7 @@ export function TodayView({ session, actor, tick, refresh, notify }: ViewProps) 
           {shown.map((c) => (
             <div key={c.id} className="mot-slot">
               <time>{c.time ?? 'Any time'}</time>
-              <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} />
+              <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} />
             </div>
           ))}
         </div>
@@ -286,7 +302,7 @@ export function TodayView({ session, actor, tick, refresh, notify }: ViewProps) 
                 {cards.map((c) => (
                   <div key={c.id} className="mot-slot">
                     <time>{c.time ?? 'Any time'}</time>
-                    <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} />
+                    <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} />
                   </div>
                 ))}
               </div>

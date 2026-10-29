@@ -1,0 +1,29 @@
+.mot-dialog:has(.mot-almanac){width:min(1100px,100vw);height:100dvh;margin:0 0 0 auto;}
+.mot-almanac{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--m-surface);color:var(--m-ink);}
+.mot-almanac header{flex:none;padding:24px;border-bottom:1px solid var(--m-line);display:grid;gap:12px;}
+.mot-almanac-heading,.mot-almanac-city-head{display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.mot-almanac-heading .m-btn{flex-shrink:0;width:44px;font-size:24px;}
+.mot-almanac h2{margin:0;font:600 19px/1.3 'IBM Plex Serif',serif;}
+.mot-almanac header p{margin:0;font:400 15px/1.5 var(--m-sans);}
+.mot-almanac-compare{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font:400 12px/1.5 var(--m-mono);}
+.mot-almanac-compare select{font:400 15px/1.4 var(--m-sans);color:var(--m-ink);background:var(--m-surface);border:1px solid var(--m-line);border-radius:12px;min-height:44px;padding:8px 12px;max-width:100%;}
+.mot-almanac-body{flex:1;min-height:0;overflow:auto;padding:24px;}
+.mot-almanac-cols{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;align-items:start;}
+.mot-almanac-cols.comparing{grid-template-columns:repeat(2,minmax(0,1fr));}
+.mot-almanac-city{min-width:0;overflow-wrap:anywhere;}
+.mot-almanac-city h3{margin:0;font:600 19px/1.4 'IBM Plex Serif',serif;}
+.mot-almanac-dates{display:flex;flex-wrap:wrap;gap:12px 24px;margin:16px 0;}
+.mot-almanac-dates dt,.mot-almanac-dates dd,.mot-almanac-status,.mot-almanac-seen{font:400 12px/1.5 var(--m-mono);}
+.mot-almanac-dates dt{color:var(--m-ink-2);}.mot-almanac-dates dd{margin:2px 0 0;}
+.mot-almanac-status{margin-top:12px;color:var(--m-ink-2);}
+.mot-almanac-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;}
+.comparing .mot-almanac-tiles{grid-template-columns:minmax(0,1fr);}
+.mot-almanac-tile{border:1px solid var(--m-line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0;}
+.mot-almanac-tile h4{margin:0;font:600 15px/1.4 var(--m-sans);}
+.mot-almanac-tile p{margin:0;}
+.mot-almanac-price{font:600 var(--t-5)/var(--lh-5) var(--m-sans);font-variant-numeric:tabular-nums;}
+.mot-almanac-conversion,.mot-almanac-note,.mot-almanac-tile details{font:400 var(--t-2)/var(--lh-2) var(--m-sans);}
+.mot-almanac-tile summary{min-height:36px;cursor:pointer;}
+.mot-almanac-tile .m-btn{margin-top:auto;min-height:44px;}
+.mot-almanac-note{margin:16px 0 0;}
+@media(max-width:760px){.mot-dialog:has(.mot-almanac){width:100%;height:100dvh;margin:0;border-radius:0;}.mot-almanac header,.mot-almanac-body{padding:16px;}.mot-almanac-cols.comparing{grid-template-columns:minmax(0,1fr);}.mot-almanac-tiles{grid-template-columns:minmax(0,1fr);}}

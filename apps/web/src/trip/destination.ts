@@ -65,16 +65,20 @@ export async function loadDestinations(options: { fetcher?: typeof fetch; storag
   const controller = new AbortController(), cancel = () => controller.abort();
   options.signal?.addEventListener('abort', cancel, { once: true });
   const timer = setTimeout(cancel, Math.max(1, Math.min(options.timeoutMs ?? 5000, 15000)));
+  let interrupt!:()=>void;
+  const interrupted=new Promise<never>((_resolve,reject)=>{interrupt=()=>reject(controller.signal.reason);controller.signal.addEventListener('abort',interrupt,{once:true});});
   try {
-    const response = await (options.fetcher ?? fetch)('/fcc/destinations.json', { signal: controller.signal, credentials: 'omit', redirect: 'error' });
+    const transport=(options.fetcher ?? fetch)('/fcc/destinations.json', { signal: controller.signal, credentials: 'omit', redirect: 'error' });
+    void transport.then(late=>{if(controller.signal.aborted)void late.body?.cancel().catch(()=>{});},()=>{});
+    const response = await Promise.race([transport,interrupted]);
     if (response.status === 404) return unavailable('The FCC destination list has not been published yet. Name a city and choose its country to start.');
     if (!response.ok) return unavailable('The destination list could not be refreshed. Retry or name a city and choose its country.');
-    const raw: unknown = await response.json(), rows = Array.isArray(raw) ? destinationRows.parse(raw) : publication.parse(raw).cities;
+    const raw: unknown = await Promise.race([response.json(),interrupted]), rows = Array.isArray(raw) ? destinationRows.parse(raw) : publication.parse(raw).cities;
     if (!rows.length) return unavailable('The published destination list is empty. Name a city and choose its country to start.');
     if (controller.signal.aborted) return unavailable('Destination list loading was cancelled or timed out. You can still name a city.');
     const retrievedAt = (options.now ?? (() => new Date()))().toISOString();
     try { storage?.setItem(CACHE_KEY, JSON.stringify({ schema: 'mot.destination-cache/1', retrievedAt, cities: rows })); } catch { /* Availability does not assert that the cache was persisted. */ }
     return { status: 'ready', cities: rows, retrievedAt };
   } catch { return unavailable('The destination list could not be refreshed. Retry or name a city and choose its country.'); }
-  finally { clearTimeout(timer); options.signal?.removeEventListener('abort', cancel); }
+  finally { clearTimeout(timer); options.signal?.removeEventListener('abort', cancel);controller.signal.removeEventListener('abort',interrupt); }
 }

@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {applyProposal,readAllCards,readTripMeta,STAGES,undoProposal,type Actor,type FccCityContent,type TripSession} from '@writers-board/core';
-import {browserFcc,citySlug} from './FccBrowser';
+import {browserMuseFcc,citySlug} from './FccBrowser';
 import {MuseRequestError,museDiagnosticText,requestMuseProposal,type MusePhase} from './muse-client';
 import type {Ghost} from './ProposalReview';
 import './muse-plan.css';
@@ -36,7 +36,7 @@ export function MusePlan({session,actor,content,onAvailability,onState,onGhosts,
  useEffect(()=>{
   const abort=new AbortController();controller.current?.abort();controller.current=undefined;setPhase('idle');setResult(undefined);setApplied([]);setSelected([]);setError('');setFailure(undefined);setCopyStatus('');setIssue(undefined);setIssueState('Loading this city’s FCC issue…');
   if(content?.city.id===cityId){setIssue(content);setIssueState('Saved FCC issue');return()=>abort.abort();}
-  void browserFcc.getCity(cityId,{signal:abort.signal,offline:!navigator.onLine}).then(loaded=>{if(abort.signal.aborted)return;if(loaded.status==='unavailable'){setIssueState(loaded.reason);return;}setIssue(loaded.value);setIssueState(loaded.status==='ready'?'FCC issue loaded':loaded.status==='stale'?'Saved issue · refresh failed':'Offline · saved issue');});
+  void browserMuseFcc.getCity(cityId,{signal:abort.signal,offline:!navigator.onLine}).then(loaded=>{if(abort.signal.aborted)return;if(loaded.status==='unavailable'){setIssueState(loaded.reason);return;}setIssue(loaded.value);setIssueState(loaded.status==='ready'?'FCC issue loaded':loaded.status==='stale'?'Saved issue · refresh failed':'Offline · saved issue');});
   return()=>abort.abort();
  },[session,cityId,attempt,content]);
  useEffect(()=>{

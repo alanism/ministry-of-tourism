@@ -22,7 +22,7 @@ import { installTripApi } from './agentApi';
 import { createTripArtifact, currentTripOperation, diagnostics } from './artifacts';
 import { ExportScreen } from './ExportScreen';
 import type { NewTrip } from './trip-store';
-import { FccBrowser } from './FccBrowser';
+import { FccBrowser, SourceFreshness, citySlug, type FccBrowserState } from './FccBrowser';
 import { MusePlan } from './MusePlan';
 
 const ArtworkPicker=lazy(()=>import('../artwork/ArtworkPicker'));
@@ -86,10 +86,11 @@ export function TripApp() {
   const registryRef=useRef<DestinationRow[]>([]);
   const startingTrip=useRef(false);
   const [cityContent,setCityContent]=useState<FccCityContent>();
+  const [fccState,setFccState]=useState<FccBrowserState>();
   const [museAvailable,setMuseAvailable]=useState(false);
   const [museLabel,setMuseLabel]=useState('Muse · check connection');
   const [museGhosts,setMuseGhosts]=useState<Ghost[]>([]);
-  const providers=useRef({fcc:false,muse:false});providers.current={fcc:!!cityContent,muse:museAvailable};
+  const providers=useRef({fcc:false,muse:false});
   const [pending, setPending] = useState<PendingReview | null>(null);
   const [focusOp, setFocusOp] = useState<number | undefined>(undefined);
   const [museOpen, setMuseOpen] = useState(true);
@@ -159,6 +160,9 @@ export function TripApp() {
   if (!open || !session) return <><FirstScreen onStart={(kind) => { setLost(false);setCreating(kind); }} boards={listBoards()} onOpen={(id) => void switchTo(id)}
     notice={lost ? 'Your last board is no longer in this browser’s storage. It may have been cleared by the browser or by you. If you exported a ZIP backup, import it to get the board back.' : undefined} />{creating&&<FocusSheet label="Choose destination" onClose={()=>setCreating(null)}><DestinationPicker kind={creating} {...destinationProps} onClose={()=>setCreating(null)} onSave={details=>void start(details)} /></FocusSheet>}</>;
   const meta = readTripMeta(session.doc);
+  const contentCity=meta.cityId??citySlug(meta.city),sourceState=fccState?.boardId===meta.boardId&&fccState.cityId===contentCity?fccState:undefined;
+  const scopedContent=cityContent?.city.id===contentCity?cityContent:undefined,updatedSources=new Set(sourceState?.updatedKeys??[]);
+  providers.current={fcc:!!scopedContent,muse:museAvailable};
   const saved = hasEphemeralAssets(session.doc)?'error':open.status();
   const sample = isSample(meta.boardId);
   const host = meta.kind === 'host_guide';
@@ -282,12 +286,12 @@ export function TripApp() {
 
       {tab === 'export' ? <ExportScreen key={meta.boardId} session={session} tick={tick} notify={notify} onExported={()=>open.markExported()} /> : tab === 'keepsakes' ? (
         <div><nav className="mot-keepsake-formats" aria-label="Keepsake formats"><button type="button" className={`m-btn small${keepsakeFormat==='magazine'?' ink':''}`} aria-pressed={keepsakeFormat==='magazine'} onClick={()=>setKeepsakeFormat('magazine')}>Magazine</button><button type="button" className={`m-btn small${keepsakeFormat==='postcard'?' ink':''}`} aria-pressed={keepsakeFormat==='postcard'} onClick={()=>setKeepsakeFormat('postcard')}>Photo postcard</button></nav>{keepsakeFormat==='magazine'?<MagazineStudio session={session} tick={tick} onExport={()=>setTab('export')} />:<Keepsakes key={meta.boardId} session={session} tick={tick} saved={saved} onExport={() => setTab('export')} onBack={() => setTab('board')} notify={notify} />}</div>
-      ) : tab==='composition' ? <Composition session={session} actor={YOU} refresh={refresh} notify={notify} /> : tab==='fcc'?<FccBrowser session={session} actor={YOU} refresh={refresh} notify={notify} onContent={setCityContent} /> : (
+      ) : tab==='composition' ? <Composition session={session} actor={YOU} refresh={refresh} notify={notify} /> : tab==='fcc'?<FccBrowser key={`${meta.boardId}:${contentCity}`} session={session} actor={YOU} refresh={refresh} notify={notify} onContent={setCityContent} onState={setFccState} initialState={sourceState} /> : (
         <div className={`mot-work view-${tab}`}>
           {sidebar}
           <div className="mot-main">
-            {tab === 'board' && <BoardView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} header={hostHead} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
-            {tab === 'today' && <div className="mot-board"><TodayView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} /></div>}
+            {tab === 'board' && <BoardView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
+            {tab === 'today' && <div className="mot-board"><TodayView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} /></div>}
             {tab === 'map' && <div className="mot-board"><MapView session={session} tick={tick} onBack={() => setTab('board')} /></div>}
           </div>
         </div>
@@ -296,7 +300,7 @@ export function TripApp() {
       {panel === 'guest' && host && <FocusSheet label="Create a guest copy" onClose={() => setPanel(null)}><GuestCopyPanel key={meta.boardId} session={session} onCreate={(t, ids) => void guestCopy(t, ids)} onClose={() => setPanel(null)} /></FocusSheet>}
       {panel==='destination'&&<FocusSheet label="Change destination" onClose={()=>setPanel(null)}><DestinationPicker current={meta} kind={meta.kind} {...destinationProps} preservedCards={readAllCards(session.parts).map(card=>({id:card.id,title:card.title,sourceCity:destinations.find(row=>row.id===card.source?.cityId)?.name??card.source?.cityId}))} onClose={()=>setPanel(null)} onSave={details=>{try{session.execute(YOU,'trip_meta_update',{city:details.city,cityId:details.cityId,countryCode:details.countryCode,timeZone:details.timeZone,dates:details.dates});setPanel(null);refresh();notify('Destination changed. Existing cards keep their sources; refresh FCC content when ready.');}catch(error){notify(error instanceof Error?error.message:'Destination could not be changed.');}}} /></FocusSheet>}
       {panel==='art'&&<Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{destination:meta,destinations}} onClose={()=>setPanel(null)} onUpload={async(file,signal)=>{await placeTripUpload(session,YOU,file,signal);refresh();setTab('composition');notify('Photo added to your trip.',{label:'Undo',run:undo});}} onInsert={async(artwork,signal)=>{await placeTripArtwork(session,YOU,artwork,signal);refresh();setTab('composition');notify('Artwork added to your trip.',{label:'Undo',run:undo});}} /></Suspense>}
-      {panel==='muse'&&<MusePlan key={meta.boardId} session={session} actor={YOU} content={cityContent} onAvailability={setMuseAvailable} onState={setMuseLabel} onGhosts={setMuseGhosts} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} />}
+      {panel==='muse'&&<MusePlan key={meta.boardId} session={session} actor={YOU} content={scopedContent} onAvailability={setMuseAvailable} onState={setMuseLabel} onGhosts={setMuseGhosts} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} />}
       {toast && panel!=='art' && <Toast message={toast.message} action={toast.action} onClose={() => setToast(null)} />}
       <div className="mot-foot">
         <details className="mot-data-details" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) e.currentTarget.open = false; }}><summary>On this device</summary><div><label><input type="checkbox" checked={measure} onChange={(e) => { enableMetrics(e.target.checked); setMeasure(e.target.checked); }} /> Count demo actions on this device</label>{measure && <p>{Object.values(readMetrics()?.counts ?? {}).reduce((a, b) => a + b, 0)} actions · no live model cost</p>}</div></details>

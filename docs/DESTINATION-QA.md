@@ -9,4 +9,6 @@ A second browser context preloads application modules, blocks the registry reque
 
 The bundled list and published JSON are generated together by `node scripts/build-fcc-destinations.mjs <read-only-FCC-source> [output-directory]`. Explicit Airport Tag collection metadata supplies 150 tag images; the other 50 cities retain the plain tag. No image is inferred from a city name. Counts exclude apparel. The included copy has no invented retrieval date; refreshed/saved copies retain their actual retrieval date.
 
+The existing five-second registry deadline now settles headers and JSON reads even when injected work ignores abort. Cancellation retains the exact dated saved copy, or the included list without inventing a retrieval date. Late responses are discarded and cannot replace the cache. `destination-settlement.test.ts` exercises stalled headers/body, cancellation and the unavailable case without saved/included data. The existing maximum timeout, country/schema rules and three UI retries are unchanged. The external WP2 destination-deadline helper holds actual publication JSON completion and checks the real deadline, all 200 included cities, Donostia search and no late cache write at six widths.
+
 Known boundary: screenshots use Chromium, not a physical phone. Opus owns independent design approval. Other app-surface reference scenarios belong to their own tasks.
