@@ -82,8 +82,7 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
   },[sourceCard,editing]);
   const className = ['m-card', editing && !sourceCard && 'editing', dragging && 'dragging', card.status === 'done' && 'done', isNext && 'next', landing && 'landed'].filter(Boolean).join(' ');
 
-  const editor=editing?(
-      <article className={sourceCard?'mot-source-editor':className} aria-label={`Editing ${card.title}`}>
+  const fields=editing?(<>
         {sourceCard&&<><header className="mot-source-detail-head"><h2>{card.title}</h2><button type="button" className="m-icon-btn" aria-label="Close card details" onClick={()=>setEditing(false)}>×</button></header><div className="mot-source-lock" role="region" aria-label="Source text"><span className="m-label">From the issue · kept as published</span>{sourceTextFor(card)?<blockquote className="mot-source-quote">{sourceTextFor(card)}</blockquote>:<p>No source excerpt was saved. Open the original source.</p>}</div><SourceRecord card={card}/><CheckedFacts card={card}/></>}
         {sourceCard&&<EditedExcerpt card={card}/>}
         {sourceCard?<label htmlFor={`title-${card.id}`}>Card title</label>:<div className="m-card-top"><span className="m-eyebrow">{PROVENANCE_LABEL[card.provenance]}</span></div>}
@@ -101,6 +100,10 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
             {scopeChoices(kind, card.scope).map((c) => <button key={c.scope} type="button" aria-pressed={draft.scope === c.scope} onClick={() => setDraft({ ...draft, scope: c.scope })}>{c.label}</button>)}
           </div>
         </fieldset>
+    </>):null;
+  const editor=editing?(
+      <article className={sourceCard?'mot-source-editor':className} aria-label={`Editing ${card.title}`}>
+        {sourceCard?<div className="mot-source-fields">{fields}</div>:fields}
         <div className="m-edit-actions">
           <button type="button" className="m-btn primary" onClick={save}>{sourceCard?'Save changes':'Done'}</button>
           <button type="button" className="m-btn" onClick={() => setEditing(false)}>Cancel</button>

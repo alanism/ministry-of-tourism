@@ -16,9 +16,10 @@
 .mot-source-muse b{display:block;margin-bottom:6px;font-size:12px;}
 .mot-source-record{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px;margin:0;}
 .mot-source-record dd{margin:0;overflow-wrap:anywhere;}
-.mot-source-editor{height:100%;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:24px;background:var(--m-surface);border-radius:16px 0 0 16px;}
-.mot-source-editor>*{flex-shrink:0;}
-.mot-source-editor .m-edit-actions{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:8px;background:var(--m-surface);padding:12px 0;border-top:1px solid var(--m-line);}
+.mot-source-editor{height:100%;overflow:hidden;display:grid;grid-template-rows:minmax(0,1fr) auto;background:var(--m-surface);border-radius:16px 0 0 16px;}
+.mot-source-fields{min-height:0;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:24px;}
+.mot-source-fields>*{flex-shrink:0;}
+.mot-source-editor .m-edit-actions{display:flex;flex-wrap:wrap;gap:8px;background:var(--m-surface);padding:12px 24px;border-top:1px solid var(--m-line);}
 .mot-source-editor h2{font:600 19px/1.3 'IBM Plex Serif',serif;margin:0;}
 .mot-source-detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 .mot-source-detail-head .m-icon-btn{flex-shrink:0;font-size:24px;}
@@ -34,4 +35,4 @@
 .mot-fcc-item h3{margin:0;font:600 19px/1.4 'IBM Plex Serif',serif;}
 .mot-fcc-item p{margin:0;}
 .mot-fcc-item pre{font:400 15px/1.5 'IBM Plex Serif',serif;}
-@media(max-width:760px){.mot-dialog:has(.mot-source-editor){width:100%;height:calc(100dvh - 56px);margin:56px 0 0;border-radius:16px 16px 0 0;}.mot-source-editor{border-radius:16px 16px 0 0;padding:16px;}.mot-source-record{grid-template-columns:minmax(0,1fr);gap:3px;}.mot-source-record dd{margin-bottom:6px;}}
+@media(max-width:760px){.mot-dialog:has(.mot-source-editor){width:100%;height:calc(100dvh - 56px);margin:56px 0 0;border-radius:16px 16px 0 0;}.mot-source-editor{border-radius:16px 16px 0 0;}.mot-source-fields,.mot-source-editor .m-edit-actions{padding:16px;}.mot-source-record{grid-template-columns:minmax(0,1fr);gap:3px;}.mot-source-record dd{margin-bottom:6px;}}
