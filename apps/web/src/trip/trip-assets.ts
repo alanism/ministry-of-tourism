@@ -52,18 +52,28 @@ export function hasEphemeralAssets(doc:Y.Doc):boolean {
 
 /** Fetch only selected media; the original stays intact and crop is document geometry. */
 export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:Artwork,signal:AbortSignal):Promise<void> {
-  const response=await fetch(artwork.original??artwork.src,{signal,credentials:'omit'});
+  const ref=artwork.artRef;
+  if(ref?.kind==='apparel-mockup')throw new Error('Apparel belongs in Wear the trip, not decorative artwork.');
+  const response=await fetch(artwork.original??artwork.src,{signal,credentials:'omit',redirect:'error'});
   if(!response.ok)throw new Error(`Artwork download failed (${response.status}). Retry or choose another image.`);
   const blob=await response.blob();
-  if(!/^image\/(png|jpeg|webp|gif)$/.test(blob.type))throw new Error('This artwork is not a supported image.');
+  if(!/^image\/(png|jpeg|webp|gif|avif)$/.test(blob.type))throw new Error('This artwork is not a supported image.');
   signal.throwIfAborted();
+  if(ref){
+    const decoded=await createImageBitmap(blob);
+    try{if(decoded.width!==ref.width||decoded.height!==ref.height)throw new Error('The original pixel size changed. Refresh the catalog before adding it.');}finally{decoded.close();}
+    signal.throwIfAborted();
+  }
   const extended=artwork as Artwork&{credit?:string;rightsStatus?:'approved'|'unknown'|'restricted';originCityId?:string;countryCode?:string};
-  const width=.38,height=Math.min(.65,.38*artwork.height/artwork.width*148/210);
+  const credit=ref?.credit??extended.credit,rightsStatus=ref?.rightsStatus??extended.rightsStatus??'unknown';
+  const crop=artwork.crop??[0,0,1,1],ratio=artwork.height*crop[3]/(artwork.width*crop[2])*148/210;
+  const width=Math.min(.38,.65/ratio),height=width*ratio;
   await commitTripBlob(blob,hash=>{
-    const existing=[...session.parts.assets.keys()].map(id=>readAsset(session.parts,id)).find(asset=>asset?.hash===hash&&asset.source?.id===artwork.id&&asset.source.url===(artwork.original??artwork.src)&&asset.credit===extended.credit&&asset.rightsStatus===(extended.rightsStatus??'unknown'));
+    if(ref?.hash&&hash!==ref.hash)throw new Error('The original bytes changed. Refresh the catalog before adding it.');
+    const existing=[...session.parts.assets.keys()].map(id=>readAsset(session.parts,id)).find(asset=>asset?.hash===hash&&asset.source?.id===artwork.id&&asset.source.url===(artwork.original??artwork.src)&&asset.credit===credit&&asset.rightsStatus===rightsStatus);
     const assetId=existing?.id??crypto.randomUUID();
-    const ops:{command:string;input:Record<string,unknown>}[]=existing?[]:[{command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:blob.type,role:'original',width:artwork.width,height:artwork.height,caption:artwork.label,credit:extended.credit,rightsStatus:extended.rightsStatus??'unknown',source:{id:artwork.id,url:artwork.original??artwork.src,retrievedAt:new Date().toISOString(),provider:'fcc',cityId:extended.originCityId??artwork.city,countryCode:extended.countryCode,kind:'artwork',origin:'artwork'}}}}];
-    ops.push({command:'trip_presentation_create',input:{assetId,x:.08,y:.08,width,height,crop:artwork.crop??[0,0,1,1],scope:'private'}});
+    const ops:{command:string;input:Record<string,unknown>}[]=existing?[]:[{command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:blob.type,role:'original',width:artwork.width,height:artwork.height,caption:artwork.label,credit,rightsStatus,source:{...ref?.source,id:artwork.id,url:artwork.original??artwork.src,retrievedAt:new Date().toISOString(),provider:'fcc',cityId:ref?.originCityId??extended.originCityId??artwork.city,countryCode:ref?.countryCode??extended.countryCode,kind:'artwork',origin:'artwork'}}}}];
+    ops.push({command:'trip_presentation_create',input:{assetId,x:.08,y:.08,width,height,crop,scope:'private'}});
     session.executeAll(actor,ops);
   },signal);
 }

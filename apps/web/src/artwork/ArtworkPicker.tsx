@@ -6,6 +6,8 @@ import { placeArtwork } from './place-artwork';
 import './artwork.css';
 import CountryArtworkBrowser from './CountryArtworkBrowser';
 import type { ArtDestination } from './country-art';
+import ArtworkPreview from './ArtworkPreview';
+import {decorativeArtwork} from './art-preview';
 interface TripArtContext {destination:{cityId?:string;city:string;countryCode?:string};destinations:readonly ArtDestination[];}
 const normalizedCity=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 
@@ -46,24 +48,29 @@ function Thumbnail({ artwork }: { artwork: Artwork }) {
 }
 
 function CatalogBrowser({ manifest, onPick, busy,trip }: { manifest: Manifest; onPick: (artwork: Artwork) => void; busy: boolean;trip?:TripArtContext }) {
-  const [subject, setSubject] = useState(manifest.subjects[0]!.id);
+  const subjects=manifest.subjects.filter(subject=>subject.id!=='apparel');
+  const [subject, setSubject] = useState(subjects[0]?.id??'');
+  const [selected,setSelected]=useState<Artwork|null>(null);
+  const selectedButton=useRef<HTMLButtonElement|null>(null);
+  const choose=(artwork:Artwork)=>{if(trip){selectedButton.current=document.activeElement as HTMLButtonElement;setSelected(artwork);}else onPick(artwork);};
+  const back=()=>{setSelected(null);requestAnimationFrame(()=>selectedButton.current?.focus());};
   const [city, setCity] = useState(trip?manifest.cities.find(value=>value.id===trip.destination.cityId||normalizedCity(value.id)===normalizedCity(trip.destination.city)||normalizedCity(value.label)===normalizedCity(trip.destination.city))?.id??'':manifest.cities.find(value => value.id === 'bangkok')?.id ?? manifest.cities[0]?.id ?? '');
   const [country,setCountry]=useState(false);
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const catalog = manifest.catalogs.find(value => value.subject === subject && (value.city ?? '') === city);
   const resource = useCatalog(catalog?.url ?? '', catalogSchema);
-  const items = resource.data?.items.filter(item => item.subject === subject && (item.city ?? '') === city
+  const items = resource.data?.items.filter(item => decorativeArtwork(item)&&item.subject === subject && (item.city ?? '') === city
     && item.label.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())) ?? [];
   const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
   const reset = () => { setPage(0); setQuery(''); };
   const hasUnlocated = manifest.catalogs.some(value => !value.city);
   const identityError = resource.data && resource.data.styleId !== manifest.styleId;
-  return <>
+  const browse=<>
     <div className="artwork-filters">
       <label className="field"><span>Subject</span><select value={subject} disabled={busy} onChange={event => { setSubject(event.target.value); reset(); }}>
-        {manifest.subjects.map(value => <option key={value.id} value={value.id}>{value.label}</option>)}
+        {subjects.map(value => <option key={value.id} value={value.id}>{value.label}</option>)}
       </select></label>
       {manifest.cities.length > 0 && <label className="field"><span>City</span><select value={city} disabled={busy||country} onChange={event => { setCity(event.target.value); reset(); }}>
         {trip&&!city&&!hasUnlocated&&<option value="">No exact-city collection</option>}
@@ -73,14 +80,14 @@ function CatalogBrowser({ manifest, onPick, busy,trip }: { manifest: Manifest; o
       <label className="field artwork-search"><span>Search these images</span><input type="search" placeholder="Find an image…" value={query} disabled={busy} onChange={event => { setQuery(event.target.value); setPage(0); }} /></label>
     </div>
     {trip&&<div className="artwork-filters"><button type="button" disabled={busy} onClick={()=>setCountry(value=>!value)}>{country?'Back to city art':'Browse this country'}</button><span>{country?`Country: ${trip.destination.countryCode??'unknown'}`:`Origin: ${manifest.cities.find(value=>value.id===city)?.label??'No exact-city collection'}`}</span></div>}
-    {country&&trip?<CountryArtworkBrowser manifest={manifest} subject={subject} countryCode={trip.destination.countryCode} destinations={trip.destinations} onPick={onPick} busy={busy} />:!catalog ? <p className="artwork-message">No artwork in this selection yet. Try another subject or city{trip?', or browse the country collection':''}.</p>
+    {country&&trip?<CountryArtworkBrowser manifest={manifest} subject={subject} countryCode={trip.destination.countryCode} destinations={trip.destinations} onPick={choose} busy={busy} preview={!!trip} />:!catalog ? <p className="artwork-message">No artwork in this selection yet. Try another subject or city{trip?', or browse the country collection':''}.</p>
       : identityError ? <p className="artwork-message" role="alert">This catalog belongs to another style. Please choose another style.</p>
       : !resource.data ? <LoadState error={resource.error} retry={resource.retry} />
       : <>
-        <p className="artwork-count" role="status">{items.length} images · Select an image to add it to your board.</p>
+        <p className="artwork-count" role="status">{items.length} images · {trip?'Select an image to preview it.':'Select an image to add it to your board.'}</p>
         {items.length ? <div className="artwork-grid" aria-label="Artwork images">
-          {items.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE).map(item => <button type="button" key={item.id} className="artwork-tile" aria-label={`Add ${item.label}`} disabled={busy} onClick={() => onPick(artworkSchema.parse(item))}>
-            <Thumbnail artwork={item} /><span className="artwork-label">{item.label}</span>
+          {items.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE).map(item => <button type="button" key={item.id} className="artwork-tile" aria-label={`${trip?'Preview':'Add'} ${item.label}`} disabled={busy} onClick={() => choose(artworkSchema.parse(item))}>
+            <Thumbnail artwork={item} /><span className="artwork-label">{item.label}</span>{trip&&<><span className="artwork-label art-meta">{trip.destination.cityId&&item.city!==trip.destination.cityId?'From ':''}{manifest.cities.find(city=>city.id===item.city)?.label??item.city??'Origin unknown'}</span><span className="artwork-label art-meta">{item.artRef?.credit??'Credit not supplied'}</span></>}
           </button>)}
         </div> : <p className="artwork-message">No images match that search.</p>}
         {totalPages > 1 && <nav className="artwork-pagination" aria-label="Artwork pages">
@@ -90,6 +97,9 @@ function CatalogBrowser({ manifest, onPick, busy,trip }: { manifest: Manifest; o
         </nav>}
       </>}
   </>;
+  if(!trip)return browse;
+  const ownId=trip.destination.cityId??trip.destinations.find(city=>[city.name,city.id,...(city.aliases??[])].some(name=>normalizedCity(name)===normalizedCity(trip.destination.city)))?.id;
+  return <div className={'trip-art-panes'+(selected?' has-preview':'')}><div className="trip-art-browse">{browse}</div>{selected?<ArtworkPreview key={selected.id} artwork={selected} origin={trip.destinations.find(city=>city.id===selected.city)?.name??manifest.cities.find(city=>city.id===selected.city)?.label??selected.city??'Origin unknown'} away={!!selected.city&&selected.city!==ownId} busy={busy} onBack={back} onAdd={()=>onPick(selected)}/>:<aside className="trip-art-preview art-preview-empty"><h3>Pick a picture to preview it</h3><p>See who drew it, where it’s from and how large its pixels print.</p></aside>}</div>;
 }
 
 function PackBrowser({ pack, onPick, busy,trip }: { pack: StylePack; onPick: (artwork: Artwork) => void; busy: boolean;trip?:TripArtContext }) {
@@ -107,10 +117,18 @@ export default function ArtworkPicker({onInsert,onClose,trip}:{onInsert?:(artwor
   const section = useRef<HTMLElement>(null);
   const insertion = useRef<AbortController | null>(null);
   const close = onClose??(()=>useUi.getState().setDialog(null));
+  useEffect(()=>{
+    // Disabling a download button can move focus to body; Escape must still cancel the sheet.
+    const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();}};
+    document.addEventListener('keydown',escape,true);
+    return()=>document.removeEventListener('keydown',escape,true);
+  },[close]);
   const pack = registry.data?.styles.find(value => value.id === styleId) ?? registry.data?.styles[0];
   useEffect(() => {
+    const previous=document.activeElement as HTMLElement|null;
+    const trigger=document.querySelector<HTMLButtonElement>('.mot-header button[aria-label="Add"]');
     section.current?.querySelector<HTMLButtonElement>('button')?.focus();
-    return () => { insertion.current?.abort(); document.querySelector<HTMLButtonElement>('.toolbar .menu-button')?.focus(); };
+    return () => { insertion.current?.abort(); if(previous?.isConnected&&previous!==document.body)previous.focus();else trigger?.focus(); };
   }, []);
   const pick = async (artwork: Artwork) => {
     if (insertion.current) return;
@@ -125,19 +143,19 @@ export default function ArtworkPicker({onInsert,onClose,trip}:{onInsert?:(artwor
       }
     } finally { clearTimeout(timer); insertion.current = null; setBusy(''); }
   };
-  return <div className="dialog-backdrop" onMouseDown={event => event.target === event.currentTarget && close()} onKeyDown={event => {
+  return <div className={'dialog-backdrop'+(trip?' trip-art-backdrop':'')} onMouseDown={event => event.target === event.currentTarget && close()} onKeyDown={event => {
     event.stopPropagation();
     if (event.key === 'Escape') { event.preventDefault(); close(); }
     if (event.key === 'Tab') {
-      const focusable = [...(section.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled)') ?? [])];
+      const focusable = [...(section.current?.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), a[href], summary, [tabindex="0"]') ?? [])].filter(element=>element.getClientRects().length>0);
       const first = focusable[0], last = focusable.at(-1);
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     }
   }}>
-    <section ref={section} className="dialog artwork-picker" role="dialog" aria-modal="true" aria-labelledby="artwork-title" aria-busy={!!busy}>
-      <div className="artwork-heading"><h2 id="artwork-title">Artwork</h2><button type="button" onClick={close} aria-label="Close artwork">Close</button></div>
-      <p className="dialog-note">People, places and objects for your ideas. Images load as you browse.</p>
+    <section ref={section} className={'dialog artwork-picker'+(trip?' trip-artwork':'')} role="dialog" aria-modal="true" aria-labelledby="artwork-title" aria-busy={!!busy}>
+      <div className="artwork-heading"><h2 id="artwork-title">{trip?'Add FCC art':'Artwork'}</h2><button type="button" onClick={close} aria-label="Close artwork">Close</button></div>
+      <p className="dialog-note">{trip?'Drawings for your trip. Choose a picture, then add its original.':'People, places and objects for your ideas. Images load as you browse.'}</p>
       {busy && <p className="artwork-notice" role="status">Adding {busy}…</p>}
       {error && <p className="dialog-error" role="alert">{error}</p>}
       {!registry.data ? <LoadState error={registry.error} retry={registry.retry} /> : <>

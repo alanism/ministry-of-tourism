@@ -5,11 +5,11 @@ import { loadCountryArtwork, resolveArtScope, type ArtDestination, type CountryA
 const PAGE_SIZE = 12;
 export interface CountryArtworkBrowserProps {
   manifest: Manifest; subject: string; countryCode?: string; destinations: readonly ArtDestination[];
-  onPick: (artwork: Artwork) => void; busy?: boolean;
+  onPick: (artwork: Artwork) => void; busy?: boolean;preview?:boolean;
 }
 
 /** Country browsing is explicit; fetching a collection never inserts art or changes the destination. */
-export default function CountryArtworkBrowser({ manifest, subject, countryCode, destinations, onPick, busy = false }: CountryArtworkBrowserProps) {
+export default function CountryArtworkBrowser({ manifest, subject, countryCode, destinations, onPick, busy = false,preview=false }: CountryArtworkBrowserProps) {
   const scope = useMemo(() => resolveArtScope({ countryCode, category: subject, mode: 'country', destinations, manifest }), [countryCode, subject, destinations, manifest]);
   const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState('');
@@ -43,9 +43,9 @@ export default function CountryArtworkBrowser({ manifest, subject, countryCode, 
     {result?.retrievedAt && <p className="artwork-count" role="status">{result.status === 'cached' ? 'Cached collection' : 'Collection loaded'} · {result.retrievedAt} · {items.length} images</p>}
     {result && !current?.loading && <>
       {items.length ? <div className="artwork-grid" aria-label="Country artwork images">
-        {items.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE).map(item => <button type="button" className="artwork-tile" key={`${item.originCityId}:${item.artwork.id}`} disabled={busy} aria-label={`Add ${item.artwork.label} from ${item.originCityName}`} onClick={() => onPick(item.artwork)}>
+        {items.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE).map(item => <button type="button" className="artwork-tile" key={`${item.originCityId}:${item.artwork.id}`} disabled={busy} aria-label={`${preview?'Preview':'Add'} ${item.artwork.label} from ${item.originCityName}`} onClick={() => onPick(item.artwork)}>
           <span className="artwork-preview"><img src={item.artwork.thumb} alt="" loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'contain' }} /></span>
-          <span className="artwork-label">{item.artwork.label}</span><span className="artwork-label">From {item.originCityName}</span>
+          <span className="artwork-label">{item.artwork.label}</span><span className="artwork-label">From {item.originCityName}</span>{preview&&<span className="artwork-label art-meta">{item.artwork.artRef?.credit??'Credit not supplied'}</span>}
         </button>)}
       </div> : result.status === 'ready' || result.status === 'cached' ? <p className="artwork-message">No images match this search. Normal image uploads remain available.</p> : null}
       {pages > 1 && <nav className="artwork-pagination" aria-label="Country artwork pages">
