@@ -4,6 +4,7 @@ import { diagnostics } from './artifacts';
 import {SourceLink} from './SourceContent';
 import {sourceDate} from './source-card';
 import {finishSourceLoad,type SourceLoadState} from './fcc-state';
+import {Almanac} from './Almanac';
 
 export const citySlug=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 let cacheDb:Promise<IDBDatabase>|undefined;
@@ -44,6 +45,7 @@ export function FccBrowser({session,actor,refresh,notify,onContent,onState,initi
   },[session,id,attempt]);
   const add=(input:Record<string,unknown>)=>{setError('');try{session.execute(actor,'trip_card_create',input);refresh();notify('FCC source added to this trip. Your notes stay separate.');}catch(cause){setError(cause instanceof Error?cause.message:'The source could not be added.');}};
   return <section className="mot-fcc" aria-label="Explore FCC"><h2>Explore FCC · {meta.city}</h2><p className="m-muted">Public FCC requests send only the city ID. Historical editorial is separate from current opening hours, prices and your own notes.</p><button type="button" className="m-btn" disabled={state.pending} onClick={()=>setAttempt(value=>value+1)}>Refresh FCC content</button>
+    <Almanac cityId={id} session={session} actor={actor} refresh={refresh} notify={notify} load={browserFcc.getAlmanac}/>
     <SourceFreshness state={{...state,boardId:session.boardId,cityId:id}}/>
     {!result&&state.pending&&<p>Loading the selected city's issue…</p>}
     {result?.status==='unavailable'&&<div><p>{result.reason}</p><button className="m-btn" type="button" disabled={state.pending} onClick={()=>setAttempt(value=>value+1)}>Retry FCC</button><p className="m-muted">Your board and artwork remain usable.</p></div>}
