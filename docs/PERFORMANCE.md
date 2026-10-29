@@ -1,60 +1,131 @@
-# PERFORMANCE — MOT-100 (Draft, N=1 probe)
+# MOT-100 performance and cancellation
 
-> Honest local probe only. Not production CDN, not cold app startup, no quantile / universal-device claims.
+Measured 30 October 2026, Asia/Bangkok, on the isolated public `mot-content-cards`
+checkpoint based on `51c5100` plus this follow-up. **MOT-100 remains In progress:**
+the final desktop run includes an 8.105-second uncached art result against the
+unchanged four-second limit, and physical iOS/Safari remains unmeasured.
 
-## Thresholds (immutable, unchanged)
+## Unchanged budgets and actual final-build results
 
-- Cached city/art view: 2000ms
-- First uncached view: 4000ms
-- 12-page art-rich PDF: 60000ms
-- No budgets changed.
+First decoded art: **4,000 ms**. Cached decoded art: **2,000 ms**.
+Exactly 12-page, art-rich PDF: **60,000 ms**. No limit was revised.
 
-## What was actually measured
+| Profile | First decoded art, ms | Cached decoded art, ms | Three 12-page PDFs, seconds | Result |
+|---|---:|---:|---|---|
+| desktop | 8105.1 | 169.3 | 8.727 / 7.807 / 7.889 | First art over 4 s |
+| phone-chromium-emulation | 2199.7 | 1253.3 | 40.451 / 36.583 / 36.424 | Measured samples within limits |
 
-- Source: `00a3349` on branch `mot-content-cards`
-- Current remote preview is older approved `b657c2b`; these newer results are **not deployed there**.
-- Environment: Local production Vite preview, sandboxed headless Chromium
-- Host: win32 10.0.26200, Intel(R) Core(TM) i5-8400 CPU @ 2.80GHz, 6 logical CPUs, 25610080256 bytes RAM
-- Fixture: city `kyoto`, previously captured public FCC editorial and licensed artwork; QA annotations are fictional. No private trip/user data.
-- Original native zip SHA256: `553d1bd047a6f755a352282f5ae6d06f32cbaaee1ad8317b92ee48d135d4c1ff`
-- Sample: **13 actual canonical Kyoto pages (not 12)** — conservative larger stress case. Exact 12-page target **not measured**.
-- N=1 per profile. No repeated timings.
-- Endpoints:
-  - firstView: Click Add/FCC art through first visible Preview control, with first thumbnail decode reported separately
-  - pdf: Actual public agent exportArtifact PDF receipt plus byte retrieval
-- Reproduction: `scripts/measure-mot-performance.cjs`; the licensed native fixture and raw receipts are in the local evidence bundle.
+The desktop grid was ready at **912.4 ms**, but its first image decoded at
+**8,105.1 ms**. This failed sample is retained: the final benchmark correctly exits
+**2** with `allWithinBudget:false`. Three separate diagnostic desktop contexts
+subsequently decoded the same 480-pixel WebP in **911.5–969.1 ms**. Their recorded
+image response durations were **249–274 ms**, HTTP 200. Those traces do not explain
+the earlier stall or replace its failure; the original run did not capture resource
+timing. No speculative source optimization or hidden reclassification was made.
 
-## Profiles
+PDF timing has three samples per profile; each first/cached view has one sample.
+These are local small samples, not reliability percentiles or universal device
+claims. A prior port-only snapshot also passed all its measured budgets; it remains
+separate from this final code snapshot. No causal speedup is claimed between runs.
+All six final PDFs contain exactly **12 page objects**, **19,618,892 bytes**, and
+SHA-256 `d8a967c6aa62970ae0a1973721b0a1887665ffd88f73fbcf4308f44816293669`.
 
-- `desktop`: 1440x1000, CPU x1 (no added throttling)
-- `phone-chromium-emulation`: Emulated phone on Windows desktop Chrome — 393x852 DPR3 touch, CPU 4x slowdown, latency 150ms, 209715.2 B/s down / 96000 B/s up (about 1.68 / 0.768 decimal Mbps). Actual iOS/Safari NOT tested — not available on host.
+## Environment and measured endpoints
 
-## Results (N=1 each)
+- Windows 10.0.26200; Intel Core i5-8400 at 2.80 GHz; six logical CPUs;
+  25,610,080,256 bytes RAM; sandboxed Chromium 151.0.7922.34.
+- Local production Vite preview at `http://127.0.0.1:5199/?view=trip`.
+  Browser plugin unavailable; the installed Playwright fallback was used.
+- Desktop 1440×1000, DPR 1, CPU ×1. Phone Chromium emulation 393×852,
+  DPR 3, touch, CPU ×4, 150 ms latency, 209,715.2 B/s down / 96,000 B/s up.
+- App load and native-package import precede throttling. Art timing starts before
+  Add → FCC art and ends after the first thumbnail decodes; grid timing is separate.
+  Cached view reopens the same sheet. Cold app startup is not measured.
+- PDF timing starts before Export PDF / Export again and ends after the ready
+  receipt and real bytes are readable. Cover preparation before that click and a
+  second checksum/download afterward are outside the interval. Actual progress
+  events and receipts are retained. No CPU-heavy checks ran alongside timing.
 
-| Profile | First grid ms | First image decoded ms | Cached grid ms | Cached decoded ms | PDF ms (13pp) | PDF bytes | PDF SHA256 |
-|---|---|---|---|---|---|---|---|
-| desktop | 928 | 936 | 158 | 164 | 10443.70000000298 | 19757488 | 6cb3291d5cbb76e24bd12b0def5b716e79e9f4290d7e7ddf5ab3dae5cbcdaf46 |
-| phone-chromium-emulation | 2076 | 2153 | 996 | 1216 | 56760.29999999702 | 19757488 | 6cb3291d5cbb76e24bd12b0def5b716e79e9f4290d7e7ddf5ab3dae5cbcdaf46 |
+## Portable fixture and cancellation proof
 
-Notes:
-- First image decoded: 936ms (desktop) and 2153ms (phone emulation).
-- Cached decoded: 164ms (desktop) and 1216ms (phone emulation).
-- All views `imageDecoded: true`.
-- PDF 13 pages within 60s: `true` for both profiles (`exact12PageTarget: false`, `largerDocumentWithin60s: true`).
-- Phone-emulation PDF 56760.3ms (~56.76s) is under 60s with narrow margin (~3.24s). No speculative optimization. No false failure claimed.
-- Desktop PDF 10443.7ms for same 13-page / 19757488-byte artifact.
+`prepare-mot-performance-fixture.mjs` derives a new shared QA ZIP without editing
+its input. It verifies three actual FCC garments and makes two portrait placements
+private in the derived copy, yielding exactly 12 canonical pages with 13 distinct
+images. All seven source cards and citations stay unchanged; no generated page is
+removed. Licensed media and QA ZIPs are excluded from this public source commit.
 
-## Exclusions / non-results
+Input ZIP SHA-256:
+`553d1bd047a6f755a352282f5ae6d06f32cbaaee1ad8317b92ee48d135d4c1ff`.
+Derived ZIP: **4,503,091 bytes**, SHA-256
+`1f98f55e2bc38d8166934de7cd21c72f8c287144afedfd43671d030137ef24b5`.
+Reuse one derived ZIP across comparisons; regeneration timestamps can change hashes.
 
-- Initial Vite dev-server throttled-startup test timed out before measured flow and is **excluded, not a performance result**.
-- Cold app startup: not measured.
-- Physical iOS / Safari: not tested.
-- Existing progress/cancel/recovery UI was not exercised by this timing probe; no percentage claim.
-- S1–S10 / Opus / MOT-94 remain separate.
+The old public checkpoint still awaited PDF-page image decoding after cancellation.
+Its imported regression failed before the narrow port from committed `220928d`.
+Two further failing tests covered cancellation during image initialization and a
+stalled source-bitmap decode. The final implementation settles those waits, clears
+the page image and URL, closes late bitmaps exactly once, and preserves the trip.
+This is an image-decoding boundary fix, not a claim that every asynchronous storage
+or media operation is universally interruptible. No export layout or MOT-94 policy
+changed.
 
-## Status
+The final production boundary test holds **desktop only** for **61,006.8 ms**.
+Real page-count progress and Cancel remain visible; no percentage is invented.
+Cancellation settles in **29.5 ms**. The phone CPU ×4 correctness case cancels after
+a short stall in **78.9 ms**; it is not a second past-60-second proof. Both reject
+late results, show no late file, and recover from cancellation and an independent
+image error via actual verified artifacts. These faults are excluded from normal
+performance samples.
 
-MOT-100 stays **In progress** pending real iOS/Safari, the exact 12-page case and cancellation/recovery boundary proof. N=1 limits confidence; repeatability is not established.
+The additional native source-bitmap browser test cancels in **44.7 ms desktop /
+85.5 ms phone emulation**. It releases a real late bitmap, verifies exactly one
+close, no late or kept file, unchanged trip, and successful 12-page PDF recovery.
+All successful browser flows record zero page errors. The three focused unit cases,
+all **589 tests in 99 files**, four TypeScript projects and production build pass;
+the final default suite took **11.21 s**, build **3.01 s**. Existing five-second test
+deadlines and all other constraints remain unchanged.
 
+## Catalogue timeout investigation
 
-Drafted by the actual Meta model `muse-spark-1.3-contributor`, request `chatcmpl-01a1874f-8618-75b3-bb0e-2599bd280a15`, from measurements collected by Codex. Codex reviewed this draft; the model did not execute the benchmark. Reproduction: `scripts/measure-mot-performance.cjs` with a caller-supplied licensed native ZIP and a local production preview.
+A read-only standalone probe validates all **1,811 catalogues / 5,203 artworks /
+10,438,533 bytes** using the existing schemas. Three runs took **1.17–2.14 s**;
+about 80% of that wall time was in file reads, including filesystem/scheduling
+cost. Schema validation took **0.16–0.32 s**. Six concurrent probes took
+**1.76–1.82 s** each and did not reproduce the intermittent five-second test failure.
+A default full check also passed all 586 pre-port tests in 14.80 s. A preload
+attempt did not attach to Vitest workers, so it produced no in-test I/O telemetry
+and is not treated as evidence about that failure's cause. OS/CDN caches and other
+system activity were not controlled. No validator, fixture, test, worker setting
+or deadline was changed to force a pass; the intermittent runner issue remains
+unresolved. Empirical retry date: 30 April 2027; no automation was scheduled.
+
+## Reproduce
+
+Use installed dependencies and a writable external evidence directory. Do not
+install another dependency tree or run other heavy jobs during measurement.
+
+```powershell
+node scripts/prepare-mot-performance-fixture.mjs <original-qa.zip> <new-12-page.mot.zip>
+npm --prefix apps/web run build
+npm --prefix apps/web run preview -- --host 127.0.0.1 --port 5199
+```
+
+Set `MOT_PLAYWRIGHT_MODULE` if needed, `MOT_EVIDENCE_DIR`, `MOT_PERFORMANCE_INPUT`
+to the derived ZIP, and optionally `MOT_TEST_ORIGIN` / `MOT_SOURCE_REVISION`.
+Run the following sequentially. Normal PDF timing defaults to three samples per
+profile. Its 120-second observation guard permits recording failures; the product
+budget stays 60 seconds. Preserve exit 2 and its receipts when a budget is missed.
+
+```powershell
+node scripts/test-mot-export-boundaries.cjs
+node scripts/test-mot-export-bitmap-cancel.cjs
+node scripts/measure-mot-performance-12.cjs
+npm run check
+```
+
+Source and production-JavaScript hashes, before/after logs, both timing snapshots,
+traces, screenshots and actual PDFs are in the local planning evidence
+`Design Sprints/Build-Performance-Public-2026-10-30`. Earlier 13-page N=1 evidence
+remains historical. Neither these measurements nor a static model review constitute
+physical iOS verification, Opus design acceptance or release approval. No deployment,
+runtime key, main update or budget change occurred.

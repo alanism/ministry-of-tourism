@@ -41,7 +41,16 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
       const asset=doc.getMap<import('yjs').Map<unknown>>('tripAssets').get(id)!;
       const blob=await getTripBlob(String(asset.get('hash')))??new Blob([original as BlobPart],{type:String(asset.get('mime'))});
       urls.set(id,await dataUrl(blob));
-      const image=await createImageBitmap(blob);dimensions.set(id,{width:image.width,height:image.height});image.close();
+      const image=await new Promise<ImageBitmap>((resolve,reject)=>{
+        const stop=()=>reject(signal?.reason??new DOMException('Export cancelled','AbortError'));
+        if(signal?.aborted){stop();return;}
+        signal?.addEventListener('abort',stop,{once:true});
+        Promise.resolve().then(()=>{signal?.throwIfAborted();return createImageBitmap(blob);}).then(
+          image=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){image.close();stop();}else resolve(image);},
+          error=>{signal?.removeEventListener('abort',stop);reject(error);},
+        );
+      });
+      try{signal?.throwIfAborted();dimensions.set(id,{width:image.width,height:image.height});}finally{image.close();}
     }
     signal?.throwIfAborted();
     const meta=readTripMeta(doc),cityId=meta.cityId??meta.city.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -76,7 +85,13 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
     signal?.throwIfAborted();
     const url=URL.createObjectURL(new Blob([page.svg],{type:'image/svg+xml'}));
     try {
-      const image=new Image();image.src=url;await image.decode();
+      const image=new Image();image.src=url;
+      await new Promise<void>((resolve,reject)=>{
+        const stop=()=>{image.src='';reject(signal?.reason??new DOMException('Export cancelled','AbortError'));};
+        if(signal?.aborted){stop();return;}
+        signal?.addEventListener('abort',stop,{once:true});
+        image.decode().then(resolve,reject).finally(()=>signal?.removeEventListener('abort',stop));
+      });
       const canvas=document.createElement('canvas');canvas.width=MAGAZINE.widthPx;canvas.height=MAGAZINE.heightPx;
       const context=canvas.getContext('2d');if(!context)throw new Error('This browser could not render the PDF.');
       context.drawImage(image,0,0);
