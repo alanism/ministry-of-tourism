@@ -34,6 +34,8 @@
 .mot-muse-grounding {background:var(--m-muse);color:var(--m-muse-ink);}
 .mot-muse-grounding.catalogue {background:var(--m-red-wash);color:var(--m-red-ink);}
 .mot-muse-warning {color:var(--m-red-ink);font:400 15px/20px var(--m-sans);}
+.mot-muse-copy {margin-top:12px;}
+.mot-muse-receipt {white-space:pre-wrap;overflow-wrap:anywhere;font:400 12px/16px var(--m-mono);margin:12px 0 0;padding:12px;border-radius:12px;background:var(--m-ink);color:var(--m-surface);}
 .mot-muse-proposals {list-style:none;padding:0;margin:0;display:grid;gap:12px;}
 .mot-muse-proposals li {border:1px dashed var(--m-guide-ink);border-radius:12px;padding:12px;background:var(--m-surface);}
 .mot-muse-proposals label {display:flex;gap:12px;align-items:center;min-height:44px;cursor:pointer;}

@@ -103,3 +103,4 @@ export const HOST_LANES: { stage: Stage; name: string }[] = [
 ];
 
 export const PROVENANCE_LABEL: Record<TripCard['provenance'], string> = { traveler: 'Traveler', host: 'Host guide', fcc: 'FCC', agent: 'Muse suggestion', provider: 'Provider' };
+export const cardProvenanceLabel=(card:Pick<TripCard,'provenance'|'createdBy'>)=>card.provenance==='agent'&&card.createdBy.startsWith('test-adapter:')?'Test adapter':PROVENANCE_LABEL[card.provenance];

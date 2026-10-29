@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 import { STAGES, boardProjection, localDateFor, mapPins, readTripMeta, todayProjection, type Actor, type BoardKind, type RevCard, type Scope, type Stage, type TripSession } from '@writers-board/core';
 import { Icon, Menu, type MenuEntry } from './ui';
 import { attachPhoto, coverAssetId, pickPhoto, useAssetUrl } from './trip-assets';
-import { HOST_LANES, PROVENANCE_LABEL, STAGE_NAME, dayLabel, longDayLabel } from './sample';
+import { HOST_LANES, cardProvenanceLabel, STAGE_NAME, dayLabel, longDayLabel } from './sample';
 import { recordOutcome } from './metrics';
 import type { Ghost } from './ProposalReview';
 
@@ -78,7 +78,7 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
   if (editing) {
     return (
       <article className={className} aria-label={`Editing ${card.title}`}>
-        <div className="m-card-top"><span className="m-eyebrow">{PROVENANCE_LABEL[card.provenance]}</span></div>
+        <div className="m-card-top"><span className="m-eyebrow">{cardProvenanceLabel(card)}</span></div>
         <input className="m-edit-title" aria-label="Title" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus={autoEdit} />
         <textarea className="m-edit-body" aria-label="Notes" value={draft.body} autoFocus={!autoEdit} onChange={(e) => setDraft({ ...draft, body: e.target.value })}
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) save(); if (e.key === 'Escape') setEditing(false); }} />
@@ -106,7 +106,7 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
       <div className="m-card-top">
         {kind === 'host_guide'
           ? <span className={`m-chip tag ${card.scope}`}>{SCOPE_LABEL[card.scope]}</span>
-          : <span className="m-eyebrow">{PROVENANCE_LABEL[card.provenance]}</span>}
+          : <span className="m-eyebrow">{cardProvenanceLabel(card)}</span>}
         <Menu label={`Actions for ${card.title || 'card'}`} items={menu} />
       </div>
       {landing === 'new' && card.provenance === 'agent' && <span className="mot-stamp landing on-card" aria-hidden="true">Approved</span>}
