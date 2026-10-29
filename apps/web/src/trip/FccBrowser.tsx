@@ -8,7 +8,18 @@ import {Almanac} from './Almanac';
 
 export const citySlug=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 let cacheDb:Promise<IDBDatabase>|undefined;
-const sourceDb=()=>cacheDb??=new Promise<IDBDatabase>((resolve,reject)=>{const request=indexedDB.open('mot-fcc-sources',1);request.onupgradeneeded=()=>request.result.createObjectStore('cities');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);request.onblocked=()=>reject(new Error('Source cache is blocked by another tab.'));});
+const sourceDb=()=>cacheDb??=new Promise<IDBDatabase>((resolve,reject)=>{
+  const request=indexedDB.open('mot-fcc-sources',1);let abandoned=false;
+  request.onupgradeneeded=()=>request.result.createObjectStore('cities');
+  request.onsuccess=()=>{
+    const db=request.result;
+    if(abandoned){db.close();return;}
+    db.onversionchange=()=>{db.close();cacheDb=undefined;};
+    resolve(db);
+  };
+  request.onerror=()=>reject(request.error);
+  request.onblocked=()=>{abandoned=true;reject(new Error('Source cache is blocked by another tab.'));};
+}).catch(error=>{cacheDb=undefined;throw error;});
 export const browserCityCache:CityContentCache={
   async read(id){const db=await sourceDb();return new Promise<CachedCity|undefined>((resolve,reject)=>{const transaction=db.transaction('cities','readonly'),request=transaction.objectStore('cities').get(id);transaction.oncomplete=()=>resolve(request.result as CachedCity|undefined);transaction.onabort=transaction.onerror=()=>reject(transaction.error);});},
   async write(id,entry){const db=await sourceDb();await new Promise<void>((resolve,reject)=>{const transaction=db.transaction('cities','readwrite');transaction.objectStore('cities').put(entry,id);transaction.oncomplete=()=>resolve();transaction.onabort=transaction.onerror=()=>reject(transaction.error);});},

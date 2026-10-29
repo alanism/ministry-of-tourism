@@ -17,6 +17,18 @@ node scripts/test-mot-fcc-states.cjs
 
 The first script checks source-note isolation, independent dates/evidence, inert source markup, Undo, keyboard close/return focus, actual Plex 600 loading, source-reading space and four viewport widths. A phone hit test checks that the action footer does not cover the title field; the note field is clicked on-screen. The second checks retained pending content, version changes without card mutations, three-request termination, offline IndexedDB copies, HTTP 304 revalidation retaining the retrieval date, the real 20-second AbortController deadline, public-source-only diagnostics, rejected wrong-city responses and distinct same-number venue identities across cities. Its registry, feed text, traveler notes and checked-fact examples are explicit synthetic fixtures. They do not establish live publication or completion of Spark's registry/CORS tasks.
 
-The RED checks reproduced the missing source detail flow, disappearing content during refresh, a collapsed phone reading area and a phone footer covering the title field. New pure tests cover note command Undo/Redo, URL handling, immutable snapshots, changed-source identity and same-city fallback. Existing constraints and timeouts are unchanged. Offline browser evidence uses an already loaded application; cold-start hosting and the browser cache-write failure path are not covered by these scripts.
+The RED checks reproduced the missing source detail flow, disappearing content during refresh, a collapsed phone reading area and a phone footer covering the title field. New pure tests cover note command Undo/Redo, URL handling, immutable snapshots, changed-source identity and same-city fallback. Existing constraints and timeouts are unchanged. Offline browser evidence uses an already loaded application; cold-start offline hosting is not covered by these scripts.
+
+`node scripts/test-mot-fcc-cache-recovery.cjs` additionally checks the browser
+storage failure paths in fresh profiles. Use the same environment settings above.
+An injected temporary open denial must reject once and allow a later real write
+and read. A native IndexedDB versionchange/deletion must close the held connection
+and permit recreation. An intentionally aborted native write must leave the old
+dated issue available offline while the fetched replacement remains usable; the
+next fetch must save normally. Every case preserves an unrelated database sentinel.
+The first two cases failed before the connection-lifecycle fix. No retry count,
+request deadline, cache schema or source content changed. Requests and notebook
+data in this regression are synthetic; no live-publication or cold-start claim is
+made. The machine-readable `result.json` states the injected faults explicitly.
 
 These UI implementations can be reviewed independently of the outstanding MOT-76 registry integration. MOT-80 and MOT-79 retain their dependency holds and need their assigned reviews; no Opus score, independent acceptance or Verified status is implied. The app's Muse runtime, credentials and model allowlist are unchanged. Spark builder work and MOT-94's hold are outside this change.
