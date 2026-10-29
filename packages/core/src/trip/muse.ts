@@ -23,6 +23,7 @@ export function buildMuseRequest(session: TripSession, selection: { cardIds: str
   const allowedAssets = new Set(cards.flatMap((c) => c.assetIds));
   const cityId = String(session.parts.meta.get('cityId') ?? session.parts.meta.get('city')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
   if (selection.cityContent && selection.cityContent.city.id !== cityId) throw new CommandError('scope', 'FCC issue is for another city');
+  if(selection.cityContent?.articles.some(article=>article.cityId!==cityId||article.source.cityId!==cityId))throw new CommandError('scope','FCC article provenance is for another city');
   const articles = (selection.cityContent?.articles ?? []).map(article => ({ title: article.title, body: article.body, source: { ...article.source } }));
   // Article bodies remain data in this payload. Schema/command permissions, not article prose, decide authority.
   const level = !selection.cityContent ? 'unavailable' : articles.length && articles.every(article => article.body.trim()) ? 'full-issue' : 'catalogue-only';
@@ -55,7 +56,7 @@ export function parseMuseOutput(raw: unknown, session: TripSession, token: Compa
   if (!parsed.success) throw new CommandError('invalid_input', 'Muse returned something that is not a proposal. Nothing changed.');
   if (parsed.data.boardId !== undefined && parsed.data.boardId !== session.boardId) throw new CommandError('scope', 'Muse answered for another board. Nothing changed.');
   const proposal: Proposal = {
-    id: `muse-${crypto.randomUUID()}`, boardId: session.boardId, token, ops: parsed.data.ops,
+    id: `muse-${crypto.randomUUID()}`, boardId: session.boardId, token, ops: parsed.data.ops.map(op=>op.command==='trip_card_create'?{...op,input:{...op.input,provenance:'agent'}}:op),
     sources: parsed.data.sources, reason: parsed.data.reason, author: 'muse', status: 'proposed',
   };
   prevalidateProposal(session, proposal);

@@ -130,11 +130,12 @@ function GhostCard({ ghost, session, onReview }: { ghost: Ghost; session: TripSe
   const url = useAssetUrl(session, ghost.assetId);
   return (
     <article className="m-card ghost" aria-label={`Suggestion, not on your board yet: ${ghost.title}`}>
-      <div className="m-card-top"><span className="m-eyebrow"><Icon name="sparkle" /> Suggestion · not added</span></div>
+      <div className="m-card-top"><span className="m-eyebrow"><Icon name="sparkle" /> {ghost.label??'Suggestion · not added'}</span></div>
       <h3 className="m-card-title"><span>{ghost.title}</span></h3>
       {url && <div className="m-card-photo wide"><img src={url} alt="" draggable={false} /></div>}
       {ghost.body && <p className="m-card-body">{ghost.body}</p>}
-      {onReview && <button type="button" className="m-btn small mot-ghost-review" onClick={() => onReview(ghost.index)}>Review <Icon name="arrowRight" /></button>}
+      {ghost.citation&&<a className="mot-muse-citation" href={ghost.citation.url} target="_blank" rel="noopener noreferrer">{ghost.citation.title}</a>}
+      {(ghost.review||onReview) && <button type="button" className="m-btn small mot-ghost-review" onClick={() => ghost.review?ghost.review():onReview?.(ghost.index)}>Review <Icon name="arrowRight" /></button>}
     </article>
   );
 }

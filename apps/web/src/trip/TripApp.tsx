@@ -5,7 +5,7 @@ import './trip.css';
 import './integration.css';
 import { FirstScreen } from './FirstScreen.tsx';
 import { BoardView, MapView, TodayView } from './BoardView.tsx';
-import { ProposalReview, ghostCards, type PendingReview } from './ProposalReview.tsx';
+import { ProposalReview, ghostCards, type PendingReview, type Ghost } from './ProposalReview.tsx';
 import { Keepsakes } from './Keepsakes.tsx';
 import { GuestCopyPanel } from './GuestCopyPanel.tsx';
 import { Diamond, FocusSheet, Icon, Logo, Menu, Toast, type MenuEntry } from './ui';
@@ -87,6 +87,8 @@ export function TripApp() {
   const startingTrip=useRef(false);
   const [cityContent,setCityContent]=useState<FccCityContent>();
   const [museAvailable,setMuseAvailable]=useState(false);
+  const [museLabel,setMuseLabel]=useState('Muse · check connection');
+  const [museGhosts,setMuseGhosts]=useState<Ghost[]>([]);
   const providers=useRef({fcc:false,muse:false});providers.current={fcc:!!cityContent,muse:museAvailable};
   const [pending, setPending] = useState<PendingReview | null>(null);
   const [focusOp, setFocusOp] = useState<number | undefined>(undefined);
@@ -243,10 +245,8 @@ export function TripApp() {
         <strong><Icon name="sparkle" /> Muse</strong>
         <button type="button" className="m-icon-btn" aria-label="Collapse Muse" onClick={() => setMuseOpen(false)}><Icon name="chevronDown" /></button>
       </div>
-      <p className="mot-status"><span className="dot" />{museAvailable?'Runtime configured':'Not connected'}</p>
       <p className="mot-rail-note m-muted">{ghostCount ? `${ghostCount} ${ghostCount === 1 ? 'suggestion waits' : 'suggestions wait'} on your board, dashed.` : 'Your board stays in your hands.'}</p>
       <button type="button" className="m-btn small" onClick={() => review()}>Review sample changes</button>
-      <button type="button" className="m-btn small" onClick={()=>setPanel('muse')}>Ask Muse</button>
     </aside>
   ) : (
     <aside className="m-panel mot-rail collapsed" aria-label="Muse">
@@ -270,6 +270,7 @@ export function TripApp() {
           {TABS.map((t) => <button key={t.id} type="button" aria-current={tab === t.id ? 'page' : undefined} onClick={() => setTab(t.id)}>{t.label}</button>)}
         </nav>
         <div className="mot-header-end">
+          <button type="button" aria-label="Ask Muse" className="m-btn pill small mot-muse-trigger" onClick={()=>setPanel('muse')}>{museLabel}</button>
           <button type="button" className="m-btn pill small" onClick={()=>setPanel('destination')}>Destination</button>
           <Menu label="Add" items={[{label:'FCC art',onSelect:()=>setPanel('art')}]} trigger={{className:'m-btn pill small',content:<>Add <Icon name="plus" /></>}} />
           <Menu label={`Switch board. Current: ${chip}`} items={boardItems} trigger={{ className: 'm-btn pill small trip-chip', content: <><span className="chip-text">{chip}</span><Icon name="chevronDown" /></> }} />
@@ -285,7 +286,7 @@ export function TripApp() {
         <div className={`mot-work view-${tab}`}>
           {sidebar}
           <div className="mot-main">
-            {tab === 'board' && <BoardView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} header={hostHead} top={rail} onOpenDay={() => setTab('today')} ghosts={ghostCards(pending)} onReview={review} />}
+            {tab === 'board' && <BoardView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} header={hostHead} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
             {tab === 'today' && <div className="mot-board"><TodayView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} /></div>}
             {tab === 'map' && <div className="mot-board"><MapView session={session} tick={tick} onBack={() => setTab('board')} /></div>}
           </div>
@@ -295,11 +296,11 @@ export function TripApp() {
       {panel === 'guest' && host && <FocusSheet label="Create a guest copy" onClose={() => setPanel(null)}><GuestCopyPanel key={meta.boardId} session={session} onCreate={(t, ids) => void guestCopy(t, ids)} onClose={() => setPanel(null)} /></FocusSheet>}
       {panel==='destination'&&<FocusSheet label="Change destination" onClose={()=>setPanel(null)}><DestinationPicker current={meta} kind={meta.kind} {...destinationProps} preservedCards={readAllCards(session.parts).map(card=>({id:card.id,title:card.title,sourceCity:destinations.find(row=>row.id===card.source?.cityId)?.name??card.source?.cityId}))} onClose={()=>setPanel(null)} onSave={details=>{try{session.execute(YOU,'trip_meta_update',{city:details.city,cityId:details.cityId,countryCode:details.countryCode,timeZone:details.timeZone,dates:details.dates});setPanel(null);refresh();notify('Destination changed. Existing cards keep their sources; refresh FCC content when ready.');}catch(error){notify(error instanceof Error?error.message:'Destination could not be changed.');}}} /></FocusSheet>}
       {panel==='art'&&<Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{destination:meta,destinations}} onClose={()=>setPanel(null)} onUpload={async(file,signal)=>{await placeTripUpload(session,YOU,file,signal);refresh();setTab('composition');notify('Photo added to your trip.',{label:'Undo',run:undo});}} onInsert={async(artwork,signal)=>{await placeTripArtwork(session,YOU,artwork,signal);refresh();setTab('composition');notify('Artwork added to your trip.',{label:'Undo',run:undo});}} /></Suspense>}
-      {panel==='muse'&&<FocusSheet label="Muse trip plan" onClose={()=>setPanel(null)}><MusePlan session={session} actor={YOU} content={cityContent} onAvailability={setMuseAvailable} refresh={refresh} notify={notify} /></FocusSheet>}
+      {panel==='muse'&&<MusePlan key={meta.boardId} session={session} actor={YOU} content={cityContent} onAvailability={setMuseAvailable} onState={setMuseLabel} onGhosts={setMuseGhosts} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} />}
       {toast && panel!=='art' && <Toast message={toast.message} action={toast.action} onClose={() => setToast(null)} />}
       <div className="mot-foot">
         <details className="mot-data-details" onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) e.currentTarget.open = false; }}><summary>On this device</summary><div><label><input type="checkbox" checked={measure} onChange={(e) => { enableMetrics(e.target.checked); setMeasure(e.target.checked); }} /> Count demo actions on this device</label>{measure && <p>{Object.values(readMetrics()?.counts ?? {}).reduce((a, b) => a + b, 0)} actions · no live model cost</p>}</div></details>
-        <p>{sample ? 'Sample trip · ' : ''}{museAvailable?'Muse runtime configured':'Manual mode · Muse not connected'}</p>
+        <p>{sample ? 'Sample trip · ' : ''}{museLabel}</p>
       </div>
       <details className="mot-trip-agent-notes"><summary>For trip agents</summary><p>Read <code>window.motTrip.capabilities()</code> for this trip's actual commands, schema, board ID and revision. <a href="/trip-agents.md">Trip agent contract</a></p></details>
     </main>
