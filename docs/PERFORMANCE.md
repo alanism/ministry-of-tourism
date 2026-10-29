@@ -22,12 +22,12 @@
 - Endpoints:
   - firstView: Click Add/FCC art through first visible Preview control, with first thumbnail decode reported separately
   - pdf: Actual public agent exportArtifact PDF receipt plus byte retrieval
-- Reproduction: outside-repo measurement script in evidence (not in repo). See evidence bundle.
+- Reproduction: `scripts/measure-mot-performance.cjs`; the licensed native fixture and raw receipts are in the local evidence bundle.
 
 ## Profiles
 
 - `desktop`: 1440x1000, CPU x1 (no added throttling)
-- `phone-chromium-emulation`: Emulated phone on Windows desktop Chrome — 393x852 DPR3 touch, CPU 4x slowdown, latency 150ms, 1.6Mbps down / 750kbps up (209715.2 / 96000 Bps in harness). Actual iOS/Safari NOT tested — not available on host.
+- `phone-chromium-emulation`: Emulated phone on Windows desktop Chrome — 393x852 DPR3 touch, CPU 4x slowdown, latency 150ms, 209715.2 B/s down / 96000 B/s up (about 1.68 / 0.768 decimal Mbps). Actual iOS/Safari NOT tested — not available on host.
 
 ## Results (N=1 each)
 
