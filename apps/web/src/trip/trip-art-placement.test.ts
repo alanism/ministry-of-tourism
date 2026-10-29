@@ -1,8 +1,8 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import {createTrip,TripSession,readAsset,readPresentations,readTripMeta} from '@writers-board/core';
+import {createTrip,TripSession,readAsset,readPresentations,readTripMeta,mapProjection} from '@writers-board/core';
 import type {Artwork} from '../artwork/catalog';
 vi.mock('../state/blobs',()=>{const stored=new Map<string,Blob>(),hashBlob=async(blob:Blob)=>Buffer.from(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer())).toString('hex');return{hashBlob,getBlob:async(hash:string)=>stored.get(hash)??null,putBlob:async(blob:Blob)=>{stored.set(await hashBlob(blob),blob);}};});
-import {placeTripArtwork,getTripBlob} from './trip-assets';
+import {placeTripArtwork,placeTripUpload,getTripBlob} from './trip-assets';
 const bytes=new Blob(['original alpha image bytes'],{type:'image/png'}),actor={kind:'human' as const,id:'owner',name:'Owner'};
 async function fixture():Promise<Artwork>{
  const hash=Buffer.from(await crypto.subtle.digest('SHA-256',await bytes.arrayBuffer())).toString('hex');
@@ -36,4 +36,17 @@ it('cancels while decoding without registering bytes or changing the document',a
  const began=new Promise<void>(resolve=>{started=resolve;});vi.stubGlobal('createImageBitmap',()=>{started();return new Promise(resolve=>{finish=resolve;});});
  const run=placeTripArtwork(session,actor,art,controller.signal);await began;controller.abort();finish({width:1200,height:2400,close:()=>undefined});
  await expect(run).rejects.toThrow();expect(session.parts.assets.size).toBe(0);expect(session.parts.presentations.size).toBe(0);
+});
+it('adds a chosen personal photo from an empty art collection without inventing an FCC source or place',async()=>{
+ const session=setup(),photo=new File(['my original photo bytes'],'My photo.png',{type:'image/png'});
+ await placeTripUpload(session,actor,photo,new AbortController().signal);
+ const object=readPresentations(session.parts)[0]!,asset=readAsset(session.parts,object.assetId!)!;
+ expect(asset.source).toBeUndefined();expect(asset.caption).toBe('My photo.png');expect(asset.width).toBe(1200);expect(session.parts.cards.size).toBe(0);expect(readTripMeta(session.doc).city).toBe('Bilbao');
+ expect(await (await getTripBlob(asset.hash))!.text()).toBe(await photo.text());session.undo(actor.id);expect(session.parts.presentations.size).toBe(0);expect(session.parts.assets.size).toBe(0);
+});
+it('keeps another city’s map decorative and out of the trip navigation projection',async()=>{
+ const session=setup(),art=await fixture();art.subject='maps';art.artRef={...art.artRef!,kind:'map',category:'maps',role:'map',variant:undefined};
+ await placeTripArtwork(session,actor,art,new AbortController().signal);
+ expect(mapProjection(session.doc)).toEqual([]);expect(readTripMeta(session.doc).city).toBe('Bilbao');
+ expect(readAsset(session.parts,readPresentations(session.parts)[0]!.assetId!)!.source?.cityId).toBe('barcelona');
 });

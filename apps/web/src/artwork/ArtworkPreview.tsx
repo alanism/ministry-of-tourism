@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import type {Artwork} from './catalog';
-import {printSize} from './art-preview';
+import {loadArtworkPreview,printSize} from './art-preview';
 
 export default function ArtworkPreview({artwork,origin,away,busy,onAdd,onBack}:{artwork:Artwork;origin:string;away:boolean;busy:boolean;onAdd:()=>void;onBack:()=>void}){
  const [attempt,setAttempt]=useState(0),[loaded,setLoaded]=useState<{id:string;url?:string;width?:number;height?:number;error?:string}>();
@@ -11,11 +11,7 @@ export default function ArtworkPreview({artwork,origin,away,busy,onAdd,onBack}:{
   const timer=setTimeout(()=>controller.abort(),20000);setLoaded({id:artwork.id});
   void(async()=>{
    try{
-    // Prefer a smaller rendition if the catalog's preview happens to equal the original.
-    const response=await fetch(artwork.src===artwork.original?artwork.thumb:artwork.src,{signal:controller.signal,credentials:'omit',redirect:'error'});
-    if(!response.ok)throw Error('Preview unavailable ('+response.status+').');
-    const blob=await response.blob(),pixels=await createImageBitmap(blob);
-    const width=pixels.width,height=pixels.height;pixels.close();controller.signal.throwIfAborted();
+    const {blob,width,height}=await loadArtworkPreview(artwork,controller.signal);controller.signal.throwIfAborted();
     if(live){url=URL.createObjectURL(blob);setLoaded({id:artwork.id,url,width,height});}
    }catch{if(live)setLoaded({id:artwork.id,error:controller.signal.aborted?'The preview timed out. Retry when connected.':'The preview could not be loaded. Retry, or add the original when connected.'});}
    finally{clearTimeout(timer);}

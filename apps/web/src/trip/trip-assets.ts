@@ -22,8 +22,16 @@ async function persistTripBlob(blob:Blob,hash:string):Promise<{hash:string;persi
     return {hash,persisted:false};
   }
 }
+async function prepareTripMedia<T>(work:()=>Promise<T>,signal?:AbortSignal):Promise<T>{
+  signal?.throwIfAborted();
+  if(!signal)return work();
+  let abort!:()=>void;
+  const cancelled=new Promise<never>((_resolve,reject)=>{abort=()=>reject(signal.reason??new DOMException('Image preparation cancelled','AbortError'));signal.addEventListener('abort',abort,{once:true});});
+  try{return await Promise.race([work(),cancelled]);}
+  finally{signal.removeEventListener('abort',abort);}
+}
 async function commitTripBlob(blob:Blob,apply:(hash:string)=>void,signal?:AbortSignal):Promise<void> {
-  const hash=await hashBlob(blob);
+  const hash=await prepareTripMedia(()=>hashBlob(blob),signal);
   signal?.throwIfAborted();
   const previous=ephemeral.get(hash);ephemeral.set(hash,blob);
   // No await between cancellation check and command commit. After this point the result is applied,
@@ -54,16 +62,19 @@ export function hasEphemeralAssets(doc:Y.Doc):boolean {
 export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:Artwork,signal:AbortSignal):Promise<void> {
   const ref=artwork.artRef;
   if(ref?.kind==='apparel-mockup')throw new Error('Apparel belongs in Wear the trip, not decorative artwork.');
-  const response=await fetch(artwork.original??artwork.src,{signal,credentials:'omit',redirect:'error'});
-  if(!response.ok)throw new Error(`Artwork download failed (${response.status}). Retry or choose another image.`);
-  const blob=await response.blob();
-  if(!/^image\/(png|jpeg|webp|gif|avif)$/.test(blob.type))throw new Error('This artwork is not a supported image.');
-  signal.throwIfAborted();
-  if(ref){
-    const decoded=await createImageBitmap(blob);
-    try{if(decoded.width!==ref.width||decoded.height!==ref.height)throw new Error('The original pixel size changed. Refresh the catalog before adding it.');}finally{decoded.close();}
+  const blob=await prepareTripMedia(async()=>{
+    const response=await fetch(artwork.original??artwork.src,{signal,credentials:'omit',redirect:'error'});
+    if(signal.aborted){void response.body?.cancel().catch(()=>{});signal.throwIfAborted();}
+    if(!response.ok)throw new Error(`Artwork download failed (${response.status}). Retry or choose another image.`);
+    const blob=await response.blob();
     signal.throwIfAborted();
-  }
+    if(!/^image\/(png|jpeg|webp|gif|avif)$/.test(blob.type))throw new Error('This artwork is not a supported image.');
+    if(ref){
+      const decoded=await createImageBitmap(blob);
+      try{signal.throwIfAborted();if(decoded.width!==ref.width||decoded.height!==ref.height)throw new Error('The original pixel size changed. Refresh the catalog before adding it.');}finally{decoded.close();}
+    }
+    return blob;
+  },signal);
   const extended=artwork as Artwork&{credit?:string;rightsStatus?:'approved'|'unknown'|'restricted';originCityId?:string;countryCode?:string};
   const credit=ref?.credit??extended.credit,rightsStatus=ref?.rightsStatus??extended.rightsStatus??'unknown';
   const crop=artwork.crop??[0,0,1,1],ratio=artwork.height*crop[3]/(artwork.width*crop[2])*148/210;
@@ -76,6 +87,17 @@ export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:A
     ops.push({command:'trip_presentation_create',input:{assetId,x:.08,y:.08,width,height,crop,scope:'private'}});
     session.executeAll(actor,ops);
   },signal);
+}
+
+/** Stage original bytes in this tab, attach atomically, then persist them by hash. */
+export async function placeTripUpload(session:TripSession,actor:Actor,file:File,signal:AbortSignal):Promise<void>{
+  if(!/^image\/(png|jpeg|webp|gif|avif)$/.test(file.type))throw new Error('Choose a PNG, JPEG, WebP, GIF or AVIF image.');
+  const pixels=await prepareTripMedia(async()=>{const image=await createImageBitmap(file);try{signal.throwIfAborted();return{width:image.width,height:image.height};}finally{image.close();}},signal);
+  const ratio=pixels.height/pixels.width*148/210,width=Math.min(.38,.65/ratio),height=width*ratio;
+  await commitTripBlob(file,hash=>{const assetId=crypto.randomUUID();session.executeAll(actor,[
+    {command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:file.type,role:'original',caption:file.name,...pixels}}},
+    {command:'trip_presentation_create',input:{assetId,x:.08,y:.08,width,height,crop:[0,0,1,1],scope:'private'}},
+  ]);},signal);
 }
 
 /** Stage original bytes in this tab, attach atomically, then persist them by hash. */

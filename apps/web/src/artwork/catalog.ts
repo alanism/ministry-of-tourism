@@ -44,11 +44,21 @@ export type StylePack = z.infer<typeof registrySchema>['styles'][number];
 export type Manifest = z.infer<typeof manifestSchema>;
 
 export async function readCatalog<T>(url: string, schema: z.ZodType<T>, signal: AbortSignal, fetcher: typeof fetch = fetch): Promise<T> {
-  const response = await fetcher(url, { signal, credentials: 'omit' });
-  if (!response.ok) throw new Error(`Could not load artwork (${response.status}). Please retry.`);
-  const result = schema.safeParse(await response.json());
-  if (!result.success) throw new Error('This artwork catalog is not supported. Please retry or choose another style.');
-  return result.data;
+  signal.throwIfAborted();
+  let abort!:()=>void;
+  const cancelled=new Promise<never>((_resolve,reject)=>{abort=()=>reject(signal.reason??new DOMException('Catalog cancelled','AbortError'));signal.addEventListener('abort',abort,{once:true});});
+  try {
+    const work=(async()=>{
+      const response = await fetcher(url, { signal, credentials: 'omit' });
+      if(signal.aborted){void response.body?.cancel().catch(()=>{});signal.throwIfAborted();}
+      if (!response.ok) throw new Error(`Could not load artwork (${response.status}). Please retry.`);
+      const body=await response.json();signal.throwIfAborted();
+      const result = schema.safeParse(body);
+      if (!result.success) throw new Error('This artwork catalog is not supported. Please retry or choose another style.');
+      return result.data;
+    })();
+    return await Promise.race([work,cancelled]);
+  } finally {signal.removeEventListener('abort',abort);}
 }
 
 /** Normalized source crops also work on the recorded optimized image variant. */
