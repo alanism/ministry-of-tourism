@@ -3,6 +3,7 @@ const {chromium}=require(process.env.MOT_PLAYWRIGHT_MODULE||'playwright');
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),crypto=require('node:crypto');
 const {execFileSync}=require('node:child_process');
 const {checkMagazineReading,captureMagazineSpreads,checkReadingNegativeControls}=require('./mot-magazine-reading-check.cjs');
+const {rasterPdfPage}=require('./mot-pdf-raster.cjs');
 const city=process.argv[2]||'bangkok',root=process.env.MOT_EVIDENCE_DIR||path.join(require('node:os').tmpdir(),'mot-magazine-qa');
 const fixtureRoot=process.env.MOT_ART_FIXTURES;
 if(!fixtureRoot)throw new Error('Set MOT_ART_FIXTURES to a directory of explicit, licensed <city>-fixture.json files. See docs/MAGAZINE-QA.md.');
@@ -71,7 +72,7 @@ const apparel=fixture.assets.filter(a=>a.kind==='apparel-mockup').map(a=>({asset
   const comparison=[];
   const checked=[...new Set([0,...['feature','plate','style','letters'].map(section=>magazine.pages.findIndex(p=>p.section===section)),magazine.pages.length-1].filter(index=>index>=0))];
   for(const index of checked){
-   const prefix=path.join(directory,`proof-${index+1}`);execFileSync(process.env.MOT_PDFTOPPM||'pdftoppm',['-f',String(index+1),'-l',String(index+1),'-singlefile','-png','-scale-to-x','1184','-scale-to-y','1680',pdfFile,prefix],{timeout:15000,stdio:['ignore','pipe','pipe']});
+   const prefix=path.join(directory,`proof-${index+1}`);await rasterPdfPage(page,pdfFile,index+1,prefix);
    const raster=fs.readFileSync(prefix+'.png').toString('base64');const pixels=await page.evaluate(async({svg,raster})=>{const load=async src=>{const image=new Image();image.src=src;await image.decode();const canvas=document.createElement('canvas');canvas.width=1184;canvas.height=1680;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,1184,1680);return{data:ctx.getImageData(0,0,1184,1680).data,png:canvas.toDataURL('image/png').split(',')[1]};};const a=await load('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)),b=await load('data:image/png;base64,'+raster);let diff=0;for(let i=0;i<a.data.length;i+=4)for(let c=0;c<3;c++)diff+=Math.abs(a.data[i+c]-b.data[i+c]);return{mean:diff/(1184*1680*3),png:a.png};},{svg:magazine.pages[index].svg,raster});
    fs.writeFileSync(path.join(directory,`preview-${index+1}.png`),Buffer.from(pixels.png,'base64'));assert(pixels.mean<=4,`Preview/PDF mean mismatch ${pixels.mean}`);comparison.push({page:index+1,mean:pixels.mean});
   }

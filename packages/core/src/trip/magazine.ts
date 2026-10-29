@@ -153,9 +153,9 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const backdrop=take('backdrop',[...role('backdrop'),...art.filter(c=>!c.role)]),foreground=take('foreground',role('foreground')),tag=take('spine-tag',role('tag'),true);
   const mastheadSize=Math.min(17.1*PU,86*PU/(Math.max(1,Array.from(meta.city).length)*.6));
   const issueTitle=meta.title!==meta.city?meta.title:first?.title??'';
-  const shortPhrase=(title:string)=>{
-    const label=magazineLabel(title).replace(/\s+/g,' ').trim();if(Array.from(label).length<=38)return label;
-    let prefix='';for(const word of label.split(' ')){const next=prefix?`${prefix} ${word}`:word;if(Array.from(next).length>37)break;prefix=next;}
+  const shortPhrase=(title:string,limit=38)=>{
+    const label=magazineLabel(title).replace(/\s+/g,' ').trim();if(Array.from(label).length<=limit)return label;
+    let prefix='';for(const word of label.split(' ')){const next=prefix?`${prefix} ${word}`:word;if(Array.from(next).length>limit-1)break;prefix=next;}
     return prefix?prefix+'…':'';
   };
   const coverLines=[...places,...cards.filter(c=>c.kind==='task')].filter(c=>!isArticle(c)).map(card=>({card,label:shortPhrase(card.title)})).filter(item=>item.label).slice(0,3);
@@ -191,16 +191,18 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const interior=take('interior',role('interior'));
     const lead=specimen??facade??interior??second;
     const leadLabel=lead?.label??'';
+    const plateCards=cards.filter(card=>[specimen,facade,second,interior].some(candidate=>candidate&&(candidate.layer?.cardId===card.id||card.assetIds.includes(candidate.assetId))));
     const leadBox=specimen?{x:-308,y:16*PU,width:1397,height:1397}:{x:0,y:0,width:1184,height:1350},noteBox=placedBox(lead,leadBox),anchor={x:noteBox.x+noteBox.width/2,y:noteBox.y+noteBox.height/2};
     const leader=specimen?`<g data-specimen-note="true"><path d="M910 285 Q920 435 ${anchor.x} ${anchor.y}" fill="none" stroke="${INK}" stroke-width="2"/><circle cx="${anchor.x}" cy="${anchor.y}" r="4" fill="${INK}"/>${rows(['Nº 1'],910,260,3.2*PU,L,'IBM Plex Serif',400,INK,true)}</g>`:'';
-    page('left','food-culture',kicker('Eat and look')+picture(lead,leadBox,0,false,specimen?'meet':'slice')+leader+(!specimen?`<rect x="${M}" y="1195" width="1018" height="280" fill="${PAPER}"/>`:'')+rows(['Nº 1'],M,1400,10.6*PU,L,'IBM Plex Sans Condensed',600,RED)+head(leadLabel,M,1490,1018,4.05*PU,1),[lead],[],specimen?BLUSH:PAPER);
+    page('left','food-culture',kicker('Eat and look')+picture(lead,leadBox,0,false,specimen?'meet':'slice')+leader+(!specimen?`<rect x="${M}" y="1195" width="1018" height="280" fill="${PAPER}"/>`:'')+rows(['Nº 1'],M,1400,10.6*PU,L,'IBM Plex Sans Condensed',600,RED)+head(leadLabel,M,1490,1018,4.05*PU,1),[lead],plateCards,specimen?BLUSH:PAPER);
     const rightArt=[facade,second,interior].filter((c):c is Candidate=>!!c&&c!==lead);
+    let plateNumber=2;
     const right=rightArt.length?head('Food and culture',M,2.5*L,1018,4.05*PU,2)
-      +(facade&&facade!==lead?picture(facade,{x:M,y:220,width:1018,height:605},0,false,'slice')+caption(facade,2,M,875):'')
-      +(second&&second!==lead?picture(second,{x:M,y:970,width:494,height:400},0,true)+caption(second,3,M,1420,494):'')
-      +(interior&&interior!==lead?picture(interior,{x:column(4),y:970,width:494,height:400})+caption(interior,4,column(4),1420,494):'')
-      :kicker('Places in the notebook')+head(leadLabel,M,4*L)+text(places.map((c,i)=>`Nº ${i+1} ${c.title}`).join('\n\n'),M,8*L,1018,2.5*PU,22);
-    page('right','food-culture',right,rightArt,places);
+      +(facade&&facade!==lead?picture(facade,{x:M,y:220,width:1018,height:605},0,false,'slice')+caption(facade,plateNumber++,M,875):'')
+      +(second&&second!==lead?picture(second,{x:M,y:970,width:494,height:400},0,true)+caption(second,plateNumber++,M,1420,494):'')
+      +(interior&&interior!==lead?(specimen?picture(interior,{x:column(4),y:970,width:494,height:400})+caption(interior,plateNumber++,column(4),1420,494):picture(interior,{x:M,y:220,width:1018,height:1050},0,false,'slice')+caption(interior,plateNumber++,M,1340)):'')
+      :head('Food and culture',M,2.5*L,1018,4.05*PU,2)+kicker('FCC place illustration',M,5*L)+caption(lead,1,M,7*L);
+    page('right','food-culture',right,rightArt,plateCards);
   }
 
   const stops=cards.filter(c=>c.kind==='place'||c.day||c.location).slice().sort((a,b)=>(a.day??'').localeCompare(b.day??'')||(a.time??'').localeCompare(b.time??''));
@@ -212,7 +214,12 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const points=shown.map((c,i)=>({c,x:i%2?column(5)+COL/2:column(2)+COL/2,y:400+i*step}));
     const path=points.map((p,i)=>`${i?'L':'M'}${p.x} ${p.y}`).join(' ');
     const grid=`<defs><pattern id="route-dots" width="${L}" height="${L}" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="${TAUPE}"/></pattern></defs><rect width="1184" height="1680" fill="url(#route-dots)"/>`;
-    const route=points.map((p,i)=>{const dayFirst=i===0||p.c.day!==shown[i-1]?.day;return `<g data-route-node="true" data-route-x="${p.x}" data-route-y="${p.y}"><circle cx="${p.x}" cy="${p.y}" r="29" fill="${dayFirst?RED:INK}"/>${rows([String(i+1)],p.x-10,p.y+10,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)}${text(p.c.title,p.x+(i%2?-245:48),p.y-40,240,2.5*PU,2)}</g>`;}).join('');
+    const route=points.map((p,i)=>{
+      const dayFirst=i===0||p.c.day!==shown[i-1]?.day,label=shortPhrase(p.c.title.split(/,|\s+y\s+/i)[0]!.trim(),28),width=350,size=2.5*PU;
+      const x=p.x+(i%2?-width-48:48),y=p.y-60,lines=wrap(label,Math.floor(width/(size*.57)));
+      const labelText=rows(lines,x,y,size,L,'IBM Plex Sans',400,INK,false,width,label).replace('<text',`<text data-route-label="true" data-route-label-paper="true" paint-order="stroke" stroke="${PAPER}" stroke-width="8" stroke-linejoin="round"`);
+      return `<g data-route-node="true" data-route-x="${p.x}" data-route-y="${p.y}"><circle cx="${p.x}" cy="${p.y}" r="29" fill="${dayFirst?RED:INK}"/>${rows([String(i+1)],p.x-10,p.y+10,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)}${labelText}</g>`;
+    }).join('');
     page('left','map',grid+kicker('The route')+head(meta.city,M,4*L)+`<g data-route-diagram="true"><path d="M-90 1140 C260 1370 700 850 1270 1190" fill="none" stroke="${BLUE}" stroke-width="120"/><path data-route-line="true" d="${path}" fill="none" stroke="${INK}" stroke-width="3" stroke-dasharray="12 12"/>`+route+'</g>'+picture(marker,{x:785,y:1250,width:300,height:190},marker?.role==='vehicle'?45:0)+kicker('not to scale · not geographic',M,1490),[marker],shown);
     const blockHeight=Math.min(5*L,850/Math.max(1,shown.length));
     const timetable=shown.map((c,i)=>{const y=7*L+i*blockHeight,dayFirst=i===0||c.day!==shown[i-1]?.day;return `<g data-reader-block="true"><circle cx="${M+27}" cy="${y-11}" r="27" fill="${dayFirst?RED:INK}"/>`+rows([String(i+1)],M+17,y,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)+text(c.title,M+80,y,938,2.5*PU,shown.length>4?1:2,'IBM Plex Sans',600)+text([c.day,c.time].filter(Boolean).join(' · '),M+80,y+(shown.length>4?L:2*L),938,2.1*PU,1)+body(c,M+80,y+3*L,938,Math.max(0,Math.floor(blockHeight/L)-3))+'</g>';}).join('');

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "entryCount": 5203,
+  "cityCount": 200,
+  "catalogCount": 1811,
+  "categoryCounts": {
+    "cafe": 200,
+    "portraits": 1585,
+    "city-ink": 198,
+    "hotels": 318,
+    "restaurants": 244,
+    "objects": 640,
+    "people": 640,
+    "activities": 177,
+    "city-illustrations": 552,
+    "apparel": 649
+  },
+  "skippedUnregisteredCityIds": [],
+  "skipReason": "Origins outside the canonical 200-city registry are reported, never renamed or assigned a guessed country.",
+  "rightsDefault": "unknown"
+}

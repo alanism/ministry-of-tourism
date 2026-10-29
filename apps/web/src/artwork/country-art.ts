@@ -1,3 +1,4 @@
+import {decorativeArtwork} from './art-preview';
 import { catalogSchema, readCatalog, type Artwork, type Manifest } from './catalog';
 
 export interface ArtDestination { id: string; name: string; countryCode: string; timeZone: string | null; aliases?: readonly string[]; }
@@ -63,7 +64,7 @@ export async function loadCountryArtwork({ scope, manifest, subject, signal, fet
           || ref.subject !== subject || !manifest.catalogs.some(known => known.url === ref.url && known.city === ref.city && known.subject === subject && known.count === ref.count)) throw new Error('Invalid country catalog reference');
         const catalog = await readCatalog(ref.url, catalogSchema, controller.signal, fetcher);
         if (catalog.styleId !== manifest.styleId || catalog.items.length !== ref.count || catalog.items.some(item => item.city !== ref.city || item.subject !== subject)) throw new Error('Country catalog identity does not match');
-        batches[index] = catalog.items.map(artwork => ({ artwork, originCityId: ref.city!, originCityName: scope.originCities[ref.city!]! }));
+        batches[index] = catalog.items.filter(decorativeArtwork).map(artwork => ({ artwork, originCityId: ref.city!, originCityName: scope.originCities[ref.city!]! }));
       } catch { failed = true; controller.abort(); }
     }
   }
