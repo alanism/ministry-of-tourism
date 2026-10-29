@@ -3,7 +3,7 @@ import { z } from 'zod';
 import * as Y from 'yjs';
 import { CommandError, type CommandContext, type CommandDef } from '../commands/define.ts';
 import { presentationScope, readAllCards, readAsset, readCard, readPresentation, readPresentations, readTripMeta, writeAsset, writeCard, writePresentation, type TripParts } from './model.ts';
-import { assetSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
+import { tripMetaSchema, assetSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
 
 /** Trip commands run against the trip doc's own parts, typed as such (#10: no BoardParts stand-in). */
 export interface TripCommandContext { doc: Y.Doc; parts: TripParts; actor: CommandContext['actor']; newId: () => string; destinations?: readonly DestinationRecord[]; }
@@ -137,7 +137,7 @@ export const tripRead = defineTripCommand({
 
 export const tripMetaUpdate = defineTripCommand({
   name: 'trip_meta_update', title: 'Set destination', description: 'Changes validated trip destination and dates without altering cards.', access: 'write',
-  input: z.object({city:z.string().min(1).max(120),cityId:opt(id),countryCode:opt(z.string().regex(/^[A-Z]{2}$/)),timeZone:timeZoneSchema,dates:opt(datesSchema)}).strict(),
+  input: z.object({city:tripMetaSchema.shape.city,cityId:opt(id),countryCode:tripMetaSchema.shape.countryCode,timeZone:timeZoneSchema,dates:opt(datesSchema)}).strict(),
   run: (ctx,input) => {
     if (input.cityId) {
       const destination = ctx.destinations?.find(d => d.id === input.cityId);
