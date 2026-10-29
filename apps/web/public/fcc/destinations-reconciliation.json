@@ -1,0 +1,33 @@
+{
+  "registryCount": 200,
+  "artCityCount": 199,
+  "matchedArtCityCount": 198,
+  "unmatchedArtCityIds": [
+    "budva"
+  ],
+  "registeredCitiesWithoutArt": [
+    "austin",
+    "manila"
+  ],
+  "unknownTimeZoneCityIds": [],
+  "sourceArtCityCount": 200,
+  "unmatchedSourceArtCityIds": [],
+  "sourceArtIdsWithoutBundledCatalogs": [
+    "austin",
+    "manila"
+  ],
+  "sources": {
+    "registry": {
+      "path": "data/city-asset-master.json",
+      "sha256": "23af57f4bab4624c6944c6a43b907214bc07ae65b871c16b74c8e9dfe6e86242"
+    },
+    "art": {
+      "path": "output/prototypes/city-pages/journal/city-art.json",
+      "sha256": "9b7e70a7b68ea2f6c99515707e544faefdf5d58fd52ce0927359ea2adac3190d"
+    },
+    "bundled": {
+      "path": "apps/web/public/artwork/fcc/manifest.json",
+      "sha256": "294746016318e1dfe990759e775bfe82884806c5029fcd1d234654c092b73719"
+    }
+  }
+}

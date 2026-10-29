@@ -1,0 +1,1424 @@
+{
+  "schema": "mot.fcc-destinations/1",
+  "version": 1,
+  "cities": [
+    {
+      "id": "abu-dhabi",
+      "name": "Abu Dhabi",
+      "aliases": [],
+      "countryCode": "AE",
+      "timeZone": "Asia/Dubai"
+    },
+    {
+      "id": "accra",
+      "name": "Accra",
+      "aliases": [],
+      "countryCode": "GH",
+      "timeZone": "Africa/Accra"
+    },
+    {
+      "id": "addis-ababa",
+      "name": "Addis Ababa",
+      "aliases": [],
+      "countryCode": "ET",
+      "timeZone": "Africa/Addis_Ababa"
+    },
+    {
+      "id": "amsterdam",
+      "name": "Amsterdam",
+      "aliases": [],
+      "countryCode": "NL",
+      "timeZone": "Europe/Amsterdam"
+    },
+    {
+      "id": "antalya",
+      "name": "Antalya",
+      "aliases": [],
+      "countryCode": "TR",
+      "timeZone": "Europe/Istanbul"
+    },
+    {
+      "id": "aspen",
+      "name": "Aspen",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Denver"
+    },
+    {
+      "id": "athens",
+      "name": "Athens",
+      "aliases": [],
+      "countryCode": "GR",
+      "timeZone": "Europe/Athens"
+    },
+    {
+      "id": "atlanta",
+      "name": "Atlanta",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/New_York"
+    },
+    {
+      "id": "auckland",
+      "name": "Auckland",
+      "aliases": [],
+      "countryCode": "NZ",
+      "timeZone": "Pacific/Auckland"
+    },
+    {
+      "id": "austin",
+      "name": "Austin",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Chicago"
+    },
+    {
+      "id": "banff",
+      "name": "Banff",
+      "aliases": [],
+      "countryCode": "CA",
+      "timeZone": "America/Edmonton"
+    },
+    {
+      "id": "bangkok",
+      "name": "Bangkok",
+      "aliases": [],
+      "countryCode": "TH",
+      "timeZone": "Asia/Bangkok"
+    },
+    {
+      "id": "barcelona",
+      "name": "Barcelona",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "basseterre-st-kitts",
+      "name": "Basseterre",
+      "aliases": [
+        "Basseterre / St Kitts",
+        "St Kitts"
+      ],
+      "countryCode": "KN",
+      "timeZone": "America/St_Kitts"
+    },
+    {
+      "id": "beijing",
+      "name": "Beijing",
+      "aliases": [],
+      "countryCode": "CN",
+      "timeZone": "Asia/Shanghai"
+    },
+    {
+      "id": "berlin",
+      "name": "Berlin",
+      "aliases": [],
+      "countryCode": "DE",
+      "timeZone": "Europe/Berlin"
+    },
+    {
+      "id": "biarritz",
+      "name": "Biarritz",
+      "aliases": [],
+      "countryCode": "FR",
+      "timeZone": "Europe/Paris"
+    },
+    {
+      "id": "bocas-del-toro",
+      "name": "Bocas del Toro Town",
+      "aliases": [],
+      "countryCode": "PA",
+      "timeZone": "America/Panama"
+    },
+    {
+      "id": "bogota",
+      "name": "Bogotá",
+      "aliases": [],
+      "countryCode": "CO",
+      "timeZone": "America/Bogota"
+    },
+    {
+      "id": "bologna",
+      "name": "Bologna",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "boquete",
+      "name": "Boquete",
+      "aliases": [],
+      "countryCode": "PA",
+      "timeZone": "America/Panama"
+    },
+    {
+      "id": "boracay",
+      "name": "Boracay",
+      "aliases": [],
+      "countryCode": "PH",
+      "timeZone": "Asia/Manila"
+    },
+    {
+      "id": "boston",
+      "name": "Boston",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/New_York"
+    },
+    {
+      "id": "brisbane",
+      "name": "Brisbane",
+      "aliases": [],
+      "countryCode": "AU",
+      "timeZone": "Australia/Brisbane"
+    },
+    {
+      "id": "brussels",
+      "name": "Brussels",
+      "aliases": [],
+      "countryCode": "BE",
+      "timeZone": "Europe/Brussels"
+    },
+    {
+      "id": "budapest",
+      "name": "Budapest",
+      "aliases": [],
+      "countryCode": "HU",
+      "timeZone": "Europe/Budapest"
+    },
+    {
+      "id": "buenos-aires",
+      "name": "Buenos Aires",
+      "aliases": [],
+      "countryCode": "AR",
+      "timeZone": "America/Argentina/Buenos_Aires"
+    },
+    {
+      "id": "busan",
+      "name": "Busan",
+      "aliases": [],
+      "countryCode": "KR",
+      "timeZone": "Asia/Seoul"
+    },
+    {
+      "id": "cairns",
+      "name": "Cairns",
+      "aliases": [],
+      "countryCode": "AU",
+      "timeZone": "Australia/Brisbane"
+    },
+    {
+      "id": "cairo",
+      "name": "Cairo",
+      "aliases": [],
+      "countryCode": "EG",
+      "timeZone": "Africa/Cairo"
+    },
+    {
+      "id": "cancun",
+      "name": "Cancún",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Cancun"
+    },
+    {
+      "id": "canggu",
+      "name": "Canggu",
+      "aliases": [],
+      "countryCode": "ID",
+      "timeZone": "Asia/Makassar"
+    },
+    {
+      "id": "cannes",
+      "name": "Cannes",
+      "aliases": [],
+      "countryCode": "FR",
+      "timeZone": "Europe/Paris"
+    },
+    {
+      "id": "cape-town",
+      "name": "Cape Town",
+      "aliases": [],
+      "countryCode": "ZA",
+      "timeZone": "Africa/Johannesburg"
+    },
+    {
+      "id": "cartagena",
+      "name": "Cartagena",
+      "aliases": [],
+      "countryCode": "CO",
+      "timeZone": "America/Bogota"
+    },
+    {
+      "id": "casablanca",
+      "name": "Casablanca",
+      "aliases": [],
+      "countryCode": "MA",
+      "timeZone": "Africa/Casablanca"
+    },
+    {
+      "id": "cebu",
+      "name": "Cebu",
+      "aliases": [],
+      "countryCode": "PH",
+      "timeZone": "Asia/Manila"
+    },
+    {
+      "id": "chamonix",
+      "name": "Chamonix",
+      "aliases": [],
+      "countryCode": "FR",
+      "timeZone": "Europe/Paris"
+    },
+    {
+      "id": "chania",
+      "name": "Chania, Crete",
+      "aliases": [],
+      "countryCode": "GR",
+      "timeZone": "Europe/Athens"
+    },
+    {
+      "id": "charlestown-nevis",
+      "name": "Charlestown",
+      "aliases": [
+        "Charlestown / Nevis",
+        "Nevis"
+      ],
+      "countryCode": "KN",
+      "timeZone": "America/St_Kitts"
+    },
+    {
+      "id": "chiang-mai",
+      "name": "Chiang Mai",
+      "aliases": [],
+      "countryCode": "TH",
+      "timeZone": "Asia/Bangkok"
+    },
+    {
+      "id": "chicago",
+      "name": "Chicago",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Chicago"
+    },
+    {
+      "id": "copenhagen",
+      "name": "Copenhagen",
+      "aliases": [],
+      "countryCode": "DK",
+      "timeZone": "Europe/Copenhagen"
+    },
+    {
+      "id": "cortina-dampezzo",
+      "name": "Cortina d’Ampezzo",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "da-nang",
+      "name": "Da Nang",
+      "aliases": [],
+      "countryCode": "VN",
+      "timeZone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "id": "dallas",
+      "name": "Dallas",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Chicago"
+    },
+    {
+      "id": "delhi",
+      "name": "Delhi",
+      "aliases": [],
+      "countryCode": "IN",
+      "timeZone": "Asia/Kolkata"
+    },
+    {
+      "id": "denpasar",
+      "name": "Denpasar",
+      "aliases": [],
+      "countryCode": "ID",
+      "timeZone": "Asia/Makassar"
+    },
+    {
+      "id": "doha",
+      "name": "Doha",
+      "aliases": [],
+      "countryCode": "QA",
+      "timeZone": "Asia/Qatar"
+    },
+    {
+      "id": "dubai",
+      "name": "Dubai",
+      "aliases": [],
+      "countryCode": "AE",
+      "timeZone": "Asia/Dubai"
+    },
+    {
+      "id": "dublin",
+      "name": "Dublin",
+      "aliases": [],
+      "countryCode": "IE",
+      "timeZone": "Europe/Dublin"
+    },
+    {
+      "id": "dubrovnik",
+      "name": "Dubrovnik",
+      "aliases": [],
+      "countryCode": "HR",
+      "timeZone": "Europe/Zagreb"
+    },
+    {
+      "id": "dunmore-town",
+      "name": "Dunmore Town, Harbour Island",
+      "aliases": [],
+      "countryCode": "BS",
+      "timeZone": "America/Nassau"
+    },
+    {
+      "id": "edinburgh",
+      "name": "Edinburgh",
+      "aliases": [],
+      "countryCode": "GB",
+      "timeZone": "Europe/London"
+    },
+    {
+      "id": "el-nido",
+      "name": "El Nido",
+      "aliases": [],
+      "countryCode": "PH",
+      "timeZone": "Asia/Manila"
+    },
+    {
+      "id": "florence",
+      "name": "Florence",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "frankfurt",
+      "name": "Frankfurt",
+      "aliases": [],
+      "countryCode": "DE",
+      "timeZone": "Europe/Berlin"
+    },
+    {
+      "id": "fukuoka",
+      "name": "Fukuoka",
+      "aliases": [],
+      "countryCode": "JP",
+      "timeZone": "Asia/Tokyo"
+    },
+    {
+      "id": "funchal",
+      "name": "Funchal",
+      "aliases": [],
+      "countryCode": "PT",
+      "timeZone": "Atlantic/Madeira"
+    },
+    {
+      "id": "galle",
+      "name": "Galle",
+      "aliases": [],
+      "countryCode": "LK",
+      "timeZone": "Asia/Colombo"
+    },
+    {
+      "id": "gold-coast",
+      "name": "Gold Coast",
+      "aliases": [],
+      "countryCode": "AU",
+      "timeZone": "Australia/Brisbane"
+    },
+    {
+      "id": "grand-anse-praslin",
+      "name": "Grand Anse, Praslin",
+      "aliases": [],
+      "countryCode": "SC",
+      "timeZone": "Indian/Mahe"
+    },
+    {
+      "id": "grand-baie",
+      "name": "Grand Baie",
+      "aliases": [],
+      "countryCode": "MU",
+      "timeZone": "Indian/Mauritius"
+    },
+    {
+      "id": "guadalajara",
+      "name": "Guadalajara",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Mexico_City"
+    },
+    {
+      "id": "guangzhou",
+      "name": "Guangzhou",
+      "aliases": [],
+      "countryCode": "CN",
+      "timeZone": "Asia/Shanghai"
+    },
+    {
+      "id": "hakuba",
+      "name": "Hakuba",
+      "aliases": [],
+      "countryCode": "JP",
+      "timeZone": "Asia/Tokyo"
+    },
+    {
+      "id": "hamburg",
+      "name": "Hamburg",
+      "aliases": [],
+      "countryCode": "DE",
+      "timeZone": "Europe/Berlin"
+    },
+    {
+      "id": "hanoi",
+      "name": "Hanoi",
+      "aliases": [],
+      "countryCode": "VN",
+      "timeZone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "id": "helsinki",
+      "name": "Helsinki",
+      "aliases": [],
+      "countryCode": "FI",
+      "timeZone": "Europe/Helsinki"
+    },
+    {
+      "id": "heraklion",
+      "name": "Heraklion",
+      "aliases": [],
+      "countryCode": "GR",
+      "timeZone": "Europe/Athens"
+    },
+    {
+      "id": "ho-chi-minh-city",
+      "name": "Ho Chi Minh City",
+      "aliases": [],
+      "countryCode": "VN",
+      "timeZone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "id": "hoi-an",
+      "name": "Hội An",
+      "aliases": [],
+      "countryCode": "VN",
+      "timeZone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "id": "hong-kong",
+      "name": "Hong Kong SAR",
+      "aliases": [],
+      "countryCode": "CN",
+      "timeZone": "Asia/Hong_Kong"
+    },
+    {
+      "id": "honolulu",
+      "name": "Honolulu",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "Pacific/Honolulu"
+    },
+    {
+      "id": "houston",
+      "name": "Houston",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Chicago"
+    },
+    {
+      "id": "hurghada",
+      "name": "Hurghada",
+      "aliases": [],
+      "countryCode": "EG",
+      "timeZone": "Africa/Cairo"
+    },
+    {
+      "id": "hvar-town",
+      "name": "Hvar Town",
+      "aliases": [],
+      "countryCode": "HR",
+      "timeZone": "Europe/Zagreb"
+    },
+    {
+      "id": "ibiza-town",
+      "name": "Ibiza Town",
+      "aliases": [
+        "Eivissa",
+        "Ibiza Town / Eivissa"
+      ],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "innsbruck",
+      "name": "Innsbruck",
+      "aliases": [],
+      "countryCode": "AT",
+      "timeZone": "Europe/Vienna"
+    },
+    {
+      "id": "istanbul",
+      "name": "Istanbul",
+      "aliases": [],
+      "countryCode": "TR",
+      "timeZone": "Europe/Istanbul"
+    },
+    {
+      "id": "jakarta",
+      "name": "Jakarta",
+      "aliases": [],
+      "countryCode": "ID",
+      "timeZone": "Asia/Jakarta"
+    },
+    {
+      "id": "johannesburg",
+      "name": "Johannesburg",
+      "aliases": [],
+      "countryCode": "ZA",
+      "timeZone": "Africa/Johannesburg"
+    },
+    {
+      "id": "johor-bahru",
+      "name": "Johor Bahru",
+      "aliases": [],
+      "countryCode": "MY",
+      "timeZone": "Asia/Kuala_Lumpur"
+    },
+    {
+      "id": "kitzbuhel",
+      "name": "Kitzbühel",
+      "aliases": [],
+      "countryCode": "AT",
+      "timeZone": "Europe/Vienna"
+    },
+    {
+      "id": "koh-phangan",
+      "name": "Koh Phangan",
+      "aliases": [],
+      "countryCode": "TH",
+      "timeZone": "Asia/Bangkok"
+    },
+    {
+      "id": "koh-samui",
+      "name": "Koh Samui",
+      "aliases": [],
+      "countryCode": "TH",
+      "timeZone": "Asia/Bangkok"
+    },
+    {
+      "id": "kotor",
+      "name": "Kotor",
+      "aliases": [],
+      "countryCode": "ME",
+      "timeZone": "Europe/Podgorica"
+    },
+    {
+      "id": "krabi",
+      "name": "Krabi",
+      "aliases": [],
+      "countryCode": "TH",
+      "timeZone": "Asia/Bangkok"
+    },
+    {
+      "id": "krakow",
+      "name": "Kraków",
+      "aliases": [],
+      "countryCode": "PL",
+      "timeZone": "Europe/Warsaw"
+    },
+    {
+      "id": "kuala-lumpur",
+      "name": "Kuala Lumpur",
+      "aliases": [],
+      "countryCode": "MY",
+      "timeZone": "Asia/Kuala_Lumpur"
+    },
+    {
+      "id": "kyoto",
+      "name": "Kyoto",
+      "aliases": [],
+      "countryCode": "JP",
+      "timeZone": "Asia/Tokyo"
+    },
+    {
+      "id": "lagos",
+      "name": "Lagos",
+      "aliases": [],
+      "countryCode": "NG",
+      "timeZone": "Africa/Lagos"
+    },
+    {
+      "id": "langkawi",
+      "name": "Langkawi",
+      "aliases": [],
+      "countryCode": "MY",
+      "timeZone": "Asia/Kuala_Lumpur"
+    },
+    {
+      "id": "las-palmas-de-gran-canaria",
+      "name": "Las Palmas de Gran Canaria",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Atlantic/Canary"
+    },
+    {
+      "id": "las-vegas",
+      "name": "Las Vegas",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Los_Angeles"
+    },
+    {
+      "id": "lima",
+      "name": "Lima",
+      "aliases": [],
+      "countryCode": "PE",
+      "timeZone": "America/Lima"
+    },
+    {
+      "id": "lisbon",
+      "name": "Lisbon",
+      "aliases": [],
+      "countryCode": "PT",
+      "timeZone": "Europe/Lisbon"
+    },
+    {
+      "id": "london",
+      "name": "London",
+      "aliases": [],
+      "countryCode": "GB",
+      "timeZone": "Europe/London"
+    },
+    {
+      "id": "los-angeles",
+      "name": "Los Angeles",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Los_Angeles"
+    },
+    {
+      "id": "luang-prabang",
+      "name": "Luang Prabang",
+      "aliases": [],
+      "countryCode": "LA",
+      "timeZone": "Asia/Vientiane"
+    },
+    {
+      "id": "macau",
+      "name": "Macau SAR",
+      "aliases": [],
+      "countryCode": "CN",
+      "timeZone": "Asia/Macau"
+    },
+    {
+      "id": "madrid",
+      "name": "Madrid",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "malaga",
+      "name": "Málaga",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "male",
+      "name": "Malé",
+      "aliases": [],
+      "countryCode": "MV",
+      "timeZone": "Indian/Maldives"
+    },
+    {
+      "id": "manila",
+      "name": "Manila",
+      "aliases": [],
+      "countryCode": "PH",
+      "timeZone": "Asia/Manila"
+    },
+    {
+      "id": "marbella",
+      "name": "Marbella",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "marrakech",
+      "name": "Marrakech",
+      "aliases": [],
+      "countryCode": "MA",
+      "timeZone": "Africa/Casablanca"
+    },
+    {
+      "id": "mecca",
+      "name": "Mecca",
+      "aliases": [],
+      "countryCode": "SA",
+      "timeZone": "Asia/Riyadh"
+    },
+    {
+      "id": "medellin",
+      "name": "Medellín",
+      "aliases": [],
+      "countryCode": "CO",
+      "timeZone": "America/Bogota"
+    },
+    {
+      "id": "medina",
+      "name": "Medina",
+      "aliases": [],
+      "countryCode": "SA",
+      "timeZone": "Asia/Riyadh"
+    },
+    {
+      "id": "melbourne",
+      "name": "Melbourne",
+      "aliases": [],
+      "countryCode": "AU",
+      "timeZone": "Australia/Melbourne"
+    },
+    {
+      "id": "mexico-city",
+      "name": "Mexico City",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Mexico_City"
+    },
+    {
+      "id": "miami",
+      "name": "Miami",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/New_York"
+    },
+    {
+      "id": "milan",
+      "name": "Milan",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "monterrey",
+      "name": "Monterrey",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Mexico_City"
+    },
+    {
+      "id": "montreal",
+      "name": "Montreal",
+      "aliases": [],
+      "countryCode": "CA",
+      "timeZone": "America/Toronto"
+    },
+    {
+      "id": "mugla",
+      "name": "Muğla",
+      "aliases": [],
+      "countryCode": "TR",
+      "timeZone": "Europe/Istanbul"
+    },
+    {
+      "id": "munich",
+      "name": "Munich",
+      "aliases": [],
+      "countryCode": "DE",
+      "timeZone": "Europe/Berlin"
+    },
+    {
+      "id": "muscat",
+      "name": "Muscat",
+      "aliases": [],
+      "countryCode": "OM",
+      "timeZone": "Asia/Muscat"
+    },
+    {
+      "id": "mykonos-town",
+      "name": "Mykonos Town",
+      "aliases": [
+        "Chora",
+        "Mykonos Town / Chora"
+      ],
+      "countryCode": "GR",
+      "timeZone": "Europe/Athens"
+    },
+    {
+      "id": "nairobi",
+      "name": "Nairobi",
+      "aliases": [],
+      "countryCode": "KE",
+      "timeZone": "Africa/Nairobi"
+    },
+    {
+      "id": "nassau",
+      "name": "Nassau",
+      "aliases": [
+        "Nassau / Paradise Island",
+        "Paradise Island"
+      ],
+      "countryCode": "BS",
+      "timeZone": "America/Nassau"
+    },
+    {
+      "id": "new-york",
+      "name": "New York",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/New_York"
+    },
+    {
+      "id": "nha-trang",
+      "name": "Nha Trang",
+      "aliases": [],
+      "countryCode": "VN",
+      "timeZone": "Asia/Ho_Chi_Minh"
+    },
+    {
+      "id": "nice",
+      "name": "Nice",
+      "aliases": [],
+      "countryCode": "FR",
+      "timeZone": "Europe/Paris"
+    },
+    {
+      "id": "niseko",
+      "name": "Niseko",
+      "aliases": [],
+      "countryCode": "JP",
+      "timeZone": "Asia/Tokyo"
+    },
+    {
+      "id": "nosara",
+      "name": "Nosara",
+      "aliases": [],
+      "countryCode": "CR",
+      "timeZone": "America/Costa_Rica"
+    },
+    {
+      "id": "oaxaca-city",
+      "name": "Oaxaca City",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Mexico_City"
+    },
+    {
+      "id": "orlando",
+      "name": "Orlando",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/New_York"
+    },
+    {
+      "id": "osaka",
+      "name": "Osaka",
+      "aliases": [],
+      "countryCode": "JP",
+      "timeZone": "Asia/Tokyo"
+    },
+    {
+      "id": "oslo",
+      "name": "Oslo",
+      "aliases": [],
+      "countryCode": "NO",
+      "timeZone": "Europe/Oslo"
+    },
+    {
+      "id": "palma-de-mallorca",
+      "name": "Palma de Mallorca",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "panama-city",
+      "name": "Panama City",
+      "aliases": [],
+      "countryCode": "PA",
+      "timeZone": "America/Panama"
+    },
+    {
+      "id": "paris",
+      "name": "Paris",
+      "aliases": [],
+      "countryCode": "FR",
+      "timeZone": "Europe/Paris"
+    },
+    {
+      "id": "pattaya-chonburi",
+      "name": "Pattaya-Chonburi",
+      "aliases": [],
+      "countryCode": "TH",
+      "timeZone": "Asia/Bangkok"
+    },
+    {
+      "id": "perth",
+      "name": "Perth",
+      "aliases": [],
+      "countryCode": "AU",
+      "timeZone": "Australia/Perth"
+    },
+    {
+      "id": "philadelphia",
+      "name": "Philadelphia",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/New_York"
+    },
+    {
+      "id": "phuket",
+      "name": "Phuket",
+      "aliases": [],
+      "countryCode": "TH",
+      "timeZone": "Asia/Bangkok"
+    },
+    {
+      "id": "placencia",
+      "name": "Placencia",
+      "aliases": [],
+      "countryCode": "BZ",
+      "timeZone": "America/Belize"
+    },
+    {
+      "id": "playa-del-carmen",
+      "name": "Playa del Carmen",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Cancun"
+    },
+    {
+      "id": "port-louis",
+      "name": "Port Louis",
+      "aliases": [],
+      "countryCode": "MU",
+      "timeZone": "Indian/Mauritius"
+    },
+    {
+      "id": "porto",
+      "name": "Porto",
+      "aliases": [],
+      "countryCode": "PT",
+      "timeZone": "Europe/Lisbon"
+    },
+    {
+      "id": "prague",
+      "name": "Prague",
+      "aliases": [],
+      "countryCode": "CZ",
+      "timeZone": "Europe/Prague"
+    },
+    {
+      "id": "puerto-escondido",
+      "name": "Puerto Escondido",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Mexico_City"
+    },
+    {
+      "id": "punta-cana",
+      "name": "Punta Cana",
+      "aliases": [],
+      "countryCode": "DO",
+      "timeZone": "America/Santo_Domingo"
+    },
+    {
+      "id": "queenstown",
+      "name": "Queenstown",
+      "aliases": [],
+      "countryCode": "NZ",
+      "timeZone": "Pacific/Auckland"
+    },
+    {
+      "id": "rhodes",
+      "name": "Rhodes",
+      "aliases": [],
+      "countryCode": "GR",
+      "timeZone": "Europe/Athens"
+    },
+    {
+      "id": "rio-de-janeiro",
+      "name": "Rio de Janeiro",
+      "aliases": [],
+      "countryCode": "BR",
+      "timeZone": "America/Sao_Paulo"
+    },
+    {
+      "id": "riyadh",
+      "name": "Riyadh",
+      "aliases": [],
+      "countryCode": "SA",
+      "timeZone": "Asia/Riyadh"
+    },
+    {
+      "id": "rome",
+      "name": "Rome",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "saint-tropez",
+      "name": "Saint-Tropez",
+      "aliases": [],
+      "countryCode": "FR",
+      "timeZone": "Europe/Paris"
+    },
+    {
+      "id": "san-francisco",
+      "name": "San Francisco",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Los_Angeles"
+    },
+    {
+      "id": "san-jose-del-cabo",
+      "name": "San José del Cabo",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Mazatlan"
+    },
+    {
+      "id": "san-miguel-de-allende",
+      "name": "San Miguel de Allende",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Mexico_City"
+    },
+    {
+      "id": "san-pedro",
+      "name": "San Pedro, Ambergris Caye",
+      "aliases": [],
+      "countryCode": "BZ",
+      "timeZone": "America/Belize"
+    },
+    {
+      "id": "san-sebastian",
+      "name": "San Sebastián",
+      "aliases": [
+        "Donostia",
+        "San Sebastián / Donostia"
+      ],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "santa-teresa",
+      "name": "Santa Teresa",
+      "aliases": [],
+      "countryCode": "CR",
+      "timeZone": "America/Costa_Rica"
+    },
+    {
+      "id": "santiago",
+      "name": "Santiago",
+      "aliases": [],
+      "countryCode": "CL",
+      "timeZone": "America/Santiago"
+    },
+    {
+      "id": "sao-paulo",
+      "name": "São Paulo",
+      "aliases": [],
+      "countryCode": "BR",
+      "timeZone": "America/Sao_Paulo"
+    },
+    {
+      "id": "sapporo",
+      "name": "Sapporo",
+      "aliases": [],
+      "countryCode": "JP",
+      "timeZone": "Asia/Tokyo"
+    },
+    {
+      "id": "seattle",
+      "name": "Seattle",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Los_Angeles"
+    },
+    {
+      "id": "seminyak",
+      "name": "Seminyak",
+      "aliases": [],
+      "countryCode": "ID",
+      "timeZone": "Asia/Makassar"
+    },
+    {
+      "id": "seoul",
+      "name": "Seoul",
+      "aliases": [],
+      "countryCode": "KR",
+      "timeZone": "Asia/Seoul"
+    },
+    {
+      "id": "seville",
+      "name": "Seville",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "shanghai",
+      "name": "Shanghai",
+      "aliases": [],
+      "countryCode": "CN",
+      "timeZone": "Asia/Shanghai"
+    },
+    {
+      "id": "sharm-el-sheikh",
+      "name": "Sharm El Sheikh",
+      "aliases": [],
+      "countryCode": "EG",
+      "timeZone": "Africa/Cairo"
+    },
+    {
+      "id": "shenzhen",
+      "name": "Shenzhen",
+      "aliases": [],
+      "countryCode": "CN",
+      "timeZone": "Asia/Shanghai"
+    },
+    {
+      "id": "singapore",
+      "name": "Singapore",
+      "aliases": [],
+      "countryCode": "SG",
+      "timeZone": "Asia/Singapore"
+    },
+    {
+      "id": "split",
+      "name": "Split",
+      "aliases": [],
+      "countryCode": "HR",
+      "timeZone": "Europe/Zagreb"
+    },
+    {
+      "id": "st-moritz",
+      "name": "St. Moritz",
+      "aliases": [],
+      "countryCode": "CH",
+      "timeZone": "Europe/Zurich"
+    },
+    {
+      "id": "stockholm",
+      "name": "Stockholm",
+      "aliases": [],
+      "countryCode": "SE",
+      "timeZone": "Europe/Stockholm"
+    },
+    {
+      "id": "sydney",
+      "name": "Sydney",
+      "aliases": [],
+      "countryCode": "AU",
+      "timeZone": "Australia/Sydney"
+    },
+    {
+      "id": "taipei",
+      "name": "Taipei",
+      "aliases": [],
+      "countryCode": "TW",
+      "timeZone": "Asia/Taipei"
+    },
+    {
+      "id": "tamarindo",
+      "name": "Tamarindo",
+      "aliases": [],
+      "countryCode": "CR",
+      "timeZone": "America/Costa_Rica"
+    },
+    {
+      "id": "taormina",
+      "name": "Taormina",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "tbilisi",
+      "name": "Tbilisi",
+      "aliases": [],
+      "countryCode": "GE",
+      "timeZone": "Asia/Tbilisi"
+    },
+    {
+      "id": "thessaloniki",
+      "name": "Thessaloniki",
+      "aliases": [],
+      "countryCode": "GR",
+      "timeZone": "Europe/Athens"
+    },
+    {
+      "id": "tokyo",
+      "name": "Tokyo",
+      "aliases": [],
+      "countryCode": "JP",
+      "timeZone": "Asia/Tokyo"
+    },
+    {
+      "id": "toronto",
+      "name": "Toronto",
+      "aliases": [],
+      "countryCode": "CA",
+      "timeZone": "America/Toronto"
+    },
+    {
+      "id": "tulum",
+      "name": "Tulum",
+      "aliases": [],
+      "countryCode": "MX",
+      "timeZone": "America/Cancun"
+    },
+    {
+      "id": "ubud",
+      "name": "Ubud",
+      "aliases": [],
+      "countryCode": "ID",
+      "timeZone": "Asia/Makassar"
+    },
+    {
+      "id": "uluwatu",
+      "name": "Uluwatu",
+      "aliases": [],
+      "countryCode": "ID",
+      "timeZone": "Asia/Makassar"
+    },
+    {
+      "id": "vail",
+      "name": "Vail",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/Denver"
+    },
+    {
+      "id": "val-disere",
+      "name": "Val d’Isère",
+      "aliases": [],
+      "countryCode": "FR",
+      "timeZone": "Europe/Paris"
+    },
+    {
+      "id": "valencia",
+      "name": "Valencia",
+      "aliases": [],
+      "countryCode": "ES",
+      "timeZone": "Europe/Madrid"
+    },
+    {
+      "id": "vancouver",
+      "name": "Vancouver",
+      "aliases": [],
+      "countryCode": "CA",
+      "timeZone": "America/Vancouver"
+    },
+    {
+      "id": "venice",
+      "name": "Venice",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "verbier",
+      "name": "Verbier",
+      "aliases": [],
+      "countryCode": "CH",
+      "timeZone": "Europe/Zurich"
+    },
+    {
+      "id": "verona",
+      "name": "Verona",
+      "aliases": [],
+      "countryCode": "IT",
+      "timeZone": "Europe/Rome"
+    },
+    {
+      "id": "victoria-seychelles",
+      "name": "Victoria",
+      "aliases": [],
+      "countryCode": "SC",
+      "timeZone": "Indian/Mahe"
+    },
+    {
+      "id": "vienna",
+      "name": "Vienna",
+      "aliases": [],
+      "countryCode": "AT",
+      "timeZone": "Europe/Vienna"
+    },
+    {
+      "id": "vilnius",
+      "name": "Vilnius",
+      "aliases": [],
+      "countryCode": "LT",
+      "timeZone": "Europe/Vilnius"
+    },
+    {
+      "id": "warsaw",
+      "name": "Warsaw",
+      "aliases": [],
+      "countryCode": "PL",
+      "timeZone": "Europe/Warsaw"
+    },
+    {
+      "id": "washington",
+      "name": "Washington",
+      "aliases": [],
+      "countryCode": "US",
+      "timeZone": "America/New_York"
+    },
+    {
+      "id": "weligama",
+      "name": "Weligama",
+      "aliases": [],
+      "countryCode": "LK",
+      "timeZone": "Asia/Colombo"
+    },
+    {
+      "id": "whistler",
+      "name": "Whistler",
+      "aliases": [],
+      "countryCode": "CA",
+      "timeZone": "America/Vancouver"
+    },
+    {
+      "id": "zanzibar-city",
+      "name": "Zanzibar City",
+      "aliases": [],
+      "countryCode": "TZ",
+      "timeZone": "Africa/Dar_es_Salaam"
+    },
+    {
+      "id": "zermatt",
+      "name": "Zermatt",
+      "aliases": [],
+      "countryCode": "CH",
+      "timeZone": "Europe/Zurich"
+    },
+    {
+      "id": "zhuhai",
+      "name": "Zhuhai",
+      "aliases": [],
+      "countryCode": "CN",
+      "timeZone": "Asia/Shanghai"
+    },
+    {
+      "id": "zurich",
+      "name": "Zurich",
+      "aliases": [],
+      "countryCode": "CH",
+      "timeZone": "Europe/Zurich"
+    }
+  ]
+}
