@@ -333,10 +333,25 @@ textarea.m-field { resize: vertical; line-height: var(--lh-2); }
 
 @media (prefers-reduced-motion: reduce) { .mot * { transition: none !important; animation: none !important; } }
 
+/* Header: brand left and controls right without squeezing either; nav gets its own scrollable row */
+@media (max-width: 1600px) {
+  .mot-header { grid-template-columns: minmax(0, auto) minmax(0, 1fr); grid-template-rows: auto auto; height: auto; min-height: calc(var(--u) * 3); padding-top: calc(var(--u) / 4); padding-bottom: calc(var(--u) / 4); row-gap: calc(var(--u) / 4); box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; }
+  .mot-brand { grid-column: 1; grid-row: 1; justify-self: start; flex: 0 0 auto; min-width: 44px; min-height: 44px; }
+  .mot-logo { flex: 0 0 auto; min-width: 44px; }
+  .mot-header-end { grid-column: 2; grid-row: 1; justify-self: end; flex-wrap: wrap; min-width: 0; max-width: 100%; }
+  .mot-header-end > * { min-width: 0; max-width: 100%; flex: 0 1 auto; }
+  .mot-header-end .m-btn { white-space: normal; overflow-wrap: anywhere; text-align: center; }
+  .mot-nav { grid-column: 1 / -1; grid-row: 2; justify-self: center; min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+  .mot-nav button { flex: 0 0 auto; white-space: nowrap; }
+}
+
 /* Phone: one column, lanes swipe sideways */
 @media (max-width: 1100px) {
-  .mot-header { grid-template-columns: 1fr auto; height: auto; padding: 12px 16px 8px; }
-  .mot-nav { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; overflow-x: auto; min-width: 0; }
+  .mot-header { grid-template-columns: minmax(0, 1fr); height: auto; padding: 12px 16px 8px; }
+  .mot-brand { min-width: 44px; min-height: 44px; }
+  .mot-logo { height: 48px; width: auto; min-width: 44px; }
+  .mot-header-end { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; justify-content: flex-end; min-width: 0; max-width: 100%; }
+  .mot-nav { grid-column: 1 / -1; grid-row: 3; justify-self: stretch; overflow-x: auto; min-width: 0; }
   .mot-nav button { flex: 0 0 auto; white-space: nowrap; padding: 0 12px; font-size: var(--t-1); line-height: var(--lh-1); }
   .mot-header-end .trip-chip .chip-text { display: none; }
   .mot-header-end .trip-chip { padding: 0 12px; }

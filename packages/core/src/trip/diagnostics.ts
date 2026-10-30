@@ -1,11 +1,13 @@
 // Local, allowlisted diagnostics. Error messages and arbitrary context never enter a receipt.
 export type DiagnosticErrorClass = 'failed' | 'cancelled' | 'timed_out' | 'unavailable' | 'invalid_input' | 'storage' | 'network' | 'rate_limited' | 'quota_exhausted';
+export type DiagnosticStep = 'collect' | 'layout' | 'write' | 'verify' | 'persist';
 export interface DiagnosticReceipt {
   requestId: string;
   operation: string;
   boardId: string;
   revision: number;
   errorClass: DiagnosticErrorClass;
+  step?: DiagnosticStep;
   startedAt: string;
   finishedAt: string;
   appVersion: string;
@@ -14,9 +16,10 @@ export interface DiagnosticReceipt {
 }
 export interface DiagnosticInput {
   requestId: string; operation: string; boardId: string; revision: number; appVersion: string;
-  error?: unknown; errorClass?: DiagnosticErrorClass; startedAt?: string; sourceUrl?: string; httpStatus?: number;
+  error?: unknown; errorClass?: DiagnosticErrorClass; step?: DiagnosticStep; startedAt?: string; sourceUrl?: string; httpStatus?: number;
 }
 const ERROR_CLASSES = new Set<DiagnosticErrorClass>(['failed', 'cancelled', 'timed_out', 'unavailable', 'invalid_input', 'storage', 'network', 'rate_limited', 'quota_exhausted']);
+const DIAGNOSTIC_STEPS = new Set<DiagnosticStep>(['collect', 'layout', 'write', 'verify', 'persist']);
 function errorClass(error: unknown): DiagnosticErrorClass {
   if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled';
   if (error instanceof DOMException && error.name === 'QuotaExceededError') return 'storage';
@@ -39,6 +42,7 @@ export function createDiagnostic(input: DiagnosticInput): DiagnosticReceipt {
   return {
     requestId: input.requestId, operation: input.operation, boardId: input.boardId, revision: input.revision,
     errorClass: input.errorClass && ERROR_CLASSES.has(input.errorClass) ? input.errorClass : errorClass(input.error),
+    ...(input.step && DIAGNOSTIC_STEPS.has(input.step) ? { step: input.step } : {}),
     startedAt: input.startedAt ?? now, finishedAt: now, appVersion: input.appVersion,
     ...(sourceUrl ? { sourceUrl } : {}),
     ...(Number.isInteger(input.httpStatus) && input.httpStatus! >= 100 && input.httpStatus! <= 599 ? { httpStatus: input.httpStatus } : {}),
@@ -46,7 +50,7 @@ export function createDiagnostic(input: DiagnosticInput): DiagnosticReceipt {
 }
 export function diagnosticText(receipt: DiagnosticReceipt): string {
   // Re-project at serialization too: callers cannot accidentally append private context to a receipt.
-  const clean = createDiagnostic({ ...receipt, errorClass: receipt.errorClass });
+  const clean = createDiagnostic({ ...receipt, errorClass: receipt.errorClass, step: receipt.step });
   clean.startedAt = receipt.startedAt; clean.finishedAt = receipt.finishedAt;
   return JSON.stringify(clean, null, 2);
 }
