@@ -5,6 +5,30 @@ checkpoint based on `51c5100` plus this follow-up. **MOT-100 remains In progress
 the final desktop run includes an 8.105-second uncached art result against the
 unchanged four-second limit, and physical iOS/Safari remains unmeasured.
 
+## App-only continuation · 31 October 2026
+
+The current workflow measures app city/art views without entering Export or generating an artifact. The original native fixture is reused unchanged; no fixture derivation or PDF benchmark runs. Legacy measurements below remain historical evidence.
+
+Visible thumbnails now show loading. A visible thumbnail that has not completed in 20 seconds changes to a recoverable unavailable message, matching the existing full-preview wait. Selecting it opens that preview’s Retry flow. Close/Escape remain usable, and neither timeout nor retry inserts art. Offscreen lazy thumbnails start their wait when visible; completion, source changes and unmount clear it. No percentage or synthetic progress is shown.
+
+| App surface / profile | Samples | First usable view, ms | Cached usable view, ms | Observation |
+|---|---:|---|---|---|
+| Art / desktop | 3 fresh browser processes | 979.1 / 950.5 / 946.0 | 237.4 / 192.0 / 180.5 | All within 4000/2000 ms |
+| Art / phone Chromium emulation | 3 fresh browser processes | 2811.6 / 2974.7 / 2985.5 | **2171.9** / 1595.9 / 1721.1 | First cached sample fails the 2000 ms budget |
+| Art / phone diagnostic repeat | 3 fresh browser processes | 2865.7 / 2867.7 / 2692.1 | 1557.3 / 1576.4 / 1587.9 | Passing repeat does not replace the failed sample |
+| City / desktop | 1 | 385.5 | 69.0 | Real published Kyoto items visible |
+| City / phone Chromium emulation | 1 | 834.0 | 224.9 | Real published Kyoto items visible |
+
+The failed cached phone view spent 2141.9 ms before its grid was available; it had no newly observed thumbnail request. Host CPU busy time was 93.0% over the first/cached probe window (including screenshot/diagnostic work). This locates the delay before image decode but does not establish a cause. The diagnostic repeat records public local JSON timing and long tasks, along with the existing safe image/proxy observer. Its cached views re-requested public metadata; no speculative cache/freshness/profile changes were made. All new normal samples have zero page/console/provider errors and exact native board reads before/after.
+
+Profiles retain desktop1440×1000/DPR1/CPU×1 and phone393×852/DPR3/touch/CPU×4/150 ms latency/209715.2 B/s down/96000 B/s up. App load and exact native fixture import precede throttling; first art ends after the first thumbnail decodes, while city ends when actual public items are usable. Browser/OS/proxy caches are not reset beyond the existing Chrome first/cached cache setting. These are small local measurements, not percentiles, cold startup, physical iOS/Safari, independent review or proof of a causal speedup.
+
+**MOT-100 stays In progress.** The new2171.9 ms miss, older8105.1/8132.8 ms failures and unmeasured physical iOS/Safari remain explicit. The 4000/2000 ms budgets, prior tests and legacy scripts are unchanged. PDF work remains owner-closed.
+
+The new driver rejects incomplete runs, missing usable content, failed/undecoded images, non-finite times and every over-budget sample; exit2 means a measurement or runtime check failed. A quick grid or fast unavailable response cannot count as passing. `scripts/test-mot-art-loading.cjs` exercises held image loading, timeout, offscreen lazy behavior, retry, Close/Escape and exact board preservation at1440/375 using a virtual clock for20-second fault waits.
+
+A first ordinary check hit two existing response-ledger CLI five-second timeouts (771pass/2fail;95.50s) during a busy-host period. Feature work stopped for investigation; those four CLI tests passed alone in4.55s. A sequential unchanged ordinary check then passed **773tests/135files in41.08s**, all four TypeScript projects, and a separate build passed in7.03s. No worker/deadline/config change was made; the failed run is retained. Current app-only receipts, fault screenshots and source audit are in the canonical planning folder `Design Sprints/Build-MOT-100-App-Only-2026-10-31`.
+
 ## Unchanged budgets and preserved ccb4f5d results
 
 First decoded art: **4,000 ms**. Cached decoded art: **2,000 ms**.
@@ -142,34 +166,26 @@ four-second failure, establish a speedup, reset OS/proxy caches or satisfy physi
 iOS/Safari acceptance. MOT-100 remains In progress. Actual Meta Spark static review
 approved the observer/report with no findings; it did not execute the measurements.
 
-## Reproduce
+## Reproduce the current app-only scope
 
-Use installed dependencies and a writable external evidence directory. Do not
-install another dependency tree or run other heavy jobs during measurement.
+Use installed dependencies, the original licensed native ZIP plus its existing `.json` checksum manifest, and an external evidence directory. Build/check and measurements run sequentially so they do not compete with each other.
 
 ```powershell
-node scripts/prepare-mot-performance-fixture.mjs <original-qa.zip> <new-12-page.mot.zip>
+npm run check
 npm --prefix apps/web run build
-npm --prefix apps/web run preview -- --host 127.0.0.1 --port 5199
+npm --prefix apps/web run preview -- --host 127.0.0.1 --port 5223
 ```
 
-Set `MOT_PLAYWRIGHT_MODULE` if needed, `MOT_EVIDENCE_DIR`, `MOT_PERFORMANCE_INPUT`
-to the derived ZIP, and optionally `MOT_TEST_ORIGIN` / `MOT_SOURCE_REVISION`.
-Run the following sequentially. Normal PDF timing defaults to three samples per
-profile. Its 120-second observation guard permits recording failures; the product
-budget stays 60 seconds. Preserve exit 2 and its receipts when a budget is missed.
+Set `MOT_PLAYWRIGHT_MODULE` when using the bundled runtime, `MOT_TEST_ORIGIN`, `MOT_EVIDENCE_DIR`, and `MOT_PERFORMANCE_INPUT` to the **existing** native ZIP. `MOT_PERFORMANCE_SAMPLES` defaults to1 and accepts1–5; use3 to repeat a surface in three fresh browser processes. Use a separate evidence directory for each invocation and retain exit2/failed receipts.
 
 ```powershell
 node scripts/test-mot-art-network.cjs
-node scripts/test-mot-export-boundaries.cjs
-node scripts/test-mot-export-bitmap-cancel.cjs
-node scripts/measure-mot-performance-12.cjs
-npm run check
+node scripts/test-mot-app-performance.cjs
+node scripts/test-mot-art-loading.cjs
+node scripts/measure-mot-app-performance.cjs desktop art
+node scripts/measure-mot-app-performance.cjs phone-chromium-emulation art
+node scripts/measure-mot-app-performance.cjs desktop city
+node scripts/measure-mot-app-performance.cjs phone-chromium-emulation city
 ```
 
-Source and production-JavaScript hashes, before/after logs, both timing snapshots,
-traces, screenshots and actual PDFs are in the local planning evidence
-`Design Sprints/Build-Performance-Public-2026-10-30`. Earlier 13-page N=1 evidence
-remains historical. Neither these measurements nor a static model review constitute
-physical iOS verification, Opus design acceptance or release approval. No deployment,
-runtime key, main update or budget change occurred.
+The legacy fixture generator, combined export measurements and export boundary scripts are retained as historical source; they are outside the owner-closed current scope. New runs use the app-only commands above. Independent review, actual iOS/Safari reference-device results and release approval remain separate.
