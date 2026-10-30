@@ -1,0 +1,135 @@
+{
+  "sourceRevision": "79b602f81adf1129b1aaf81119faf2e4ba34c030",
+  "scope": "MOT-119–129 task-definition review; no implementation",
+  "inputBoardSave": 194,
+  "outputBoardSave": 195,
+  "reviewId": "R20",
+  "reviewer": "Codex",
+  "astraInvoked": false,
+  "findings": {
+    "blocker": 3,
+    "major": 13
+  },
+  "prerequisites": [
+    "MOT-130",
+    "MOT-131",
+    "MOT-132"
+  ],
+  "referenceCopies": [
+    {
+      "name": "ACCEPTANCE.md",
+      "sha256": "af237a384e99195dcda9119184f3c15cf2869a15e61dee70cb97229306eff74d",
+      "repositoryCopyMatches": true
+    },
+    {
+      "name": "BOARD-CATALOG-EXPORT.md",
+      "sha256": "22753db3a8e390f28895e23ad0f1568772c1dfb3782e7abc785580280a34132f",
+      "repositoryCopyMatches": true
+    },
+    {
+      "name": "README.md",
+      "sha256": "9de33042ac26aea785a89aeaa198c43aa3cd9a8547f502b24a4bb8e32a739eea",
+      "repositoryCopyMatches": true
+    },
+    {
+      "name": "SHARED-ROOMS.md",
+      "sha256": "ac6f9f0723805894aecfd04f77050f8a0e937b648630ae543948bf6926908170",
+      "repositoryCopyMatches": true
+    },
+    {
+      "name": "VOTING-AND-HANDOFF.md",
+      "sha256": "f81993b8b891a5ecfaca0283a09cc0e470f48f8ccb066962ea220149da64d138",
+      "repositoryCopyMatches": true
+    }
+  ],
+  "sourceAnchors": [
+    {
+      "path": "packages/core/src/trip/persist.ts",
+      "sha256": "fd0a8859a06079c5f7262a44e520265a8c09e75f2cd6990444c910930ce8638f"
+    },
+    {
+      "path": "packages/core/src/trip/model.ts",
+      "sha256": "665788c4fd93cab84327ba77761b1082a7fb33b781bf878ebd821d29ca1bf765"
+    },
+    {
+      "path": "packages/core/src/trip/session.ts",
+      "sha256": "0d15bee35831fc6c67ff82a4e634c6b4f5aab58c1ecd286f729bb542d03d3a3d"
+    },
+    {
+      "path": "packages/core/src/trip/schema.ts",
+      "sha256": "2285b61206d9d8ea8293fac350a5b589764a3e550e4e28cca2d91e2cec263996"
+    },
+    {
+      "path": "packages/core/src/trip/package.ts",
+      "sha256": "2b1819ad176986f19b7bf8517339044131c9a0c9fb6124da13ea7de6c034f9c4"
+    },
+    {
+      "path": "packages/core/src/trip/revisions.ts",
+      "sha256": "c6570e20b203c367275c7341396881933046ad4db7b6cbd43e4601dbf70e12ec"
+    },
+    {
+      "path": "packages/core/src/trip/projections.ts",
+      "sha256": "584806878a4c4309ed2949f9b61043c763e97d8bcb55c4bdffd4458145508d13"
+    },
+    {
+      "path": "packages/core/src/trip/preference-tally.ts",
+      "sha256": "1b40489b8b671c823e09e27ae86809e23363afc837fc1a411fe5c5cc6e65972c"
+    },
+    {
+      "path": "packages/core/src/trip/render.ts",
+      "sha256": "ce31f2223e13acb753a644fe6f90edb26d220673df5d432a6be52aa7e5f205e6"
+    },
+    {
+      "path": "apps/web/src/trip/artifacts.ts",
+      "sha256": "f0af0a14e36af2a94e134893b7de956e2af83531cdd14aee82ce0778f51eea40"
+    },
+    {
+      "path": "apps/web/src/trip/trip-store.ts",
+      "sha256": "77d4bb6023d489bb4760a669cd0639502d77d186ce01a247beabe94c78ef365c"
+    },
+    {
+      "path": "apps/web/src/trip/BoardView.tsx",
+      "sha256": "f5b535f887034617d322c0847781964ceec34b8186e8931fb7020c7259112c7f"
+    },
+    {
+      "path": "apps/web/src/trip/ExportScreen.tsx",
+      "sha256": "b3554d512f0d87bb4e51581e833403baf2f9273ea23b7c926774674fce6a7493"
+    },
+    {
+      "path": "scripts/check-mot-release.cjs",
+      "sha256": "7bf2adc36ea69db362ab4ccbc9877b0db771f3cfb071a1080bcc095c7cfddf64"
+    },
+    {
+      "path": "firebase.json",
+      "sha256": "1e4c9080fc339883079f6102c511313b724810f03765712c45b99456452f8d49"
+    },
+    {
+      "path": "apps/web/package.json",
+      "sha256": "09da588a0a588d8f452c7215379f41a6651b03837304944c6385edf58d3f3b48"
+    }
+  ],
+  "checks": {
+    "defaultCheck": true,
+    "tests": 902,
+    "testFiles": 162,
+    "vitestSeconds": 34.1,
+    "typeProjects": 4,
+    "build": true,
+    "draftAndSavedBoardQa": true,
+    "viewports": [
+      1440,
+      375
+    ],
+    "featuresImplemented": false
+  },
+  "preserved": [
+    "all 50 pre-WP10 tasks/records",
+    "all 19 existing reviews",
+    "A01–A27 text",
+    "existing harness/application source",
+    "production/device holds",
+    "PDF closure",
+    "assigned models and pending Astra gate"
+  ],
+  "evidenceDirectory": "C:\\Users\\alani\\OneDrive\\Documents\\Vibe Code\\Ministry of Tourism\\Design Sprints\\WP10-Definition-Review-2026-10-31"
+}
