@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { artworkSchema, catalogSchema, manifestSchema, registrySchema, cropPixels, readCatalog } from './catalog';
 
 const asset = {
@@ -10,18 +10,23 @@ const asset = {
 };
 
 describe('artwork catalogs', () => {
-  it('validates the published FCC metadata and every crop against the shared pack contract', () => {
+  it('validates the published FCC metadata and every crop against the shared pack contract', async () => {
     const root = new URL('../../public/', import.meta.url);
-    const json = (url: string) => JSON.parse(readFileSync(new URL(url.replace(/^\//, ''), root), 'utf8'));
-    const registry = registrySchema.parse(json('/artwork/index.json'));
+    const json = async (url: string) => JSON.parse(await readFile(new URL(url.replace(/^\//, ''), root), 'utf8'));
+    const registry = registrySchema.parse(await json('/artwork/index.json'));
     const fcc = registry.styles.find(style => style.id === 'fcc-editorial')!;
-    const manifest = manifestSchema.parse(json(fcc.manifest));
+    const manifest = manifestSchema.parse(await json(fcc.manifest));
     expect(manifest.cities.length).toBeGreaterThan(100);
-    for (const reference of manifest.catalogs) {
-      const catalog = catalogSchema.parse(json(reference.url));
-      expect(catalog.styleId).toBe(fcc.id);
-      expect(catalog.items).toHaveLength(reference.count);
-      expect(catalog.items.every(item => item.subject === reference.subject && item.city === reference.city)).toBe(true);
+    // Bound open files while overlapping small-file I/O on Windows.
+    for (let offset = 0; offset < manifest.catalogs.length; offset += 16) {
+      const references = manifest.catalogs.slice(offset, offset + 16);
+      const catalogs = await Promise.all(references.map(reference => json(reference.url)));
+      for (const [index, reference] of references.entries()) {
+        const catalog = catalogSchema.parse(catalogs[index]);
+        expect(catalog.styleId).toBe(fcc.id);
+        expect(catalog.items).toHaveLength(reference.count);
+        expect(catalog.items.every(item => item.subject === reference.subject && item.city === reference.city)).toBe(true);
+      }
     }
   });
   it('registers new styles as data, including packs without cities', () => {
