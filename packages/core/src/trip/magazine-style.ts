@@ -1,4 +1,5 @@
 import { PLEX_CSS } from './fonts/plex.ts';
+import { recoverFccTitle } from './fcc-text.ts';
 
 export const MAGAZINE = { widthPx:1184,heightPx:1680,widthMm:148,heightMm:210,pageSize:[419.53,595.28] as [number,number] } as const;
 export const PAPER='#FAF7F2', INK='#000000', RED='#CC0000', BLUSH='#F9EDEB', BLUE='#BBD0DC', TAUPE='#CBB9B0';
@@ -8,7 +9,7 @@ export const escapeXml=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').
 
 /** Presentation-only aliases. Original labels and source evidence are never rewritten. */
 export function magazineLabel(value:string):string {
-  const repaired=value.replace(/Â·/g,'·').replace(/â€™/g,'’').replace(/â€“/g,'–').replace(/â€”/g,'—').replace(/\s*[·|—–-]\s*Version\s*\d+\s*$/i,'').replace(/_/g,' ').trim();
+  const repaired=recoverFccTitle(value).replace(/\s*[·|—–-]\s*Version\s*\d+\s*$/i,'').replace(/_/g,' ').trim();
   const aliases:Record<string,string>={
     'Hotel Maria Cristina A Luxury Collection Hotel Hotel Exterio':'Hotel María Cristina',
     'Flight luggage tag V2':'Luggage tag','Fu Fu No Yu Onsen':'Fu Fu no Yu onsen','La Cuchara De San Telmo':'La Cuchara de San Telmo',

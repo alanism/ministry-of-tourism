@@ -4,6 +4,7 @@ import { readAllCards, readTripMeta, tripParts } from './model.ts';
 import { cropSchema, presentationFieldsSchema, MAGAZINE_ART_ROLES, PRESENTATION_PATTERNS, type MagazineArtRole, type Presentation, type TripCard } from './schema.ts';
 import { fccShopUrl, selectCityApparel, type ApparelArtRef } from './merch.ts';
 import { isPublicFccUrl } from './city-source.ts';
+import { recoverFccTitle } from './fcc-text.ts';
 import { publicLinkUrl } from '../export/pdf.ts';
 import { MAGAZINE, PAPER, INK, RED, BLUSH, BLUE, TAUPE, PU, M, L, G, COL, column, escapeXml as esc, magazineLabel, wrap, flowText, rows, kicker, shell } from './magazine-style.ts';
 export { MAGAZINE, magazineLabel } from './magazine-style.ts';
@@ -33,7 +34,7 @@ const titleCase=(value:string)=>value.split('-').map(s=>s[0]?.toUpperCase()+s.sl
 export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocument{
   const parts=tripParts(doc),meta=readTripMeta(doc),personal=options.includePrivate===true||options.variant==='personal';
   const visible=(scope:string)=>personal||(scope!=='private'&&(options.variant!=='guide'||scope==='guide'));
-  const cards=readAllCards(parts).filter(c=>visible(c.scope)),visibleIds=new Set(cards.map(c=>c.id));
+  const cards=readAllCards(parts).filter(c=>visible(c.scope)).map(c=>c.provenance==='fcc'||c.source?.provider==='fcc'?{...c,title:recoverFccTitle(c.title)}:c),visibleIds=new Set(cards.map(c=>c.id));
   const layers=[...doc.getMap<Presentation>('tripPresentations').values()].filter(p=>p.boardId===meta.boardId&&visible(p.scope)&&(!p.cardId||visibleIds.has(p.cardId))).sort((a,b)=>a.zIndex-b.zIndex||a.id.localeCompare(b.id));
   const selected=new Set([...cards.flatMap(c=>c.assetIds),...layers.flatMap(p=>p.assetId?[p.assetId]:[])]);
   const allOwned=new Set([...readAllCards(parts).flatMap(c=>c.assetIds),...[...doc.getMap<Presentation>('tripPresentations').values()].flatMap(p=>p.assetId?[p.assetId]:[])]);
@@ -125,8 +126,11 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const folio=pages.length+1,id=`${current.id}:${side}${current.pageIds.length>1?':'+current.pageIds.length:''}`;
     const textProvenance=layers.filter(p=>!p.assetId&&sourceCards.some(c=>c.id===p.cardId)).map(p=>`<g data-placement="${esc(p.id)}" data-locked="${p.locked}" data-source-geometry="${[p.x,p.y,p.width,p.height].join(',')}" transform="rotate(${p.rotation} 592 840)"/>`).join('');
     const creditY=usedImages.some(c=>c.kind==='apparel-mockup')?1480:1540;
+    const creditX=M+(pattern==='merch'?30:pattern==='tee-advert'?24:0),creditWidth=1018-(creditX-M);
+    const creditText=rows(creditChunk.lines,creditX,creditY,1.9*PU,26,'IBM Plex Mono',400,INK,false,creditWidth,creditSource.slice(0,creditSource.length-creditChunk.rest.length)).replace('<text','<text data-credits="true"');
+    const creditBlock=creditChunk.lines.length&&(pattern==='personal-cover'||usedImages.some(c=>c.kind==='apparel-mockup'))?`<g data-credit-block="true"><rect data-credit-zone="true" x="${creditX-12}" y="${creditY-1.9*PU-8}" width="${creditWidth+24}" height="${1.9*PU+(creditChunk.lines.length-1)*26+16}" fill="${PAPER}"/>${creditText}</g>`:creditText;
     const manualText=layers.filter(p=>p.cardId&&!p.assetId&&p.magazineLayout?.pageId===id).map(p=>{const c=cards.find(c=>c.id===p.cardId)!;return `<g data-placement="${esc(p.id)}" data-editor-box="${[p.x*1184,p.y*1680,p.width*1184,p.height*1680].join(',')}" data-editor-angle="${p.rotation}" transform="rotate(${p.rotation} ${(p.x+p.width/2)*1184} ${(p.y+p.height/2)*1680})">${text(c.title,p.x*1184,p.y*1680+38,p.width*1184,38,3,'IBM Plex Serif',600)+text(c.body,p.x*1184,p.y*1680+165,p.width*1184,29.6,Math.max(1,Math.floor((p.height*1680-165)/L)))}</g>`;}).join('');
-    const svg=shell(paintPictures(content)+manualText+textProvenance+rows(creditChunk.lines,M,creditY,1.9*PU,26,'IBM Plex Mono',400,INK,false,1018,creditSource.slice(0,creditSource.length-creditChunk.rest.length)).replace('<text','<text data-credits="true"'),title,current.section.endsWith('cover')?undefined:folio,side,paper);
+    const svg=shell(paintPictures(content)+manualText+textProvenance+creditBlock,title,current.section.endsWith('cover')?undefined:folio,side,paper);
     const normalizedLinks=links?.map(link=>({...link,x:link.x/1184,y:link.y/1680,width:link.width/1184,height:link.height/1680}));
     current.pageIds.push(id);pages.push({id,pattern,folio,svg,assetIds:usedImages.map(c=>c.assetId),credits,spreadId:current.id,side,section:current.section,title,slots:spreads.flatMap(s=>s.usedSlots).filter(s=>usedImages.some(c=>c.assetId===s.assetId)),sourceCardIds:sourceCards.map(c=>c.id),artworkLabels:usedImages.map(c=>({assetId:c.assetId,label:c.label})),...(normalizedLinks?{links:normalizedLinks}:{})});
   }
@@ -223,8 +227,9 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const route=points.map((p,i)=>{
       const dayFirst=i===0||p.c.day!==shown[i-1]?.day,label=shortPhrase(p.c.title.split(/,|\s+y\s+/i)[0]!.trim(),28),width=350,size=2.5*PU;
       const x=p.x+(i%2?-width-48:48),y=p.y-60,lines=wrap(label,Math.floor(width/(size*.57)));
+      if(lines.length>1&&Array.from(lines.at(-1)!).length<6){const words=lines[lines.length-2]!.split(' '),last=words.pop();if(words.length){lines[lines.length-2]=words.join(' ');lines[lines.length-1]=last+' '+lines.at(-1);}}
       const labelText=rows(lines,x,y,size,L,'IBM Plex Sans',400,INK,false,width,label).replace('<text',`<text data-route-label="true" data-route-label-paper="true" paint-order="stroke" stroke="${PAPER}" stroke-width="8" stroke-linejoin="round"`);
-      return `<g data-route-node="true" data-route-x="${p.x}" data-route-y="${p.y}"><circle cx="${p.x}" cy="${p.y}" r="29" fill="${dayFirst?RED:INK}"/>${rows([String(i+1)],p.x-10,p.y+10,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)}${labelText}</g>`;
+      return `<g data-route-node="true" data-route-x="${p.x}" data-route-y="${p.y}"><circle cx="${p.x}" cy="${p.y}" r="29" fill="${dayFirst?RED:INK}"/>${rows([String(i+1)],p.x-10,p.y+10,2.5*PU,L,'IBM Plex Sans Condensed',600,PAPER)}<rect data-route-label-knockout="true" x="${x-12}" y="${y-size-12}" width="${width+24}" height="${size+(lines.length-1)*L+24}" fill="${PAPER}"/>${labelText}</g>`;
     }).join('');
     page('left','map',grid+kicker('The route')+head(meta.city,M,4*L)+`<g data-route-diagram="true"><path d="M-90 1140 C260 1370 700 850 1270 1190" fill="none" stroke="${BLUE}" stroke-width="120"/><path data-route-line="true" d="${path}" fill="none" stroke="${INK}" stroke-width="3" stroke-dasharray="12 12"/>`+route+'</g>'+picture(marker,{x:785,y:1250,width:300,height:190},marker?.role==='vehicle'?45:0)+kicker('not to scale · not geographic',M,1490),[marker],shown);
     const blockHeight=Math.min(5*L,850/Math.max(1,shown.length));

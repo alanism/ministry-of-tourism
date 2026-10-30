@@ -1,5 +1,6 @@
 // Public FCC content boundary. Feed URLs are configured only after FCC publishes them (MOT-74/78).
 import { z } from 'zod';
+import { recoverFccTitle } from './fcc-text.ts';
 
 export const FCC_ORIGIN = 'https://foreignclubberscorespondence.web.app';
 const FCC_HOSTS = new Set(['foreignclubberscorespondence.web.app', 'foreignclubberscorespondence.firebaseapp.com']);
@@ -86,7 +87,7 @@ async function normalize(entry: CachedFeed): Promise<FccCityContent> {
   const articles = await Promise.all(feed.articles.map(async article => {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(article.body));
     const contentHash = [...new Uint8Array(digest)].map(v => v.toString(16).padStart(2, '0')).join('');
-    return { id: compositeId(feed.city.id, article.id), cityId: feed.city.id, title: article.title, body: article.body, source: { ...source(article, 'article'), contentHash } };
+    return { id: compositeId(feed.city.id, article.id), cityId: feed.city.id, title: recoverFccTitle(article.title), body: article.body, source: { ...source(article, 'article'), contentHash } };
   }));
   return { city: { ...feed.city }, articles, places: feed.places.map(place => ({ id: compositeId(feed.city.id, place.id), city: feed.city.id, name: place.name, lat: place.lat, lng: place.lng, provenance: 'fcc', retrievedAt, fixture: false, source: source(place, 'venue') })), almanac: structuredClone(feed.almanac) };
 }

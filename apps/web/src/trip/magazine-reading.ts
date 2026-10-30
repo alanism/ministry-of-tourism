@@ -95,6 +95,11 @@ export async function readableMagazineSvg(source:string,width:number,signal:Abor
         const contained=items.filter(p=>p.node.tagName==='text'&&p.old.x>=b.x-1&&p.old.x+p.old.width<=b.x+b.width+1&&p.old.y>=b.y&&bottom(p.old)<=bottom(b));
         const growth=Math.max(0,...contained.map(p=>bottom(p.next)-bottom(p.old)));
         if(growth)rect.setAttribute('height',String(b.height+growth));
+        // These paper knockouts follow the larger phone type, including its full font bounds.
+        if(rect.hasAttribute('data-route-label-knockout')||rect.hasAttribute('data-credit-zone')){
+          const label=scope.querySelector<SVGGraphicsElement>('text[data-route-label],text[data-credits]');
+          if(label){const box=label.getBBox(),shift=label.transform.baseVal.consolidate()?.matrix,fit=union([bounds(rect as SVGGraphicsElement),{x:box.x+(shift?.e??0)-12,y:box.y+(shift?.f??0)-12,width:box.width+24,height:box.height+24}]);for(const name of ['x','y','width','height'] as const)rect.setAttribute(name,String(fit[name]));}
+        }
       }
       if(scope.hasAttribute('data-route-diagram')){
         const points=[...scope.querySelectorAll<SVGGraphicsElement>('[data-route-node]')].map(node=>{const y=Number(node.getAttribute('data-route-y')),x=Number(node.getAttribute('data-route-x'));return new DOMPoint(x,y).matrixTransform(node.transform.baseVal.consolidate()?.matrix??new DOMMatrix());});
@@ -108,8 +113,9 @@ export async function readableMagazineSvg(source:string,width:number,signal:Abor
       return Math.max(...[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(parent).matrixTransform(inverse).y));
     }));
     for(const credit of svg.querySelectorAll<SVGGraphicsElement>('[data-credits]')){
-      const delta=wordsBottom+48-bounds(credit).y;
-      if(delta>0)credit.setAttribute('transform',`translate(0 ${delta}) ${credit.getAttribute('transform')??''}`);
+      const block=credit.closest<SVGGraphicsElement>('[data-credit-block]')??credit;
+      const delta=wordsBottom+48-bounds(block).y;
+      if(delta>0)block.setAttribute('transform',`translate(0 ${delta}) ${block.getAttribute('transform')??''}`);
     }
     const content=[...svg.children].filter((n):n is SVGGraphicsElement=>n instanceof SVGGraphicsElement&&!['defs','rect'].includes(n.tagName)&&!n.hasAttribute('data-jacket-spine')&&!n.hasAttribute('data-folio')&&!(n.hasAttribute('data-art')&&Number(n.querySelector('svg')?.getAttribute('width'))>=1000));
     const folio=svg.querySelector('[data-folio]');
