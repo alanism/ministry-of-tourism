@@ -1,0 +1,21 @@
+.mot-ballot label { display: grid; gap: 6px; font-size: var(--t-1); font-weight: 600; min-width: 0; }
+.mot-ballot-selectors, .mot-ballot-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mot-ballot-selectors { margin: 12px 0; }
+.mot-ballot-scale { margin-top: 20px; font-weight: 600; }
+.mot-ballot-status { margin: 10px 0; font-family: var(--m-mono); font-size: var(--t-1); }
+.mot-ballot-options { display: grid; gap: 12px; margin: 18px 0; }
+.mot-ballot-option { border: 1px solid var(--m-line); border-radius: 12px; padding: 14px; background: var(--m-paper, var(--m-surface)); }
+.mot-ballot-title { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.mot-ballot-title h3 { font-size: var(--t-2); overflow-wrap: anywhere; }
+.mot-rank-sticker { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border: 1px dashed var(--m-line-2); border-radius: 50%; font-family: var(--m-mono); }
+.mot-rank-sticker.ranked { background: var(--m-ink); color: var(--m-surface); border-style: solid; transform: rotate(-5deg); }
+.mot-ballot-stamp.approved { border: 2px solid var(--m-ink); }
+.mot-ballot-stamp.maybe { border: 2px dashed var(--m-ink-2); }
+.mot-ballot-stamp.denied { border: 2px solid var(--m-red); color: var(--m-red-ink); }
+.mot-ballot-note { margin-top: 20px; }
+.mot-ballot-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.mot-ballot-setup { display: grid; gap: 18px; padding-top: 12px; }
+.mot-ballot-setup fieldset { border: 1px solid var(--m-line); padding: 12px; border-radius: 12px; }
+.mot-ballot-setup .mot-ballot-check { display: flex; align-items: center; gap: 12px; min-height: 44px; overflow-wrap: anywhere; }
+.mot-ballot-check input { width: 20px; height: 20px; flex: none; }
+@media (max-width: 420px) { .mot-ballot-selectors, .mot-ballot-controls { grid-template-columns: 1fr; } }

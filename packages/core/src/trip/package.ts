@@ -32,8 +32,8 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
   const apparel=options.selectedCardIds?[]:readMagazineApparel(parts,personal);
   const preference=sourceMeta.magazine;
   const magazine=preference&&apparel.some(asset=>asset.id===preference.wornTeeAssetId)?{...preference,apparelAssetIds:apparel.map(asset=>asset.id)}:undefined;
-  const {magazine:omitted,groupPreferences,...plainMeta}=sourceMeta;
-  const meta={...plainMeta,...(personal&&groupPreferences?{groupPreferences}:{}),...(magazine?{magazine}:{})};
+  const {magazine:omitted,groupPreferences,groupBallots,...plainMeta}=sourceMeta;
+  const meta={...plainMeta,...(personal&&groupPreferences?{groupPreferences}:{}),...(personal&&groupBallots?{groupBallots}:{}),...(magazine?{magazine}:{})};
   const included=(scope:string)=>personal || (variant==='guide'?scope==='guide':scope!=='private');
   const cards = all.filter(c=>included(c.scope) && (!options.selectedCardIds || options.selectedCardIds.has(c.id)));
   const cardIds=new Set(cards.map(c=>c.id));
@@ -61,7 +61,7 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
   const readable = { meta, cards, presentations };
   files['manifest.json'] = strToU8(JSON.stringify(manifest, null, 2));
   // The document must contain only exported cards: encoding the live doc would leak private cards.
-  const filtered = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, boardId: meta.boardId, dates: meta.dates, party: meta.party, agentMode: meta.agentMode, lineage: meta.lineage,magazine:meta.magazine,groupPreferences:meta.groupPreferences });
+  const filtered = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, boardId: meta.boardId, dates: meta.dates, party: meta.party, agentMode: meta.agentMode, lineage: meta.lineage,magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots });
   const filteredParts = tripParts(filtered);
   filtered.transact(() => {
     for (const c of cards) writeCard(filteredParts, c);

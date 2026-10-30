@@ -1,5 +1,6 @@
 // Trip document (MOT-10): its own Yjs doc, so Writer's Board boards stay untouched.
 import * as Y from 'yjs';
+import {validateLocalBallot} from './group-ballot.ts';
 import { SYSTEM_ORIGIN, type AgentMode } from '../doc/model.ts';
 import { assetSchema, presentationSchema, TRIP_SCHEMA_VERSION, tripCardSchema, tripMetaSchema, type Asset, type BoardKind, type Presentation, type TripCard, type TripMeta } from './schema.ts';
 
@@ -47,6 +48,7 @@ export interface CreateTripOptions {
   lineage?: TripMeta['lineage'];
   magazine?: TripMeta['magazine'];
   groupPreferences?: TripMeta['groupPreferences'];
+  groupBallots?: TripMeta['groupBallots'];
   newId?: () => string;
 }
 
@@ -73,6 +75,7 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     lineage: options.lineage,
     magazine: options.magazine,
     groupPreferences: options.groupPreferences,
+    groupBallots: options.groupBallots,
   });
   const parts = tripParts(doc);
   doc.transact(() => {
@@ -84,7 +87,9 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
 export function readTripMeta(doc: Y.Doc): TripMeta {
   const parts = tripParts(doc);
   const raw: Record<string, unknown> = Object.fromEntries(parts.meta.entries());
-  return tripMetaSchema.parse(raw);
+  const meta=tripMetaSchema.parse(raw);
+  for(const ballot of meta.groupBallots??[])validateLocalBallot(ballot,meta.groupPreferences);
+  return meta;
 }
 
 export function cardToPlain(card: Y.Map<unknown>): TripCard {

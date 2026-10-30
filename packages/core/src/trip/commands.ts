@@ -1,5 +1,6 @@
 // Trip commands (MOT-12): the only way to change a trip. Validate before writing.
 import { z } from 'zod';
+import {ballotKey,groupBallotKeySchema,groupBallotSchema,validateLocalBallot} from './group-ballot.ts';
 import { groupPreferencesSchema, validateGroupUpdate } from './group-preferences.ts';
 import * as Y from 'yjs';
 import { CommandError, type CommandContext, type CommandDef } from '../commands/define.ts';
@@ -148,8 +149,8 @@ export const tripMetaUpdate = defineTripCommand({
     ctx.parts.meta.set('city',input.city);ctx.parts.meta.set('timeZone',input.timeZone);
     for (const key of ['cityId','countryCode'] as const) if (input[key] === undefined) ctx.parts.meta.delete(key); else ctx.parts.meta.set(key,input[key]);
     if (input.dates) ctx.parts.meta.set('dates',input.dates);
-    const {groupPreferences,...publicMeta}=readTripMeta(ctx.doc);
-    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{})};
+    const {groupPreferences,groupBallots,...publicMeta}=readTripMeta(ctx.doc);
+    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{})};
   },
 });
 
@@ -196,6 +197,23 @@ export const tripPresentationDelete = defineTripCommand({
   name:'trip_presentation_delete',title:'Remove trip art',description:'Removes a placement without deleting its media.',access:'write',input:z.object({id}).strict(),
   run:(ctx,input)=>{if(!readPresentation(ctx.parts,input.id))throw new CommandError('not_found','No such presentation');ctx.parts.presentations.delete(input.id);return{id:input.id};},
 });
+export const tripBallotUpdate=defineTripCommand({
+  name:'trip_ballot_update',title:'Save household shortlist',description:'Person-only local response. Rank, stamp and optional shared note stay independent; never books or shares anything.',access:'write',humanOnly:true,input:groupBallotSchema,
+  run:(ctx,input)=>{
+    const meta=readTripMeta(ctx.doc);
+    try{validateLocalBallot(input,meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+    const ballots=meta.groupBallots??[],index=ballots.findIndex(b=>ballotKey(b)===ballotKey(input));
+    if(index<0)ballots.push(input);else ballots[index]=input;
+    ctx.parts.meta.set('groupBallots',ballots);return structuredClone(input);
+  },
+});
+export const tripBallotRead=defineTripCommand({name:'trip_ballot_read',title:'Read local household responses',description:'Person-only local responses; no response is distinct from an empty shortlist.',access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupBallots??[]});
+export const tripBallotClear=defineTripCommand({name:'trip_ballot_clear',title:'Remove local household response',description:'Return a household and round to no response; Undo is available.',access:'write',humanOnly:true,input:groupBallotKeySchema,run:(ctx,input)=>{
+  const meta=readTripMeta(ctx.doc);
+  try{validateLocalBallot({...input,rankings:[],stamps:[],shared_note:''},meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+  ctx.parts.meta.set('groupBallots',(meta.groupBallots??[]).filter(b=>ballotKey(b)!==ballotKey(input)));return structuredClone(input);
+}});
+
 export const tripGroupConfigure = defineTripCommand({
   name:'trip_group_configure',title:'Declare group preference rounds',description:'Person-only: declare stable household labels and immutable K3/K5 rounds. This never records a vote or authenticates a household.',
   access:'write',humanOnly:true,input:groupPreferencesSchema,
@@ -210,4 +228,4 @@ export const tripGroupRead = defineTripCommand({
   access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupPreferences??null,
 });
 
-export const TRIP_COMMANDS: TripCommand[] = [tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];
+export const TRIP_COMMANDS: TripCommand[] = [tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];
