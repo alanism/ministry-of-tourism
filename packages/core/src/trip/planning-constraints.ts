@@ -28,7 +28,7 @@ export const planningProblemSchema=z.object({
 export type PlanningProblem=z.infer<typeof planningProblemSchema>;
 export type ScheduleAssignment=z.infer<typeof scheduleAssignmentSchema>;
 export type PlanningEvidence<T>={value:T|null;status:'confirmed'|'inferred'|'unknown';source:string;source_date:string|null;valid_until:string|null};
-export function confirmedFact<T>(fact:PlanningEvidence<T>,asOf:string):fact is PlanningEvidence<T>&{value:T}{return fact.status==='confirmed'&&fact.value!==null&&fact.source_date!==null&&fact.source_date<=new Date(asOf).toISOString().slice(0,10)&&(!fact.valid_until||Date.parse(fact.valid_until)>=Date.parse(asOf));}
+export function confirmedFact<T>(fact:PlanningEvidence<T>,asOf:string):fact is PlanningEvidence<T>&{value:T}{return fact.status==='confirmed'&&fact.value!==null&&fact.source_date!==null&&fact.source_date<=(/^\d{4}-\d{2}-\d{2}T/.test(asOf)?asOf.slice(0,10):new Date(asOf).toISOString().slice(0,10))&&(!fact.valid_until||Date.parse(fact.valid_until)>=Date.parse(asOf));}
 
 export const groupPolicySchema=z.object({id:z.literal('mot-group-planning'),version:z.literal(1),criteria:z.union([z.tuple([z.literal('feasibility'),z.literal('top_two'),z.literal('first_choice'),z.literal('participating_points'),z.literal('travel')]),z.tuple([z.literal('feasibility'),z.literal('participating_points'),z.literal('top_two'),z.literal('first_choice'),z.literal('travel')])])}).strict();
 export const DEFAULT_GROUP_POLICY=groupPolicySchema.parse({id:'mot-group-planning',version:1,criteria:['feasibility','top_two','first_choice','participating_points','travel']});
