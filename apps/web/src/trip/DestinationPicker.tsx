@@ -11,11 +11,14 @@ export interface DestinationPickerProps {
   preservedCards?: readonly { id: string; title: string; sourceCity?: string }[];
 }
 const LANES = ['Plan', 'Prepare', 'Arrive', 'Explore', 'Remember'];
+const SearchIcon = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="10" cy="10" r="6" /><path d="m15 15 5 5" /></svg>;
+/** FCC tag art when it has one; the drawn tag stands in, faded, while the art loads and stays if it fails. */
 function Tag({ row, city }: { row?: DestinationRow; city: string }) {
-  const [failed, setFailed] = useState(false);
-  return <span className="mot-destination-tag" aria-hidden="true">{row?.tagUrl && !failed
-    ? <img src={row.tagUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
-    : <span className="mot-destination-tag-drawn"><span>{Array.from(city).slice(0, 3).join('').toLocaleUpperCase()}</span></span>}</span>;
+  const [art, setArt] = useState<'loading' | 'loaded' | 'failed'>('loading');
+  const hasArt = !!row?.tagUrl && art !== 'failed';
+  return <span className={`mot-destination-tag${hasArt ? ` ${art}` : ''}`} aria-hidden="true">
+    {art !== 'loaded' && <span className="mot-destination-tag-drawn"><span>{Array.from(city).slice(0, 3).join('').toLocaleUpperCase()}</span></span>}
+    {hasArt && <img src={row!.tagUrl!} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onLoad={() => setArt('loaded')} onError={() => setArt('failed')} />}</span>;
 }
 /** Marks the part of `text` that the folded query matched, so Donostia or "sebastian" shows why a row is here. */
 function Hit({ text, query }: { text: string; query: string }) {
@@ -35,6 +38,8 @@ export function DestinationPicker({ kind = 'traveler', current, onSave, onClose,
   const showResults = !!query.trim(), activeOption = Math.min(active, results.length);
   const status = registryStatus ?? (registry.length ? 'ready' : 'unavailable');
   const countryResults = countryChoices(countryQuery);
+  // Cities with FCC tag art lead the wall; the sort is stable, so each group stays alphabetical.
+  const wall = [...registry].sort((a, b) => Number(!a.tagUrl) - Number(!b.tagUrl)), withArt = registry.filter(row => row.tagUrl).length;
   useEffect(() => { if (step === 'city') search.current?.focus(); else if (step === 'country') countrySearch.current?.focus(); else preview.current?.focus(); }, [step]);
   useEffect(()=>{if(step==='city'&&showResults)document.getElementById(`${listId}-${activeOption}`)?.scrollIntoView({block:'nearest'});},[step,showResults,listId,activeOption]);
   const chooseCity = (row: DestinationRow) => { setSelection({ city: row.name, countryCode: row.countryCode, destination: row }); setError(''); setStep('preview'); };
@@ -56,7 +61,7 @@ export function DestinationPicker({ kind = 'traveler', current, onSave, onClose,
       <div className="mot-destination-body">
         {step === 'city' ? <>
           {current && <p className="mot-destination-muted">Currently {current.city}{current.countryCode ? `, ${countryName(current.countryCode)}` : ''}. Your board title stays “{current.title}”.</p>}
-          <label className="mot-destination-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><circle cx="10" cy="10" r="6" /><path d="m15 15 5 5" /></svg><span className="mot-destination-sr">Destination city</span>
+          <label className="mot-destination-search"><SearchIcon /><span className="mot-destination-sr">Destination city</span>
             <input ref={search} type="search" value={query} maxLength={120} autoComplete="off" placeholder="City, or another name for it" role="combobox" aria-expanded={showResults} aria-controls={showResults ? listId : undefined} aria-activedescendant={showResults ? `${listId}-${activeOption}` : undefined}
               onChange={event => { setQuery(event.target.value); setActive(0); }} onKeyDown={event => {
                 if (!showResults) return;
@@ -72,13 +77,13 @@ export function DestinationPicker({ kind = 'traveler', current, onSave, onClose,
               <Tag row={row} city={row.name} /><span><strong><Hit text={row.name} query={query} /></strong><small>{countryName(row.countryCode)}{via && <> · also <Hit text={via} query={query} /></>}</small></span><span className="mot-destination-result-meta">{row.artworkCount === undefined ? 'Choose →' : row.artworkCount ? `${row.artworkCount} FCC illustrations` : 'No FCC art yet'}</span>
             </button></li>)}
             <li role="none"><button type="button" id={`${listId}-${results.length}`} className="mot-destination-result typed" role="option" aria-selected={activeOption === results.length} tabIndex={-1} onClick={chooseTyped}><Tag city={query.trim()} /><span><strong>Use “{query.trim()}” as you typed it</strong><small>Choose its country next. We won’t guess.</small></span><span className="mot-destination-result-meta">Your own city</span></button></li>
-          </ul> : registry.length ? <div><p className="mot-destination-label">Or pick a tag</p><div className="mot-destination-tagwall" aria-label="Destination luggage tags">{registry.slice(0, wallLimit).map(row => <button type="button" key={row.id} aria-label={`Choose ${row.name}, ${countryName(row.countryCode)}`} onClick={() => chooseCity(row)}><Tag row={row} city={row.name} /><span>{row.name}</span><small>{countryName(row.countryCode)}</small></button>)}</div>{registry.length > wallLimit && <button type="button" className="mot-destination-text-button" onClick={() => setWallLimit(value => value + 24)}>Show more cities</button>}</div>
+          </ul> : registry.length ? <div><p className="mot-destination-label">Or pick a tag{withArt ? ` · ${withArt} FCC cities have one` : ''}</p><div className="mot-destination-tagwall" aria-label="Destination luggage tags">{wall.slice(0, wallLimit).map(row => <button type="button" key={row.id} aria-label={`Choose ${row.name}, ${countryName(row.countryCode)}`} onClick={() => chooseCity(row)}><Tag row={row} city={row.name} /><span>{row.name}</span><small>{countryName(row.countryCode)}</small></button>)}</div>{registry.length > wallLimit && <button type="button" className="mot-destination-text-button" onClick={() => setWallLimit(value => value + 24)}>Show more cities</button>}</div>
             : <div className="mot-destination-waiting"><Tag city="?" /><p>Every trip starts somewhere.</p><span>Type a city above. Choose its country by name next.</span></div>}
           <p className="mot-destination-muted">A new trip starts empty. Choosing a destination never adds sample cards.</p>
         </> : step === 'country' && selection ? <>
           <div className="mot-destination-preview"><div className="mot-destination-who"><Tag city={selection.city} /><div><h3>{selection.city}</h3><p>Kept exactly as you typed it.</p></div></div></div>
           <div><h3 className="mot-destination-question">Which country is {selection.city} in?</h3><p className="mot-destination-muted">You choose. A city name or picture is not evidence of its country.</p></div>
-          <label className="mot-destination-search"><span className="mot-destination-sr">Country</span><input ref={countrySearch} type="search" placeholder="Search countries by name" value={countryQuery} onChange={event => setCountryQuery(event.target.value)} /></label>
+          <label className="mot-destination-search"><SearchIcon /><span className="mot-destination-sr">Country</span><input ref={countrySearch} type="search" placeholder="Search countries by name" value={countryQuery} onChange={event => setCountryQuery(event.target.value)} /></label>
           <div className="mot-destination-countries" role="group" aria-label="Countries">{countryResults.slice(0, 18).map(country => <button type="button" key={country.code} onClick={() => chooseCountry(country.code)}>{country.name}</button>)}</div>
           <p className="mot-destination-muted">{countryResults.length > 18 ? `${countryResults.length - 18} more countries · keep typing to narrow the list.` : !countryResults.length ? 'No country matches. Search its full name.' : 'Time zone stays unknown unless FCC supplies an explicit city entry.'}</p>
         </> : selection ? <>

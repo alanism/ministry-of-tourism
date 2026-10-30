@@ -1,13 +1,15 @@
 /* MOT-77: the reference's luggage tags, explicit country question and empty-board preview. */
-.mot-dialog:has(.mot-destination) { width: min(640px, calc(100vw - 48px)); height: min(760px, calc(100dvh - 48px)); }
+/* Top-anchored and only as tall as its content, so the search field stays put while results shrink the dialog. */
+.mot-dialog:has(.mot-destination) { --mot-destination-h: min(760px, calc(100dvh - 48px)); width: min(640px, calc(100vw - 48px)); height: fit-content; max-height: var(--mot-destination-h); margin: max(24px, 8dvh) auto auto; }
 .mot-dialog:has(.mot-destination)::backdrop { background: rgba(250,247,242,.6); backdrop-filter: blur(3px); }
-.mot-destination.m-panel { width: 100%; max-width: none; height: 100%; min-height: 0; margin: 0; padding: 0; overflow: hidden; background: var(--m-surface); border-radius: 16px; }
-.mot-destination form { display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 0; height: 100%; min-width: 0; }
+.mot-destination.m-panel { width: 100%; max-width: none; height: auto; max-height: var(--mot-destination-h); min-height: 0; margin: 0; padding: 0; overflow: hidden; background: var(--m-surface); border-radius: 16px; }
+.mot-destination form { display: flex; flex-direction: column; gap: 0; max-height: var(--mot-destination-h); min-width: 0; }
+.mot-destination-heading, .mot-destination-foot { flex: none; }
 .mot-destination-heading { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 24px; border-bottom: 1px solid var(--m-line); }
 .mot-destination-heading h2 { flex: 1; margin: 0; font: 600 19px/24px 'IBM Plex Serif',Georgia,serif; }
 .mot-destination-close { border: 0; background: transparent; color: var(--m-ink-2); border-radius: 8px; width: 44px; height: 44px; font: 24px/28px var(--m-sans); cursor: pointer; }
 .mot-destination-close:hover { background: var(--m-wash); }
-.mot-destination-body { display: grid; align-content: start; gap: 24px; overflow: auto; min-height: 0; padding: 24px; }
+.mot-destination-body { display: grid; align-content: start; gap: 24px; flex: 1 1 auto; overflow: auto; min-height: 0; padding: 24px; }
 .mot-destination-body > * { min-width: 0; }
 .mot-destination p { margin: 0; }
 .mot-destination :is(b,strong) { font-weight: 600; }
@@ -26,11 +28,14 @@
 .mot-destination-tagwall button:hover { background: var(--m-wash); }
 .mot-destination-tagwall button > span:not(.mot-destination-tag) { font: 600 12px/16px var(--m-sans); text-align: center; overflow-wrap: anywhere; }
 .mot-destination-tagwall small { font: 12px/16px var(--m-sans); color: var(--m-ink-2); text-align: center; }
+.mot-destination-tag > * { grid-area: 1 / 1; }
+.mot-destination-tag.loading img { opacity: 0; }
+.mot-destination-tag.loading .mot-destination-tag-drawn { opacity: .4; }
 .mot-destination-tag { display: grid; place-items: center; width: 64px; height: 64px; flex: none; transform: rotate(-5deg); transition: transform .2s ease; }
 .mot-destination-tagwall button:nth-child(3n+1) .mot-destination-tag { transform: rotate(5deg); }
 .mot-destination-tagwall button:nth-child(3n+2) .mot-destination-tag { transform: rotate(-2deg); }
 .mot-destination-tagwall button:hover .mot-destination-tag { transform: rotate(0); }
-.mot-destination-tag img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px #0003); }
+.mot-destination-tag img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px #0003); transition: opacity .2s ease; }
 .mot-destination-tag-drawn { position: relative; display: grid; place-items: center; width: 44px; height: 56px; padding-top: 10px; border: 1.5px solid var(--m-ink); border-radius: 7px 7px 9px 9px; background: var(--m-paper); font: 600 12px/1 var(--m-mono); }
 .mot-destination-tag-drawn::before { content: ''; position: absolute; top: 5px; left: calc(50% - 4px); width: 8px; height: 8px; border: 1.5px solid var(--m-ink); border-radius: 50%; }
 .mot-destination-results { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
@@ -74,7 +79,8 @@
 .mot-destination .m-btn.primary { background: var(--m-red); border-color: var(--m-red); color: #ffffff; }
 .mot-destination-error { color: var(--m-red); font-size: 12px; }
 @media(max-width:760px) {
-  .mot-dialog:has(.mot-destination) { width: 100vw; height: calc(100dvh - 56px); margin: 56px 0 0; border-radius: 16px 16px 0 0; }
+  .mot-dialog:has(.mot-destination) { --mot-destination-h: calc(100dvh - 56px); width: 100vw; height: var(--mot-destination-h); margin: 56px 0 0; border-radius: 16px 16px 0 0; }
+  .mot-destination.m-panel, .mot-destination form { height: 100%; }
   .mot-destination.m-panel { border-radius: 16px 16px 0 0; border: 0; }
   .mot-destination-heading { padding: 10px 12px 10px 16px; }
   .mot-destination-body { padding: 16px; }
@@ -90,4 +96,4 @@
   .mot-destination-foot { padding-bottom: max(12px,env(safe-area-inset-bottom)); }
   .mot-destination-foot > span { max-width: 26ch; }
 }
-@media(prefers-reduced-motion:reduce) { .mot-destination-tag { transition: none; } }
+@media(prefers-reduced-motion:reduce) { .mot-destination-tag, .mot-destination-tag img { transition: none; } }
