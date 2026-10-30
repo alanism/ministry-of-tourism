@@ -3,7 +3,7 @@
   "styles": [
     {
       "id": "fcc-editorial",
-      "label": "FCC Â· Fashion, travel & lifestyle",
+      "label": "FCC · Fashion, travel & lifestyle",
       "manifest": "/artwork/fcc/manifest.json",
       "credit": "Foreign Clubbers Correspondence",
       "rightsStatus": "unknown"
