@@ -175,15 +175,22 @@ export function createFccAdapter(options: FccAdapterOptions) {
       return { status, value: structuredClone(entry.almanac), retrievedAt: entry.retrievedAt, sourceVersion: `sha256:${hash}`, ...(error ? { error } : {}) };
     }
     if (request.offline) return previous ? almanacResult(previous, 'cached') : unavailable(err('offline', 'No cached Almanac snapshot is available for this city.'));
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
     const controller = new AbortController(), cancel = () => controller.abort();
     request.signal?.addEventListener('abort', cancel, { once: true });
     if (request.signal?.aborted) cancel();
     let timedOut = false, failure = err('network', 'The Almanac could not be reached. Retry or use the dated cache.');
     const timer = setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, Math.min(options.timeoutMs ?? 10000, 30000)));
+    let interrupt!: () => void;
+    const interrupted = new Promise<never>((_resolve, reject) => { interrupt = () => reject(new Error('cancelled')); controller.signal.addEventListener('abort', interrupt, { once: true }); });
     try {
       for (let attempt = 0; attempt <= retries; attempt++) {
         try {
-          const response = await fetcher(url, { signal: controller.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} });
+          const transport = fetcher(url, { signal: controller.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} }).then(response => {
+            if (controller.signal.aborted) { void response.body?.cancel().catch(() => {}); throw new Error('cancelled'); }
+            return response;
+          });
+          const response = await Promise.race([transport, interrupted]);
           if (controller.signal.aborted) break;
           if (response.status === 304 && previous) return almanacResult(previous, 'cached');
           if (!response.ok) {
@@ -192,7 +199,7 @@ export function createFccAdapter(options: FccAdapterOptions) {
             break;
           }
           let raw: unknown;
-          try { raw = await response.json(); } catch { failure = err('invalid_feed', 'The Almanac response is unreadable. The previous snapshot was kept.'); break; }
+          try { raw = await Promise.race([response.json(), interrupted]); } catch { if (controller.signal.aborted) throw new Error('cancelled'); failure = err('invalid_feed', 'The Almanac response is unreadable. The previous snapshot was kept.'); break; }
           const parsed = fccAlmanacSnapshotSchema.safeParse(raw);
           if (!parsed.success || parsed.data.slug !== cityId) { failure = err('invalid_feed', 'FCC returned an invalid or different-city Almanac snapshot. The previous snapshot was kept.'); break; }
           if (controller.signal.aborted) break;
@@ -204,10 +211,10 @@ export function createFccAdapter(options: FccAdapterOptions) {
           if (controller.signal.aborted) break;
         }
       }
-    } finally { clearTimeout(timer); request.signal?.removeEventListener('abort', cancel); }
+    } finally { clearTimeout(timer); request.signal?.removeEventListener('abort', cancel); controller.signal.removeEventListener('abort', interrupt); }
     if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
     if (timedOut) failure = err('network', 'Almanac loading timed out. Retry or use the dated cache.');
-    options.onDiagnostic?.({ operation: 'fcc-almanac-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) });
+    try { options.onDiagnostic?.({ operation: 'fcc-almanac-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) }); } catch { /* Diagnostics cannot replace a typed source result or discard a dated copy. */ }
     return previous ? almanacResult(previous, 'stale', failure) : unavailable(failure);
   }
   return {
