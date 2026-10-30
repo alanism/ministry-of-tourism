@@ -59,3 +59,10 @@ export * from './trip/schedule-proposal.ts';
 export * from './trip/booking-attention.ts';
 export * from './trip/group-workspace.ts';
 export * from './trip/group-plan-review.ts';
+export * from './trip/guidance.ts';
+export * from './trip/workflow-routing.ts';
+export * from './trip/keepsake-workflow.ts';
+export * from './trip/agent-context.ts';
+export * from './trip/trip-adaptation.ts';
+
+export * from './trip/group-routing.ts';

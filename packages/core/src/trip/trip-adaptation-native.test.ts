@@ -1,0 +1,21 @@
+import {expect,it} from 'vitest';
+import * as core from '../index.ts';
+import {wp9Trip,wp9Person} from './wp9-test-fixtures.ts';
+it('uses real durations/rest/travel for only affected activities and preserves held bookings, preparation, private data and other days',async()=>{
+ const{session,ids}=wp9Trip(),before=core.readAllCards(session.parts),bytes=core.encodeTrip(session.doc),plan=await core.planTripAdaptation(session,{kind:'delay',day:'2026-11-01',until:'13:00'},{ownerView:true});expect(core.encodeTrip(session.doc)).toEqual(bytes);expect(plan.changes.map(c=>[c.title,c.to])).toEqual([['Museum','13:00'],['Lunch','14:15']]);expect(plan.assumptions.join(' ')).not.toMatch(/assumed|60 minutes/i);expect(plan.alternatives.some(a=>a.id===ids.Boat)).toBe(false);expect(plan.alternatives.some(a=>a.id===ids.Garden)).toBe(true);
+ core.applyTripAdaptation(session,wp9Person,plan,true);expect(core.readCard(session.parts,ids.Dinner!)?.time).toBe('18:00');expect(core.readCard(session.parts,ids['Other day']!)?.time).toBe('09:00');expect(core.readCard(session.parts,ids['PRIVATE note']!)?.body).toBe('PRIVATE source');expect(core.undoProposal(session,plan.proposal!.id)).toBe(true);expect(core.readAllCards(session.parts)).toEqual(before);
+});
+it('returns useful uncertainty without fabricated duration/party or private planning access on the agent default',async()=>{
+ const{session,planning}=wp9Trip(),agent=await core.planTripAdaptation(session,{kind:'delay',day:'2026-11-01',until:'13:00'});expect(agent.proposal).toBeNull();expect(JSON.stringify(agent)).not.toMatch(/PRIVATE/);
+ planning.activities[0]!.duration_minutes={...planning.activities[0]!.duration_minutes,value:null,status:'unknown'};session.execute(wp9Person,'trip_group_planning_set',{planning,policy:core.DEFAULT_GROUP_POLICY});const plan=await core.planTripAdaptation(session,{kind:'delay',day:'2026-11-01',until:'13:00'},{ownerView:true});expect(plan.unknowns.join(' ')).toMatch(/duration/i);expect(plan.changes.some(c=>c.title==='Museum')).toBe(false);
+});
+it('uses real denied/access/split constraints and never moves or cancels a conflicting booked activity',async()=>{
+ const{session,ids}=wp9Trip(),response=await core.createGroupResponse({version:1,trip_id:'trip',proposal_version:1,round_id:'venues',household_id:'b',response_revision:1,rankings:[],stamps:[{option_id:ids.Museum!,value:'denied'}],shared_note:'PRIVATE concern',constraints:[],responded_at:'2026-10-31T00:00:00Z'});await core.mergeGroupResponseFiles(session,wp9Person,[new TextEncoder().encode(JSON.stringify(response))],['b']);const denied=await core.planTripAdaptation(session,{kind:'delay',day:'2026-11-01',until:'13:00'},{ownerView:true});expect(denied.changes.some(c=>c.id===ids.Museum&&c.to!=='flexible (no day)')).toBe(false);
+ const booked=await core.planTripAdaptation(session,{kind:'delay',day:'2026-11-01',until:'20:00'},{ownerView:true});expect(booked.proposal).toBeNull();expect(booked.conflicts.some(c=>c.id===ids.Dinner)).toBe(true);expect(core.readCard(session.parts,ids.Dinner!)?.booking?.status).toBe('held');
+});
+it('low energy proposes local flexible cards without touching bookings; weather without facts changes nothing',async()=>{
+ const{session,ids}=wp9Trip(),energy=await core.planTripAdaptation(session,{kind:'energy',day:'2026-11-01',level:'low'},{ownerView:true});expect(energy.changes.every(c=>c.id!==ids.Dinner)).toBe(true);expect(energy.changes.length).toBeGreaterThan(0);const weather=await core.planTripAdaptation(session,{kind:'weather',day:'2026-11-01'},{ownerView:true});expect(weather.proposal).toBeNull();expect(weather.unknowns.join(' ')).toMatch(/weather|outdoor/i);
+});
+it('refuses stale or denied-persistence application, and next step excludes preparation tasks',async()=>{
+ const{session}=wp9Trip(),next=core.nextStep(session,new Date('2026-11-01T07:00:00+07:00'));expect(next?.card.title).toBe('Museum');expect(next?.preparation.join(' ')).toContain('Pack preparation');const plan=await core.planTripAdaptation(session,{kind:'delay',day:'2026-11-01',until:'13:00'},{ownerView:true});session.execute(wp9Person,'trip_card_create',{kind:'note',title:'Unrelated edit'});const before=core.encodeTrip(session.doc);expect(()=>core.applyTripAdaptation(session,wp9Person,plan,true)).toThrow(/stale|changed/i);expect(core.encodeTrip(session.doc)).toEqual(before);
+});

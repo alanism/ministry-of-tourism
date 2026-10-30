@@ -6,6 +6,7 @@ import { coverAssetId, useAssetUrl } from './trip-assets';
 import { cityLabel } from './sample';
 import type { SavedStatus } from './trip-store';
 import { recordOutcome } from './metrics';
+export {MemoryChoice} from './MemoryChoice';
 
 type Template = 'postcard' | 'memory';
 const TEMPLATES: { id: Template; name: string; hint: string; icon: IconName }[] = [

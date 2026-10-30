@@ -1,3 +1,4 @@
+import {agentGuidanceSchema} from './guidance.ts';
 // Safe import (MOT-31): every archive is hostile until proven otherwise.
 import { unzipSync, strFromU8 } from 'fflate';
 import * as Y from 'yjs';
@@ -71,7 +72,7 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
   if(readable){
     const raw=JSON.parse(strFromU8(readable));
     if(manifest.version===1 && raw.meta?.schemaVersion===1)raw.meta.schemaVersion=2;
-    const parsed=z.object({meta:tripMetaSchema,cards:z.array(tripCardSchema),presentations:z.array(presentationSchema).optional()}).strict().safeParse(raw);
+    const parsed=z.object({meta:tripMetaSchema,cards:z.array(tripCardSchema),presentations:z.array(presentationSchema).optional(),agent_guidance:agentGuidanceSchema.optional()}).strict().safeParse(raw);
     if(!parsed.success)fail('Readable trip has unknown or unsupported schema fields');
   }
   const srcParts=tripParts(source);
@@ -86,7 +87,7 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
   // Imported metadata cannot grant tools (MOT-31): Autopilot never arrives switched on.
   const agentMode = meta.agentMode === 'autopilot' ? 'together' : meta.agentMode;
   if(meta.magazine?.apparelAssetIds.some(id=>!assets.has(id)||!readAsset(srcParts,id)?.apparel))fail('Magazine preference references missing apparel');
-  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,newId: options.newId });
+  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,memoryWorkflow:meta.memoryWorkflow,newId: options.newId });
   const dstParts = tripParts(fresh);
   fresh.transact(() => {
     for(const [key,value] of srcParts.clock)if(key.startsWith('groupResponse:'))dstParts.clock.set(key,structuredClone(value));

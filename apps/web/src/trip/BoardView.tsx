@@ -8,8 +8,9 @@ import { attachPhoto, coverAssetId, pickPhoto, useAssetUrl } from './trip-assets
 import { HOST_LANES, PROVENANCE_LABEL, STAGE_NAME, dayLabel, longDayLabel } from './sample';
 import { recordOutcome } from './metrics';
 import type { Ghost } from './ProposalReview';
+import {AdaptPanel,NextStepPanel} from './TripAdjustment';
 
-export interface ViewProps { session: TripSession; actor: Actor; tick: number; refresh: () => void; notify: (m: string) => void; updatedSources?:ReadonlySet<string>; }
+export interface ViewProps { session: TripSession; actor: Actor; tick: number; refresh: () => void; notify: (m: string) => void; updatedSources?:ReadonlySet<string>; whenSaved?:()=>Promise<void>; }
 
 const CARD_TYPE = 'application/x-mot-card';
 const SCOPE_LABEL: Record<Scope, string> = { guide: 'Guide', stay: 'Stay only', private: 'Private' };
@@ -258,7 +259,7 @@ export function BoardView({ session, actor, tick, refresh, notify, header, top, 
   );
 }
 
-export function TodayView({ session, actor, tick, refresh, notify,updatedSources }: ViewProps) {
+export function TodayView({ session, actor, tick, refresh, notify,updatedSources,whenSaved }: ViewProps) {
   const attentionTasks=readAllCards(session.parts).filter(c=>c.kind==='task'&&c.status!=='done'&&c.bookingAttention);
   const attentionPanel=attentionTasks.length?<section className="mot-group-attention" aria-label="Booking attention tasks"><h3>Booking attention · separate from activity dates</h3>{attentionTasks.map(card=>{const a=bookingAttention(card.bookingAttention,new Date().toISOString());return <article key={card.id}><strong>{card.title}</strong><p>{a.urgency} · {a.important?'important':'optional'} · {a.reason}</p><p>Activity: {a.activity_start??'unknown'} · booking deadline: {a.deadline??'unknown'}</p><small>Source: {a.source} · {a.source_date??'date unknown'} · cost {a.cost_confirmed?'confirmed':'unconfirmed'}</small><button type="button" className="m-btn small" onClick={()=>{session.execute(actor,'trip_task_set_status',{id:card.id,status:'done'});refresh();}}>Mark attention complete</button></article>;})}</section>:null;
 
@@ -281,6 +282,7 @@ export function TodayView({ session, actor, tick, refresh, notify,updatedSources
     <section className="m-panel mot-day" aria-label="Today">
       {attentionPanel}
       <p className="m-eyebrow">Today · {dayLabel(today)} · {meta.timeZone.replace('_', ' ')} time</p>
+      <NextStepPanel session={session}/>
       <h2>{shownDay ? longDayLabel(shownDay) : 'Nothing planned yet'}</h2>
       {next && <p className="mot-day-note m-muted">Nothing scheduled today. Here's what's next on your trip.</p>}
       {shown.length > 0 ? (
@@ -295,6 +297,7 @@ export function TodayView({ session, actor, tick, refresh, notify,updatedSources
       ) : (
         <p className="m-muted" style={{ marginTop: 10 }}>Give a card a day from its ⋮ menu (Edit), and it shows up here on that day in the trip's time zone.</p>
       )}
+      {shownDay&&<AdaptPanel key={shownDay} session={session} actor={actor} day={shownDay} tick={tick} refresh={refresh} notify={notify} whenSaved={whenSaved}/>}
       {upcoming.length > 0 && (
         <>
           <hr className="m-rule" style={{ margin: '26px 0 6px' }} />

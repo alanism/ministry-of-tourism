@@ -1,3 +1,4 @@
+import {agentGuidance,startHereMarkdown} from './guidance.ts';
 // Trip package export (MOT-30). ZIP via fflate: small, maintained, no native deps.
 import { zipSync, strToU8 } from 'fflate';
 import * as Y from 'yjs';
@@ -32,11 +33,12 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
   const apparel=options.selectedCardIds?[]:readMagazineApparel(parts,personal);
   const preference=sourceMeta.magazine;
   const magazine=preference&&apparel.some(asset=>asset.id===preference.wornTeeAssetId)?{...preference,apparelAssetIds:apparel.map(asset=>asset.id)}:undefined;
-  const {magazine:omitted,groupPreferences,groupBallots,groupWorkspace,...plainMeta}=sourceMeta;
-  const meta={...plainMeta,...(personal&&groupPreferences?{groupPreferences}:{}),...(personal&&groupBallots?{groupBallots}:{}),...(personal&&groupWorkspace?{groupWorkspace}:{}),...(magazine?{magazine}:{})};
+  const {magazine:omitted,groupPreferences,groupBallots,groupWorkspace,memoryWorkflow,...plainMeta}=sourceMeta;
   const included=(scope:string)=>personal || (variant==='guide'?scope==='guide':scope!=='private');
   const cards = all.filter(c=>included(c.scope) && (!options.selectedCardIds || options.selectedCardIds.has(c.id)));
   const cardIds=new Set(cards.map(c=>c.id));
+  const retainedReactions=Object.fromEntries(Object.entries(memoryWorkflow?.reactions??{}).filter(([id])=>cardIds.has(id)));
+  const meta={...plainMeta,...(personal&&groupPreferences?{groupPreferences}:{}),...(personal&&groupBallots?{groupBallots}:{}),...(personal&&groupWorkspace?{groupWorkspace}:{}),...(magazine?{magazine}:{}),...(memoryWorkflow&&Object.keys(retainedReactions).length?{memoryWorkflow:{version:1 as const,reactions:retainedReactions}}:{})};
   const presentations=readPresentations(parts).filter(p=>included(presentationScope(parts,p)) && (!p.cardId || cardIds.has(p.cardId)) && (!options.selectedCardIds || !!p.cardId));
   const wantedAssets = new Set([...cards.flatMap((c) => c.assetIds),...presentations.flatMap(p=>p.assetId?[p.assetId]:[]),...apparel.map(asset=>asset.id)]);
   const assets: PackageAsset[] = [];
@@ -58,10 +60,10 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
     files[file] = bytes;
   }
   const manifest = { format: TRIP_PACKAGE_FORMAT, version: TRIP_PACKAGE_VERSION, boardId: meta.boardId, created: options.created ?? new Date().toISOString(), assets };
-  const readable = { meta, cards, presentations };
+  const readable = { meta, cards, presentations, agent_guidance:agentGuidance() };
   files['manifest.json'] = strToU8(JSON.stringify(manifest, null, 2));
   // The document must contain only exported cards: encoding the live doc would leak private cards.
-  const filtered = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, boardId: meta.boardId, dates: meta.dates, party: meta.party, agentMode: meta.agentMode, lineage: meta.lineage,magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace });
+  const filtered = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, boardId: meta.boardId, dates: meta.dates, party: meta.party, agentMode: meta.agentMode, lineage: meta.lineage,magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,memoryWorkflow:meta.memoryWorkflow });
   const filteredParts = tripParts(filtered);
   filtered.transact(() => {
     if(personal)for(const [key,value] of parts.clock)if(key.startsWith('groupResponse:'))filteredParts.clock.set(key,structuredClone(value));
@@ -74,6 +76,8 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
   filtered.destroy();
   files['trip.json'] = strToU8(JSON.stringify(readable, null, 2));
   files['layout.json'] = strToU8(JSON.stringify({cards:cards.map((c) => ({ id: c.id, stage: c.stage, x: c.x, y: c.y })),presentations}, null, 2));
+  files['guidance.json']=strToU8(JSON.stringify(agentGuidance(),null,2));
+  files['START-HERE.md']=strToU8(startHereMarkdown(Object.keys(files).concat('START-HERE.md')));
   const values=Object.values(files);
   if(values.some(bytes=>bytes.length>TRIP_PACKAGE_LIMITS.fileBytes)||values.reduce((size,bytes)=>size+bytes.length,0)>TRIP_PACKAGE_LIMITS.totalBytes)throw new Error('This package exceeds its portable import limit (10 MiB per file, 50 MiB total); nothing was exported');
   const zip=zipSync(files,{level:6});

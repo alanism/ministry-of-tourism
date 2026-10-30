@@ -17,3 +17,13 @@ The FCC adapter reads one selected city and keeps a dated last-known-good snapsh
 Muse is unavailable until the owner configures the server-held Standard-mode model and privacy settings. Manual board, art and export work independently. Only a deliberate proposal request sends selected non-private text, the prompt and selected-city FCC article data. Image bytes are not sent. See `/docs` in the source checkout for the runtime and release instructions; no credentials belong in this page, a browser setting or source control.
 
 An exported receipt establishes bytes and download availability. It does not establish durable saving, delivery to a recipient, a live provider round trip or a production deployment.
+
+## Workflow guidance
+
+`context()` exposes non-private board facts. `route(request, {answers, inferred})` chooses the smallest workflow without reading native private replies. `await routeGroup(request, {ledger, answers, inferred})` validates deliberately shared response envelopes and reports current coverage; this is not a feasibility check. Rename/photo/note/keepsake routes bypass group work.
+
+`capabilities().guidance` reports guide ID, version and the current phase hint. `guidance(versionSeen)` returns essentials only when changed. [Guide for your AI](/guides/trip-best-practices.md) is served by ordinary GET. The canonical deployed guide URL remains null until verified; the relative path works on the app origin.
+
+`nextStep()` reports the next visible activity with source/time confidence. `await proposeAdaptation(change, {configuration, ledger, planning})` checks explicitly supplied WP8 facts; it never applies, books or cancels. Owner Today reads the native planning workspace and offers narrow Apply/Undo. Missing facts produce tentative results or a useful no-change response.
+
+`memories(reactions?)` offers permitted photos/notes and existing credited art without planning questions. Memory reactions are owner actions; app pages show actual photos. Native ZIP packages contain START-HERE.md, guidance.json and trip.json agent_guidance with matching versions, plus permitted original media and arrangement. A JSON-only handoff embeds guidance and does not pretend to contain separate media files.

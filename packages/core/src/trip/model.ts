@@ -50,6 +50,7 @@ export interface CreateTripOptions {
   groupPreferences?: TripMeta['groupPreferences'];
   groupBallots?: TripMeta['groupBallots'];
   groupWorkspace?: TripMeta['groupWorkspace'];
+  memoryWorkflow?:TripMeta['memoryWorkflow'];
   newId?: () => string;
 }
 
@@ -78,6 +79,7 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     groupPreferences: options.groupPreferences,
     groupBallots: options.groupBallots,
     groupWorkspace: options.groupWorkspace,
+    memoryWorkflow:options.memoryWorkflow,
   });
   const parts = tripParts(doc);
   doc.transact(() => {

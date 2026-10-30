@@ -515,3 +515,44 @@ textarea.m-field { resize: vertical; line-height: var(--lh-2); }
 .mot-next { position: relative; }
 .mot-next-label { position: absolute; top: -12px; left: var(--u); padding: 4px 12px; background: var(--m-red); color: #fff; border-radius: 6px; transform: rotate(-2deg); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14); }
 @media (max-width: 1100px) { .mot-next-label { left: 16px; } .mot-next-when { padding-top: 8px; } }
+
+/* WP9: below-board guidance (MOT-116), Today next step and local adjustment (MOT-114), memory choice (MOT-115). */
+.mot-guidance-wrap { flex: none; padding: 0 var(--u) calc(var(--u) / 2); }
+/* The guide sits below the board and never takes height from it: the board keeps the screen under the 72px header. */
+@media (min-width: 1101px) { .mot-work.view-board:has(+ .mot-guidance-wrap) { flex: 0 0 calc(100% - 72px); } }
+.mot-guidance { padding: 0; font: 400 var(--t-2)/var(--lh-2) var(--m-sans); color: var(--m-ink-2); }
+.mot-guidance > h2 { margin: 0 0 4px; color: var(--m-ink); }
+.mot-guidance-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(var(--u) / 2); }
+.mot-guidance-step { border-top: 1px solid var(--m-line-2); }
+.mot-guidance-step summary { min-height: 44px; padding: 10px 0; cursor: pointer; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.mot-guidance-step summary strong { font-weight: 600; color: var(--m-ink); }
+.mot-guidance-step summary span { flex-basis: 100%; }
+.mot-guidance-now { font: 400 var(--t-1)/var(--lh-1) var(--m-mono); font-style: normal; text-transform: uppercase; letter-spacing: 0.08em; color: var(--m-guide-ink); }
+.mot-guidance-step ul { margin: 0 0 12px; padding-left: 18px; display: grid; gap: 6px; }
+.mot-guidance-ai { margin: 12px 0 0; min-height: 44px; display: flex; align-items: center; flex-wrap: wrap; gap: 0 6px; }
+.mot-guidance-ai a { color: var(--m-ink); font-weight: 600; min-height: 44px; display: inline-flex; align-items: center; }
+.mot-guidance-ai span { color: var(--m-ink-3); }
+.mot-step { margin-bottom: var(--u); padding-bottom: calc(var(--u) / 2); border-bottom: 1px solid var(--m-line); display: grid; gap: 8px; }
+.mot-step h3 { margin: 0; font: 600 var(--t-3)/var(--lh-3) var(--m-sans); }
+.mot-step ul, .mot-adapt ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.mot-adapt { margin-top: var(--u); display: grid; gap: 12px; }
+.mot-adapt form { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.mot-adapt label { display: grid; gap: 4px; font: 400 var(--t-1)/var(--lh-1) var(--m-mono); }
+.mot-adapt-result { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--m-line); border-radius: 8px; background: var(--m-surface); }
+.mot-memories { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--u); padding: var(--u); }
+.mot-memory-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.mot-memory { display: grid; gap: 8px; align-content: start; padding: 12px; border: 1px solid var(--m-line); border-radius: 8px; background: var(--m-surface); }
+.mot-memory img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 4px; }
+.mot-memory p { margin: 0; }
+.mot-memory [role=group] { display: flex; gap: 4px; flex-wrap: wrap; }
+.mot-memory [aria-pressed=true] { background: var(--m-ink); color: var(--m-surface); }
+.mot-memory-side { display: grid; gap: 12px; align-content: start; }
+.mot-memory-side ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+@media (max-width: 767px) {
+  .mot-guidance-wrap { padding: 0 16px 12px; }
+  .mot-guidance-steps { grid-template-columns: 1fr; gap: 0; }
+  .mot-memories { grid-template-columns: 1fr; padding: 16px; }
+}
+
+.mot-memory-main,.mot-memory-side{padding:24px;min-width:0;overflow-wrap:anywhere}.mot-memory-side img{max-width:100%;max-height:180px;object-fit:contain}.mot-memory-preview{grid-column:1/-1;display:grid;gap:12px;min-width:0}.mot-memory-preview iframe{width:100%;height:700px;border:1px solid var(--m-line);background:white}.mot-memory-list{grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr))}.mot-memory-main>.m-btn{margin-top:12px}.mot-adapt{overflow-wrap:anywhere}.mot-adapt-ack{display:flex!important;align-items:center;min-height:44px}.mot-adapt input[type=checkbox]{min-width:24px;min-height:24px}.mot-adapt input[type=time]{min-height:44px;max-width:100%}
+@media(max-width:767px){.mot-memory-main,.mot-memory-side{padding:16px}.mot-adapt form>label{width:100%}}

@@ -7,6 +7,7 @@ import { groupBallotsSchema } from './group-ballot.ts';
 import { groupPreferencesSchema } from './group-preferences.ts';
 
 export const bookingSchema=z.object({status:z.enum(['confirmed','held','not_booked']),reference:z.string().max(200).optional()}).strict();
+export const memoryWorkflowSchema=z.object({version:z.literal(1),reactions:z.record(z.string().min(1).max(200),z.enum(['keep','maybe','skip'])).refine(r=>Object.keys(r).length<=500,'At most 500 memory reactions')}).strict();
 export const TRIP_SCHEMA_VERSION = 2;
 export const STAGES = ['plan', 'prepare', 'arrive', 'explore', 'remember'] as const;
 export type Stage = (typeof STAGES)[number];
@@ -65,6 +66,7 @@ export const tripMetaSchema = z.object({
   groupPreferences: groupPreferencesSchema.optional(),
   groupBallots: groupBallotsSchema.optional(),
   groupWorkspace: groupWorkspaceSchema.optional(),
+  memoryWorkflow:memoryWorkflowSchema.optional(),
   lineage: z.object({ guideBoardId: id, copiedAt: z.string().min(1) }).optional(),
   magazine: z.object({wornTeeAssetId:id,apparelAssetIds:z.array(id).min(1).max(3).refine(ids=>new Set(ids).size===ids.length)}).strict()
     .refine(value=>value.apparelAssetIds.includes(value.wornTeeAssetId),'The chosen tee must be cached').optional(),

@@ -1,3 +1,5 @@
+import {TripGuidance} from './TripGuidance';
+import {tripPhase} from '@writers-board/core';
 // Trip shell, matched to the predicted builds: header pill nav, brief sidebar, lanes, Muse rail, review and keepsakes.
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { TripSession, createGuestCopy, importTripPackage, readAllCards, readTripMeta, tripParts, type Actor, type BoardKind, type FccCityContent } from '@writers-board/core';
@@ -6,7 +8,7 @@ import './integration.css';
 import { FirstScreen } from './FirstScreen.tsx';
 import { BoardView, MapView, TodayView } from './BoardView.tsx';
 import { ProposalReview, ghostCards, type PendingReview } from './ProposalReview.tsx';
-import { Keepsakes } from './Keepsakes.tsx';
+import { Keepsakes,MemoryChoice } from './Keepsakes.tsx';
 import { GuestCopyPanel } from './GuestCopyPanel.tsx';
 import { Diamond, FocusSheet, Icon, Logo, Menu, Toast, type MenuEntry } from './ui';
 import { STORAGE_ERROR_EVENT, STORAGE_STATUS_EVENT, forgetLastBoard, lastBoardId, listBoards, openTrip, type OpenTrip, type SavedStatus } from './trip-store.ts';
@@ -73,7 +75,7 @@ export function TripApp() {
   const [session, setSession] = useState<TripSession | null>(null);
   const [booting, setBooting] = useState(true);
   const [tab, setTab] = useState<Tab>('board');
-  const [keepsakeFormat,setKeepsakeFormat]=useState<'magazine'|'postcard'>('magazine');
+  const [keepsakeFormat,setKeepsakeFormat]=useState<'magazine'|'postcard'|'memories'>('memories');
   const [tick, setTick] = useState(0);
   const [toast, setToast] = useState<{ message: string; action?: { label: string; run: () => void } } | null>(null);
   const [lost, setLost] = useState(false);
@@ -157,6 +159,7 @@ export function TripApp() {
   const scopedContent=cityContent?.city.id===contentCity?cityContent:undefined,updatedSources=new Set(sourceState?.updatedKeys??[]);
   providers.current={fcc:!!scopedContent,muse:museAvailable};
   const saved = hasEphemeralAssets(session.doc)?'error':open.status();
+  const whenSaved=async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are still in this tab. Download a personal ZIP backup.');};
   const sample = isSample(meta.boardId);
   const host = meta.kind === 'host_guide';
   const boards = listBoards();
@@ -280,17 +283,18 @@ export function TripApp() {
       <input ref={fileRef} type="file" accept=".zip,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void onImport(f); }} />
 
       {tab === 'export' ? <ExportScreen key={meta.boardId} session={session} tick={tick} notify={notify} onExported={()=>open.markExported()} /> : tab === 'keepsakes' ? (
-        <div><nav className="mot-keepsake-formats" aria-label="Keepsake formats"><button type="button" className={`m-btn small${keepsakeFormat==='magazine'?' ink':''}`} aria-pressed={keepsakeFormat==='magazine'} onClick={()=>setKeepsakeFormat('magazine')}>Magazine</button><button type="button" className={`m-btn small${keepsakeFormat==='postcard'?' ink':''}`} aria-pressed={keepsakeFormat==='postcard'} onClick={()=>setKeepsakeFormat('postcard')}>Photo postcard</button></nav>{keepsakeFormat==='magazine'?<MagazineStudio session={session} tick={tick} onExport={()=>setTab('export')} />:<Keepsakes key={meta.boardId} session={session} tick={tick} saved={saved} onExport={() => setTab('export')} onBack={() => setTab('board')} notify={notify} />}</div>
+        <div><nav className="mot-keepsake-formats" aria-label="Keepsake formats"><button type="button" className={`m-btn small${keepsakeFormat==='memories'?' ink':''}`} aria-pressed={keepsakeFormat==='memories'} onClick={()=>setKeepsakeFormat('memories')}>Memories</button><button type="button" className={`m-btn small${keepsakeFormat==='memories'?<MemoryChoice key={meta.boardId} session={session} actor={YOU} tick={tick} saved={saved} notify={notify} refresh={refresh} whenSaved={whenSaved}/>:keepsakeFormat==='magazine'?' ink':''}`} aria-pressed={keepsakeFormat==='magazine'} onClick={()=>setKeepsakeFormat('magazine')}>Magazine</button><button type="button" className={`m-btn small${keepsakeFormat==='postcard'?' ink':''}`} aria-pressed={keepsakeFormat==='postcard'} onClick={()=>setKeepsakeFormat('postcard')}>Photo postcard</button></nav>{keepsakeFormat==='memories'?<MemoryChoice key={meta.boardId} session={session} actor={YOU} tick={tick} saved={saved} notify={notify} refresh={refresh} whenSaved={whenSaved}/>:keepsakeFormat==='magazine'?<MagazineStudio session={session} tick={tick} onExport={()=>setTab('export')} />:<Keepsakes key={meta.boardId} session={session} tick={tick} saved={saved} onExport={() => setTab('export')} onBack={() => setTab('board')} notify={notify} />}</div>
       ) : tab==='composition' ? <Composition session={session} actor={YOU} refresh={refresh} notify={notify} /> : tab==='fcc'?<FccBrowser key={`${meta.boardId}:${contentCity}`} session={session} actor={YOU} refresh={refresh} notify={notify} onContent={setCityContent} onState={setFccState} initialState={sourceState} /> : (
         <div className={`mot-work view-${tab}`}>
           {sidebar}
           <div className="mot-main">
             {tab === 'board' && <BoardView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={ghostCards(pending)} onReview={review} />}
-            {tab === 'today' && <div className="mot-board"><TodayView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} /></div>}
+            {tab === 'today' && <div className="mot-board"><TodayView whenSaved={whenSaved} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} /></div>}
             {tab === 'map' && <div className="mot-board"><MapView session={session} tick={tick} onBack={() => setTab('board')} /></div>}
           </div>
         </div>
       )}
+      <div className="mot-guidance-wrap"><TripGuidance phase={tripPhase(meta)}/></div>
       {panel==='ballot'&&<FocusSheet label="Group preferences" onClose={()=>setPanel(null)}><Suspense fallback={<p role="status">Opening group preferences…</p>}><GroupPreferences key={meta.boardId} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} whenSaved={async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are still in this tab. Download a personal ZIP backup.');}} onClose={()=>setPanel(null)} /></Suspense></FocusSheet>}
       {panel === 'review' && <FocusSheet label="Review changes" onClose={() => setPanel(null)}><ProposalReview key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={() => setPanel(null)} pending={pending} focus={focusOp} onPending={setPending} /></FocusSheet>}
       {panel === 'guest' && host && <FocusSheet label="Create a guest copy" onClose={() => setPanel(null)}><GuestCopyPanel key={meta.boardId} session={session} onCreate={(t, ids) => void guestCopy(t, ids)} onClose={() => setPanel(null)} /></FocusSheet>}
