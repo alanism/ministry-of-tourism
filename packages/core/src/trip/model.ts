@@ -46,6 +46,7 @@ export interface CreateTripOptions {
   agentMode?: AgentMode;
   lineage?: TripMeta['lineage'];
   magazine?: TripMeta['magazine'];
+  groupPreferences?: TripMeta['groupPreferences'];
   newId?: () => string;
 }
 
@@ -71,6 +72,7 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     agentMode: options.agentMode ?? 'together',
     lineage: options.lineage,
     magazine: options.magazine,
+    groupPreferences: options.groupPreferences,
   });
   const parts = tripParts(doc);
   doc.transact(() => {

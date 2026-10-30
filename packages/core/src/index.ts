@@ -48,3 +48,5 @@ export * from './trip/png.ts';
 export * from './trip/merch.ts';
 export * from './trip/art-ref.ts';
 export * from './trip/magazine-audit.ts';
+
+export * from './trip/group-preferences.ts';
