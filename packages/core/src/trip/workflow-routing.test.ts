@@ -82,6 +82,18 @@ describe('MOT-109 smallest-workflow routing', () => {
     const route = routeWorkflow({ ops: [{ command: 'trip_meta_update', input: { dates: { start: '2026-12-12', end: '2026-12-15' } } }] }, base);
     expect(route.invalidates.map(c => c.field)).toEqual(['dates']);
   });
+  it('flags material fields named in a text-only trip change (W5 Wonder review)', () => {
+    const fields = (text: string) => routeWorkflow({ text }, base);
+    expect(fields('Change our budget to 100 EUR')).toMatchObject({ workflow: 'trip_change' });
+    expect(fields('Change our budget to 100 EUR').invalidates.map(c => c.field)).toEqual(['budget']);
+    expect(fields('Change our access needs: we now need step-free routes')).toMatchObject({ workflow: 'trip_change' });
+    expect(fields('Change our access needs: we now need step-free routes').invalidates.map(c => c.field)).toEqual(['access']);
+    expect(fields('Switch the destination and dates').invalidates.map(c => c.field)).toEqual(['dates', 'destination']);
+    // A narrow edit or a day-of change names no material field and invalidates nothing.
+    expect(fields('Move the tram card to Explore')).toMatchObject({ workflow: 'small_edit', invalidates: [] });
+    expect(fields('Running late today')).toMatchObject({ workflow: 'trip_change', invalidates: [] });
+    expect(fields('Move the step-free access note to Explore')).toMatchObject({ workflow: 'small_edit', invalidates: [] });
+  });
   it('lets an expired fact expire before checking conflicts, comparing instants not strings', () => {
     const now = new Date('2026-10-30T00:30:00Z');
     const route = routeWorkflow({ text: 'plan tomorrow' }, { ...base, now, facts: [

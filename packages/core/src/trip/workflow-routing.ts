@@ -68,7 +68,9 @@ export function tripPhase(meta: Pick<TripMeta, 'dates' | 'timeZone'>, now: Date 
   return today < meta.dates.start ? 'planning' : today > meta.dates.end ? 'post' : 'during';
 }
 
-const TRIP_LEVEL = /\b(move|change|shift|push|postpone|extend|shorten|switch)\b[^.?!]*\b(trip|dates?|destination|budget|holiday|vacation)\b/i;
+const TRIP_LEVEL = /\b(move|change|shift|push|postpone|extend|shorten|switch)\b[^.?!]*\b(trip|dates?|destination|budget|holiday|vacation|(access|accessibility|mobility) needs?)\b/i;
+/** Material fields a text-only trip change names. Words only: no value is inferred from them. */
+const MATERIAL_TEXT: readonly [MaterialChange['field'], RegExp][] = [['dates', /\bdates?\b/i], ['destination', /\b(destination|city)\b/i], ['budget', /\b(budget|spending (ceiling|limit))\b/i], ['access', /\b(access(ibility)?|step[- ]free|wheelchair|mobility)\b/i]];
 const SMALL = /\b(rename|retitle|re-title|move|drag|caption|tag|mark (it |this )?(done|open)|tick off|add (a |this |my |one )?(photo|picture|pic|image|note)|attach)\b/i;
 const KEEPSAKE = /\b(keepsakes?|memor(y|ies)|postcards?|magazine|album|scrapbook|photo ?book|souvenir|remember (the|our|this) trip)\b/i;
 const CHANGE = /\b(delay(ed)?|late|running behind|missed|cancel(l)?ed|closed|rain(ing)?|weather|storm|tired|exhausted|energy|sick|what'?s next|next step|right now|today)\b/i;
@@ -164,7 +166,8 @@ export function routeWorkflow(request: RouteRequest, context: RouteContext): Rou
   const tentative = facts.unknown.some(u => blocking.has(u.field)) || (workflow === 'plan' && facts.unknown.length > 0);
   const questions = workflow === 'preferences' ? preferenceQuestions(context.answers, 2, missing) : workflow === 'plan' ? preferenceQuestions(context.answers, 2, missing).filter(q => missing.includes(q.id)) : [];
   const metaUpdate = request.ops?.find(op => op.command === 'trip_meta_update')?.input;
-  const invalidates = metaUpdate ? materialChanges({ dates: context.meta.dates, city: context.meta.city, cityId: context.meta.cityId }, { dates: (metaUpdate.dates as MaterialState['dates']) ?? context.meta.dates, ...(metaUpdate.city === undefined ? { city: context.meta.city, cityId: context.meta.cityId } : { city: metaUpdate.city as string, cityId: metaUpdate.cityId as string | undefined }) }) : [];
+  const invalidates = metaUpdate ? materialChanges({ dates: context.meta.dates, city: context.meta.city, cityId: context.meta.cityId }, { dates: (metaUpdate.dates as MaterialState['dates']) ?? context.meta.dates, ...(metaUpdate.city === undefined ? { city: context.meta.city, cityId: context.meta.cityId } : { city: metaUpdate.city as string, cityId: metaUpdate.cityId as string | undefined }) })
+    : workflow === 'trip_change' ? MATERIAL_TEXT.filter(([, word]) => word.test(request.text ?? '')).map(([field]) => ({ field, invalidates: MATERIAL_EFFECT[field] })) : [];
   const tools = context.tools ?? {};
   const mode: RouteResult['mode'] = context.meta.agentMode === 'solo' ? 'read_only'
     : workflow === 'small_edit' ? (tools.persistence === false ? 'propose' : 'apply')
