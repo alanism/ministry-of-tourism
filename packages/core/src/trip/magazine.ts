@@ -175,11 +175,17 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const headingColumns=Math.floor(1018/(6.55*PU*.57)),headingLines=wrap(opening,headingColumns),visibleHeading=headingLines.slice(0,panorama?5:12),headingY=panorama?970:4*L;
     if(visibleHeading.length<headingLines.length)visibleHeading[visibleHeading.length-1]=Array.from(visibleHeading.at(-1)!).slice(0,headingColumns-1).join('')+'…';
     const leadBodyY=Math.max(panorama?1260:0,headingY+visibleHeading.length*2*L),bodyLines=Math.min(panorama?4:Infinity,Math.max(0,Math.floor((1490-leadBodyY)/L)+1));
-    page('left','city-feature',panoramaImage(false)+kicker(meta.city,M,panorama?850:2*L)+rows(visibleHeading,M,headingY,6.55*PU,2*L,'IBM Plex Serif',600,INK,false,1018,visibleHeading.length===headingLines.length?opening:visibleHeading.join(' '))+body(featureLead,M,leadBodyY,1018,bodyLines),[panorama],featureLead?[featureLead]:[]);
+    // The feature ends here; its unprinted words belong to the notebook, never the contents.
+    const leadSource=featureLead?.body??'',leadChunk=flowText(leadSource,Math.floor(1018/(2.5*PU*.57))-1,bodyLines);
+    const truncated=!!leadChunk.rest.trim()&&leadChunk.lines.length>0;
+    if(truncated)leadChunk.lines[leadChunk.lines.length-1]+='…';
+    if(featureLead)remainingText.set(featureLead.id+':body',leadChunk.rest);
+    const leadExcerpt=leadSource.slice(0,leadSource.length-leadChunk.rest.length).trimEnd()+(truncated?'…':'');
+    page('left','city-feature',panoramaImage(false)+kicker(meta.city,M,panorama?850:2*L)+rows(visibleHeading,M,headingY,6.55*PU,2*L,'IBM Plex Serif',600,INK,false,1018,visibleHeading.length===headingLines.length?opening:visibleHeading.join(' '))+rows(leadChunk.lines,M,leadBodyY,2.5*PU,L,'IBM Plex Sans',400,INK,false,1018,leadExcerpt),[panorama],featureLead?[featureLead]:[]);
     const facts=cards.flatMap(c=>(c.currentFacts??[]).filter(()=>c.source?.kind==='almanac').map(f=>({f,c}))).slice(0,3);
     const factsSvg=facts.map(({f},i)=>kicker(f.field,M,1260+i*86,RED)+text(`${f.value} · ${f.observedAt}`,M,1298+i*86,1018,2.1*PU,1)).join('');
     const contents=cards.slice(0,5).map((c,i)=>`${i+1}. ${c.title}`).join('\n');
-    page('right','city-feature',panoramaImage(true)+kicker('In this issue',M,panorama?850:2*L)+body(featureLead,M,panorama?925:4*L,3*COL+2*G,facts.length?6:10)+text(contents,column(4),panorama?925:4*L,3*COL+2*G,2.5*PU,10)+(facts.length?factsSvg:''),[panorama],cards.slice(0,5));
+    page('right','city-feature',panoramaImage(true)+kicker('In this issue',M,panorama?850:2*L)+text(contents,column(4),panorama?925:4*L,3*COL+2*G,2.5*PU,10)+(facts.length?factsSvg:''),[panorama],cards.slice(0,5));
   }
 
   const hasPlate=role('specimen','facade','interior').some(c=>!c.identities.some(id=>used.has(id)));
