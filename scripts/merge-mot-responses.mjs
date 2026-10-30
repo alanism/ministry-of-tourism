@@ -1,12 +1,13 @@
 // Local JSON/ZIP merge. No network, model calls, executable imports or canonical board writes.
-import {readFileSync,writeFileSync,existsSync,lstatSync,statSync,openSync,closeSync,fsyncSync,renameSync,unlinkSync,realpathSync} from 'node:fs';
+import {readFileSync,writeFileSync,existsSync,lstatSync,statSync,openSync,closeSync,fsyncSync,unlinkSync,realpathSync} from 'node:fs';
 import {resolve,dirname,join,basename} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {mergeResponseFiles} from '../packages/core/src/trip/response-ledger.ts';
 import {TRIP_PACKAGE_LIMITS} from '../packages/core/src/trip/package.ts';
+import {replaceResponseLedger} from './replace-response-ledger.mjs';
 
 const usage='Usage: node scripts/merge-mot-responses.mjs --config group.json --out ledger.json [--ledger previous.json] [--resolve-household ID] response.json|response.zip ...';
-let lockFd,lockPath,tempPath;
+let lockFd,lockPath,tempPath,commitAttempted=false;
 try{
  const args=process.argv.slice(2),files=[],resolvedHouseholds=[];let configPath,outPath,ledgerPath;
  for(let i=0;i<args.length;i++){
@@ -36,8 +37,8 @@ try{
   if(oldOutput&&(!existsSync(outPath)||!read(outPath,false).equals(oldOutput)))throw new Error('Ledger changed during the merge. Retry from the latest copy.');
   tempPath=join(dirname(outPath),'.'+basename(outPath)+'.'+randomUUID()+'.tmp');
   const fd=openSync(tempPath,'wx',0o600);try{writeFileSync(fd,bytes);fsyncSync(fd);}finally{closeSync(fd);}
-  renameSync(tempPath,outPath);tempPath=undefined;
+  commitAttempted=true;replaceResponseLedger(tempPath,outPath);tempPath=undefined;
  }
  console.log(JSON.stringify({current:result.current.length,conflicts:result.conflicts.length,pending:result.pending.length,history:result.ledger.entries.length,stale_proposals:result.stale_proposals,identity:result.identity}));
-}catch(error){console.error('Response merge failed; previous ledger is unchanged. '+(error instanceof Error?error.message:'Retry with a valid response file.'));process.exitCode=1;}
+}catch(error){console.error((commitAttempted?'Response merge could not confirm durability; the output may have changed. Reopen the ledger before retrying. ':'Response merge failed; previous ledger is unchanged. ')+(error instanceof Error?error.message:'Retry with a valid response file.'));process.exitCode=1;}
 finally{if(tempPath)try{unlinkSync(tempPath);}catch{}if(lockFd!==undefined){closeSync(lockFd);try{unlinkSync(lockPath);}catch{}}}
