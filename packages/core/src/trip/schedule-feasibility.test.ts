@@ -4,6 +4,10 @@ import * as core from '../index.ts';
 import {fact,problem} from './planning-test-fixtures.ts';
 const assignment=(option_id='beach',slot_id='one',household_ids=['a','b'])=>({option_id,slot_id,household_ids});
 
+it('rejects commitment references to undeclared activities before checking a schedule (W3 review F7)',()=>{
+ for(const kind of ['fixed_booking','meal','rest'] as const){const p=problem();p.commitments=[{id:'booking',kind,option_id:'ghost',start:p.slots[0]!.start,end:p.slots[0]!.end,household_ids:['a','b']}];expect(()=>core.checkScheduleFeasibility(p,[])).toThrow(/undeclared household or activity/);}
+});
+
 it('accepts an explicitly known feasible slot without writing or inventing facts',()=>{const p=problem(),before=JSON.stringify(p),r=core.checkScheduleFeasibility(p,[assignment()]);expect(r.status).toBe('feasible');expect(r.errors).toEqual([]);expect(r.tentative).toEqual([]);expect(JSON.stringify(p)).toBe(before);});
 it('rejects participant overlap, closed windows, inaccessible boats, durations and confirmed budget breaches',()=>{
  for(const mutate of [(p:any)=>p.slots[1]={...p.slots[1],start:'2026-11-01T09:30:00Z',end:'2026-11-01T10:30:00Z'},(p:any)=>p.activities[0].opening=fact([{start:'2026-11-01T12:00:00Z',end:'2026-11-01T14:00:00Z'}]),(p:any)=>p.activities[1].access[1].allowed=fact(false),(p:any)=>p.activities[0].duration_minutes=fact(90),(p:any)=>p.budget=fact(5)]){const p=problem();mutate(p);expect(core.checkScheduleFeasibility(p,[assignment(),assignment('boat','two')]).status).toBe('infeasible');}

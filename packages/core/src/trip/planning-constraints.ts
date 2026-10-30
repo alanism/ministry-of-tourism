@@ -23,7 +23,7 @@ export const planningProblemSchema=z.object({
  const h=new Set(p.households.map(h=>h.household_id)),a=new Set(p.activities.map(a=>a.option_id));
  if(h.size!==p.households.length||a.size!==p.activities.length||new Set(p.slots.map(s=>s.slot_id)).size!==p.slots.length||new Set(p.commitments.map(c=>c.id)).size!==p.commitments.length)ctx.addIssue({code:'custom',message:'Households, activities, slots and commitments need distinct stable IDs'});
  const participants=[...p.slots,...p.commitments,...p.split_groups].flatMap(s=>s.household_ids),options=p.rules.flatMap(r=>'option_ids'in r?r.option_ids:r.kind==='before'?[r.first,r.then]:[r.option_id,r.requires]);
- if(participants.some(id=>!h.has(id))||p.activities.some(a=>a.access.some(x=>!h.has(x.household_id))||new Set(a.access.map(x=>x.household_id)).size!==a.access.length)||[...options,...p.split_groups.map(s=>s.option_id)].some(id=>!a.has(id)))ctx.addIssue({code:'custom',message:'Constraint refers to an undeclared household or activity'});
+ if(participants.some(id=>!h.has(id))||p.activities.some(a=>a.access.some(x=>!h.has(x.household_id))||new Set(a.access.map(x=>x.household_id)).size!==a.access.length)||[...options,...p.split_groups.map(s=>s.option_id),...p.commitments.flatMap(c=>c.option_id?[c.option_id]:[])].some(id=>!a.has(id)))ctx.addIssue({code:'custom',message:'Constraint refers to an undeclared household or activity'});
 });
 export type PlanningProblem=z.infer<typeof planningProblemSchema>;
 export type ScheduleAssignment=z.infer<typeof scheduleAssignmentSchema>;
