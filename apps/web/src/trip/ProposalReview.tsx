@@ -116,7 +116,7 @@ export function ProposalReview({ session, actor, refresh, notify, onClose, pendi
         <button type="button" className="m-icon-btn" aria-label="Close review" onClick={onClose}><Icon name="close" /></button>
       </div>
       <div className="mot-sheet-scroll">
-      <div style={{ marginTop: 10 }}><span className="m-chip muse">Test adapter · Muse not connected</span></div>
+      <div style={{ marginTop: 10 }}><span className="m-chip muse">Test adapter · sample changes</span></div>
       <p className="lede t-1">Based on current board</p>
 
       {phase.kind === 'asking' && (
