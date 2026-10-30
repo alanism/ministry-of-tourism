@@ -10,6 +10,11 @@ import './group-preferences.css';
 
 type Props={session:TripSession;actor:Actor;tick:number;refresh:()=>void;notify:(s:string)=>void;onClose:()=>void;whenSaved:()=>Promise<void>};
 function download(bytes:Uint8Array,filename:string,mime:string){const url=URL.createObjectURL(new Blob([bytes as BlobPart],{type:mime})),a=document.createElement('a');a.href=url;a.download=filename;a.click();window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
+/** Stamp columns count accepted current responses only; pending/conflicting households stay in coverage, not "No stamp". */
+export function stampCounts(tally:PreferenceTally,option:PreferenceTally['options'][number]){
+ const s=optionStampCounts(option.stamps,tally.coverage.responding,tally.coverage.total);
+ return {approved:s.approved,maybe:s.maybe,denied:s.denied,none:s.noStamp};
+}
 export function GroupPreferences(props:Props){
  const [organizer,setOrganizer]=useState(false),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
  const exportResponse=async(key:unknown,format:'json'|'zip')=>{if(busy)return;setBusy(true);try{const file=await exportLocalGroupResponse(props.session,props.actor,key,format);await props.whenSaved();download(file.bytes,`household-${file.response.household_id}-r${file.response.response_revision}.${format}`,format==='zip'?'application/zip':'application/json');setNotice(`Response revision ${file.response.response_revision} is ready as ${format.toUpperCase()}. Share this file explicitly with the organizer.`);}catch(e){setNotice(`${e instanceof Error?e.message:'Response export failed'} Your response stays in this tab; retry or download a personal ZIP backup.`);}finally{setBusy(false);}};
