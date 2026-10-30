@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const {BUDGETS,withinBudget,summarize}=require('./measure-mot-app-performance.cjs');
+assert.deepEqual(BUDGETS,{firstViewMs:4000,cachedViewMs:2000});
+assert(withinBudget({ready:true,milliseconds:4000},false));assert(!withinBudget({ready:true,milliseconds:4000.1},false));
+assert(withinBudget({ready:true,milliseconds:2000},true));assert(!withinBudget({ready:true,milliseconds:2000.1},true));
+for(const view of [{ready:false,milliseconds:10},{ready:true,milliseconds:NaN},{ready:true,milliseconds:-1},{gridMs:10,milliseconds:100}])assert(!withinBudget(view,false));
+const good={first:{ready:true,milliseconds:1000},cached:{ready:true,milliseconds:100}};
+assert.equal(summarize([good],1).allWithinBudget,true);assert.equal(summarize([],1).allWithinBudget,false);assert.equal(summarize([{}],1).allWithinBudget,false);assert.equal(summarize([good],2).allWithinBudget,false);
+assert.equal(summarize([good,{...good,first:{ready:true,milliseconds:8105.1}}],2).allWithinBudget,false);
+assert.equal(summarize([{...good,cached:{ready:false,milliseconds:50}}],1).allWithinBudget,false);
+console.log('App performance: unchanged first/cached boundaries; decoded/usable readiness, finite times, incomplete runs and every failed sample remain failures.');
