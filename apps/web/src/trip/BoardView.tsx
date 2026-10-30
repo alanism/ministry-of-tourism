@@ -5,7 +5,7 @@ import { FocusSheet, Icon, Menu, type MenuEntry } from './ui';
 import { CardContent, CheckedFacts, EditedExcerpt, SourceLink, SourceRecord } from './SourceContent';
 import { cardEditInput, editsSourceNote, sourceHref, sourceKey, sourceTextFor } from './source-card';
 import { attachPhoto, coverAssetId, pickPhoto, useAssetUrl } from './trip-assets';
-import { HOST_LANES, PROVENANCE_LABEL, STAGE_NAME, dayLabel, longDayLabel } from './sample';
+import { HOST_LANES, cardProvenanceLabel, STAGE_NAME, dayLabel, longDayLabel } from './sample';
 import { recordOutcome } from './metrics';
 import type { Ghost } from './ProposalReview';
 import {AdaptPanel,NextStepPanel} from './TripAdjustment';
@@ -87,7 +87,7 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
   const fields=editing?(<>
         {sourceCard&&<><header className="mot-source-detail-head"><h2>{card.title}</h2><button type="button" className="m-icon-btn" aria-label="Close card details" onClick={()=>setEditing(false)}>×</button></header><div className="mot-source-lock" role="region" aria-label="Source text"><span className="m-label">From the issue · kept as published</span>{sourceTextFor(card)?<blockquote className="mot-source-quote">{sourceTextFor(card)}</blockquote>:<p>No source excerpt was saved. Open the original source.</p>}</div><SourceRecord card={card}/><CheckedFacts card={card}/></>}
         {sourceCard&&<EditedExcerpt card={card}/>}
-        {sourceCard?<label htmlFor={`title-${card.id}`}>Card title</label>:<div className="m-card-top"><span className="m-eyebrow">{PROVENANCE_LABEL[card.provenance]}</span></div>}
+        {sourceCard?<label htmlFor={`title-${card.id}`}>Card title</label>:<div className="m-card-top"><span className="m-eyebrow">{cardProvenanceLabel(card)}</span></div>}
         <input id={sourceCard?`title-${card.id}`:undefined} className="m-edit-title" aria-label="Title" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus={autoEdit} />
         {sourceCard&&<label htmlFor={`note-${card.id}`}>Your note <span className="m-muted">Your words · source unchanged</span></label>}
         <textarea id={sourceCard?`note-${card.id}`:undefined} className="m-edit-body" aria-label={sourceCard?'Your note':'Notes'} value={sourceCard?draft.travelerNote:draft.body} maxLength={20000} autoFocus={!autoEdit&&!sourceCard} onChange={(e) => setDraft({ ...draft, [sourceCard?'travelerNote':'body']: e.target.value })}
@@ -123,7 +123,7 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
       <div className="m-card-top">
         {kind === 'host_guide'
           ? <span className={`m-chip tag ${card.scope}`}>{SCOPE_LABEL[card.scope]}</span>
-          : <span className="m-eyebrow">{PROVENANCE_LABEL[card.provenance]}</span>}
+          : <span className="m-eyebrow">{cardProvenanceLabel(card)}</span>}
         <Menu label={`Actions for ${card.title || 'card'}`} items={menu} />
       </div>
       {landing === 'new' && card.provenance === 'agent' && <span className="mot-stamp landing on-card" aria-hidden="true">Approved</span>}

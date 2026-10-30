@@ -12,7 +12,7 @@ const ADAPTER_DELAY_MS = 1200;
 
 /** A suggestion that is not yet decided: the Board draws its unapplied card creations as ghosts. */
 export interface PendingReview { suggestion: ReviewSuggestion; applied: number[] }
-export interface Ghost { index: number; stage: Stage; title: string; body: string; assetId?: string }
+export interface Ghost { index: number; stage: Stage; title: string; body: string; assetId?: string; label?:string; citation?:{title:string;url:string}; review?:()=>void }
 
 export function ghostCards(pending: PendingReview | null): Ghost[] {
   if (!pending) return [];
@@ -116,7 +116,7 @@ export function ProposalReview({ session, actor, refresh, notify, onClose, pendi
         <button type="button" className="m-icon-btn" aria-label="Close review" onClick={onClose}><Icon name="close" /></button>
       </div>
       <div className="mot-sheet-scroll">
-      <div style={{ marginTop: 10 }}><span className="m-chip muse">Test adapter · Muse not connected</span></div>
+      <div style={{ marginTop: 10 }}><span className="m-chip muse">Test adapter · sample changes</span></div>
       <p className="lede t-1">Based on current board</p>
 
       {phase.kind === 'asking' && (

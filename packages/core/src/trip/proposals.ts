@@ -1,3 +1,4 @@
+import {tripCardSchema} from './schema.ts';
 // Proposals (MOT-20): agents propose, people approve. Atomic, idempotent, stale-safe.
 import { CommandError } from '../commands/define.ts';
 import type { Actor } from '../doc/model.ts';
@@ -64,7 +65,9 @@ export function applyProposal(session: TripSession, approver: Actor, proposal: P
   if (!idx.length) return { ...done(), remainingOps: proposal.ops.length - prior.ops.length };
   const chosen: Proposal = { ...proposal, ops: idx.map((i) => proposal.ops[i]!) };
   prevalidateProposal(session, chosen, prior.revs);
-  session.executeAll(approver, chosen.ops, proposalUndoKey(proposal.id));
+  const context=proposal.author==='agent:fake'||proposal.author==='test-adapter'?{...approver,id:`test-adapter:${approver.id}`}:approver;
+  if(context!==approver)tripCardSchema.shape.createdBy.parse(context.id);
+  session.executeAll(context, chosen.ops, proposalUndoKey(proposal.id));
   const ops = [...prior.ops, ...idx].sort((a, b) => a - b);
   const revs = { ...prior.revs };
   for (const op of chosen.ops) { const id = touchedCardId(op); if (id) revs[id] = session.cardRev(id); }

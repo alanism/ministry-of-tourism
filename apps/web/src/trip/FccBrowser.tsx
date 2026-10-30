@@ -24,7 +24,9 @@ export const browserCityCache:CityContentCache={
   async read(id){const db=await sourceDb();return new Promise<CachedCity|undefined>((resolve,reject)=>{const transaction=db.transaction('cities','readonly'),request=transaction.objectStore('cities').get(id);transaction.oncomplete=()=>resolve(request.result as CachedCity|undefined);transaction.onabort=transaction.onerror=()=>reject(transaction.error);});},
   async write(id,entry){const db=await sourceDb();await new Promise<void>((resolve,reject)=>{const transaction=db.transaction('cities','readwrite');transaction.objectStore('cities').put(entry,id);transaction.oncomplete=()=>resolve();transaction.onabort=transaction.onerror=()=>reject(transaction.error);});},
 };
-export const browserFcc=createFccAdapter({maxRetries:2,feedUrl:id=>`${import.meta.env.VITE_FCC_FEED_BASE??`${FCC_ORIGIN}/feeds/cities`}/${encodeURIComponent(id)}.json`,cache:browserCityCache,onDiagnostic:entry=>diagnostics.record(createDiagnostic({requestId:crypto.randomUUID(),operation:entry.operation,boardId:'public-source',revision:0,appVersion:'mot-integration-v2',sourceUrl:entry.sourceUrl,httpStatus:entry.httpStatus,errorClass:entry.errorClass==='network'?'network':entry.errorClass==='cancelled'?'cancelled':'unavailable'}))});
+const publicFccOptions:Parameters<typeof createFccAdapter>[0]={feedUrl:id=>`${import.meta.env.VITE_FCC_FEED_BASE??`${FCC_ORIGIN}/feeds/cities`}/${encodeURIComponent(id)}.json`,cache:browserCityCache,onDiagnostic:entry=>diagnostics.record(createDiagnostic({requestId:crypto.randomUUID(),operation:entry.operation,boardId:'public-source',revision:0,appVersion:'mot-integration-v2',sourceUrl:entry.sourceUrl,httpStatus:entry.httpStatus,errorClass:entry.errorClass==='network'?'network':entry.errorClass==='cancelled'?'cancelled':'unavailable'}))};
+export const browserFcc=createFccAdapter({...publicFccOptions,maxRetries:2});
+export const browserMuseFcc=createFccAdapter({...publicFccOptions,maxRetries:1});
 
 export interface FccBrowserState extends SourceLoadState {boardId:string;cityId:string;}
 export function SourceFreshness({state,onOpen}:{state:FccBrowserState|undefined;onOpen?:()=>void}){
