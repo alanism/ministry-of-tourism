@@ -47,3 +47,14 @@ it('parses JSON strictly and rejects corrupt response hashes and unknown fields'
  const a=await reply();expect(await core.parseGroupResponseFile(strToU8(JSON.stringify(a)),group())).toEqual(a);
  for(const value of ['{',JSON.stringify({...a,guide_url:'https://example.invalid/no-fetch'}),JSON.stringify({...a,response_id:'0'.repeat(64)})])await expect(core.parseGroupResponseFile(strToU8(value),group())).rejects.toThrow();
 });
+it('W1 F1: labels a response for a superseded proposal version stale in its receipt',async()=>{
+ const g=group();g.rounds.push({...g.rounds[0]!,proposal_version:2});const old=await reply(),result=await core.mergeResponseLedger(g,undefined,[old],resolved);
+ expect(result.current).toEqual([]);expect(result.stale_proposals).toEqual([1]);expect(result.receipts).toEqual([{response_id:old.response_id,status:'stale'}]);
+ const fresh=await reply({proposal_version:2}),both=await core.mergeResponseLedger(g,result.ledger,[fresh],resolved);expect(both.receipts).toEqual([{response_id:fresh.response_id,status:'accepted'}]);
+});
+it('W1 F2: returns current and conflict projections detached from the returned ledger history',async()=>{
+ const a=await reply(),b=await reply({rankings:[{option_id:'museum',rank:1}]}),result=await core.mergeResponseLedger(group(),undefined,[a],resolved),saved=JSON.stringify(result.ledger);
+ result.current[0]!.shared_note='edited outside the merge';result.current[0]!.rankings.push({option_id:'garden',rank:2});expect(JSON.stringify(result.ledger)).toBe(saved);
+ await expect(core.mergeResponseLedger(group(),result.ledger,[])).resolves.toMatchObject({current:[a]});
+ const conflict=await core.mergeResponseLedger(group(),undefined,[a,b],resolved),before=JSON.stringify(conflict.ledger);conflict.conflicts[0]!.response_ids.pop();expect(JSON.stringify(conflict.ledger)).toBe(before);
+});

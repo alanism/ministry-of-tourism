@@ -24,7 +24,7 @@ try{
  if([configPath,...files].some(file=>same(file,outPath)))throw new Error('Refusing to overwrite a configuration or response input. Choose a separate ledger output.');
  if(existsSync(outPath)&&(lstatSync(outPath).isSymbolicLink()||!statSync(outPath).isFile()))throw new Error('Output must be a regular ledger file.');
  if(ledgerPath&&existsSync(outPath)&&!same(ledgerPath,outPath))throw new Error('Existing output must be its own previous ledger; use a new output path for another ledger.');
- lockPath=outPath+'.lock';try{lockFd=openSync(lockPath,'wx',0o600);}catch{throw new Error('Ledger is busy. Retry after the other merge finishes.');}
+ lockPath=outPath+'.lock';try{lockFd=openSync(lockPath,'wx',0o600);}catch(error){if(error?.code==='EEXIST')throw new Error('Ledger is busy. Retry after the other merge finishes.');throw new Error(`Cannot create the ledger lock (${error?.code??'unknown error'}). Check that the output folder exists and is writable, then retry.`);}
  let total=0;
  const read=(file,count=true)=>{if(statSync(file).size>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('Input exceeds the portable file limit.');const bytes=readFileSync(file);if(count)total+=bytes.length;if(bytes.length>TRIP_PACKAGE_LIMITS.fileBytes||total>TRIP_PACKAGE_LIMITS.totalBytes)throw new Error('Input batch exceeds the portable size limit.');return bytes;};
  const config=JSON.parse(read(configPath).toString('utf8')),oldOutput=existsSync(outPath)?read(outPath):null;

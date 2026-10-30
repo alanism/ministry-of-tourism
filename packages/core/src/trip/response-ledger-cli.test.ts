@@ -21,3 +21,7 @@ it('preserves the last valid output if a later response is malformed',async()=>f
 it('refuses to overwrite config/response files and reports a busy ledger for retry',async()=>fixture(p=>{
  const before=readFileSync(p.config),bad=cli(['--config',p.config,'--out',p.config,p.response]);expect(bad.status).toBe(1);expect(bad.stderr).toMatch(/overwrite/i);expect(readFileSync(p.config)).toEqual(before);writeFileSync(p.out+'.lock','');const busy=cli(['--config',p.config,'--out',p.out,p.response]);expect(busy.status).toBe(1);expect(busy.stderr).toMatch(/busy|retry/i);
 }));
+it('W1 F4: reports a missing output directory as a path error, not a busy ledger',async()=>fixture(p=>{
+ const out=join(p.root,'missing-dir','ledger.json'),failed=cli(['--config',p.config,'--out',out,'--resolve-household','family',p.response]);
+ expect(failed.status).toBe(1);expect(failed.stderr).not.toMatch(/busy/i);expect(failed.stderr).toMatch(/output folder|directory/i);expect(failed.stderr).toMatch(/previous ledger.*unchanged/i);
+}));
