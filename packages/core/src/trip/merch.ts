@@ -37,7 +37,9 @@ export function selectCityApparel(cityId: string, rawEntries: unknown): ApparelA
     if (previous && JSON.stringify(previous) !== JSON.stringify(artwork)) throw new Error('FCC apparel has conflicting metadata for the same asset.');
     selected.set(artwork.assetId, artwork);
   }
-  return [...selected.values()];
+  const roles=['apparel-brush','apparel-map-mono','apparel-map-color'];
+  const priority=(art:ApparelArtRef)=>art.role?roles.indexOf(art.role):roles.length;
+  return [...selected.values()].sort((a,b)=>priority(a)-priority(b));
 }
 
 /** The function has no access to trip titles, dates, people, notes or arbitrary query parameters. */

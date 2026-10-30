@@ -1,4 +1,4 @@
-import { buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, rgbPdfImage, tripParts, type DiagnosticReceipt, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
+import { buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, rgbPdfImage, TRIP_PACKAGE_LIMITS, tripParts, type DiagnosticReceipt, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
 import { getTripBlob } from './trip-assets';
 import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
@@ -58,17 +58,38 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
     let apparel:Awaited<ReturnType<typeof loadCityApparel>>=[...cached];const warnings:string[]=[];
     try{
       const fresh=await loadCityApparel(cityId,{signal});
-      apparel=[...cached,...fresh.filter(art=>!cached.some(saved=>saved.assetId===art.assetId))].slice(0,3);
+      const variants=fresh.some(art=>art.role)?fresh.filter(art=>art.role):fresh;
+      apparel=[...cached,...variants.filter(art=>!cached.some(saved=>saved.assetId===art.assetId))].slice(0,3);
       const downloads=apparel.filter(art=>!urls.has(art.assetId));
+      let failed=0,downloaded=0;
       for(const [index,art] of downloads.entries()){
-        options.onProgress?.({stage:'collect',completed:bytes.size+index,total:bytes.size+downloads.length,unit:'assets',done:false});
+        options.onProgress?.({stage:'collect',completed:bytes.size+downloaded,total:bytes.size+downloads.length,unit:'assets',done:false});
         signal?.throwIfAborted();
-        const response=await fetch(art.originalUrl??art.renditionUrl,{signal,credentials:'omit',redirect:'error'});
-        if(!response.ok)throw new Error('FCC tee image unavailable');
-        const image=await response.blob();if(!/^image\/(png|jpeg|webp|avif)$/.test(image.type))throw new Error('FCC tee image is not a supported raster');
-        urls.set(art.assetId,await dataUrl(image));dimensions.set(art.assetId,{width:art.width,height:art.height});
-        options.onProgress?.({stage:'collect',completed:bytes.size+index+1,total:bytes.size+downloads.length,unit:'assets',done:index===downloads.length-1});
+        try{
+          const response=await fetch(art.originalUrl??art.renditionUrl,{signal,credentials:'omit',redirect:'error'});
+          if(!response.ok)throw new Error('FCC tee image unavailable');
+          if(Number(response.headers.get('content-length'))>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('FCC tee image exceeds the portable image limit');
+          const image=await response.blob();
+          if(image.type!==art.mimeType||!image.size||image.size>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('FCC tee image does not match its declared raster');
+          const hash=await artifactSha256(image);
+          if((art.hash&&art.hash!==hash)||(art.source.contentHash&&art.source.contentHash!==hash))throw new Error('FCC tee original changed');
+          const decoded=await new Promise<ImageBitmap>((resolve,reject)=>{
+            const stop=()=>reject(signal?.reason??new DOMException('Export cancelled','AbortError'));
+            if(signal?.aborted){stop();return;}
+            signal?.addEventListener('abort',stop,{once:true});
+            Promise.resolve().then(()=>{signal?.throwIfAborted();return createImageBitmap(image);}).then(
+              decoded=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){decoded.close();stop();}else resolve(decoded);},
+              error=>{signal?.removeEventListener('abort',stop);reject(error);},
+            );
+          });
+          try{signal?.throwIfAborted();if(decoded.width!==art.width||decoded.height!==art.height)throw new Error('FCC tee dimensions changed');}finally{decoded.close();}
+          signal?.throwIfAborted();
+          urls.set(art.assetId,await dataUrl(image));dimensions.set(art.assetId,{width:art.width,height:art.height});downloaded++;
+        }catch(error){if(signal?.aborted)throw error;failed++;}
+        options.onProgress?.({stage:'collect',completed:bytes.size+downloaded,total:bytes.size+downloads.length,unit:'assets',done:index===downloads.length-1});
       }
+      apparel=apparel.filter(art=>urls.has(art.assetId));
+      if(failed)warnings.push(`${failed} FCC tee photo${failed===1?' is':'s are'} unavailable; the remaining trip pages are kept.`);
     }catch(error){if(signal?.aborted)throw error;apparel=[...cached];warnings.push(cached.length?'FCC is unavailable; your cached tee choice is kept.':'FCC tee pages are unavailable; your trip pages are kept.');}
     options.onProgress?.({stage:'layout',completed:0,unit:'pages',done:false});
     const renderOptions:NonNullable<Parameters<typeof buildMagazine>[1]>&{artwork:readonly unknown[]}={assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:apparel};
