@@ -1,5 +1,6 @@
 // Trip commands (MOT-12): the only way to change a trip. Validate before writing.
 import { z } from 'zod';
+import {preferenceRoundSchema,tallyGroupPreferences} from './preference-tally.ts';
 import {ballotKey,groupBallotKeySchema,groupBallotSchema,validateLocalBallot} from './group-ballot.ts';
 import { groupPreferencesSchema, validateGroupUpdate } from './group-preferences.ts';
 import * as Y from 'yjs';
@@ -197,6 +198,8 @@ export const tripPresentationDelete = defineTripCommand({
   name:'trip_presentation_delete',title:'Remove trip art',description:'Removes a placement without deleting its media.',access:'write',input:z.object({id}).strict(),
   run:(ctx,input)=>{if(!readPresentation(ctx.parts,input.id))throw new CommandError('not_found','No such presentation');ctx.parts.presentations.delete(input.id);return{id:input.id};},
 });
+export const tripPreferenceTally=defineTripCommand({name:'trip_preference_tally',title:'Tally supplied household responses',description:'Read-only deterministic K3/K5 points and response coverage from explicitly supplied configuration and ledger. Never reads private board ballots, changes the board or books anything.',access:'read',input:z.object({configuration:groupPreferencesSchema,ledger:z.unknown().optional(),round:preferenceRoundSchema}).strict(),run:async(_ctx,input)=>tallyGroupPreferences(input.configuration,input.ledger,input.round)});
+
 export const tripBallotUpdate=defineTripCommand({
   name:'trip_ballot_update',title:'Save household shortlist',description:'Person-only local response. Rank, stamp and optional shared note stay independent; never books or shares anything.',access:'write',humanOnly:true,input:groupBallotSchema,
   run:(ctx,input)=>{
@@ -228,4 +231,4 @@ export const tripGroupRead = defineTripCommand({
   access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupPreferences??null,
 });
 
-export const TRIP_COMMANDS: TripCommand[] = [tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];
+export const TRIP_COMMANDS: TripCommand[] = [tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CommandError, OperationTracker, TRIP_SCHEMA_VERSION, type Asset, type DiagnosticReceipt, type OperationState, type Presentation, type TripCard, type TripSession } from '@writers-board/core';
+import { CommandError, OperationTracker, TRIP_SCHEMA_VERSION, type PreferenceTally, type Asset, type DiagnosticReceipt, type OperationState, type Presentation, type TripCard, type TripSession } from '@writers-board/core';
 
 const agent = {kind:'agent' as const,id:'agent:trip-page',name:'Trip page agent'};
 const runSchema=z.object({boardId:z.string().min(1),revision:z.number().int().nonnegative(),ops:z.array(z.object({command:z.string().min(1),input:z.record(z.string(),z.unknown())}).strict()).max(100)}).strict();
@@ -13,6 +13,7 @@ export function createTripApi(session:TripSession,options:TripApiOptions={}) {
     probe,
     capabilities:()=>({...probe(),commands:session.tools(),examples:[{boardId:session.boardId,revision:session.boardRev,ops:[{command:'trip_card_create',input:{kind:'note',title:'A trip note',stage:'plan'}}]}]}),
     read:()=>session.execute<{meta:Record<string,unknown>;cards:TripCard[];presentations:Presentation[];assets:Asset[]}>(agent,'trip_read'),
+    tallyPreferences:(input:unknown)=>session.execute<Promise<PreferenceTally>>(agent,'trip_preference_tally',input),
     call:(name:string,input:unknown={})=>{
       const tool=session.tools().find(tool=>tool.name===name);
       if(!tool)throw new CommandError('unknown_command',`No trip command named ${name}`);

@@ -52,3 +52,4 @@ export * from './trip/fcc-journal.ts';
 export * from './trip/group-preferences.ts';
 export * from './trip/group-ballot.ts';
 export * from './trip/response-ledger.ts';
+export * from './trip/preference-tally.ts';
