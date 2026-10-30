@@ -1,5 +1,10 @@
 # MOT-101 public source candidate — 31 October 2026
 
+Historical source-integration evidence follows. The later consolidated local
+candidate, passing default suite and current evidence mapping are documented in
+`LOCAL-RELEASE-CANDIDATE.md`; these later results do not retroactively change the
+test outcomes or scope recorded below.
+
 This branch prepares source for review. It does not authorize a deployment or
 claim release acceptance. MOT-101 remains Doing; assigned reviewers and owner
 approval, device, real-origin and rollback requirements remain in force.

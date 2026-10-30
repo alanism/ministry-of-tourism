@@ -24,4 +24,4 @@ Before removing a worktree, confirm its patches are integrated or preserved unde
 
 The private checkout's legacy deployment override and scratch probe are retained locally. The authoritative public branch already commits the `nonhumanintelligence` / `ministryoftourism` Hosting mapping. Writer's Board and FCC remain separate repositories.
 
-Outstanding Muse production-ingress/acceptance and ledger power-loss durability work retain their existing status. The repository's tests, timeouts, compiler settings and lint rules remain the governing harness; this reconciliation does not loosen them.
+The isolated local candidate and exact tested inputs are recorded in `LOCAL-RELEASE-CANDIDATE.md`. Final local Muse diagnostics and the ledger replacement/directory durability follow-up are integrated there. Local barrier verification does not certify physical power-loss behavior or clear production Muse ingress/acceptance, permissions/retention, device, guide or release-approval holds. The repository's tests, timeouts, compiler settings and lint rules remain the governing harness; this reconciliation does not loosen them.
