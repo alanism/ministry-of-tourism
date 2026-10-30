@@ -12,6 +12,7 @@ Use a dedicated release checkout, separate from active model worktrees. Its `ori
 | `05f1dd2`, published WP2 completion | Release base; all incoming WP2 regressions retained |
 | `8e80745`, completed W1–W6 integration | Merged with ancestry; includes W1 recovery, group planning, ballot, workflow and Muse command-shape fixes |
 | `4b27516` and `9856678`, destination review and polish | Applied as source patches; their unrelated private ancestry is not imported |
+| `aa8a9bd`, concurrently published homepage demo | Merged before publication; the restored production video and its regressions are retained |
 
 The three conflict resolutions preserve both the public candidate's recovery behavior and the review fixes: the Magazine button class is corrected, runtime documentation retains both receipts and live-review evidence, and Muse command guidance permits supplied citations on newly created cards while prohibiting source replacement on existing cards. A focused regression covers that last integration boundary.
 
