@@ -12,6 +12,7 @@ export interface ArtifactProgress {stage:'collect'|'layout'|'write'|'verify';com
 export interface ArtifactOptions {includePrivate?:boolean;variant?:ArtifactScope;onProgress?:(progress:ArtifactProgress)=>void;onState?:(state:OperationState)=>void;onDiagnostic?:(receipt:DiagnosticReceipt)=>void;}
 export interface ExportArtifact extends TripArtifact {id:string;createdAt:string;sha256:string;kept:boolean;scope:ArtifactScope;urlExpiresAt:null;inventory:ArtifactInventory;coverSvg?:string;storageDiagnostic?:DiagnosticReceipt;}
 const available=new Map<string,{record:StoredArtifact;artifact:ExportArtifact}>();
+const restoring=new Map<string,Set<{cancelled:boolean}>>(),removing=new Map<string,Promise<void>>();
 function selection(doc:import('yjs').Doc,scope:ArtifactScope){
   const parts=tripParts(doc),visible=(value:string)=>scope==='personal'||(scope==='guide'?value==='guide':value!=='private');
   const cards=readAllCards(parts).filter(card=>visible(card.scope)),ids=new Set(cards.map(card=>card.id));
@@ -169,14 +170,27 @@ export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',
 
 /** A kept file gets a fresh URL after reload. Tab-only bytes stay available until explicit removal or tab close. */
 export async function restoreTripArtifact(id:string):Promise<ExportArtifact>{
+  if(removing.has(id))throw new Error('This export is being removed. Make a fresh export from your board.');
   const live=available.get(id);if(live)return live.artifact;
-  const record=await readArtifact(id);if(!record)throw new Error('This export is no longer kept in this browser. Make a fresh export.');
-  const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},coverSvg:record.coverSvg};
-  available.set(id,{record,artifact});return artifact;
+  const pending={cancelled:false},readers=restoring.get(id)??new Set<{cancelled:boolean}>();readers.add(pending);restoring.set(id,readers);
+  try{
+    const record=await readArtifact(id);
+    if(pending.cancelled)throw new Error('This export was removed while restoring. Make a fresh export.');
+    if(!record)throw new Error('This export is no longer kept in this browser. Make a fresh export.');
+    const existing=available.get(id);if(existing)return existing.artifact;
+    const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},coverSvg:record.coverSvg};
+    available.set(id,{record,artifact});return artifact;
+  }finally{readers.delete(pending);if(!readers.size&&restoring.get(id)===readers)restoring.delete(id);}
 }
 export async function forgetTripArtifact(id:string):Promise<void>{
-  const live=available.get(id);if(live?.artifact.kept!==false)await removeArtifact(id);else try{await removeArtifact(id);}catch{/* No verified durable copy exists; remove the tab-only file. */}
-  if(live)URL.revokeObjectURL(live.artifact.url);available.delete(id);
+  const pending=removing.get(id);if(pending)return pending;
+  restoring.get(id)?.forEach(reader=>{reader.cancelled=true;});
+  const removal=(async()=>{
+    const live=available.get(id);if(live?.artifact.kept!==false)await removeArtifact(id);else try{await removeArtifact(id);}catch{/* No verified durable copy exists; remove the tab-only file. */}
+    const current=available.get(id);if(current)URL.revokeObjectURL(current.artifact.url);available.delete(id);
+  })();
+  removing.set(id,removal);
+  try{await removal;}finally{if(removing.get(id)===removal)removing.delete(id);}
 }
 
 export function downloadArtifact(artifact:TripArtifact):void {

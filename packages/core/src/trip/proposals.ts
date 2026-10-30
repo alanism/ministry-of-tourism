@@ -6,6 +6,7 @@ import { readAllCards, readCard } from './model.ts';
 import { appliedPart, hasApplied, markApplied, tokenMatches } from './revisions.ts';
 import type { ComparisonToken } from './revisions.ts';
 import type { TripSession } from './session.ts';
+import {tripCardSchema} from './schema.ts';
 
 export interface ProposalOp { command: string; input: Record<string, unknown>; }
 export interface SourceRef { id: string; url?: string; retrievedAt: string; }
@@ -64,7 +65,10 @@ export function applyProposal(session: TripSession, approver: Actor, proposal: P
   if (!idx.length) return { ...done(), remainingOps: proposal.ops.length - prior.ops.length };
   const chosen: Proposal = { ...proposal, ops: idx.map((i) => proposal.ops[i]!) };
   prevalidateProposal(session, chosen, prior.revs);
-  session.executeAll(approver, chosen.ops, proposalUndoKey(proposal.id));
+  // The approving person keeps their role; a namespaced creation context makes test output durable and explicit.
+  const context=proposal.author==='agent:fake'||proposal.author==='test-adapter'?{...approver,id:`test-adapter:${approver.id}`}:approver;
+  if(context!==approver)tripCardSchema.shape.createdBy.parse(context.id);
+  session.executeAll(context, chosen.ops, proposalUndoKey(proposal.id));
   const ops = [...prior.ops, ...idx].sort((a, b) => a - b);
   const revs = { ...prior.revs };
   for (const op of chosen.ops) { const id = touchedCardId(op); if (id) revs[id] = session.cardRev(id); }

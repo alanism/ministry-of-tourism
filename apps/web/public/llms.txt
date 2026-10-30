@@ -1,8 +1,8 @@
-# Writer's Board
+# Ministry of Tourism
 
-> A whiteboard for planning and writing that a person and an AI agent can share. Boards live in the person's browser. Agents can read the board as JSON, add cards and notes, check quotes against sources, and carry a board between sessions with board_export and board_import.
+> A travel workspace for travelers, hosts, tour guides and their AI agents. The board keeps places, source material, selected artwork and trip memories together in the person's browser.
 
-The writer's own words stay theirs: agents are refused when they try to write the writer's prose, and every agent change is labeled and can be undone.
+Read the actual board ID, revision and command schemas before proposing changes. Private content is excluded from agent reads and shared exports. Muse availability is explicit; manual editing and export work without a live provider.
 
-- [Notes for AI agents: what this is, how to use it, rules and FAQ](/agents.md)
-- [Plain page for browsers without WebGL](/?view=agent)
+- [Open the travel board](/)
+- [Trip agent contract: window.motTrip, commands, privacy and portable artifacts](/trip-agents.md)

@@ -1,6 +1,6 @@
 # Ministry of Tourism: trip agent contract
 
-Open `/?view=trip`. The selected trip exposes `window.motTrip`; the inherited writer API is absent on this route. Inspect `window.motTrip.capabilities()` before invoking commands.
+Open `/` (or `/?view=trip`). A saved trip reopens; a new visitor chooses a destination before an empty board is created. The selected trip exposes `window.motTrip`; the inherited writer API is absent on this route. Inspect `window.motTrip.capabilities()` before invoking commands.
 
 - `probe()` returns API/schema versions, active board ID, current revision and provider availability. It contains no card content.
 - `read()` returns metadata, non-private cards, visible presentation objects and their asset metadata. Private cards, private decorative layers and their exclusive media are excluded.

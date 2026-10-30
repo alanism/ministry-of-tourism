@@ -1,6 +1,8 @@
 import type {TripCard} from '@writers-board/core';
 import '@fontsource/ibm-plex-serif/600.css';
 import {editedSourceCopy,sourceDate,sourceHref,sourceTextFor} from './source-card';
+import {cardProvenanceLabel} from './sample';
+
 import './content-cards.css';
 
 export function SourceLink({url,label='Open source ↗'}:{url:string|undefined;label?:string}){
@@ -22,10 +24,11 @@ export function EditedExcerpt({card}:{card:TripCard}){
   return copy?<div className="mot-source-note"><span>Your saved excerpt</span><p>{copy}</p></div>:null;
 }
 export function CardContent({card,updated=false}:{card:TripCard;updated?:boolean}){
-  const quote=sourceTextFor(card),source=card.source;
+  const quote=sourceTextFor(card),source=card.source,label=cardProvenanceLabel(card);
   return <div className="mot-card-content">
     {updated&&<span className="m-chip">Source updated · your note kept</span>}
-    {card.provenance==='agent'?<div className="mot-source-muse"><b>Muse suggestion · Not checked</b><p>{card.body}</p></div>:
+    {card.provenance==='agent'?<div className="mot-source-muse"><b>{label==='Test adapter'?'Test adapter suggestion':label} · Not checked</b><p>{card.body}</p></div>:
+
       source?<>{quote&&<blockquote className="mot-source-quote compact">{quote.slice(0,2000)}</blockquote>}<div className="mot-source-attribution">{source.kind==='venue'?'Venue · ':''}{source.provider==='fcc'||card.provenance==='fcc'?'FCC':'Source'} · {source.publishedAt?'Published '+sourceDate(source.publishedAt):'Retrieved '+sourceDate(source.retrievedAt)}</div></>:
       card.body?<p className="m-card-body">{card.body}</p>:null}
     <EditedExcerpt card={card}/>{card.travelerNote&&<div className="mot-source-note"><span>Your note</span><p>{card.travelerNote}</p></div>}

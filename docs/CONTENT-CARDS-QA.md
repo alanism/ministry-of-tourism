@@ -31,4 +31,6 @@ request deadline, cache schema or source content changed. Requests and notebook
 data in this regression are synthetic; no live-publication or cold-start claim is
 made. The machine-readable `result.json` states the injected faults explicitly.
 
-These UI implementations can be reviewed independently of the outstanding MOT-76 registry integration. MOT-80 and MOT-79 retain their dependency holds and need their assigned reviews; no Opus score, independent acceptance or Verified status is implied. The app's Muse runtime, credentials and model allowlist are unchanged. Spark builder work and MOT-94's hold are outside this change.
+The MOT-76 registry dependency is met by the included 200-city publication. This checkout integrates the committed source cards, freshness states, cache recovery and Spark-built Almanac from `51c5100`, alongside its newer artwork and Muse runtime. Board/destination keys scope the retained issue and grounding input. The source-card renderer retains the current Test adapter attribution without duplicating the Muse suggestion label; `source-integration.test.ts` covers both cases. Almanac source, styles, helper and unit test remain byte-identical to that committed build.
+
+MOT-77/79/80/81/82 remain Implemented pending their independent design reviews. No Opus score, self-Verified, runtime credential/model change or deployment is implied. See `WP2-INTEGRATION-QA.md` for the combined verification; MOT-94 and release holds remain.

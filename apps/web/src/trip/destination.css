@@ -4,27 +4,28 @@
 .mot-destination.m-panel { width: 100%; max-width: none; height: 100%; min-height: 0; margin: 0; padding: 0; overflow: hidden; background: var(--m-surface); border-radius: 16px; }
 .mot-destination form { display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 0; height: 100%; min-width: 0; }
 .mot-destination-heading { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 24px; border-bottom: 1px solid var(--m-line); }
-.mot-destination-heading h2 { flex: 1; margin: 0; font: 500 19px/1.3 'IBM Plex Serif',Georgia,serif; }
-.mot-destination-close { border: 0; background: transparent; color: var(--m-ink-2); border-radius: 8px; width: 44px; height: 44px; font: 26px/1 var(--m-sans); cursor: pointer; }
+.mot-destination-heading h2 { flex: 1; margin: 0; font: 600 19px/24px 'IBM Plex Serif',Georgia,serif; }
+.mot-destination-close { border: 0; background: transparent; color: var(--m-ink-2); border-radius: 8px; width: 44px; height: 44px; font: 24px/28px var(--m-sans); cursor: pointer; }
 .mot-destination-close:hover { background: var(--m-wash); }
-.mot-destination-body { display: grid; align-content: start; gap: 16px; overflow: auto; min-height: 0; padding: 20px 24px 24px; }
+.mot-destination-body { display: grid; align-content: start; gap: 24px; overflow: auto; min-height: 0; padding: 24px; }
 .mot-destination-body > * { min-width: 0; }
 .mot-destination p { margin: 0; }
-.mot-destination-muted { color: var(--m-ink-2); font: 12px/1.5 var(--m-sans); }
+.mot-destination :is(b,strong) { font-weight: 600; }
+.mot-destination-muted { color: var(--m-ink-2); font: 12px/16px var(--m-sans); }
 .mot-destination-search { display: flex !important; flex-direction: row; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; border: 1px solid var(--m-line-2); border-radius: 12px; background: var(--m-surface); }
-.mot-destination-search:focus-within { border-color: var(--m-ink); outline: 2px solid var(--m-wash); }
+.mot-destination-search:focus-within { border-color: var(--m-ink); outline: 2px solid var(--m-red); }
 .mot-destination-search svg { width: 20px; height: 20px; flex: none; color: var(--m-ink-2); }
-.mot-destination-search input { width: 100%; min-width: 0; border: 0; outline: none; padding: 12px 0; background: transparent; color: var(--m-ink); font: 15px/1.4 var(--m-sans); }
+.mot-destination-search input { width: 100%; min-width: 0; border: 0; outline: none; padding: 12px 0; background: transparent; color: var(--m-ink); font: 15px/20px var(--m-sans); }
 .mot-destination-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.mot-destination-status { display: flex; align-items: center; gap: 8px; font: 11px/1.5 var(--m-mono); color: var(--m-ink-2); }
+.mot-destination-status { display: flex; align-items: center; gap: 8px; font: 12px/16px var(--m-mono); color: var(--m-ink-2); }
 .mot-destination-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--m-guide-ink); flex: none; }
 .mot-destination-status i.off { background: var(--m-ink-3); }
-.mot-destination-label { margin: 0 0 12px !important; font: 600 12px/1.5 var(--m-mono); text-transform: uppercase; letter-spacing: .06em; }
+.mot-destination-label { margin: 0 0 12px !important; font: 600 12px/16px var(--m-mono); text-transform: uppercase; letter-spacing: .06em; }
 .mot-destination-tagwall { display: grid; grid-template-columns: repeat(auto-fill,minmax(92px,1fr)); gap: 8px 4px; }
 .mot-destination-tagwall button { display: grid; justify-items: center; align-content: start; gap: 3px; min-width: 0; min-height: 110px; padding: 8px 4px; border: 0; border-radius: 12px; background: transparent; cursor: pointer; }
 .mot-destination-tagwall button:hover { background: var(--m-wash); }
-.mot-destination-tagwall button > span:not(.mot-destination-tag) { font: 600 12px/1.3 var(--m-sans); text-align: center; overflow-wrap: anywhere; }
-.mot-destination-tagwall small { font: 11px/1.35 var(--m-sans); color: var(--m-ink-2); text-align: center; }
+.mot-destination-tagwall button > span:not(.mot-destination-tag) { font: 600 12px/16px var(--m-sans); text-align: center; overflow-wrap: anywhere; }
+.mot-destination-tagwall small { font: 12px/16px var(--m-sans); color: var(--m-ink-2); text-align: center; }
 .mot-destination-tag { display: grid; place-items: center; width: 64px; height: 64px; flex: none; transform: rotate(-5deg); transition: transform .2s ease; }
 .mot-destination-tagwall button:nth-child(3n+1) .mot-destination-tag { transform: rotate(5deg); }
 .mot-destination-tagwall button:nth-child(3n+2) .mot-destination-tag { transform: rotate(-2deg); }
@@ -36,42 +37,42 @@
 .mot-destination-result { display: grid; grid-template-columns: 56px minmax(0,1fr) 82px; align-items: center; gap: 12px; width: 100%; min-height: 72px; padding: 8px; text-align: left; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--m-ink); cursor: pointer; }
 .mot-destination-result:hover,.mot-destination-result[aria-selected='true'] { background: var(--m-wash); border-color: var(--m-line); }
 .mot-destination-result .mot-destination-tag { width: 56px; height: 56px; }
-.mot-destination-result strong { display: block; font: 500 19px/1.3 'IBM Plex Serif',Georgia,serif; overflow-wrap: anywhere; }
-.mot-destination-result small { display: block; margin-top: 3px; font: 12px/1.4 var(--m-sans); color: var(--m-ink-2); }
-.mot-destination-result.typed strong { font: 500 15px/1.4 var(--m-sans); }
-.mot-destination-result-meta { font: 11px/1.4 var(--m-mono); text-align: right; color: var(--m-ink-2); }
-.mot-destination-text-button { min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: var(--m-ink); font: 600 12px/1.4 var(--m-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.mot-destination-result strong { display: block; font: 600 19px/24px 'IBM Plex Serif',Georgia,serif; overflow-wrap: anywhere; }
+.mot-destination-result small { display: block; margin-top: 3px; font: 12px/16px var(--m-sans); color: var(--m-ink-2); }
+.mot-destination-result.typed strong { font: 400 15px/20px var(--m-sans); }
+.mot-destination-result-meta { font: 12px/16px var(--m-mono); text-align: right; color: var(--m-ink-2); }
+.mot-destination-text-button { min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: var(--m-ink); font: 600 12px/16px var(--m-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .mot-destination-waiting { display: grid; justify-items: center; gap: 10px; padding: 28px 16px; background: var(--m-paper); border-radius: 12px; text-align: center; }
-.mot-destination-waiting p { font: 500 19px/1.35 'IBM Plex Serif',Georgia,serif; }
-.mot-destination-waiting > span:last-child { max-width: 32ch; font: 12px/1.5 var(--m-sans); color: var(--m-ink-2); }
+.mot-destination-waiting p { font: 600 19px/24px 'IBM Plex Serif',Georgia,serif; }
+.mot-destination-waiting > span:last-child { max-width: 32ch; font: 12px/16px var(--m-sans); color: var(--m-ink-2); }
 .mot-destination-preview { display: grid; gap: 16px; padding: 16px; border: 1px solid var(--m-line); border-radius: 16px; background: var(--m-paper); }
 .mot-destination-who { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .mot-destination-who > div { min-width: 0; }
 .mot-destination-who .mot-destination-tag { width: 72px; height: 72px; }
-.mot-destination-who h3 { margin: 0 0 6px; font: 500 24px/1.25 'IBM Plex Serif',Georgia,serif; overflow-wrap: anywhere; }
-.mot-destination-who p,.mot-destination-preview > p { font: 12px/1.5 var(--m-sans); color: var(--m-ink-2); }
+.mot-destination-who h3 { margin: 0 0 6px; font: 600 24px/28px 'IBM Plex Serif',Georgia,serif; overflow-wrap: anywhere; }
+.mot-destination-who p,.mot-destination-preview > p { font: 12px/16px var(--m-sans); color: var(--m-ink-2); }
 .mot-destination-lanes { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; }
-.mot-destination-lanes > div { min-width: 0; min-height: 66px; padding: 8px 6px; border: 1px dashed var(--m-line-2); border-radius: 8px; background: var(--m-surface); font: 10px/1.4 var(--m-mono); overflow-wrap: anywhere; }
+.mot-destination-lanes > div { min-width: 0; min-height: 66px; padding: 8px 6px; border: 1px dashed var(--m-line-2); border-radius: 8px; background: var(--m-surface); font: 12px/16px var(--m-mono); overflow-wrap: anywhere; }
 .mot-destination-lanes b { display: block; text-transform: uppercase; }
 .mot-destination-lanes span { color: var(--m-ink-2); }
-.mot-destination-facts { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 8px 16px; margin: 0; font: 15px/1.5 var(--m-sans); }
+.mot-destination-facts { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 8px 16px; margin: 0; font: 15px/20px var(--m-sans); }
 .mot-destination-facts dt { color: var(--m-ink-2); }
 .mot-destination-facts dd { margin: 0; overflow-wrap: anywhere; }
-.mot-destination-question { margin: 0 0 8px; font: 500 19px/1.35 'IBM Plex Serif',Georgia,serif; }
+.mot-destination-question { margin: 0 0 8px; font: 600 19px/24px 'IBM Plex Serif',Georgia,serif; }
 .mot-destination-countries { display: flex; flex-wrap: wrap; gap: 8px; }
-.mot-destination-countries button { min-height: 44px; padding: 0 12px; border: 1px solid var(--m-line-2); border-radius: 999px; background: var(--m-surface); font: 12px/1.4 var(--m-sans); cursor: pointer; }
+.mot-destination-countries button { min-height: 44px; padding: 0 12px; border: 1px solid var(--m-line-2); border-radius: 999px; background: var(--m-surface); font: 12px/16px var(--m-sans); cursor: pointer; }
 .mot-destination-countries button:hover { background: var(--m-wash); }
 .mot-destination-keep { display: grid; gap: 8px; padding: 0; margin: 0 0 12px; list-style: none; }
-.mot-destination-keep li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 10px 12px; border: 1px solid var(--m-line); border-radius: 10px; background: var(--m-paper); font: 12px/1.4 var(--m-sans); }
+.mot-destination-keep li { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; padding: 10px 12px; border: 1px solid var(--m-line); border-radius: 10px; background: var(--m-paper); font: 12px/16px var(--m-sans); }
 .mot-destination-keep b { margin-right: auto; }
 .mot-destination-keep span { padding: 2px 8px; border-radius: 999px; background: var(--m-guide); color: var(--m-guide-ink); }
 .mot-destination-foot { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--m-line); }
-.mot-destination-foot > span { margin-right: auto; font: 11px/1.4 var(--m-mono); color: var(--m-ink-2); }
+.mot-destination-foot > span { margin-right: auto; font: 12px/16px var(--m-mono); color: var(--m-ink-2); }
 .mot-destination .m-btn.primary { background: var(--m-red); border-color: var(--m-red); color: #ffffff; }
 .mot-destination-error { color: var(--m-red); font-size: 12px; }
-@media(max-width:600px) {
-  .mot-dialog:has(.mot-destination) { width: 100vw; height: 100dvh; margin: 0; border-radius: 0; }
-  .mot-destination.m-panel { border-radius: 0; border: 0; }
+@media(max-width:760px) {
+  .mot-dialog:has(.mot-destination) { width: 100vw; height: calc(100dvh - 56px); margin: 56px 0 0; border-radius: 16px 16px 0 0; }
+  .mot-destination.m-panel { border-radius: 16px 16px 0 0; border: 0; }
   .mot-destination-heading { padding: 10px 12px 10px 16px; }
   .mot-destination-body { padding: 16px; }
   .mot-destination-result { grid-template-columns: 48px minmax(0,1fr); gap: 10px; }

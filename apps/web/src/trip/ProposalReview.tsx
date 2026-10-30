@@ -12,7 +12,7 @@ const ADAPTER_DELAY_MS = 1200;
 
 /** A suggestion that is not yet decided: the Board draws its unapplied card creations as ghosts. */
 export interface PendingReview { suggestion: ReviewSuggestion; applied: number[] }
-export interface Ghost { index: number; stage: Stage; title: string; body: string; assetId?: string }
+export interface Ghost { index: number; stage: Stage; title: string; body: string; assetId?: string; label?:string; citation?:{title:string;url:string}; review?:()=>void }
 
 export function ghostCards(pending: PendingReview | null): Ghost[] {
   if (!pending) return [];

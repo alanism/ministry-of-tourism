@@ -11,7 +11,8 @@ export function App() {
     window.addEventListener('popstate', changed);
     return () => window.removeEventListener('popstate', changed);
   }, []);
+  const view = new URLSearchParams(search).get('view');
   return <Suspense fallback={<main className="loading" role="status">Opening your workspace…</main>}>
-    {new URLSearchParams(search).get('view') === 'trip' ? <TripApp /> : <WriterApp />}
+    {view === 'board' || view === 'agent' ? <WriterApp /> : <TripApp />}
   </Suspense>;
 }
