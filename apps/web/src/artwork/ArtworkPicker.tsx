@@ -28,7 +28,7 @@ function useCatalog<T>(url: string, schema: z.ZodType<T>) {
     try{const raw=cacheable?localStorage.getItem(cacheKey):null;if(raw&&raw.length<512*1024){const saved=JSON.parse(raw);if(typeof saved.retrievedAt==='string'&&Number.isFinite(Date.parse(saved.retrievedAt)))cached={data:schema.parse(saved.data),retrievedAt:saved.retrievedAt};}}catch{}
     let live = true;
     setState({ url });
-    readCatalog(url, schema, controller.signal).then(data => {
+    readCatalog(url, schema, controller.signal, fetch, { cache: cacheable, forceRefresh: attempt > 0 }).then(data => {
       if(live){setState({url,data});if(cacheable)try{const saved=JSON.stringify({data,retrievedAt:new Date().toISOString()});if(saved.length<512*1024)localStorage.setItem(cacheKey,saved);}catch{}}
     }).catch(error => {
       if (live) setState({ url,...(cached?{data:cached.data,cachedAt:cached.retrievedAt}:{}), error: controller.signal.aborted ? 'Artwork took too long to load. Please retry.' : error instanceof Error ? error.message : 'Could not load artwork. Please retry.' });

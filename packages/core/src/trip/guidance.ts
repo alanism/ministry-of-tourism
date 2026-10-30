@@ -8,8 +8,8 @@ export const GUIDE_ID = 'mot-trip-best-practices';
 export const GUIDE_VERSION = '0.2.0';
 /** Public path served by ordinary GET from the app origin. */
 export const GUIDE_PATH = '/guides/trip-best-practices.md';
-/** Stays null until an actual deployment of the guide is verified. Never guess a deployed URL. */
-export const GUIDE_URL: string | null = null;
+/** Verified production deployment of the guide: fetched with HTTP 200 and byte-identical to the published guide file. */
+export const GUIDE_URL: string | null = 'https://ministryoftourism.web.app/guides/trip-best-practices.md';
 
 export type GuidePhase = 'planning' | 'during' | 'post';
 export interface GuideSection { phase: GuidePhase; title: string; summary: string; points: string[]; }

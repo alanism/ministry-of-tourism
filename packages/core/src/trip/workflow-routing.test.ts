@@ -124,6 +124,6 @@ describe('MOT-109 smallest-workflow routing', () => {
   it('never exposes private cards to an agent context', () => {
     const context = agentContext(planned(), { now: before });
     expect(JSON.stringify(context)).not.toContain('PRIVATE-CODE');
-    expect(context).toMatchObject({ current_phase: 'planning', counts: { cards: 2 }, fixed_bookings: [expect.objectContaining({ title: 'Dinner' })], guide: { guide_url: null } });
+    expect(context).toMatchObject({ current_phase: 'planning', counts: { cards: 2 }, fixed_bookings: [expect.objectContaining({ title: 'Dinner' })], guide: { guide_url: 'https://ministryoftourism.web.app/guides/trip-best-practices.md' } });
   });
 });

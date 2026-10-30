@@ -11,10 +11,10 @@ const owner = { kind: 'human' as const, id: 'owner', name: 'Owner' };
 const published = new URL(`../../../../apps/web/public${GUIDE_PATH}`, import.meta.url);
 
 describe('MOT-116 one guidance source', () => {
-  it('publishes the generated guide unchanged and keeps the URL null until a deployment is verified', () => {
+  it('publishes the generated guide unchanged and uses the verified production guide URL', () => {
     expect(readFileSync(published, 'utf8')).toBe(guidanceMarkdown());
-    expect(GUIDE_URL).toBeNull();
-    expect(agentGuidance()).toMatchObject({ guide_url: null, version: GUIDE_VERSION });
+    expect(GUIDE_URL).toBe('https://ministryoftourism.web.app/guides/trip-best-practices.md');
+    expect(agentGuidance()).toMatchObject({ guide_url: 'https://ministryoftourism.web.app/guides/trip-best-practices.md', version: GUIDE_VERSION });
   });
   it('covers Planning, During trip and Post trip, with post-trip copy on HTML/app and JSON/ZIP and no PDF requirement', () => {
     expect(GUIDE_SECTIONS.map(s => s.title)).toEqual(['Planning', 'During trip', 'Post trip']);
@@ -35,9 +35,10 @@ describe('MOT-116 one guidance source', () => {
     expect(start).toContain(`version: \`${GUIDE_VERSION}\``);
     expect(start).toContain(GUIDE_ESSENTIALS[0]);
     // A JSON-only handoff names no embedded file it cannot resolve.
-    // guide_path is the public app route, not a file inside the package.
-    const { guide_path, ...embedded } = readable.agent_guidance;
+    // guide_path is the public app route, not a file inside the package; guide_url is its verified public URL.
+    const { guide_path, guide_url, ...embedded } = readable.agent_guidance;
     expect(guide_path).toBe(GUIDE_PATH);
+    expect(guide_url).toBe(GUIDE_URL);
     expect(JSON.stringify(embedded)).not.toMatch(/START-HERE|\.md\b|\.json\b|assets\//);
     for (const name of [...start.matchAll(/^- `([^`]+)`:/gm)].map(m => m[1]!).filter(n => !['small_edit', 'preferences', 'plan', 'trip_change', 'keepsake'].includes(n))) expect(name === 'assets/' || name in files).toBe(true);
     expect(start).not.toContain('assets/');
