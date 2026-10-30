@@ -12,6 +12,12 @@ export function changeRank(ballot:GroupBallot,optionId:string,rank:number,K:3|5)
  return {...ballot,rankings:ordered.map((option_id,index)=>({option_id,rank:index+1}))};
 }
 
+/** Display names are labels, not identities: repeated names show their stable household ID so a response cannot be entered for the wrong household. */
+export function householdLabels(households:readonly {household_id:string;display_name:string}[]){
+ const count=new Map<string,number>();for(const h of households){const k=h.display_name.trim().toLowerCase();count.set(k,(count.get(k)??0)+1);}
+ return new Map(households.map(h=>[h.household_id,(count.get(h.display_name.trim().toLowerCase())??0)>1?`${h.display_name} · ${h.household_id}`:h.display_name]));
+}
+
 function RoundSetup({session,actor,refresh,notify}:Omit<Props,'onClose'>){
  const meta=readTripMeta(session.doc),cards=readAllCards(session.parts).filter(c=>c.kind!=='brief'&&c.scope!=='private');
  const [names,setNames]=useState(''),[K,setK]=useState<3|5>(5),[chosen,setChosen]=useState(()=>new Set(cards.map(c=>c.id)));
@@ -30,11 +36,11 @@ function RoundSetup({session,actor,refresh,notify}:Omit<Props,'onClose'>){
 function BallotEditor({session,actor,refresh,notify,group,round,householdId,onExport,exportBusy}:{session:TripSession;actor:Actor;refresh:()=>void;notify:Props['notify'];group:GroupPreferences;round:GroupPreferences['rounds'][number];householdId:string;onExport?:Props['onExport'];exportBusy?:boolean}){
  const key={proposal_version:round.proposal_version,round_id:round.round_id,household_id:householdId},saved=readTripMeta(session.doc).groupBallots?.find(b=>ballotKey(b)===ballotKey(key));
  const ballot=saved??{...key,rankings:[],stamps:[],shared_note:''},[note,setNote]=useState<string|null>(null);
- const cards=new Map(readAllCards(session.parts).map(c=>[c.id,c])),household=group.households.find(h=>h.household_id===householdId)!;
+ const cards=new Map(readAllCards(session.parts).map(c=>[c.id,c])),household=group.households.find(h=>h.household_id===householdId)!,label=householdLabels(group.households).get(householdId)??household.display_name;
  const update=(next:GroupBallot)=>{try{session.execute(actor,'trip_ballot_update',next);refresh();}catch(error){notify(error instanceof Error?error.message:'Response could not be saved');}};
- return <section aria-label={`${household.display_name} response`}>
+ return <section aria-label={`${label} response`}>
   <p className="mot-ballot-scale">Rank points: {round.rank_limit===5?'5, 4, 3, 2, 1':'3, 2, 1'}. Choose up to {round.rank_limit}; fewer choices are welcome.</p>
-  <p role="status" className="mot-ballot-status">{!saved?'No response':ballot.rankings.length===round.rank_limit?'Complete shortlist':`Partial response · ${ballot.rankings.length} of ${round.rank_limit} ranked`} · {household.display_name}</p>
+  <p role="status" className="mot-ballot-status">{!saved?'No response':ballot.rankings.length===round.rank_limit?'Complete shortlist':`Partial response · ${ballot.rankings.length} of ${round.rank_limit} ranked`} · {label}</p>
   <p className="m-muted t-1">Ranks express preference. Stamps express acceptability. Approved does not book, pay or share anything. Denied means this household must not be assumed to attend.</p>
   <div className="mot-ballot-options">{round.option_ids.map(optionId=>{
    const card=cards.get(optionId),title=card&&card.scope!=='private'?card.title||optionId:optionId,rank=ballot.rankings.find(r=>r.option_id===optionId)?.rank,stamp=ballot.stamps.find(s=>s.option_id===optionId)?.value??'';
@@ -69,7 +75,7 @@ export function RankBallot({session,actor,refresh,notify,onClose,notice,onOrgani
    {onOrganizer&&<button type="button" className="m-btn" onClick={onOrganizer}>Organizer summary</button>}{notice&&<p role="status">{notice}</p>}
    {group&&round&&household?<>
     <div className="mot-ballot-selectors"><label>Round<select className="m-field" aria-label="Round" value={`${round.proposal_version}:${round.round_id}`} onChange={e=>setRoundKey(e.target.value)}>{group.rounds.map(r=><option key={`${r.proposal_version}:${r.round_id}`} value={`${r.proposal_version}:${r.round_id}`}>{r.kind==='destination'?'Destinations':`City: ${r.city_id}`} · proposal {r.proposal_version} · {r.rank_limit} ranks</option>)}</select></label>
-    <label>Responding household<select className="m-field" aria-label="Responding household" value={household.household_id} onChange={e=>setHouseholdId(e.target.value)}>{group.households.map(h=><option key={h.household_id} value={h.household_id}>{h.display_name}</option>)}</select></label></div>
+    <label>Responding household<select className="m-field" aria-label="Responding household" value={household.household_id} onChange={e=>setHouseholdId(e.target.value)}>{(()=>{const labels=householdLabels(group.households);return group.households.map(h=><option key={h.household_id} value={h.household_id}>{labels.get(h.household_id)}</option>);})()}</select></label></div>
     <p className="m-muted t-1">One household, one response. Household names are labels, not verified identities.</p>
     <BallotEditor key={`${round.proposal_version}:${round.round_id}:${household.household_id}`} session={session} actor={actor} refresh={refresh} notify={notify} group={group} round={round} householdId={household.household_id} onExport={onExport} exportBusy={exportBusy} />
    </>:<RoundSetup session={session} actor={actor} refresh={refresh} notify={notify} />}
