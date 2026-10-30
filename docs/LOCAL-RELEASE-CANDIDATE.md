@@ -1,6 +1,78 @@
 # Local release candidate — 31 October 2026
 
-## Latest integration: requested WP6 revision d23b163
+## Latest integration: requested WP6 revision 0355bb6
+
+The current local code checkpoint is
+`169ddc9f3881b5a9939180678dc6921cb8a9979a`, merging exactly
+`0355bb66ba3499a330c713d4cd36de6e8006c193` into `568ce6a`. It brings the bounded
+catalog metadata session cache, readable horizontally scrollable phone summary
+tables, and the verified public guide URL contract. All eight incoming files
+match their source commit blobs. Of 2,624 previously tracked files, 2,618 remain
+unchanged; six change and two files are added. Existing final Muse diagnostics,
+ledger durability and uncommitted source-worktree work are preserved.
+
+The owner explicitly authorized retaining the exact committed URL expectation
+updates in `guidance.test.ts` and `workflow-routing.test.ts`. Those two files are
+byte-identical to the requested source; every other existing harness file,
+configuration, timeout, dependency and release-gate rule remains unchanged.
+Before implementation, the incoming cache tests reproduced five failures and
+seven passes; incoming guide expectations reproduced two failures and 16 passes.
+Original files were restored before the merge. After integration the unchanged
+default **`npm run check` passes: 902 tests / 162 files**, followed by all four
+TypeScript projects. Test execution: 33.66 seconds. The production web build
+passes in 3.07 seconds with existing advisories. Earlier ledger CLI timing
+failures remain historical observations; its implementation and timeout were
+not changed, and no timing-flake fix is claimed.
+
+Sandboxed Playwright was used because the Browser plugin is unavailable. Local
+browser verification uses loopback resources and declared transport fixtures:
+
+- At 1440/375, art-picker reopen makes no registry/manifest request even with
+  browser HTTP caching disabled, while city/category catalogs still refresh.
+  The board remains identical. Twelve cache regressions cover opt-in scope,
+  schema/fetcher isolation, five-minute TTL, backwards clocks, 32-entry bounds,
+  clones, forced refresh, invalid data and cancellation.
+- Real WP8 response exchange/tally/fairness/Apply/Undo/offline checks pass with
+  all original assertions retained in an external probe. Added phone checks
+  verify single-line headers and a 520px table scrolling inside 337px/242px
+  containers at 375/280. Screenshots were inspected.
+- The unchanged canonical WP9 runner stops at its obsolete null guide-URL
+  expectation. That failure is retained; no canonical-runner pass is claimed.
+  A separate external probe changes only that expected value to the exact
+  approved URL and its matching success description. All other assertions and
+  steps remain. Its eight native steps/eight layouts pass, including ordinary
+  local guide GET byte parity, privacy, Today, fixed bookings, memories,
+  HTML/JSON/ZIP and deliberate storage-fault recovery. Only expected injected
+  AbortErrors occur inside its fault window.
+- Four development/built-origin helper runs at 1440/375 pass exact-byte photo
+  import, canvas non-taint and durable reload/hash checks, with zero unexpected
+  external attempts. No production URL was fetched. This is local fixture
+  evidence, not fresh public-FCC CORS or physical-device acceptance.
+
+All four complete implementation hashes in the producer's fixed-performance
+source binding match the integrated worktree bytes exactly. Its existing
+measurements therefore retain their source provenance. No fresh timing-budget,
+network, cold-start or physical-device result is claimed. Existing 4s/2s boundary
+self-tests and all 11 unchanged release-gate self-tests pass.
+
+On frozen board save192, genuine source integration reduces the unchanged gate
+from 39 live / 37 manual errors with 27 absent latest references to **three live /
+one manual errors, zero ancestry gaps and zero record-format errors**. Release
+remains blocked: live Muse key setup/A14 and MOT-100 physical acceptance are not
+cleared. MOT-100/MOT-101 remain Implemented; their device-pending scope, prior
+owner-authorized hold resolutions and every task/review record are preserved.
+The board update changes only the separate local-candidate banner and metadata.
+Save193 is written and rechecked at 1440/375 with all 50 task records unchanged.
+Applicable A16–A20 still require the existing supplemental evidence and acceptance;
+the legacy gate's A01–A14 coverage is not expanded or waived.
+
+This task performs no push, deployment, paid/provider call, credential handling,
+PDF work or new production acceptance. The public guide URL is the imported
+contract, checked locally, not a new deployment or fresh production verification.
+Raw evidence is beside the canonical plan in
+`Design Sprints/Local-WP6-0355bb6-Integration-2026-10-31/`.
+
+## Prior requested integration: d23b163
 
 The current local code checkpoint is
 `884bcf357426f532c5f08f19b7bc1ce82ee511d7`, merging exactly
