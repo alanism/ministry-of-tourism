@@ -32,6 +32,7 @@ const coreUrl='/@fs/'+path.resolve(__dirname,'..').replace(/\\/g,'/')+'/packages
    await trip.whenSaved();session.destroy();trip.destroy();
   },{fixture,coreUrl});
   await page.reload({waitUntil:'domcontentloaded'});await page.getByRole('navigation',{name:'Trip views'}).getByRole('button',{name:'Keepsakes',exact:true}).click();
+  await page.getByRole('button',{name:'Magazine',exact:true}).click();
   await page.locator('.mot-issue-paper img').first().waitFor();
   assert.equal(page.url(),origin+'/?view=trip');assert((await page.title()).includes(fixture.name));assert.equal(await page.locator('vite-error-overlay').count(),0);
   const flip=page.getByRole('button',{name:'Turn the postcard over',exact:true});

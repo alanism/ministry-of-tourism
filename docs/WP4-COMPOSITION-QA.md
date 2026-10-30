@@ -1,3 +1,7 @@
+# Current acceptance
+
+On31October2026 the owner reassigned WP4 acceptance to Codex. See [WP4-WONDER-ACCEPTANCE.md](WP4-WONDER-ACCEPTANCE.md) for current results; pending Opus statements below describe the historical30October run. PDF-only work stays closed.
+
 # WP4 composition and portable state
 
 The shared reader keeps the existing paired spreads. Feature overflow belongs in

@@ -20,7 +20,7 @@ const missing=process.env.MOT_TEE_MISSING,failed=process.env.MOT_TEE_FAILED;
   }
   if(failed){const data=JSON.parse(fs.readFileSync(path.join(__dirname,'../apps/web/public/artwork/fcc',city,'apparel.json'),'utf8'));const art=data.items.find(i=>i.artRef.variant===failed).artRef;await context.route(art.originalUrl??art.renditionUrl,r=>r.abort());}
   await page.goto(origin+'/?view=trip');await createTripThroughDestination(page,{city:row.name,country,registry:true});
-  await page.getByRole('button',{name:'Keepsakes',exact:true}).click();await page.locator('.mot-issue-tee-choices').waitFor({timeout:25000});
+  await page.getByRole('button',{name:'Keepsakes',exact:true}).click();await page.getByRole('button',{name:'Magazine',exact:true}).click();await page.locator('.mot-issue-tee-choices').waitFor({timeout:25000});
   const issue=await page.evaluate(async()=>{
    await window.motTrip.persist();const code=await(await fetch('/src/trip/trip-store.ts')).text(),coreUrl=code.match(/from\s+["']([^"']*packages\/core\/src\/index\.ts[^"']*)["']/)?.[1];
    if(!coreUrl)throw Error('Core module unavailable');const core=await import(coreUrl),store=await import('/src/trip/trip-store.ts'),{prepareMagazine}=await import('/src/trip/artifacts.ts');

@@ -5,7 +5,7 @@ import {gridLines,moveBox,resizeBox,rotateTo,panCrop,zoomCrop,type Corner,type E
 import {compositionPages,liveCompositionObject,DEFAULT_LAYOUT,paintCompositionDraft,patchForBox,printDpi,type SceneObject} from './composition-scene';
 
 type Draft={object:SceneObject;patch:Partial<Presentation>;box:EditBox;guides:Guides};
-type Gesture={object:SceneObject;mode:string;x:number;y:number;scale:number;rev:number;angle:number;moved:boolean};
+type Gesture={object:SceneObject;mode:string;x:number;y:number;scale:number;rev:number;angle:number;moved:boolean;pointerId:number};
 const corners:Record<Corner,string>={nw:'top left',ne:'top right',sw:'bottom left',se:'bottom right'};
 export function Composition({session,actor,refresh,notify}:{session:TripSession;actor:Actor;refresh:()=>void;notify:(message:string)=>void}){
  const [magazine,setMagazine]=useState<MagazineDocument>(),[error,setError]=useState(''),[loading,setLoading]=useState(true),[attempt,setAttempt]=useState(0),[spreadIndex,setSpreadIndex]=useState(0),[side,setSide]=useState(0),[phone,setPhone]=useState(false);
@@ -34,22 +34,22 @@ export function Composition({session,actor,refresh,notify}:{session:TripSession;
  const showDraft=(value:Draft|undefined)=>{draftRef.current=value;setDraft(value);};
  const commit=(name:string,input:Record<string,unknown>,label:string)=>{try{session.execute(actor,name,input);knownRevision.current=session.boardRev;pending.current=session.boardRev;setHistory(h=>({past:[...h.past,label],future:[]}));refresh();notify(label);return true;}catch(cause){showDraft(undefined);notify(cause instanceof Error?cause.message:'The object could not be changed.');return false;}};
  const commitDraft=()=>{const d=draftRef.current;if(!d||pending.current!==undefined)return;if(gesture.current&&gesture.current.rev!==session.boardRev){showDraft(undefined);notify('The trip changed during the gesture. Try again.');return;}commit('trip_presentation_update',{id:d.object.presentation.id,...d.patch},`${cropping?'Crop':'Arrange'} ${d.object.label}`);};
- const undo=(redo=false)=>{showDraft(undefined);gesture.current=undefined;const ok=redo?session.redo(actor.id):session.undo(actor.id);knownRevision.current=session.boardRev;pending.current=session.boardRev;if(ok){setHistory(h=>redo?{past:[...h.past,h.future.at(-1)??'Change'],future:h.future.slice(0,-1)}:{past:h.past.slice(0,-1),future:[...h.future,h.past.at(-1)??'Change']});refresh();notify(redo?'Redone':'Undone');}};
+ const undo=(redo=false)=>{showDraft(undefined);gesture.current=undefined;const ok=redo?session.redo(actor.id):session.undo(actor.id);knownRevision.current=session.boardRev;pending.current=ok?session.boardRev:undefined;if(ok){setHistory(h=>redo?{past:[...h.past,h.future.at(-1)??'Change'],future:h.future.slice(0,-1)}:{past:h.past.slice(0,-1),future:[...h.future,h.past.at(-1)??'Change']});refresh();notify(redo?'Redone':'Undone');}};
  const select=(o:SceneObject)=>{setSelected(o.key);setSide(o.pageIndex);setCropping(false);};
  const locked=(o:SceneObject)=>{if(readPresentation(session.parts,o.presentation.id)?.locked){notify('Locked. Press L or choose Unlock to arrange it.');return true;}return false;};
  const begin=(event:PointerEvent,chosen?:SceneObject,mode='move')=>{
-  if(preview||event.button!==0)return;
+  if(preview||event.button!==0||!event.isPrimary||gesture.current)return;
   const key=(event.target as Element).closest('[data-edit-id]')?.getAttribute('data-edit-id'),o=chosen??scene.objects.find(n=>n.key===key);
   if(!o){setSelected(undefined);setCropping(false);return;}
   setSelected(o.key);if(loading||locked(o))return;
   event.preventDefault();event.stopPropagation();if(!(event.target as Element).closest('button'))root.current?.focus({preventScroll:true});const rect=trim.current!.getBoundingClientRect(),scale=rect.width/(phone?1184:2368),visible=phone?side*1184:0;
   const cx=rect.left+(o.box.x+o.box.width/2-visible)*scale,cy=rect.top+(o.box.y+o.box.height/2)*scale;
   if(mode==='move'&&lastTap.current.key===o.key&&performance.now()-lastTap.current.at<350&&o.presentation.assetId){lastTap.current={key:'',at:0};setCropping(v=>!v);return;}
-  gesture.current={object:o,mode:mode==='move'&&cropping?'pan':mode,x:event.clientX,y:event.clientY,scale,rev:session.boardRev,angle:Math.atan2(event.clientY-cy,event.clientX-cx)*180/Math.PI,moved:false};
+  gesture.current={object:o,mode:mode==='move'&&cropping?'pan':mode,x:event.clientX,y:event.clientY,scale,rev:session.boardRev,angle:Math.atan2(event.clientY-cy,event.clientX-cx)*180/Math.PI,moved:false,pointerId:event.pointerId};
   event.currentTarget.setPointerCapture(event.pointerId);
  };
  const move=(event:PointerEvent)=>{
-  const g=gesture.current;if(!g)return;const dx=(event.clientX-g.x)/g.scale,dy=(event.clientY-g.y)/g.scale;g.moved||=Math.hypot(event.clientX-g.x,event.clientY-g.y)>2;
+  const g=gesture.current;if(!g||event.pointerId!==g.pointerId)return;const dx=(event.clientX-g.x)/g.scale,dy=(event.clientY-g.y)/g.scale;g.moved||=Math.hypot(event.clientX-g.x,event.clientY-g.y)>2;
   if(g.mode==='pan'){
    const a=g.object.box.rotation*Math.PI/180,c=g.object.presentation.crop;showDraft({object:g.object,box:g.object.box,guides:{},patch:{crop:panCrop(c,-(dx*Math.cos(a)+dy*Math.sin(a))/g.object.box.width*c[2],-(-dx*Math.sin(a)+dy*Math.cos(a))/g.object.box.height*c[3])}});return;
   }
@@ -60,7 +60,7 @@ export function Composition({session,actor,refresh,notify}:{session:TripSession;
   }else{const result=g.mode==='move'?moveBox(g.object.box,dx,dy,event.altKey):resizeBox(g.object.box,g.mode as Corner,dx,dy,event.shiftKey,event.altKey);box=result.box;guides=result.guides;}
   showDraft({object:g.object,box,patch:patchForBox(g.object,box),guides});
  };
- const end=()=>{const g=gesture.current;if(!g)return;if(g.moved)commitDraft();else{showDraft(undefined);lastTap.current={key:g.object.key,at:performance.now()};}gesture.current=undefined;};
+ const end=(event:PointerEvent)=>{const g=gesture.current;if(!g||event.pointerId!==g.pointerId)return;if(g.moved)commitDraft();else{showDraft(undefined);lastTap.current={key:g.object.key,at:performance.now()};}gesture.current=undefined;};
  const update=(patch:Partial<Presentation>,label:string)=>{if(current)commit('trip_presentation_update',{id:current.id,...patch},label);};
  const canOrder=!!object&&scene.objects.filter(o=>o.paintGroup===object.paintGroup).length>1;
  const order=(direction:number)=>{if(!current||!canOrder)return;const values=scene.objects.map(o=>readPresentation(session.parts,o.presentation.id)?.magazineLayout?.order??0);update({magazineLayout:{...(current.magazineLayout??DEFAULT_LAYOUT),order:direction>0?Math.max(...values)+1:Math.min(...values)-1}},direction>0?'Bring forward':'Send backward');};
@@ -93,7 +93,7 @@ export function Composition({session,actor,refresh,notify}:{session:TripSession;
  const handleStyle=(x:number,y:number):CSSProperties=>({left:`clamp(22px, calc(32px + ${(x-visibleStart)/visibleWidth*100}% - ${(x-visibleStart)/visibleWidth*64}px), calc(100% - 22px))`,top:`clamp(22px, calc(32px + ${y/1680*100}% - ${y/1680*64}px), calc(100% - 22px))`});
  const handlePoint=(x:number,y:number)=>{const a=shown!.rotation*Math.PI/180,dx=x*shown!.width/2,dy=y*shown!.height/2;return{x:shown!.x+shown!.width/2+dx*Math.cos(a)-dy*Math.sin(a),y:shown!.y+shown!.height/2+dx*Math.sin(a)+dy*Math.cos(a)};};
  const cards=readAllCards(session.parts),linked=current?.cardId?cards.find(c=>c.id===current.cardId):undefined,placedIds=new Set(scene.objects.map(o=>o.presentation.id)),unplaced=readPresentations(session.parts).filter(p=>!placedIds.has(p.id));
- return <section ref={root} className="mot-composition" aria-label="Trip composition" aria-busy={loading} data-magazine-revision={magazine?.revision} tabIndex={-1} onFocusCapture={e=>{const key=(e.target as Element).getAttribute('data-edit-id');keyboardFocus.current=!!key;if(key)setSelected(key);}} onKeyDown={keyDown} onPointerMove={move} onPointerUp={end} onPointerCancel={()=>{gesture.current=undefined;showDraft(undefined);}}>
+ return <section ref={root} className="mot-composition" aria-label="Trip composition" aria-busy={loading} data-magazine-revision={magazine?.revision} tabIndex={-1} onFocusCapture={e=>{const key=(e.target as Element).getAttribute('data-edit-id');keyboardFocus.current=!!key;if(key)setSelected(key);}} onKeyDown={keyDown} onPointerMove={move} onPointerUp={end} onPointerCancel={e=>{if(gesture.current&&e.pointerId===gesture.current.pointerId){gesture.current=undefined;showDraft(undefined);}}}>
   <header className="mot-editor-heading"><div><h2>Arrange your issue</h2><p className="m-muted">Move the pictures, keep the trip. Each gesture undoes in one step.</p></div><button className="m-btn" type="button" aria-pressed={preview} onClick={()=>setPreview(v=>!v)}>{preview?'Back to editing':'Preview'}</button></header>
   <div className="mot-editor-bar"><label>Spread<select aria-label="Spread" className="m-field" value={group?.id??''} onChange={e=>{setSpreadIndex(groups.findIndex(g=>g.id===e.target.value));setSelected(undefined);setCropping(false);setSide(0);}}>{groups.map((g,i)=><option key={g.id} value={g.id}>{g.title} · {i+1} of {groups.length}</option>)}</select></label><span className={`mot-edit-chip${breaks>1?' warning':''}`}>{breaks} grid {breaks===1?'break':'breaks'}{breaks>1?' · the guide allows one':''}</span><button className="m-btn" type="button" onClick={()=>undo()} aria-label="Undo composition change">Undo{history.past.length?` · ${history.past.at(-1)}`:''}</button><button className="m-btn" type="button" onClick={()=>undo(true)} aria-label="Redo composition change">Redo{history.future.length?` · ${history.future.at(-1)}`:''}</button><label><input type="checkbox" checked={grid} onChange={e=>setGrid(e.target.checked)} /> Grid</label></div>
   {error&&<p role="alert">{error} Your board is unchanged. <button type="button" className="m-btn" onClick={()=>setAttempt(v=>v+1)}>Try again</button></p>}

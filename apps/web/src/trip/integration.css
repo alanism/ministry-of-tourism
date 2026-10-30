@@ -68,3 +68,4 @@
 .mot-dpi-bar{height:8px;overflow:hidden;border-radius:8px;background:color-mix(in srgb,#CBB9B0 30%,#FFFFFF);}
 .mot-dpi-bar>span{display:block;height:100%;background:#2F4A6B;}
 .mot-dpi.soft .mot-dpi-bar>span{background:#CC0000;}
+.mot-dpi b{font-weight:600;}

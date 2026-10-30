@@ -32,4 +32,4 @@ export function resizeBox(original:EditBox,corner:Corner,dx:number,dy:number,fre
 }
 export function rotateTo(angle:number,free:boolean){const a=((angle+180)%360+360)%360-180;if(free)return a;const near=[-90,-45,-9,0,9,45,90].find(v=>Math.abs(a-v)<4);return near??a;}
 export function panCrop(crop:readonly number[],dx:number,dy:number):[number,number,number,number]{return [clamp(crop[0]!+dx,0,1-crop[2]!),clamp(crop[1]!+dy,0,1-crop[3]!),crop[2]!,crop[3]!];}
-export function zoomCrop(crop:readonly number[],zoom:number):[number,number,number,number]{const w=1/clamp(zoom,1,3);return [clamp(crop[0]!+crop[2]!/2-w/2,0,1-w),clamp(crop[1]!+crop[3]!/2-w/2,0,1-w),w,w];}
+export function zoomCrop(crop:readonly number[],zoom:number):[number,number,number,number]{const ratio=crop[3]!/crop[2]!;const w=Math.min(1/clamp(zoom,1,3),1/ratio);const h=w*ratio;return [clamp(crop[0]!+crop[2]!/2-w/2,0,1-w),clamp(crop[1]!+crop[3]!/2-h/2,0,1-h),w,h];}
