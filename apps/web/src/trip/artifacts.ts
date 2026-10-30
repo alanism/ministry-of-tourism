@@ -74,8 +74,16 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
           if(image.type!==art.mimeType||!image.size||image.size>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('FCC tee image does not match its declared raster');
           const hash=await artifactSha256(image);
           if((art.hash&&art.hash!==hash)||(art.source.contentHash&&art.source.contentHash!==hash))throw new Error('FCC tee original changed');
-          const decoded=await createImageBitmap(image);
-          try{if(decoded.width!==art.width||decoded.height!==art.height)throw new Error('FCC tee dimensions changed');}finally{decoded.close();}
+          const decoded=await new Promise<ImageBitmap>((resolve,reject)=>{
+            const stop=()=>reject(signal?.reason??new DOMException('Export cancelled','AbortError'));
+            if(signal?.aborted){stop();return;}
+            signal?.addEventListener('abort',stop,{once:true});
+            Promise.resolve().then(()=>{signal?.throwIfAborted();return createImageBitmap(image);}).then(
+              decoded=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){decoded.close();stop();}else resolve(decoded);},
+              error=>{signal?.removeEventListener('abort',stop);reject(error);},
+            );
+          });
+          try{signal?.throwIfAborted();if(decoded.width!==art.width||decoded.height!==art.height)throw new Error('FCC tee dimensions changed');}finally{decoded.close();}
           signal?.throwIfAborted();
           urls.set(art.assetId,await dataUrl(image));dimensions.set(art.assetId,{width:art.width,height:art.height});downloaded++;
         }catch(error){if(signal?.aborted)throw error;failed++;}
