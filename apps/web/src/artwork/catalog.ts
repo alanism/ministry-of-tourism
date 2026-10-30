@@ -43,7 +43,28 @@ export type Artwork = z.infer<typeof artworkSchema>;
 export type StylePack = z.infer<typeof registrySchema>['styles'][number];
 export type Manifest = z.infer<typeof manifestSchema>;
 
-export async function readCatalog<T>(url: string, schema: z.ZodType<T>, signal: AbortSignal, fetcher: typeof fetch = fetch): Promise<T> {
+const CATALOG_CACHE_TTL_MS = 5 * 60 * 1000;
+const CATALOG_CACHE_MAX_ENTRIES = 32;
+type CatalogCacheEntry = { storedAt: number; data: unknown };
+const catalogCache = new Map<string, CatalogCacheEntry>();
+const catalogSchemaIds = new WeakMap<object, number>();
+const catalogFetcherIds = new WeakMap<object, number>();
+let nextCatalogSchemaId = 1;
+let nextCatalogFetcherId = 1;
+
+function catalogIdentityId(ids: WeakMap<object, number>, value: object, assign: () => number): number {
+  let id = ids.get(value);
+  if (id === undefined) { id = assign(); ids.set(value, id); }
+  return id;
+}
+
+function catalogCacheKey<T>(url: string, schema: z.ZodType<T>, fetcher: typeof fetch): string {
+  const schemaId = catalogIdentityId(catalogSchemaIds, schema, () => nextCatalogSchemaId++);
+  const fetcherId = catalogIdentityId(catalogFetcherIds, fetcher, () => nextCatalogFetcherId++);
+  return JSON.stringify([schemaId, fetcherId, url]);
+}
+
+async function fetchCatalog<T>(url: string, schema: z.ZodType<T>, signal: AbortSignal, fetcher: typeof fetch): Promise<T> {
   signal.throwIfAborted();
   let abort!:()=>void;
   const cancelled=new Promise<never>((_resolve,reject)=>{abort=()=>reject(signal.reason??new DOMException('Catalog cancelled','AbortError'));signal.addEventListener('abort',abort,{once:true});});
@@ -59,6 +80,38 @@ export async function readCatalog<T>(url: string, schema: z.ZodType<T>, signal: 
     })();
     return await Promise.race([work,cancelled]);
   } finally {signal.removeEventListener('abort',abort);}
+}
+
+export async function readCatalog<T>(url: string, schema: z.ZodType<T>, signal: AbortSignal, fetcher: typeof fetch = fetch, options: { cache?: boolean; forceRefresh?: boolean } = {}): Promise<T> {
+  signal.throwIfAborted();
+  if (!options.cache) return fetchCatalog(url, schema, signal, fetcher);
+  const key = catalogCacheKey(url, schema, fetcher);
+  if (options.forceRefresh) {
+    catalogCache.delete(key);
+  } else {
+    const entry = catalogCache.get(key);
+    if (entry) {
+      const age = Date.now() - entry.storedAt;
+      if (age < 0 || age >= CATALOG_CACHE_TTL_MS) {
+        catalogCache.delete(key);
+      } else {
+        catalogCache.delete(key);
+        catalogCache.set(key, entry);
+        signal.throwIfAborted();
+        return structuredClone(entry.data) as T;
+      }
+    }
+  }
+  const data = await fetchCatalog(url, schema, signal, fetcher);
+  signal.throwIfAborted();
+  catalogCache.delete(key);
+  catalogCache.set(key, { storedAt: Date.now(), data: structuredClone(data) });
+  while (catalogCache.size > CATALOG_CACHE_MAX_ENTRIES) {
+    const oldest = catalogCache.keys().next().value as string | undefined;
+    if (oldest === undefined) break;
+    catalogCache.delete(oldest);
+  }
+  return data;
 }
 
 /** Normalized source crops also work on the recorded optimized image variant. */
