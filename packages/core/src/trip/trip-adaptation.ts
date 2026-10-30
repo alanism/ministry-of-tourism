@@ -126,4 +126,3 @@ export function applyTripAdaptation(session:TripSession,actor:Actor,plan:Adaptat
  if(!plan.proposal||!plan.check)throw new Error('There is no permitted adjustment to apply');if(session.boardRev!==plan.revision)throw new CommandError('stale','The trip changed after this adjustment was checked; nothing applied');
  const checked=evaluateSchedule({...plan.check.planning,as_of:new Date().toISOString()},plan.check.assignments,plan.check.denied);if(checked.status==='infeasible')throw new Error(checked.errors.join('; '));if(checked.status==='tentative'&&!allowTentative)throw new Error('Explicitly acknowledge the unconfirmed facts before applying this tentative adjustment');return applyProposal(session,actor,plan.proposal);
 }
-
