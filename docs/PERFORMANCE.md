@@ -96,8 +96,29 @@ A default full check also passed all 586 pre-port tests in 14.80 s. A preload
 attempt did not attach to Vitest workers, so it produced no in-test I/O telemetry
 and is not treated as evidence about that failure's cause. OS/CDN caches and other
 system activity were not controlled. No validator, fixture, test, worker setting
-or deadline was changed to force a pass; the intermittent runner issue remains
-unresolved. Empirical retry date: 30 April 2027; no automation was scheduled.
+or deadline was changed by that investigation; the issue was left unresolved.
+
+### Resolution: bounded catalogue reads (31 October 2026)
+
+In-test measurements recorded **1,813 metadata reads**, with **1.10 s of 1.57 s**
+spent in synchronous file reads. The exhaustive catalogue test now reads batches
+of at most **16 files asynchronously**, then performs the original schema parsing
+and assertions in manifest order. All **1,811 catalogues / 5,203 artworks** remain
+covered. Assertions, catalogues, schemas, worker settings and the **5,000 ms**
+timeout are unchanged; the other four tests in that file are unchanged.
+
+A temporary slow-filesystem diagnostic reproduced the timeout in **28.10 s**
+with serial reads. The bounded reader completed in **3.77 s**, including a larger
+requested per-read delay (15 ms versus 3 ms; Windows rounded the serial waits).
+Both diagnostics read all 1,813 files. An invalid crop injected into the last
+catalogue was rejected; the original bytes were restored before final checks.
+Instrumentation and fault injection are outside the committed test.
+
+Unmodified **`npm run check` passes all 866 tests in 155 files plus all four
+TypeScript checks in 35.40 s**, without execution partitions or extra flags.
+The ordinary baseline also passed on this occasion, consistent with an
+intermittent filesystem-latency failure. These observations establish preserved
+coverage and improved tolerance of slow reads, not a universal timing guarantee.
 
 ## First-art network diagnosis (30 October follow-up)
 
