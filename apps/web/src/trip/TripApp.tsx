@@ -287,7 +287,7 @@ export function TripApp() {
           <Menu label="Add" items={[{label:'FCC art',onSelect:()=>setPanel('art')}]} trigger={{className:'m-btn pill small',content:<>Add <Icon name="plus" /></>}} />
           <Menu label={`Switch board. Current: ${chip}`} items={boardItems} trigger={{ className: 'm-btn pill small trip-chip', content: <><span className="chip-text">{chip}</span><Icon name="chevronDown" /></> }} />
           <button type="button" className="m-btn pill mot-header-undo" onClick={undo}>Undo</button>
-          <button type="button" className="m-btn pill mot-export-trigger" aria-label="Open export" onClick={()=>setTab('export')}><Icon name="file" /><span>Export</span></button>
+          <button type="button" className="m-btn pill mot-export-trigger" aria-label="Open export" title="Open export" onClick={()=>setTab('export')}><Icon name="file" /><span>Export</span></button>
         </div>
       </header>
       <input ref={fileRef} type="file" accept=".zip,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void onImport(f); }} />

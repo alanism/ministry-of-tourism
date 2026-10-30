@@ -1,4 +1,4 @@
-import { buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, rgbPdfImage, TRIP_PACKAGE_LIMITS, tripParts, type DiagnosticReceipt, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
+import { buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, rgbPdfImage, TRIP_PACKAGE_LIMITS, tripParts, type DiagnosticReceipt, type DiagnosticStep, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
 import { getTripBlob } from './trip-assets';
 import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
@@ -24,10 +24,10 @@ export function artifactInventory(doc:import('yjs').Doc,scope:ArtifactScope='sta
   const selected=selection(doc,scope);
   return {cards:selected.cards.length,placements:selected.placements.length,assets:selected.assets.length,notes:selected.cards.filter(card=>card.kind==='note'||card.kind==='brief'||!!card.travelerNote).length,credits:selected.assets.filter(id=>readAsset(selected.parts,id)?.credit?.trim()).length};
 }
-async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress'],stage:ArtifactProgress['stage']='collect'){
+async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress'],stage:ArtifactProgress['stage']='collect',classifyErrors=false){
   const selected=selection(doc,scope),bytes=new Map<string,Uint8Array>();
   onProgress?.({stage,completed:0,total:selected.assets.length,unit:'assets',done:false});
-  for(const id of selected.assets){signal?.throwIfAborted();const asset=readAsset(selected.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)throw new Error('A selected image is missing. Restore its original bytes and retry.');if(await artifactSha256(blob)!==asset.hash)throw new Error('A selected image failed its checksum. Restore its original bytes.');bytes.set(id,new Uint8Array(await blob.arrayBuffer()));onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:false});}
+  for(const id of selected.assets){signal?.throwIfAborted();const asset=readAsset(selected.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)throw Object.assign(new Error('A selected image is missing. Restore its original bytes and retry.'),classifyErrors?{code:'unavailable'}:{});if(await artifactSha256(blob)!==asset.hash)throw Object.assign(new Error('A selected image failed its checksum. Restore its original bytes.'),classifyErrors?{code:'invalid_input'}:{});bytes.set(id,new Uint8Array(await blob.arrayBuffer()));onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:false});}
   signal?.throwIfAborted();onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:true});return bytes;
 }
 
@@ -129,7 +129,8 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
 export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',signal?:AbortSignal,options:ArtifactOptions={}):Promise<ExportArtifact> {
   const snapshot=loadTrip(encodeTrip(session.doc)),frozen=new (session.constructor as typeof import('@writers-board/core').TripSession)(snapshot);
   const id=crypto.randomUUID(),startedAt=new Date().toISOString();
-  const diagnostic=(receipt:DiagnosticReceipt)=>{diagnostics.record(receipt);options.onDiagnostic?.(receipt);};
+  let zipStep:DiagnosticStep='collect';
+  const diagnostic=(receipt:DiagnosticReceipt):DiagnosticReceipt=>{const published=format==='zip'?{...createDiagnostic({...receipt,errorClass:receipt.errorClass,step:zipStep}),startedAt:receipt.startedAt,finishedAt:receipt.finishedAt}:receipt;diagnostics.record(published);options.onDiagnostic?.(published);return published;};
   const tracker=new OperationTracker({id,boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',operation:'export',onChange:state=>{lastOperation=state;options.onState?.(state);},onDiagnostic:diagnostic});
   const cancel=()=>tracker.cancel();signal?.addEventListener('abort',cancel,{once:true});
   if(signal?.aborted)tracker.cancel();
@@ -144,8 +145,11 @@ export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',
       magazine=await tracker.run('fetching','validating',()=>prepareMagazine(frozen,signal,scope==='personal',{variant:scope,onProgress:options.onProgress}));
       bytes=await tracker.run('exporting','exported',()=>magazinePdf(magazine!,signal,options.onProgress));
     }else{
+      zipStep='collect';
       options.onProgress?.({stage:'collect',completed:inventory.cards,total:inventory.cards,unit:'cards',done:true});
-      const media=await tracker.run('fetching','validating',()=>collectAssets(snapshot,scope,signal,options.onProgress,'layout'));
+      zipStep='layout';
+      const media=await tracker.run('fetching','validating',()=>collectAssets(snapshot,scope,signal,options.onProgress,'layout',true));
+      zipStep='write';
       options.onProgress?.({stage:'write',completed:0,unit:'bytes',done:false});
       bytes=await tracker.run('exporting','exported',()=>exportTripPackage(snapshot,media,{includePrivate:scope==='personal',variant:scope==='personal'?'private':scope}));
       options.onProgress?.({stage:'write',completed:bytes.length,total:bytes.length,unit:'bytes',done:true});
@@ -153,14 +157,16 @@ export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',
     signal?.throwIfAborted();
     const title=readTripMeta(snapshot).title.replace(/[^\p{L}\p{N}-]+/gu,'-').replace(/^-|-$/g,'')||'trip';
     const mime=format==='pdf'?'application/pdf':'application/zip',filename=`${title}.${format==='pdf'?'pdf':'mot.zip'}`;
+    if(format==='zip')zipStep='verify';
     options.onProgress?.({stage:'verify',completed:0,total:bytes.length,unit:'bytes',done:false});
     const blob=new Blob([bytes as BlobPart],{type:mime}),readback=new Uint8Array(await blob.arrayBuffer());
     if(readback.length!==bytes.length||!readback.every((byte,index)=>byte===bytes[index]))throw new Error('Export read-back failed. Retry from the unchanged board.');
     const sha256=await artifactSha256(blob),createdAt=new Date().toISOString();signal?.throwIfAborted();
     const record:StoredArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,createdAt,sha256,scope,format,blob,inventory,...(magazine?.pages[0]?{coverSvg:magazine.pages[0].svg}:{})};
     let kept=false,storageDiagnostic:DiagnosticReceipt|undefined;
+    if(format==='zip')zipStep='persist';
     try{await keepArtifact(record);kept=true;}
-    catch(error){storageDiagnostic=createDiagnostic({requestId:id,operation:'keep-export',boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',startedAt,errorClass:'storage',error});diagnostic(storageDiagnostic);}
+    catch(error){storageDiagnostic=diagnostic(createDiagnostic({requestId:id,operation:'keep-export',boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',startedAt,errorClass:'storage',error}));}
     if(signal?.aborted){if(kept)try{await removeArtifact(id);}catch{/* The cancelled file is never advertised as ready. */}signal.throwIfAborted();}
     options.onProgress?.({stage:'verify',completed:blob.size,total:blob.size,unit:'bytes',done:true});
     const artifact:ExportArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,url:URL.createObjectURL(blob),createdAt,sha256,kept,scope,urlExpiresAt:null,inventory,coverSvg:record.coverSvg,...(storageDiagnostic?{storageDiagnostic}:{})};
