@@ -13,13 +13,13 @@ const session = () => new TripSession(createTrip({ title: 'Sample', city: 'bangk
 const landing = () => renderToStaticMarkup(createElement(FirstScreen, { onStart: () => {}, boards: [], onOpen: () => {} }));
 
 describe('optional sample media', () => {
-  it('renders a labeled notes-only landing and seeds original cards without requesting omitted photos', async () => {
+  it('renders a product demo landing and seeds original cards without requesting omitted photos', async () => {
     vi.stubEnv('VITE_MOT_SAMPLE_MEDIA', undefined);
     const fetcher = vi.fn(() => { throw new Error('Sample binaries are omitted'); });
     vi.stubGlobal('fetch', fetcher);
     const html = landing();
     expect(html).not.toContain('/sample/');
-    expect(html).toContain('Sample trip · notes only');
+    expect(html).toContain('/assets/mot-product-and-technical-demo-20261030.mp4');
     expect(html).toContain('Make this my trip');
     const trip = session();
     await seedSample(trip, 'traveler');
@@ -49,6 +49,7 @@ describe('optional sample media', () => {
     expect(fetcher).toHaveBeenCalledTimes(4);
     expect(attachPhoto).toHaveBeenCalledTimes(2);
     expect(readAllCards(trip.parts).find(card => card.title === 'A moment on the river')?.kind).toBe('photo');
-    expect(landing()).toContain('/sample/river.jpg');
+    expect(landing()).toContain('/assets/mot-product-and-technical-demo-20261030.mp4');
+    expect(landing()).not.toContain('/sample/');
   });
 });

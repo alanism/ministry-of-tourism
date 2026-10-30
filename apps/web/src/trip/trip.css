@@ -317,6 +317,8 @@ textarea.m-field { resize: vertical; line-height: var(--lh-2); }
 .mot-first-promise { font-size: var(--t-1); line-height: var(--lh-1); }
 .mot-first-proof { margin: 0; padding: 16px 16px 24px; background: var(--m-surface); border: 1px solid var(--m-line); box-shadow: 0 12px 40px rgba(0, 0, 0, .08); transform: rotate(2deg); }
 .mot-first-proof img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+.mot-first-proof.mot-first-demo { transform: none; min-width: 0; }
+.mot-first-proof.mot-first-demo video { display: block; width: 100%; max-width: 100%; height: auto; }
 .mot-first-proof figcaption { display: grid; gap: 8px; padding: 24px 16px 0; }
 .mot-first-proof strong { font-size: var(--t-5); line-height: var(--lh-5); font-weight: 600; letter-spacing: -.02em; }
 .mot-first-proof span { color: var(--m-ink-2); font-size: var(--t-2); line-height: var(--lh-2); }
@@ -392,6 +394,8 @@ textarea.m-field { resize: vertical; line-height: var(--lh-2); }
   .mot-first-intro { font-size: var(--t-3); line-height: var(--lh-3); }
   .mot-first-copy .m-btn { margin-top: 16px; }
   .mot-first-proof { transform: rotate(1deg); padding: 12px 12px 16px; }
+  .mot-first-proof.mot-first-demo { transform: none; }
+  .mot-first-proof.mot-first-demo video { width: 100%; display: block; }
   .mot-first-proof figcaption { padding: 16px 8px 0; }
   .mot-first-proof strong { font-size: var(--t-4); line-height: var(--lh-4); }
   .mot-proof-caption { margin-left: 8px !important; }
