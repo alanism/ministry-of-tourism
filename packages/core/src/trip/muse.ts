@@ -26,7 +26,7 @@ export function buildMuseRequest(session: TripSession, selection: { cardIds: str
   if(selection.cityContent?.articles.some(article=>article.cityId!==cityId||article.source.cityId!==cityId))throw new CommandError('scope','FCC article provenance is for another city');
   const articles = (selection.cityContent?.articles ?? []).map(article => ({ title: article.title, body: article.body, source: { ...article.source } }));
   // Article bodies remain data in this payload. Schema/command permissions, not article prose, decide authority.
-  const level = !selection.cityContent ? 'unavailable' : articles.length && articles.every(article => article.body.trim()) ? 'full-issue' : 'catalogue-only';
+  const level = !selection.cityContent || !articles.length ? 'unavailable' : articles.every(article => article.body.trim()) ? 'full-issue' : 'catalogue-only';
   return {
     boardId: session.boardId,
     prompt: selection.prompt,

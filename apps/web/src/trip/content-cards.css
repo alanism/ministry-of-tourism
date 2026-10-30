@@ -13,7 +13,8 @@
 .mot-source-tick{border-radius:50%;width:18px;height:18px;display:grid;place-items:center;background:var(--m-guide-ink);color:var(--m-surface);font-size:12px;}
 .mot-source-unchecked{font:400 12px/1.5 var(--m-sans);color:var(--m-ink-2);}
 .mot-source-muse{padding:10px;border-radius:12px;background:var(--m-muse);color:var(--m-muse-ink);font:400 15px/1.5 var(--m-sans);}
-.mot-source-muse b{display:block;margin-bottom:6px;font-size:12px;}
+.mot-source-facts b{font-weight:600;}
+.mot-source-muse b{display:block;margin-bottom:6px;font-size:12px;font-weight:600;}
 .mot-source-record{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 12px;margin:0;}
 .mot-source-record dd{margin:0;overflow-wrap:anywhere;}
 .mot-source-editor{height:100%;overflow:hidden;display:grid;grid-template-rows:minmax(0,1fr) auto;background:var(--m-surface);border-radius:16px 0 0 16px;}

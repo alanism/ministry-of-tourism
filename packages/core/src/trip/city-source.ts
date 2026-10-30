@@ -22,7 +22,7 @@ export const fccCityFeedSchema = z.object({
   articles: z.array(articleSchema).max(200), places: z.array(placeSchema).max(2000), almanac: z.array(almanacSchema).max(500),
 }).strict().refine(feed => new Set(feed.articles.map(a => a.id)).size === feed.articles.length && new Set(feed.places.map(p => p.id)).size === feed.places.length, 'Source IDs must be unique within a city');
 export type FccCityFeed = z.infer<typeof fccCityFeedSchema>;
-const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const localDate = z.iso.date();
 const citationUrl = z.string().max(2000).refine(value => {
   if (!value) return true;
   try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; }
