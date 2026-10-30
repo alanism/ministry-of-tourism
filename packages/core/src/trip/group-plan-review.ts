@@ -44,7 +44,13 @@ export function applyGroupScheduleReview(session:TripSession,actor:Actor,review:
  if(session.boardRev!==review.revision)throw new CommandError('stale','The trip changed after this proposal; nothing applied. Prepare it again.');
  if(!review.result.best)throw new Error('There is no feasible proposal to apply');
  const assignments=selected.map(i=>review.operationAssignments[i]);if(assignments.some(a=>!a))throw new Error('Select existing proposed changes');
- const checked=checkScheduleFeasibility({...review.planning,as_of:new Date().toISOString()},assignments,review.denied);
+ // Unselected planning activities keep their current board dates; recheck the selection against them too.
+ const timeZone=readTripMeta(session.doc).timeZone,chosen=new Set(assignments.map(a=>a!.option_id)),placed=timeZone?readAllCards(session.parts).flatMap(card=>{
+  if(chosen.has(card.id)||!card.day||!card.time||!review.planning.activities.some(a=>a.option_id===card.id)||review.planning.commitments.some(c=>c.kind==='fixed_booking'&&(c.option_id===card.id||c.id===card.id)))return[];
+  let start:number;try{start=Date.parse(tripLocalInstant(`${card.day}T${card.time}`,timeZone));}catch{return[];}
+  const slots=review.planning.slots.filter(s=>Date.parse(s.start)===start);return slots.length===1?[{option_id:card.id,slot_id:slots[0]!.slot_id,household_ids:[...slots[0]!.household_ids]}]:[];
+ }):[];
+ const checked=checkScheduleFeasibility({...review.planning,as_of:new Date().toISOString()},[...assignments,...placed],review.denied);
  if(checked.status==='infeasible')throw new Error(`Selected changes break the declared constraints: ${checked.errors.join('; ')}`);
  if(checked.status==='tentative'&&!allowTentative)throw new Error('These choices are tentative; explicitly acknowledge the unconfirmed facts before applying');
  return applyProposal(session,actor,review.proposal,selected);

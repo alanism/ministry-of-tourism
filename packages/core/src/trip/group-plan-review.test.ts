@@ -14,3 +14,12 @@ it('refuses a protected window that contradicts the recorded booking start and r
  const{session,p,map}=await setup(),id=map.get('boat')!,agent={kind:'agent' as const,id:'helper',name:'Helper'};session.execute(person,'trip_card_update',{id,day:'2026-11-01',time:'16:00',booking:{status:'confirmed'}});p.commitments=[{id,kind:'fixed_booking',option_id:id,start:'2026-11-01T10:00:00Z',end:'2026-11-01T11:00:00Z',household_ids:['a','b']}];session.execute(person,'trip_group_planning_set',{planning:p,policy:core.DEFAULT_GROUP_POLICY});await expect(core.prepareGroupScheduleReview(session,person)).rejects.toThrow(/booking|window|start/i);
  const before=core.encodeTrip(session.doc);expect(()=>session.execute(agent,'trip_card_update',{id,booking:{status:'confirmed'}})).toThrow();expect(core.encodeTrip(session.doc)).toEqual(before);
 });
+it('rechecks a partial Apply against unselected activities still dated on the board (W3 review F5)',async()=>{
+ // Slot one is 16:00 and slot two 18:00 in Bangkok. Boat already sits at 18:00 on the board; the reviewed plan moves boat to one and beach to two.
+ const{session,p,map}=await setup(),boat=map.get('boat')!,beach=map.get('beach')!;
+ p.rules=[{kind:'before',first:boat,then:beach}];session.execute(person,'trip_card_update',{id:boat,day:'2026-11-01',time:'18:00'});session.execute(person,'trip_group_planning_set',{planning:p,policy:core.DEFAULT_GROUP_POLICY});
+ const prepared=await core.prepareGroupScheduleReview(session,person),ops=[{command:'trip_card_update',input:{id:boat,day:'2026-11-01',time:'16:00'}},{command:'trip_card_update',input:{id:beach,day:'2026-11-01',time:'18:00'}}];
+ const review={...prepared,operationAssignments:[{slot_id:'one',option_id:boat,household_ids:['a','b']},{slot_id:'two',option_id:beach,household_ids:['a','b']}],proposal:{...prepared.proposal,ops,token:session.token([boat,beach])}};
+ const before=core.encodeTrip(session.doc);expect(()=>core.applyGroupScheduleReview(session,person,review,[1],true)).toThrow(/break the declared constraints/);expect(core.encodeTrip(session.doc)).toEqual(before);
+ expect(core.applyGroupScheduleReview(session,person,review,[0,1],true).appliedOps).toBe(2);
+});

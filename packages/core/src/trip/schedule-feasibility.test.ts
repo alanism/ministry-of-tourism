@@ -41,3 +41,15 @@ it('adds monetary minor units exactly, joins adjacent opening windows and checks
 it('does not approve denied or inaccessible participation just because an activity was already booked',()=>{
  const p=problem();p.commitments=[{id:'booked-boat',kind:'fixed_booking',option_id:'boat',start:p.slots[0]!.start,end:p.slots[0]!.end,household_ids:['a','b']}];expect(core.checkScheduleFeasibility(p,[],[{household_id:'b',option_id:'boat'}]).status).toBe('infeasible');p.activities[1]!.access[1]!.allowed=fact(false);expect(core.checkScheduleFeasibility(p,[]).status).toBe('infeasible');
 });
+it('rejects placing an already fixed-booked activity into a second slot (W3 review)',()=>{
+ const p=problem();p.commitments=[{id:'bk',kind:'fixed_booking',option_id:'beach',start:'2026-11-01T14:00:00Z',end:'2026-11-01T15:00:00Z',household_ids:['a','b']}];
+ const r=core.checkScheduleFeasibility(p,[assignment('beach','one')]);expect(r.status).toBe('infeasible');expect(r.errors.join(' ')).toMatch(/fixed booking/i);
+});
+it('dates source evidence in the offset written on as_of, never accepting a locally future-dated fact (W3 review F3)',()=>{
+ const behind={...problem(),as_of:'2026-10-29T23:00:00-14:00'};expect(core.checkScheduleFeasibility(behind,[assignment()]).status).toBe('tentative');
+ const ahead={...problem(),as_of:'2026-10-30T00:30:00+14:00'};expect(core.checkScheduleFeasibility(ahead,[assignment()]).status).toBe('feasible');
+});
+it('keeps a preserved fixed booking tentative when a participant has no access evidence (W3 review F6)',()=>{
+ const p=problem();p.activities[1]!.access=[];p.commitments=[{id:'booked-boat',kind:'fixed_booking',option_id:'boat',start:p.slots[0]!.start,end:p.slots[0]!.end,household_ids:['a','b']}];
+ const r=core.checkScheduleFeasibility(p,[]);expect(r.status).toBe('tentative');expect(r.tentative.join(' ')).toMatch(/boat.*access/i);
+});
