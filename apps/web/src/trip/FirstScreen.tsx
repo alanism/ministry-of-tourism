@@ -1,13 +1,9 @@
 // First screens (MOT-53): one obvious action per audience. Copy fixed from the owner's memo.
 import type { BoardKind } from '@writers-board/core';
-import { useState } from 'react';
 import { Logo } from './ui';
 import type { BoardEntry } from './trip-store';
-import { samplePhotoUrl } from './sample-media';
 
 export function FirstScreen({ onStart, boards, onOpen, notice }: { onStart: (kind: BoardKind) => void; boards: BoardEntry[]; onOpen: (id: string) => void; notice?: string }) {
-  const [photoFailed, setPhotoFailed] = useState(false);
-  const photo = !photoFailed && samplePhotoUrl('river');
   return (
     <main className="mot">
       <div className="mot-first">
@@ -21,14 +17,12 @@ export function FirstScreen({ onStart, boards, onOpen, notice }: { onStart: (kin
             <button type="button" className="m-btn primary" onClick={() => onStart('traveler')}>Make this my trip</button>
             <p className="mot-first-promise">Your board. Your decisions. A trip worth keeping.</p>
           </section>
-          <figure className="mot-first-proof">
-            {photo ? <img src={photo} alt="A sample Bangkok keepsake showing boats on the river at sunset" onError={() => setPhotoFailed(true)} /> :
-              <div aria-label="Sample trip notes" style={{ aspectRatio: '3 / 2', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14, padding: 24 }}>
-                <p className="m-eyebrow">Bangkok · sample plan</p>
-                <p>Walk by the river.</p><p>Save a favorite place.</p><p>Add a photo of your own.</p>
-              </div>}
-            <figcaption><strong>A trip worth keeping.</strong><span>{photo ? 'Bangkok · Our first evening on the river.' : 'Start with notes. Add your own memories.'}</span></figcaption>
-            <p className="mot-proof-caption">{photo ? 'Sample keepsake · concept photo' : 'Sample trip · notes only'}</p>
+          <figure className="mot-first-proof mot-first-demo">
+            <video controls playsInline preload="none" poster="/assets/concept-trailer-poster.webp" aria-label="Product demo and how it works video">
+              <source src="/assets/mot-product-and-technical-demo-20261030.mp4" type="video/mp4" />
+              <p>Your browser does not support embedded video. <a href="/assets/mot-product-and-technical-demo-20261030.mp4">Watch the product demo</a></p>
+            </video>
+            <figcaption>Product demo + how it works · 2:30</figcaption>
           </figure>
         </div>
         <div className="mot-first-paths">
