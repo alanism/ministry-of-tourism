@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:rio-de-janeiro:ar1:4ecf87774890393af5221da2",
+      "styleId": "fcc-editorial",
+      "label": "GIG · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "rio-de-janeiro",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/rio-de-janeiro/illustrations/rio-de-janeiro-airport-tag-b898c08b82-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/rio-de-janeiro/illustrations/rio-de-janeiro-airport-tag-b898c08b82-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/rio-de-janeiro-airport-tag.png",
+      "sourceHash": "b898c08b8287217350dbd70bfde5b98aa1b81beae0bd0ed61141b78a070535ce",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.20733652312599682,
+        0.04704944178628389,
+        0.5861244019138756,
+        0.9202551834130781
+      ],
+      "artRef": {
+        "assetId": "fcc:rio-de-janeiro:ar1:4ecf87774890393af5221da2",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "rio-de-janeiro",
+        "label": "GIG · Flight luggage tag V2",
+        "countryCode": "BR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/rio-de-janeiro/illustrations/rio-de-janeiro-airport-tag-b898c08b82-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/rio-de-janeiro/illustrations/rio-de-janeiro-airport-tag-b898c08b82-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/rio-de-janeiro-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "b898c08b8287217350dbd70bfde5b98aa1b81beae0bd0ed61141b78a070535ce",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "b898c08b8287217350dbd70bfde5b98aa1b81beae0bd0ed61141b78a070535ce",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/rio-de-janeiro.html?section=journal",
+          "cityId": "rio-de-janeiro",
+          "countryCode": "BR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "b898c08b8287217350dbd70bfde5b98aa1b81beae0bd0ed61141b78a070535ce",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

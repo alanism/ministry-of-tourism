@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:val-disere:ar1:53a92e40388c3e94a0873304",
+      "styleId": "fcc-editorial",
+      "label": "GVA · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "val-disere",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/val-disere/illustrations/val-disere-airport-tag-b110772caf-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/val-disere/illustrations/val-disere-airport-tag-b110772caf-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/val-disere-airport-tag.png",
+      "sourceHash": "b110772cafc87da621f3b4a991f08173ef38bb75221645b3555f0b2f6a21ff4f",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.20334928229665072,
+        0.046251993620414676,
+        0.5933014354066986,
+        0.9178628389154705
+      ],
+      "artRef": {
+        "assetId": "fcc:val-disere:ar1:53a92e40388c3e94a0873304",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "val-disere",
+        "label": "GVA · Flight luggage tag V2",
+        "countryCode": "FR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/val-disere/illustrations/val-disere-airport-tag-b110772caf-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/val-disere/illustrations/val-disere-airport-tag-b110772caf-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/val-disere-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "b110772cafc87da621f3b4a991f08173ef38bb75221645b3555f0b2f6a21ff4f",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "b110772cafc87da621f3b4a991f08173ef38bb75221645b3555f0b2f6a21ff4f",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/val-disere.html?section=journal",
+          "cityId": "val-disere",
+          "countryCode": "FR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "b110772cafc87da621f3b4a991f08173ef38bb75221645b3555f0b2f6a21ff4f",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

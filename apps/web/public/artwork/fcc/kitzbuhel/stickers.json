@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:kitzbuhel:ar1:59dd0a6608bb05aca201653a",
+      "styleId": "fcc-editorial",
+      "label": "SZG · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "kitzbuhel",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/kitzbuhel/illustrations/kitzbuhel-airport-tag-a3cad8e19c-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/kitzbuhel/illustrations/kitzbuhel-airport-tag-a3cad8e19c-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/kitzbuhel-airport-tag.png",
+      "sourceHash": "a3cad8e19cfe9cad3f69c987a2d9ee54e2c3e1cfbac6e7e19b8cbeb82ce0b763",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.20334928229665072,
+        0.02711323763955343,
+        0.5933014354066986,
+        0.9401913875598086
+      ],
+      "artRef": {
+        "assetId": "fcc:kitzbuhel:ar1:59dd0a6608bb05aca201653a",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "kitzbuhel",
+        "label": "SZG · Flight luggage tag V2",
+        "countryCode": "AT",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/kitzbuhel/illustrations/kitzbuhel-airport-tag-a3cad8e19c-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/kitzbuhel/illustrations/kitzbuhel-airport-tag-a3cad8e19c-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/kitzbuhel-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "a3cad8e19cfe9cad3f69c987a2d9ee54e2c3e1cfbac6e7e19b8cbeb82ce0b763",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "a3cad8e19cfe9cad3f69c987a2d9ee54e2c3e1cfbac6e7e19b8cbeb82ce0b763",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/kitzbuhel.html?section=journal",
+          "cityId": "kitzbuhel",
+          "countryCode": "AT",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "a3cad8e19cfe9cad3f69c987a2d9ee54e2c3e1cfbac6e7e19b8cbeb82ce0b763",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

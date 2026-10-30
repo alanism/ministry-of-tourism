@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:krakow:ar1:0d6d7f3ea3531d20a5d400f2",
+      "styleId": "fcc-editorial",
+      "label": "KRK · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "krakow",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/krakow/illustrations/krakow-airport-tag-e60c321237-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/krakow/illustrations/krakow-airport-tag-e60c321237-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/krakow-airport-tag.png",
+      "sourceHash": "e60c3212373ac1c2a16f07aac0ec49e638a74b0c25453fd6bb8985a7fa74ac3a",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.0645933014354067,
+        0.5749601275917066,
+        0.9011164274322169
+      ],
+      "artRef": {
+        "assetId": "fcc:krakow:ar1:0d6d7f3ea3531d20a5d400f2",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "krakow",
+        "label": "KRK · Flight luggage tag V2",
+        "countryCode": "PL",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/krakow/illustrations/krakow-airport-tag-e60c321237-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/krakow/illustrations/krakow-airport-tag-e60c321237-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/krakow-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "e60c3212373ac1c2a16f07aac0ec49e638a74b0c25453fd6bb8985a7fa74ac3a",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "e60c3212373ac1c2a16f07aac0ec49e638a74b0c25453fd6bb8985a7fa74ac3a",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/krakow.html?section=journal",
+          "cityId": "krakow",
+          "countryCode": "PL",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "e60c3212373ac1c2a16f07aac0ec49e638a74b0c25453fd6bb8985a7fa74ac3a",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

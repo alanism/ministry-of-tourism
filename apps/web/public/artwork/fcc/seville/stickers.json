@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:seville:ar1:460baf20c97e7a7ce113ea4a",
+      "styleId": "fcc-editorial",
+      "label": "SVQ · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "seville",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/seville/illustrations/seville-airport-tag-9811c5314b-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/seville/illustrations/seville-airport-tag-9811c5314b-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/seville-airport-tag.png",
+      "sourceHash": "9811c5314b43175d445c5faa02351047a9874cd0d822c17d054833d032ebc511",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.050239234449760764,
+        0.5757575757575758,
+        0.9122807017543859
+      ],
+      "artRef": {
+        "assetId": "fcc:seville:ar1:460baf20c97e7a7ce113ea4a",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "seville",
+        "label": "SVQ · Flight luggage tag V2",
+        "countryCode": "ES",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/seville/illustrations/seville-airport-tag-9811c5314b-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/seville/illustrations/seville-airport-tag-9811c5314b-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/seville-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "9811c5314b43175d445c5faa02351047a9874cd0d822c17d054833d032ebc511",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "9811c5314b43175d445c5faa02351047a9874cd0d822c17d054833d032ebc511",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/seville.html?section=journal",
+          "cityId": "seville",
+          "countryCode": "ES",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "9811c5314b43175d445c5faa02351047a9874cd0d822c17d054833d032ebc511",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

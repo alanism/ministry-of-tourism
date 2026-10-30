@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:honolulu:ar1:27f69898cee50f2b019dbd2b",
+      "styleId": "fcc-editorial",
+      "label": "HNL · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "honolulu",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/honolulu/illustrations/honolulu-airport-tag-1961d4a1b9-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/honolulu/illustrations/honolulu-airport-tag-1961d4a1b9-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/honolulu-airport-tag.png",
+      "sourceHash": "1961d4a1b95bf26009e8dc343bd731e8464dd40d1384486a3f34e1df26c77316",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.06140350877192982,
+        0.5749601275917066,
+        0.9066985645933014
+      ],
+      "artRef": {
+        "assetId": "fcc:honolulu:ar1:27f69898cee50f2b019dbd2b",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "honolulu",
+        "label": "HNL · Flight luggage tag V2",
+        "countryCode": "US",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/honolulu/illustrations/honolulu-airport-tag-1961d4a1b9-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/honolulu/illustrations/honolulu-airport-tag-1961d4a1b9-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/honolulu-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "1961d4a1b95bf26009e8dc343bd731e8464dd40d1384486a3f34e1df26c77316",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "1961d4a1b95bf26009e8dc343bd731e8464dd40d1384486a3f34e1df26c77316",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/honolulu.html?section=journal",
+          "cityId": "honolulu",
+          "countryCode": "US",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "1961d4a1b95bf26009e8dc343bd731e8464dd40d1384486a3f34e1df26c77316",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

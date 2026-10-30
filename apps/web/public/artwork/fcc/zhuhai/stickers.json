@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:zhuhai:ar1:192d93b5a75207d54d514a3a",
+      "styleId": "fcc-editorial",
+      "label": "ZUH · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "zhuhai",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/zhuhai/illustrations/zhuhai-airport-tag-1aa3758ec6-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/zhuhai/illustrations/zhuhai-airport-tag-1aa3758ec6-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/zhuhai-airport-tag.png",
+      "sourceHash": "1aa3758ec621fe889d055f9d39b7812ddb2b9a4bc91d62919fad837d42c7d961",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.20574162679425836,
+        0.04784688995215311,
+        0.5885167464114832,
+        0.9202551834130781
+      ],
+      "artRef": {
+        "assetId": "fcc:zhuhai:ar1:192d93b5a75207d54d514a3a",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "zhuhai",
+        "label": "ZUH · Flight luggage tag V2",
+        "countryCode": "CN",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/zhuhai/illustrations/zhuhai-airport-tag-1aa3758ec6-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/zhuhai/illustrations/zhuhai-airport-tag-1aa3758ec6-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/zhuhai-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "1aa3758ec621fe889d055f9d39b7812ddb2b9a4bc91d62919fad837d42c7d961",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "1aa3758ec621fe889d055f9d39b7812ddb2b9a4bc91d62919fad837d42c7d961",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/zhuhai.html?section=journal",
+          "cityId": "zhuhai",
+          "countryCode": "CN",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "1aa3758ec621fe889d055f9d39b7812ddb2b9a4bc91d62919fad837d42c7d961",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

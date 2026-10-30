@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:perth:ar1:d7f1d3cb78753d3b76c96d78",
+      "styleId": "fcc-editorial",
+      "label": "PER · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "perth",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/perth/illustrations/perth-airport-tag-c560291f52-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/perth/illustrations/perth-airport-tag-c560291f52-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/perth-airport-tag.png",
+      "sourceHash": "c560291f52b5e550f3c10818cbbb5fb2b3250914eecde417d4098f5ab6b9ec3d",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.06220095693779904,
+        0.5749601275917066,
+        0.905103668261563
+      ],
+      "artRef": {
+        "assetId": "fcc:perth:ar1:d7f1d3cb78753d3b76c96d78",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "perth",
+        "label": "PER · Flight luggage tag V2",
+        "countryCode": "AU",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/perth/illustrations/perth-airport-tag-c560291f52-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/perth/illustrations/perth-airport-tag-c560291f52-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/perth-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "c560291f52b5e550f3c10818cbbb5fb2b3250914eecde417d4098f5ab6b9ec3d",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "c560291f52b5e550f3c10818cbbb5fb2b3250914eecde417d4098f5ab6b9ec3d",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/perth.html?section=journal",
+          "cityId": "perth",
+          "countryCode": "AU",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "c560291f52b5e550f3c10818cbbb5fb2b3250914eecde417d4098f5ab6b9ec3d",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

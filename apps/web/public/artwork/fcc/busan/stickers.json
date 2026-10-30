@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:busan:ar1:3ac77706bdb94dbd259f8faf",
+      "styleId": "fcc-editorial",
+      "label": "PUS · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "busan",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/busan/illustrations/busan-airport-tag-406dd65739-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/busan/illustrations/busan-airport-tag-406dd65739-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/busan-airport-tag.png",
+      "sourceHash": "406dd65739256057da8c494c487d1bd0cc35f248dcb45c4f448c4be6b836cf17",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21451355661881977,
+        0.06618819776714513,
+        0.5709728867623605,
+        0.8995215311004785
+      ],
+      "artRef": {
+        "assetId": "fcc:busan:ar1:3ac77706bdb94dbd259f8faf",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "busan",
+        "label": "PUS · Flight luggage tag V2",
+        "countryCode": "KR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/busan/illustrations/busan-airport-tag-406dd65739-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/busan/illustrations/busan-airport-tag-406dd65739-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/busan-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "406dd65739256057da8c494c487d1bd0cc35f248dcb45c4f448c4be6b836cf17",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "406dd65739256057da8c494c487d1bd0cc35f248dcb45c4f448c4be6b836cf17",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/busan.html?section=journal",
+          "cityId": "busan",
+          "countryCode": "KR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "406dd65739256057da8c494c487d1bd0cc35f248dcb45c4f448c4be6b836cf17",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

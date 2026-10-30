@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:barcelona:ar1:ea750b48b3b0b1d8205097cc",
+      "styleId": "fcc-editorial",
+      "label": "BCN · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "barcelona",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/barcelona/illustrations/barcelona-airport-tag-0d8b5e7427-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/barcelona/illustrations/barcelona-airport-tag-0d8b5e7427-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/barcelona-airport-tag.png",
+      "sourceHash": "0d8b5e7427bc72686af1c2837ca3ce61b7bc598724ad17c1b9e4c40ae2a0323c",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.22567783094098884,
+        0.04864433811802233,
+        0.583732057416268,
+        0.9146730462519936
+      ],
+      "artRef": {
+        "assetId": "fcc:barcelona:ar1:ea750b48b3b0b1d8205097cc",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "barcelona",
+        "label": "BCN · Flight luggage tag V2",
+        "countryCode": "ES",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/barcelona/illustrations/barcelona-airport-tag-0d8b5e7427-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/barcelona/illustrations/barcelona-airport-tag-0d8b5e7427-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/barcelona-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "0d8b5e7427bc72686af1c2837ca3ce61b7bc598724ad17c1b9e4c40ae2a0323c",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "0d8b5e7427bc72686af1c2837ca3ce61b7bc598724ad17c1b9e4c40ae2a0323c",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/barcelona.html?section=journal",
+          "cityId": "barcelona",
+          "countryCode": "ES",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "0d8b5e7427bc72686af1c2837ca3ce61b7bc598724ad17c1b9e4c40ae2a0323c",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

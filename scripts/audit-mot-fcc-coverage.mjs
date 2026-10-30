@@ -654,6 +654,58 @@ export async function auditFccCoverage({ fccRoot, motPublicRoot } = {}) {
     }
   }
 
+  // Strict release-proven original aliases. Both the source original URL and
+  // each alias must be canonical FCC-origin release paths with identical
+  // full SHA-256 and positive safe-integer byte evidence; row claims alone
+  // are never trusted, and any conflicting evidence poisons its path.
+  const releaseEvidence = new Map(); const poisonedReleasePaths = new Set();
+  const releasePathKey = (value) => {
+    if (typeof value !== 'string' || !value) return undefined;
+    try {
+      const parsed = value.startsWith('//') ? new URL(`https:${value}`)
+        : /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value) ? new URL(value) : new URL(value, ORIGIN);
+      return parsed.pathname || undefined;
+    } catch { return undefined; }
+  };
+  const strictReleasePath = (value) => {
+    if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || value.includes('\\') || value.includes('\0') || value.includes('?') || value.includes('#') || value.includes('%')) return undefined;
+    const parts = value.split('/').slice(1);
+    if (!parts.length || parts.some((p) => !p || p === '.' || p === '..')) return undefined;
+    try { const parsed = new URL(value, ORIGIN); return parsed.origin === ORIGIN && parsed.pathname === value ? value : undefined; } catch { return undefined; }
+  };
+  const strictReleaseUrlPath = (value) => {
+    if (typeof value !== 'string' || !value) return undefined;
+    try {
+      const parsed = new URL(value); const pathname = strictReleasePath(parsed.pathname);
+      return parsed.origin === ORIGIN && !parsed.username && !parsed.password && !parsed.search && !parsed.hash && pathname && value === `${ORIGIN}${pathname}` ? pathname : undefined;
+    } catch { return undefined; }
+  };
+  for (const file of optimized.files) {
+    const canonical = strictReleasePath(file?.path); const key = canonical ?? releasePathKey(file?.path);
+    if (!key) continue;
+    const sha = typeof file?.sha256 === 'string' && /^[0-9a-f]{64}$/i.test(file.sha256) ? file.sha256.toLowerCase() : undefined;
+    const valid = canonical && sha && Number.isSafeInteger(file?.bytes) && file.bytes > 0 ? { sha256: sha, bytes: file.bytes } : undefined;
+    if (!valid) { poisonedReleasePaths.add(key); releaseEvidence.delete(key); continue; }
+    if (poisonedReleasePaths.has(key)) continue;
+    const prior = releaseEvidence.get(key);
+    if (prior && (prior.sha256 !== valid.sha256 || prior.bytes !== valid.bytes)) { poisonedReleasePaths.add(key); releaseEvidence.delete(key); }
+    else releaseEvidence.set(key, valid);
+  }
+  const releaseUrlsByEvidence = new Map();
+  for (const [releasePath, evidence] of releaseEvidence) {
+    const key = `${evidence.sha256}:${evidence.bytes}`;
+    const urls = releaseUrlsByEvidence.get(key) ?? [];
+    urls.push(`${ORIGIN}${releasePath}`);
+    releaseUrlsByEvidence.set(key, urls);
+  }
+  for (const urls of releaseUrlsByEvidence.values()) urls.sort();
+  for (const row of rows) {
+    const sourcePath = strictReleaseUrlPath(row.originalUrl);
+    const sourceEvidence = sourcePath ? releaseEvidence.get(sourcePath) : undefined;
+    if (!sourceEvidence) continue;
+    const aliases = releaseUrlsByEvidence.get(`${sourceEvidence.sha256}:${sourceEvidence.bytes}`);
+    if (aliases?.length) row.originalAliases = uniqSort([...(row.originalAliases ?? []), ...aliases]);
+  }
   // ---- Matching (indexed; no O(N*M) scans) ------------------------------------
   // Proof is: same city + proven canonical original alias (raw source URL or
   // SHA-proven published gallery original) + exact normalized crop +

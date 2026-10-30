@@ -21,7 +21,7 @@ try{previous=JSON.parse(await readFile(path.join(output,'manifest.json'),'utf8')
 const previousPack=registry.styles.find(style=>style.id===styleId);
 const policy={credit:previous.credit??previousPack?.credit??'Foreign Clubbers Correspondence',rightsStatus:previous.rightsStatus??previousPack?.rightsStatus??'unknown'};
 const manifest={version:1,styleId,...policy,subjects:[],cities:[],catalogs:[]},groups=new Map(),skipped=new Set();
-const labels={cafe:'Café',portraits:'Brush & fashion portraits','city-ink':'City ink',hotels:'Hotels',restaurants:'Restaurants',maps:'Maps',stickers:'Stickers',objects:'Objects',people:'People',activities:'Activities','city-illustrations':'City illustrations',apparel:'Apparel',other:'Other drawings'};
+const labels={cafe:'CafÃ©',portraits:'Brush & fashion portraits','city-ink':'City ink',hotels:'Hotels',restaurants:'Restaurants',maps:'Maps',stickers:'Stickers',objects:'Objects',people:'People',activities:'Activities','city-illustrations':'City illustrations',apparel:'Apparel',other:'Other drawings'};
 const url=value=>new URL(value,host).href;
 const humanize=value=>value.replace(/-/g,' ').replace(/\b\w/g,letter=>letter.toUpperCase());
 const cropFor=(frame,width,height)=>frame?[frame[0]/width,frame[1]/height,(frame[2]-frame[0])/width,(frame[3]-frame[1])/height]:undefined;
@@ -48,8 +48,8 @@ for(const [slug,records] of Object.entries(catalog).sort(([a],[b])=>a.localeComp
  for(const [i,slot] of (fashion?.slots??[]).entries())if(fashion.frames?.[i])drawing(sheet,'fashion',humanize(slot),cropFor(fashion.frames[i],fashion.width,fashion.height),'portrait');
  for(const figure of city?.figures??[]){
   if(figure.kind==='style')continue;const record=records.find(value=>value.id===figure.sha256);if(!record||used.has(record.id))continue;
-  const category=['backdrop','foreground'].includes(figure.kind)?figure.kind:figure.kind==='scene'?'people':figure.kind==='object'?'objects':record.category;
-  drawing(record,category,figure.label,cropFor(figure.frame,figure.width,figure.height),['backdrop','foreground'].includes(figure.kind)?figure.kind:undefined);
+  const category=['backdrop','foreground','tag','stamp'].includes(figure.kind)?figure.kind:figure.kind==='scene'?'people':figure.kind==='object'?'objects':record.category;
+  drawing(record,category,figure.label,cropFor(figure.frame,figure.width,figure.height),['backdrop','foreground','tag','stamp'].includes(figure.kind)?figure.kind:undefined);
  }
  for(const record of records){
   if(used.has(record.id)||['fashion','fashion-men'].includes(record.category)||/sheet/i.test(record.label))continue;
@@ -93,7 +93,7 @@ manifest.cities=[...new Set(manifest.catalogs.map(ref=>ref.city))].sort().map(id
 files.push({name:'manifest.json',bytes:JSON.stringify(manifest)});
 const report={version:1,entryCount:count,cityCount:manifest.cities.length,catalogCount:manifest.catalogs.length,categoryCounts:Object.fromEntries(manifest.subjects.map(subject=>[subject.id,manifest.catalogs.filter(ref=>ref.subject===subject.id).reduce((n,ref)=>n+ref.count,0)])),skippedUnregisteredCityIds:[...skipped].sort(),skipReason:'Origins outside the canonical 200-city registry are reported, never renamed or assigned a guessed country.',rightsDefault:policy.rightsStatus};
 files.push({name:'build-report.json',bytes:JSON.stringify(report,null,2)+'\n'});
-const pack={id:styleId,label:'FCC · Fashion, travel & lifestyle',manifest:'/artwork/fcc/manifest.json',...policy};registry.styles=[...registry.styles.filter(value=>value.id!==styleId),pack];
+const pack={id:styleId,label:'FCC Â· Fashion, travel & lifestyle',manifest:'/artwork/fcc/manifest.json',...policy};registry.styles=[...registry.styles.filter(value=>value.id!==styleId),pack];
 // All references, origins, policies and crops have validated before the first write.
 async function fourWorkers(values,work){let next=0;await Promise.all(Array.from({length:Math.min(4,values.length)},async()=>{while(next<values.length){const index=next++;await work(values[index],index);}}));}
 await fourWorkers(files,async file=>{await mkdir(path.dirname(path.join(output,file.name)),{recursive:true});await writeFile(path.join(output,file.name),file.bytes);});

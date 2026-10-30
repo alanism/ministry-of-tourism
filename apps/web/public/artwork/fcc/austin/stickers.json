@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:austin:ar1:dad0a9d46b57036c1a1a6125",
+      "styleId": "fcc-editorial",
+      "label": "Tag",
+      "subject": "stickers",
+      "city": "austin",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/output/illustrations/manila-austin-v1/austin/notebook/tag.webp",
+      "src": "https://foreignclubberscorespondence.web.app/illustrations/manila-austin-v1/austin/tag.png",
+      "original": "https://foreignclubberscorespondence.web.app/illustrations/manila-austin-v1/austin/tag.png",
+      "sourceHash": "3144998bf0fb5ae8c6980e5db23f7d5c2c07dc0aad79f20bcf8ea031bc58618d",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.19138755980861244,
+        0.030303030303030304,
+        0.6172248803827751,
+        0.9409888357256778
+      ],
+      "artRef": {
+        "assetId": "fcc:austin:ar1:dad0a9d46b57036c1a1a6125",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "austin",
+        "label": "Tag",
+        "countryCode": "US",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/manila-austin-v1/austin/notebook/tag.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/illustrations/manila-austin-v1/austin/tag.png",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/illustrations/manila-austin-v1/austin/tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "3144998bf0fb5ae8c6980e5db23f7d5c2c07dc0aad79f20bcf8ea031bc58618d",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "3144998bf0fb5ae8c6980e5db23f7d5c2c07dc0aad79f20bcf8ea031bc58618d",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/austin.html?section=journal",
+          "cityId": "austin",
+          "countryCode": "US",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "3144998bf0fb5ae8c6980e5db23f7d5c2c07dc0aad79f20bcf8ea031bc58618d",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

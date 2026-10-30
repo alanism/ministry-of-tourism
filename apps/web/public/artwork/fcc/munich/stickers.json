@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:munich:ar1:75ce3cc8139e75c1ea5c0cb0",
+      "styleId": "fcc-editorial",
+      "label": "MUC · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "munich",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/munich/illustrations/munich-airport-tag-3f0084a0d5-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/munich/illustrations/munich-airport-tag-3f0084a0d5-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/munich-airport-tag.png",
+      "sourceHash": "3f0084a0d5c0097541bce61c13d82ecb7d758492e7706d5b90275f6c67d991a6",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21610845295055822,
+        0.06698564593301436,
+        0.5685805422647527,
+        0.8987240829346093
+      ],
+      "artRef": {
+        "assetId": "fcc:munich:ar1:75ce3cc8139e75c1ea5c0cb0",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "munich",
+        "label": "MUC · Flight luggage tag V2",
+        "countryCode": "DE",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/munich/illustrations/munich-airport-tag-3f0084a0d5-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/munich/illustrations/munich-airport-tag-3f0084a0d5-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/munich-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "3f0084a0d5c0097541bce61c13d82ecb7d758492e7706d5b90275f6c67d991a6",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "3f0084a0d5c0097541bce61c13d82ecb7d758492e7706d5b90275f6c67d991a6",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/munich.html?section=journal",
+          "cityId": "munich",
+          "countryCode": "DE",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "3f0084a0d5c0097541bce61c13d82ecb7d758492e7706d5b90275f6c67d991a6",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

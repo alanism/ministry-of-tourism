@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:los-angeles:ar1:f72de3fbcbb7d8c9a98d8d81",
+      "styleId": "fcc-editorial",
+      "label": "LAX · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "los-angeles",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/los-angeles/illustrations/los-angeles-airport-tag-5120522e51-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/los-angeles/illustrations/los-angeles-airport-tag-5120522e51-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/los-angeles-airport-tag.png",
+      "sourceHash": "5120522e51fd533d72bc76c1e2a0b1d9278fc8b77fd7761ea39ff4a6cce221e0",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21451355661881977,
+        0.06698564593301436,
+        0.5717703349282297,
+        0.89792663476874
+      ],
+      "artRef": {
+        "assetId": "fcc:los-angeles:ar1:f72de3fbcbb7d8c9a98d8d81",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "los-angeles",
+        "label": "LAX · Flight luggage tag V2",
+        "countryCode": "US",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/los-angeles/illustrations/los-angeles-airport-tag-5120522e51-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/los-angeles/illustrations/los-angeles-airport-tag-5120522e51-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/los-angeles-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "5120522e51fd533d72bc76c1e2a0b1d9278fc8b77fd7761ea39ff4a6cce221e0",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "5120522e51fd533d72bc76c1e2a0b1d9278fc8b77fd7761ea39ff4a6cce221e0",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/los-angeles.html?section=journal",
+          "cityId": "los-angeles",
+          "countryCode": "US",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "5120522e51fd533d72bc76c1e2a0b1d9278fc8b77fd7761ea39ff4a6cce221e0",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

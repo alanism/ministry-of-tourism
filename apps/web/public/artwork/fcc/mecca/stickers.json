@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:mecca:ar1:0982147d37725c0691ecc7a0",
+      "styleId": "fcc-editorial",
+      "label": "JED · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "mecca",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/mecca/illustrations/mecca-airport-tag-3c56e4a825-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/mecca/illustrations/mecca-airport-tag-3c56e4a825-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/mecca-airport-tag.png",
+      "sourceHash": "3c56e4a82560c705b128ddfad43fe0927e32b1bd783f087e2f3b522f1bd553dd",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.06618819776714513,
+        0.5749601275917066,
+        0.9003189792663477
+      ],
+      "artRef": {
+        "assetId": "fcc:mecca:ar1:0982147d37725c0691ecc7a0",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "mecca",
+        "label": "JED · Flight luggage tag V2",
+        "countryCode": "SA",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/mecca/illustrations/mecca-airport-tag-3c56e4a825-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/mecca/illustrations/mecca-airport-tag-3c56e4a825-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/mecca-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "3c56e4a82560c705b128ddfad43fe0927e32b1bd783f087e2f3b522f1bd553dd",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "3c56e4a82560c705b128ddfad43fe0927e32b1bd783f087e2f3b522f1bd553dd",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/mecca.html?section=journal",
+          "cityId": "mecca",
+          "countryCode": "SA",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "3c56e4a82560c705b128ddfad43fe0927e32b1bd783f087e2f3b522f1bd553dd",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

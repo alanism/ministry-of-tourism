@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:niseko:ar1:1fd937b55219395cf071144c",
+      "styleId": "fcc-editorial",
+      "label": "CTS · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "niseko",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/niseko/illustrations/niseko-airport-tag-671c39f2e6-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/niseko/illustrations/niseko-airport-tag-671c39f2e6-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/niseko-airport-tag.png",
+      "sourceHash": "671c39f2e6e1ff7d797e4b2483bbdcc9b3c274622480653ff09c2c966dcc7e94",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.2113237639553429,
+        0.06379585326953748,
+        0.5781499202551834,
+        0.8907496012759171
+      ],
+      "artRef": {
+        "assetId": "fcc:niseko:ar1:1fd937b55219395cf071144c",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "niseko",
+        "label": "CTS · Flight luggage tag V2",
+        "countryCode": "JP",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/niseko/illustrations/niseko-airport-tag-671c39f2e6-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/niseko/illustrations/niseko-airport-tag-671c39f2e6-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/niseko-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "671c39f2e6e1ff7d797e4b2483bbdcc9b3c274622480653ff09c2c966dcc7e94",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "671c39f2e6e1ff7d797e4b2483bbdcc9b3c274622480653ff09c2c966dcc7e94",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/niseko.html?section=journal",
+          "cityId": "niseko",
+          "countryCode": "JP",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "671c39f2e6e1ff7d797e4b2483bbdcc9b3c274622480653ff09c2c966dcc7e94",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:buenos-aires:ar1:f22b0305117bc2a129810953",
+      "styleId": "fcc-editorial",
+      "label": "EZE · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "buenos-aires",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/buenos-aires/illustrations/buenos-aires-airport-tag-b014dff435-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/buenos-aires/illustrations/buenos-aires-airport-tag-b014dff435-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/buenos-aires-airport-tag.png",
+      "sourceHash": "b014dff43586aadfee5e28ed6ade95af562e6e8a24e64279dc6547152a545948",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21212121212121213,
+        0.06220095693779904,
+        0.5765550239234449,
+        0.9043062200956937
+      ],
+      "artRef": {
+        "assetId": "fcc:buenos-aires:ar1:f22b0305117bc2a129810953",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "buenos-aires",
+        "label": "EZE · Flight luggage tag V2",
+        "countryCode": "AR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/buenos-aires/illustrations/buenos-aires-airport-tag-b014dff435-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/buenos-aires/illustrations/buenos-aires-airport-tag-b014dff435-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/buenos-aires-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "b014dff43586aadfee5e28ed6ade95af562e6e8a24e64279dc6547152a545948",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "b014dff43586aadfee5e28ed6ade95af562e6e8a24e64279dc6547152a545948",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/buenos-aires.html?section=journal",
+          "cityId": "buenos-aires",
+          "countryCode": "AR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "b014dff43586aadfee5e28ed6ade95af562e6e8a24e64279dc6547152a545948",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

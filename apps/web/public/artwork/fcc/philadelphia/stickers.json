@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:philadelphia:ar1:b7f8c8f62da9a9e8573c958c",
+      "styleId": "fcc-editorial",
+      "label": "PHL · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "philadelphia",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/philadelphia/illustrations/philadelphia-airport-tag-8b6a178a24-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/philadelphia/illustrations/philadelphia-airport-tag-8b6a178a24-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/philadelphia-airport-tag.png",
+      "sourceHash": "8b6a178a24523d98b39647618da2e5c94b2188e02c2f9adb7ed194f00b8de0d3",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21212121212121213,
+        0.0645933014354067,
+        0.5757575757575758,
+        0.9035087719298246
+      ],
+      "artRef": {
+        "assetId": "fcc:philadelphia:ar1:b7f8c8f62da9a9e8573c958c",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "philadelphia",
+        "label": "PHL · Flight luggage tag V2",
+        "countryCode": "US",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/philadelphia/illustrations/philadelphia-airport-tag-8b6a178a24-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/philadelphia/illustrations/philadelphia-airport-tag-8b6a178a24-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/philadelphia-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "8b6a178a24523d98b39647618da2e5c94b2188e02c2f9adb7ed194f00b8de0d3",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "8b6a178a24523d98b39647618da2e5c94b2188e02c2f9adb7ed194f00b8de0d3",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/philadelphia.html?section=journal",
+          "cityId": "philadelphia",
+          "countryCode": "US",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "8b6a178a24523d98b39647618da2e5c94b2188e02c2f9adb7ed194f00b8de0d3",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

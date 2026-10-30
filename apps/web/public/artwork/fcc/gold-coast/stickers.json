@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:gold-coast:ar1:9900b2ebd243275303426ded",
+      "styleId": "fcc-editorial",
+      "label": "OOL · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "gold-coast",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/gold-coast/illustrations/gold-coast-airport-tag-66c3fbf114-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/gold-coast/illustrations/gold-coast-airport-tag-66c3fbf114-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/gold-coast-airport-tag.png",
+      "sourceHash": "66c3fbf114162c027bb404c0983d1317ac29a653fe91fa99d6d24b49381282ef",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.0645933014354067,
+        0.5757575757575758,
+        0.8891547049441786
+      ],
+      "artRef": {
+        "assetId": "fcc:gold-coast:ar1:9900b2ebd243275303426ded",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "gold-coast",
+        "label": "OOL · Flight luggage tag V2",
+        "countryCode": "AU",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/gold-coast/illustrations/gold-coast-airport-tag-66c3fbf114-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/gold-coast/illustrations/gold-coast-airport-tag-66c3fbf114-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/gold-coast-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "66c3fbf114162c027bb404c0983d1317ac29a653fe91fa99d6d24b49381282ef",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "66c3fbf114162c027bb404c0983d1317ac29a653fe91fa99d6d24b49381282ef",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/gold-coast.html?section=journal",
+          "cityId": "gold-coast",
+          "countryCode": "AU",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "66c3fbf114162c027bb404c0983d1317ac29a653fe91fa99d6d24b49381282ef",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

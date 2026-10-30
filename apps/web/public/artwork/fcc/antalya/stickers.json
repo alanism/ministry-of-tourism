@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:antalya:ar1:f2e5fcffbfba8a15adec3745",
+      "styleId": "fcc-editorial",
+      "label": "AYT · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "antalya",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/antalya/illustrations/antalya-airport-tag-6d95c64b94-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/antalya/illustrations/antalya-airport-tag-6d95c64b94-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/antalya-airport-tag.png",
+      "sourceHash": "6d95c64b9468ed347eb8ebce49a1f60934029eb1eba4e3518689f0e35d9d1d1e",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21371610845295055,
+        0.058213716108452954,
+        0.5725677830940988,
+        0.9027113237639554
+      ],
+      "artRef": {
+        "assetId": "fcc:antalya:ar1:f2e5fcffbfba8a15adec3745",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "antalya",
+        "label": "AYT · Flight luggage tag V2",
+        "countryCode": "TR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/antalya/illustrations/antalya-airport-tag-6d95c64b94-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/antalya/illustrations/antalya-airport-tag-6d95c64b94-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/antalya-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "6d95c64b9468ed347eb8ebce49a1f60934029eb1eba4e3518689f0e35d9d1d1e",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "6d95c64b9468ed347eb8ebce49a1f60934029eb1eba4e3518689f0e35d9d1d1e",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/antalya.html?section=journal",
+          "cityId": "antalya",
+          "countryCode": "TR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "6d95c64b9468ed347eb8ebce49a1f60934029eb1eba4e3518689f0e35d9d1d1e",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

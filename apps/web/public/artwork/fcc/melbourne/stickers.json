@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:melbourne:ar1:d0af461f9b6d7204392fdba6",
+      "styleId": "fcc-editorial",
+      "label": "MEL · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "melbourne",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/melbourne/illustrations/melbourne-airport-tag-407db35932-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/melbourne/illustrations/melbourne-airport-tag-407db35932-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/melbourne-airport-tag.png",
+      "sourceHash": "407db35932d11f48bc7597a946a033ca3cd01b8b5d786de7a497d1c60587de21",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21451355661881977,
+        0.06618819776714513,
+        0.5717703349282297,
+        0.8987240829346093
+      ],
+      "artRef": {
+        "assetId": "fcc:melbourne:ar1:d0af461f9b6d7204392fdba6",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "melbourne",
+        "label": "MEL · Flight luggage tag V2",
+        "countryCode": "AU",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/melbourne/illustrations/melbourne-airport-tag-407db35932-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/melbourne/illustrations/melbourne-airport-tag-407db35932-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/melbourne-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "407db35932d11f48bc7597a946a033ca3cd01b8b5d786de7a497d1c60587de21",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "407db35932d11f48bc7597a946a033ca3cd01b8b5d786de7a497d1c60587de21",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/melbourne.html?section=journal",
+          "cityId": "melbourne",
+          "countryCode": "AU",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "407db35932d11f48bc7597a946a033ca3cd01b8b5d786de7a497d1c60587de21",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

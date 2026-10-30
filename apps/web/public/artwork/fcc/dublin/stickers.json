@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:dublin:ar1:fee3a96b869aa1d3d237aac3",
+      "styleId": "fcc-editorial",
+      "label": "DUB · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "dublin",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/dublin/illustrations/dublin-airport-tag-fab38b64bc-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/dublin/illustrations/dublin-airport-tag-fab38b64bc-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/dublin-airport-tag.png",
+      "sourceHash": "fab38b64bc2085841bb2db58ac6850fa5f6c28ca7d3cc42df93fdb9b6af8e2c6",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21052631578947367,
+        0.04864433811802233,
+        0.5789473684210527,
+        0.919457735247209
+      ],
+      "artRef": {
+        "assetId": "fcc:dublin:ar1:fee3a96b869aa1d3d237aac3",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "dublin",
+        "label": "DUB · Flight luggage tag V2",
+        "countryCode": "IE",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/dublin/illustrations/dublin-airport-tag-fab38b64bc-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/dublin/illustrations/dublin-airport-tag-fab38b64bc-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/dublin-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "fab38b64bc2085841bb2db58ac6850fa5f6c28ca7d3cc42df93fdb9b6af8e2c6",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "fab38b64bc2085841bb2db58ac6850fa5f6c28ca7d3cc42df93fdb9b6af8e2c6",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/dublin.html?section=journal",
+          "cityId": "dublin",
+          "countryCode": "IE",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "fab38b64bc2085841bb2db58ac6850fa5f6c28ca7d3cc42df93fdb9b6af8e2c6",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:vilnius:ar1:c4ab54bfb237dad27d0ed37c",
+      "styleId": "fcc-editorial",
+      "label": "VNO · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "vilnius",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/vilnius/illustrations/vilnius-airport-tag-c1ec84ed06-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/vilnius/illustrations/vilnius-airport-tag-c1ec84ed06-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/vilnius-airport-tag.png",
+      "sourceHash": "c1ec84ed06f7bd584fa53becce46896710eb90a2f19785077c6baf67e18dd2ae",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21371610845295055,
+        0.06220095693779904,
+        0.5733652312599681,
+        0.905103668261563
+      ],
+      "artRef": {
+        "assetId": "fcc:vilnius:ar1:c4ab54bfb237dad27d0ed37c",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "vilnius",
+        "label": "VNO · Flight luggage tag V2",
+        "countryCode": "LT",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/vilnius/illustrations/vilnius-airport-tag-c1ec84ed06-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/vilnius/illustrations/vilnius-airport-tag-c1ec84ed06-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/vilnius-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "c1ec84ed06f7bd584fa53becce46896710eb90a2f19785077c6baf67e18dd2ae",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "c1ec84ed06f7bd584fa53becce46896710eb90a2f19785077c6baf67e18dd2ae",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/vilnius.html?section=journal",
+          "cityId": "vilnius",
+          "countryCode": "LT",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "c1ec84ed06f7bd584fa53becce46896710eb90a2f19785077c6baf67e18dd2ae",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

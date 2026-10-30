@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:bogota:ar1:d17f71c11c6087128ce290fb",
+      "styleId": "fcc-editorial",
+      "label": "BOG · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "bogota",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/bogota/illustrations/bogota-airport-tag-d775ab7989-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/bogota/illustrations/bogota-airport-tag-d775ab7989-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/bogota-airport-tag.png",
+      "sourceHash": "d775ab7989875b8debca8ee32279bea263f214486bd68f452cf13d83498199f0",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.06539074960127592,
+        0.5741626794258373,
+        0.9019138755980861
+      ],
+      "artRef": {
+        "assetId": "fcc:bogota:ar1:d17f71c11c6087128ce290fb",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "bogota",
+        "label": "BOG · Flight luggage tag V2",
+        "countryCode": "CO",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/bogota/illustrations/bogota-airport-tag-d775ab7989-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/bogota/illustrations/bogota-airport-tag-d775ab7989-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/bogota-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "d775ab7989875b8debca8ee32279bea263f214486bd68f452cf13d83498199f0",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "d775ab7989875b8debca8ee32279bea263f214486bd68f452cf13d83498199f0",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/bogota.html?section=journal",
+          "cityId": "bogota",
+          "countryCode": "CO",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "d775ab7989875b8debca8ee32279bea263f214486bd68f452cf13d83498199f0",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

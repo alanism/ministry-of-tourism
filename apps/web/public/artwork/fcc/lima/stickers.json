@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:lima:ar1:a208dd67b1808df490271ef1",
+      "styleId": "fcc-editorial",
+      "label": "LIM · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "lima",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/lima/illustrations/lima-airport-tag-8c0c7854b6-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/lima/illustrations/lima-airport-tag-8c0c7854b6-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/lima-airport-tag.png",
+      "sourceHash": "8c0c7854b65b263d05bced2d9e4e8767a9e92533d9c3db779f0b8ef6d5beaf0f",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21451355661881977,
+        0.06618819776714513,
+        0.5709728867623605,
+        0.9011164274322169
+      ],
+      "artRef": {
+        "assetId": "fcc:lima:ar1:a208dd67b1808df490271ef1",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "lima",
+        "label": "LIM · Flight luggage tag V2",
+        "countryCode": "PE",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/lima/illustrations/lima-airport-tag-8c0c7854b6-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/lima/illustrations/lima-airport-tag-8c0c7854b6-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/lima-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "8c0c7854b65b263d05bced2d9e4e8767a9e92533d9c3db779f0b8ef6d5beaf0f",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "8c0c7854b65b263d05bced2d9e4e8767a9e92533d9c3db779f0b8ef6d5beaf0f",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/lima.html?section=journal",
+          "cityId": "lima",
+          "countryCode": "PE",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "8c0c7854b65b263d05bced2d9e4e8767a9e92533d9c3db779f0b8ef6d5beaf0f",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

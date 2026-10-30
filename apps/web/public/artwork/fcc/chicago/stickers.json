@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:chicago:ar1:818835360d44b6fd976681b3",
+      "styleId": "fcc-editorial",
+      "label": "ORD · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "chicago",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/chicago/illustrations/chicago-airport-tag-76fbbde297-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/chicago/illustrations/chicago-airport-tag-76fbbde297-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/chicago-airport-tag.png",
+      "sourceHash": "76fbbde297f22997c904ec0f97026aec238d680bb4fe1f445ec997b228da15c9",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.20813397129186603,
+        0.04226475279106858,
+        0.5845295055821371,
+        0.9274322169059012
+      ],
+      "artRef": {
+        "assetId": "fcc:chicago:ar1:818835360d44b6fd976681b3",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "chicago",
+        "label": "ORD · Flight luggage tag V2",
+        "countryCode": "US",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/chicago/illustrations/chicago-airport-tag-76fbbde297-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/chicago/illustrations/chicago-airport-tag-76fbbde297-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/chicago-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "76fbbde297f22997c904ec0f97026aec238d680bb4fe1f445ec997b228da15c9",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "76fbbde297f22997c904ec0f97026aec238d680bb4fe1f445ec997b228da15c9",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/chicago.html?section=journal",
+          "cityId": "chicago",
+          "countryCode": "US",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "76fbbde297f22997c904ec0f97026aec238d680bb4fe1f445ec997b228da15c9",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

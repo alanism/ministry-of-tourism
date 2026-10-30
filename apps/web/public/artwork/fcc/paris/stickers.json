@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:paris:ar1:47e0e9fa2ca48840cc994f02",
+      "styleId": "fcc-editorial",
+      "label": "CDG · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "paris",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/paris/illustrations/paris-airport-tag-4f1d39900a-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/paris/illustrations/paris-airport-tag-4f1d39900a-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/paris-airport-tag.png",
+      "sourceHash": "4f1d39900a5fb240fd7a2c44107592f2d8cd49249c551e80988742a936783d40",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21212121212121213,
+        0.07017543859649122,
+        0.5765550239234449,
+        0.8827751196172249
+      ],
+      "artRef": {
+        "assetId": "fcc:paris:ar1:47e0e9fa2ca48840cc994f02",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "paris",
+        "label": "CDG · Flight luggage tag V2",
+        "countryCode": "FR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/paris/illustrations/paris-airport-tag-4f1d39900a-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/paris/illustrations/paris-airport-tag-4f1d39900a-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/paris-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "4f1d39900a5fb240fd7a2c44107592f2d8cd49249c551e80988742a936783d40",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "4f1d39900a5fb240fd7a2c44107592f2d8cd49249c551e80988742a936783d40",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/paris.html?section=journal",
+          "cityId": "paris",
+          "countryCode": "FR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "4f1d39900a5fb240fd7a2c44107592f2d8cd49249c551e80988742a936783d40",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

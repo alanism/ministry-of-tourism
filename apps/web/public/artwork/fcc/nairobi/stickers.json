@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:nairobi:ar1:0958943ecfd2e4cf9fd3e7fa",
+      "styleId": "fcc-editorial",
+      "label": "NBO · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "nairobi",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/nairobi/illustrations/nairobi-airport-tag-a2519cff88-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/nairobi/illustrations/nairobi-airport-tag-a2519cff88-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/nairobi-airport-tag.png",
+      "sourceHash": "a2519cff884ad0d1711d1742e5e21e287f29bd9e0d5c52229b71c143bf16f5cd",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.06140350877192982,
+        0.5749601275917066,
+        0.9059011164274322
+      ],
+      "artRef": {
+        "assetId": "fcc:nairobi:ar1:0958943ecfd2e4cf9fd3e7fa",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "nairobi",
+        "label": "NBO · Flight luggage tag V2",
+        "countryCode": "KE",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/nairobi/illustrations/nairobi-airport-tag-a2519cff88-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/nairobi/illustrations/nairobi-airport-tag-a2519cff88-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/nairobi-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "a2519cff884ad0d1711d1742e5e21e287f29bd9e0d5c52229b71c143bf16f5cd",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "a2519cff884ad0d1711d1742e5e21e287f29bd9e0d5c52229b71c143bf16f5cd",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/nairobi.html?section=journal",
+          "cityId": "nairobi",
+          "countryCode": "KE",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "a2519cff884ad0d1711d1742e5e21e287f29bd9e0d5c52229b71c143bf16f5cd",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

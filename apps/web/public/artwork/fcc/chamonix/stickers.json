@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:chamonix:ar1:58f265f211d00be2e0dbc239",
+      "styleId": "fcc-editorial",
+      "label": "GVA · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "chamonix",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/chamonix/illustrations/chamonix-airport-tag-65654c1e33-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/chamonix/illustrations/chamonix-airport-tag-65654c1e33-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/chamonix-airport-tag.png",
+      "sourceHash": "65654c1e33a13edb9e31b7d58c475cf4ae7b9d5fa8cb5b8c6dd4e6395d4f6ad9",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.2113237639553429,
+        0.06299840510366826,
+        0.5781499202551834,
+        0.8923444976076556
+      ],
+      "artRef": {
+        "assetId": "fcc:chamonix:ar1:58f265f211d00be2e0dbc239",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "chamonix",
+        "label": "GVA · Flight luggage tag V2",
+        "countryCode": "FR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/chamonix/illustrations/chamonix-airport-tag-65654c1e33-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/chamonix/illustrations/chamonix-airport-tag-65654c1e33-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/chamonix-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "65654c1e33a13edb9e31b7d58c475cf4ae7b9d5fa8cb5b8c6dd4e6395d4f6ad9",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "65654c1e33a13edb9e31b7d58c475cf4ae7b9d5fa8cb5b8c6dd4e6395d4f6ad9",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/chamonix.html?section=journal",
+          "cityId": "chamonix",
+          "countryCode": "FR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "65654c1e33a13edb9e31b7d58c475cf4ae7b9d5fa8cb5b8c6dd4e6395d4f6ad9",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

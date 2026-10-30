@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:orlando:ar1:af39550959d704a39fdb75a8",
+      "styleId": "fcc-editorial",
+      "label": "MCO · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "orlando",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/orlando/illustrations/orlando-airport-tag-0d554118cb-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/orlando/illustrations/orlando-airport-tag-0d554118cb-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/orlando-airport-tag.png",
+      "sourceHash": "0d554118cb0d0aaa5368450950f64d737f741c14cfb2a0ff9dd9c20f5dbdba0e",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21610845295055822,
+        0.06618819776714513,
+        0.5677830940988836,
+        0.8987240829346093
+      ],
+      "artRef": {
+        "assetId": "fcc:orlando:ar1:af39550959d704a39fdb75a8",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "orlando",
+        "label": "MCO · Flight luggage tag V2",
+        "countryCode": "US",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/orlando/illustrations/orlando-airport-tag-0d554118cb-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/orlando/illustrations/orlando-airport-tag-0d554118cb-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/orlando-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "0d554118cb0d0aaa5368450950f64d737f741c14cfb2a0ff9dd9c20f5dbdba0e",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "0d554118cb0d0aaa5368450950f64d737f741c14cfb2a0ff9dd9c20f5dbdba0e",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/orlando.html?section=journal",
+          "cityId": "orlando",
+          "countryCode": "US",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "0d554118cb0d0aaa5368450950f64d737f741c14cfb2a0ff9dd9c20f5dbdba0e",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

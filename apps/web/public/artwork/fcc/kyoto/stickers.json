@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:kyoto:ar1:770be650bec08ffa0aeaf762",
+      "styleId": "fcc-editorial",
+      "label": "KIX · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "kyoto",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/kyoto/illustrations/kyoto-airport-tag-e1fa24fe72-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/kyoto/illustrations/kyoto-airport-tag-e1fa24fe72-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/kyoto-airport-tag.png",
+      "sourceHash": "e1fa24fe72521da04acc852f6c6608277bdb47716b038d1ab36efc71dc6085e1",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.2113237639553429,
+        0.043859649122807015,
+        0.5781499202551834,
+        0.9186602870813397
+      ],
+      "artRef": {
+        "assetId": "fcc:kyoto:ar1:770be650bec08ffa0aeaf762",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "kyoto",
+        "label": "KIX · Flight luggage tag V2",
+        "countryCode": "JP",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/kyoto/illustrations/kyoto-airport-tag-e1fa24fe72-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/kyoto/illustrations/kyoto-airport-tag-e1fa24fe72-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/kyoto-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "e1fa24fe72521da04acc852f6c6608277bdb47716b038d1ab36efc71dc6085e1",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "e1fa24fe72521da04acc852f6c6608277bdb47716b038d1ab36efc71dc6085e1",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/kyoto.html?section=journal",
+          "cityId": "kyoto",
+          "countryCode": "JP",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "e1fa24fe72521da04acc852f6c6608277bdb47716b038d1ab36efc71dc6085e1",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

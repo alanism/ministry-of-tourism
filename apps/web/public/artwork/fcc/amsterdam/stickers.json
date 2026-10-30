@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:amsterdam:ar1:f591e3f7ae3a10b30780e802",
+      "styleId": "fcc-editorial",
+      "label": "AMS · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "amsterdam",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/amsterdam/illustrations/amsterdam-airport-tag-c25933b96f-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/amsterdam/illustrations/amsterdam-airport-tag-c25933b96f-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/amsterdam-airport-tag.png",
+      "sourceHash": "c25933b96f2f0bf89c5d9f312d7aab39b0d0dbdfdfe3c37d964e209ef2ba1aa6",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.22727272727272727,
+        0.07177033492822966,
+        0.5454545454545454,
+        0.8899521531100478
+      ],
+      "artRef": {
+        "assetId": "fcc:amsterdam:ar1:f591e3f7ae3a10b30780e802",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "amsterdam",
+        "label": "AMS · Flight luggage tag V2",
+        "countryCode": "NL",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/amsterdam/illustrations/amsterdam-airport-tag-c25933b96f-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/amsterdam/illustrations/amsterdam-airport-tag-c25933b96f-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/amsterdam-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "c25933b96f2f0bf89c5d9f312d7aab39b0d0dbdfdfe3c37d964e209ef2ba1aa6",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "c25933b96f2f0bf89c5d9f312d7aab39b0d0dbdfdfe3c37d964e209ef2ba1aa6",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/amsterdam.html?section=journal",
+          "cityId": "amsterdam",
+          "countryCode": "NL",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "c25933b96f2f0bf89c5d9f312d7aab39b0d0dbdfdfe3c37d964e209ef2ba1aa6",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

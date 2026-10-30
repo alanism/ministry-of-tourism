@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:las-vegas:ar1:0f732622b6bbbb0daa6179cd",
+      "styleId": "fcc-editorial",
+      "label": "LAS · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "las-vegas",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/las-vegas/illustrations/las-vegas-airport-tag-2e1f7548bc-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/las-vegas/illustrations/las-vegas-airport-tag-2e1f7548bc-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/las-vegas-airport-tag.png",
+      "sourceHash": "2e1f7548bc0db6874d01819cf80b78318d2c650aea35d21d73680d04369a0b19",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21371610845295055,
+        0.058213716108452954,
+        0.5733652312599681,
+        0.9011164274322169
+      ],
+      "artRef": {
+        "assetId": "fcc:las-vegas:ar1:0f732622b6bbbb0daa6179cd",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "las-vegas",
+        "label": "LAS · Flight luggage tag V2",
+        "countryCode": "US",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/las-vegas/illustrations/las-vegas-airport-tag-2e1f7548bc-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/las-vegas/illustrations/las-vegas-airport-tag-2e1f7548bc-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/las-vegas-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "2e1f7548bc0db6874d01819cf80b78318d2c650aea35d21d73680d04369a0b19",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "2e1f7548bc0db6874d01819cf80b78318d2c650aea35d21d73680d04369a0b19",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/las-vegas.html?section=journal",
+          "cityId": "las-vegas",
+          "countryCode": "US",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "2e1f7548bc0db6874d01819cf80b78318d2c650aea35d21d73680d04369a0b19",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

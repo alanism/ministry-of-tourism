@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:guangzhou:ar1:a22faa0158e41324b7f537ae",
+      "styleId": "fcc-editorial",
+      "label": "CAN · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "guangzhou",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/guangzhou/illustrations/guangzhou-airport-tag-998408d857-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/guangzhou/illustrations/guangzhou-airport-tag-998408d857-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/guangzhou-airport-tag.png",
+      "sourceHash": "998408d857f951596ed34992c95aee01d6b939eae2e8908afbdb4f804ee4a8ba",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21451355661881977,
+        0.06698564593301436,
+        0.5717703349282297,
+        0.8987240829346093
+      ],
+      "artRef": {
+        "assetId": "fcc:guangzhou:ar1:a22faa0158e41324b7f537ae",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "guangzhou",
+        "label": "CAN · Flight luggage tag V2",
+        "countryCode": "CN",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/guangzhou/illustrations/guangzhou-airport-tag-998408d857-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/guangzhou/illustrations/guangzhou-airport-tag-998408d857-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/guangzhou-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "998408d857f951596ed34992c95aee01d6b939eae2e8908afbdb4f804ee4a8ba",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "998408d857f951596ed34992c95aee01d6b939eae2e8908afbdb4f804ee4a8ba",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/guangzhou.html?section=journal",
+          "cityId": "guangzhou",
+          "countryCode": "CN",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "998408d857f951596ed34992c95aee01d6b939eae2e8908afbdb4f804ee4a8ba",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

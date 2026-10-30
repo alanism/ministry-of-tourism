@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:koh-samui:ar1:04fcf4618e6ed23c69dc7fba",
+      "styleId": "fcc-editorial",
+      "label": "USM · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "koh-samui",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/koh-samui/illustrations/koh-samui-airport-tag-10ab6a537c-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/koh-samui/illustrations/koh-samui-airport-tag-10ab6a537c-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/koh-samui-airport-tag.png",
+      "sourceHash": "10ab6a537c1125ae8d52fa57f7627d70dd8fe1f86fbeee64d825991f5a23832d",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21291866028708134,
+        0.06379585326953748,
+        0.5741626794258373,
+        0.9035087719298246
+      ],
+      "artRef": {
+        "assetId": "fcc:koh-samui:ar1:04fcf4618e6ed23c69dc7fba",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "koh-samui",
+        "label": "USM · Flight luggage tag V2",
+        "countryCode": "TH",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/koh-samui/illustrations/koh-samui-airport-tag-10ab6a537c-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/koh-samui/illustrations/koh-samui-airport-tag-10ab6a537c-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/koh-samui-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "10ab6a537c1125ae8d52fa57f7627d70dd8fe1f86fbeee64d825991f5a23832d",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "10ab6a537c1125ae8d52fa57f7627d70dd8fe1f86fbeee64d825991f5a23832d",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/koh-samui.html?section=journal",
+          "cityId": "koh-samui",
+          "countryCode": "TH",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "10ab6a537c1125ae8d52fa57f7627d70dd8fe1f86fbeee64d825991f5a23832d",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

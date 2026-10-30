@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:shenzhen:ar1:546dfacd8cb318bbc79c7072",
+      "styleId": "fcc-editorial",
+      "label": "SZX · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "shenzhen",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/shenzhen/illustrations/shenzhen-airport-tag-c2432279f7-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/shenzhen/illustrations/shenzhen-airport-tag-c2432279f7-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/shenzhen-airport-tag.png",
+      "sourceHash": "c2432279f70c9c7b90a8168bd00004f4cfc13c16439d830221958cfd1389a97a",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21052631578947367,
+        0.06140350877192982,
+        0.5789473684210527,
+        0.9059011164274322
+      ],
+      "artRef": {
+        "assetId": "fcc:shenzhen:ar1:546dfacd8cb318bbc79c7072",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "shenzhen",
+        "label": "SZX · Flight luggage tag V2",
+        "countryCode": "CN",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/shenzhen/illustrations/shenzhen-airport-tag-c2432279f7-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/shenzhen/illustrations/shenzhen-airport-tag-c2432279f7-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/shenzhen-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "c2432279f70c9c7b90a8168bd00004f4cfc13c16439d830221958cfd1389a97a",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "c2432279f70c9c7b90a8168bd00004f4cfc13c16439d830221958cfd1389a97a",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/shenzhen.html?section=journal",
+          "cityId": "shenzhen",
+          "countryCode": "CN",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "c2432279f70c9c7b90a8168bd00004f4cfc13c16439d830221958cfd1389a97a",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

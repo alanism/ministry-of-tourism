@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:jakarta:ar1:1fda223ac2ab0c37a8608fb2",
+      "styleId": "fcc-editorial",
+      "label": "CGK · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "jakarta",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/jakarta/illustrations/jakarta-airport-tag-9e00dc1e3d-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/jakarta/illustrations/jakarta-airport-tag-9e00dc1e3d-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/jakarta-airport-tag.png",
+      "sourceHash": "9e00dc1e3dbf2d333979c46f025e0ed3b699802111cdabfb8abf28af09e139ba",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21371610845295055,
+        0.0645933014354067,
+        0.5725677830940988,
+        0.9035087719298246
+      ],
+      "artRef": {
+        "assetId": "fcc:jakarta:ar1:1fda223ac2ab0c37a8608fb2",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "jakarta",
+        "label": "CGK · Flight luggage tag V2",
+        "countryCode": "ID",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/jakarta/illustrations/jakarta-airport-tag-9e00dc1e3d-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/jakarta/illustrations/jakarta-airport-tag-9e00dc1e3d-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/jakarta-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "9e00dc1e3dbf2d333979c46f025e0ed3b699802111cdabfb8abf28af09e139ba",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "9e00dc1e3dbf2d333979c46f025e0ed3b699802111cdabfb8abf28af09e139ba",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/jakarta.html?section=journal",
+          "cityId": "jakarta",
+          "countryCode": "ID",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "9e00dc1e3dbf2d333979c46f025e0ed3b699802111cdabfb8abf28af09e139ba",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

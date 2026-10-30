@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:hakuba:ar1:e21544ca07418c02490377b9",
+      "styleId": "fcc-editorial",
+      "label": "NRT · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "hakuba",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/hakuba/illustrations/hakuba-airport-tag-aa9e3d3778-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/hakuba/illustrations/hakuba-airport-tag-aa9e3d3778-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/hakuba-airport-tag.png",
+      "sourceHash": "aa9e3d37786c9f16fe5b23f649f22a9b5bb0a91c0471b951ac8bc1b60a0df7dc",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.20893141945773525,
+        0.05901116427432217,
+        0.5829346092503987,
+        0.8971291866028708
+      ],
+      "artRef": {
+        "assetId": "fcc:hakuba:ar1:e21544ca07418c02490377b9",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "hakuba",
+        "label": "NRT · Flight luggage tag V2",
+        "countryCode": "JP",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/hakuba/illustrations/hakuba-airport-tag-aa9e3d3778-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/hakuba/illustrations/hakuba-airport-tag-aa9e3d3778-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/hakuba-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "aa9e3d37786c9f16fe5b23f649f22a9b5bb0a91c0471b951ac8bc1b60a0df7dc",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "aa9e3d37786c9f16fe5b23f649f22a9b5bb0a91c0471b951ac8bc1b60a0df7dc",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/hakuba.html?section=journal",
+          "cityId": "hakuba",
+          "countryCode": "JP",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "aa9e3d37786c9f16fe5b23f649f22a9b5bb0a91c0471b951ac8bc1b60a0df7dc",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

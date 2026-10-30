@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:cairns:ar1:6b771ca3e990efd5496502b5",
+      "styleId": "fcc-editorial",
+      "label": "CNS · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "cairns",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/cairns/illustrations/cairns-airport-tag-622f07b519-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/cairns/illustrations/cairns-airport-tag-622f07b519-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/cairns-airport-tag.png",
+      "sourceHash": "622f07b51968262efde580ca2a432b712a279a581331faad28a0e0a306ef3b0a",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.20574162679425836,
+        0.045454545454545456,
+        0.5885167464114832,
+        0.9234449760765551
+      ],
+      "artRef": {
+        "assetId": "fcc:cairns:ar1:6b771ca3e990efd5496502b5",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "cairns",
+        "label": "CNS · Flight luggage tag V2",
+        "countryCode": "AU",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cairns/illustrations/cairns-airport-tag-622f07b519-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/cairns/illustrations/cairns-airport-tag-622f07b519-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/cairns-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "622f07b51968262efde580ca2a432b712a279a581331faad28a0e0a306ef3b0a",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "622f07b51968262efde580ca2a432b712a279a581331faad28a0e0a306ef3b0a",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/cairns.html?section=journal",
+          "cityId": "cairns",
+          "countryCode": "AU",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "622f07b51968262efde580ca2a432b712a279a581331faad28a0e0a306ef3b0a",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

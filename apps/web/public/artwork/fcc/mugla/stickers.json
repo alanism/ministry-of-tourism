@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:mugla:ar1:f623669f5c23417e583e4e53",
+      "styleId": "fcc-editorial",
+      "label": "DLM · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "mugla",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/mugla/illustrations/mugla-airport-tag-9fafa23fb6-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/mugla/illustrations/mugla-airport-tag-9fafa23fb6-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/mugla-airport-tag.png",
+      "sourceHash": "9fafa23fb62267f3595192c26671676b6e9bdfc22dc1db4da40d24dfc9aeb852",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21212121212121213,
+        0.06539074960127592,
+        0.5757575757575758,
+        0.9019138755980861
+      ],
+      "artRef": {
+        "assetId": "fcc:mugla:ar1:f623669f5c23417e583e4e53",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "mugla",
+        "label": "DLM · Flight luggage tag V2",
+        "countryCode": "TR",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/mugla/illustrations/mugla-airport-tag-9fafa23fb6-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/mugla/illustrations/mugla-airport-tag-9fafa23fb6-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/mugla-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "9fafa23fb62267f3595192c26671676b6e9bdfc22dc1db4da40d24dfc9aeb852",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "9fafa23fb62267f3595192c26671676b6e9bdfc22dc1db4da40d24dfc9aeb852",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/mugla.html?section=journal",
+          "cityId": "mugla",
+          "countryCode": "TR",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "9fafa23fb62267f3595192c26671676b6e9bdfc22dc1db4da40d24dfc9aeb852",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}

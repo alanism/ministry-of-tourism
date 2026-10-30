@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "styleId": "fcc-editorial",
+  "items": [
+    {
+      "id": "fcc:lisbon:ar1:ae0ca5b40fac15a74fb927d9",
+      "styleId": "fcc-editorial",
+      "label": "LIS · Flight luggage tag V2",
+      "subject": "stickers",
+      "city": "lisbon",
+      "collection": "city-illustrations",
+      "thumb": "https://foreignclubberscorespondence.web.app/assets/generated/lisbon/illustrations/lisbon-airport-tag-9f610d4728-480w.webp",
+      "src": "https://foreignclubberscorespondence.web.app/assets/generated/lisbon/illustrations/lisbon-airport-tag-9f610d4728-960w.webp",
+      "original": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/lisbon-airport-tag.png",
+      "sourceHash": "9f610d4728176f26ace13e42c3c4b4cdaddc3bccf918dc7555c62983488c143e",
+      "width": 1254,
+      "height": 1254,
+      "crop": [
+        0.21451355661881977,
+        0.0645933014354067,
+        0.5709728867623605,
+        0.9019138755980861
+      ],
+      "artRef": {
+        "assetId": "fcc:lisbon:ar1:ae0ca5b40fac15a74fb927d9",
+        "category": "stickers",
+        "kind": "sticker",
+        "originCityId": "lisbon",
+        "label": "LIS · Flight luggage tag V2",
+        "countryCode": "PT",
+        "role": "tag",
+        "geographicScope": "city",
+        "thumbnailUrl": "https://foreignclubberscorespondence.web.app/assets/generated/lisbon/illustrations/lisbon-airport-tag-9f610d4728-480w.webp",
+        "renditionUrl": "https://foreignclubberscorespondence.web.app/assets/generated/lisbon/illustrations/lisbon-airport-tag-9f610d4728-960w.webp",
+        "originalUrl": "https://foreignclubberscorespondence.web.app/output/illustrations/city-airport-tags-v2/lisbon-airport-tag.png",
+        "width": 1254,
+        "height": 1254,
+        "mimeType": "image/png",
+        "hash": "9f610d4728176f26ace13e42c3c4b4cdaddc3bccf918dc7555c62983488c143e",
+        "credit": "Foreign Clubbers Correspondence",
+        "rightsStatus": "unknown",
+        "source": {
+          "provider": "fcc",
+          "sourceId": "9f610d4728176f26ace13e42c3c4b4cdaddc3bccf918dc7555c62983488c143e",
+          "canonicalUrl": "https://foreignclubberscorespondence.web.app/lisbon.html?section=journal",
+          "cityId": "lisbon",
+          "countryCode": "PT",
+          "kind": "artwork",
+          "retrievedAt": "2026-10-29",
+          "version": "9c36fe186ebe8d38",
+          "contentHash": "9f610d4728176f26ace13e42c3c4b4cdaddc3bccf918dc7555c62983488c143e",
+          "origin": "artwork"
+        }
+      }
+    }
+  ]
+}
