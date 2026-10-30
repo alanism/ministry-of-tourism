@@ -2,6 +2,8 @@
 
 Ministry of Tourism (MoT) is a travel workspace for travelers, hosts and tour guides. Plan with cards, add sourced FCC artwork and places, make an art-first trip magazine, and export an editable package that can reopen offline. Manual trip work needs no model key.
 
+The authoritative release source is this repository's **`main`** branch. Start new work from `origin/main`; older review branches and the separate private development history are historical inputs. See [Git workflow and reconciliation](docs/GIT-WORKFLOW.md) for source provenance and worktree rules. A source update does not itself deploy the app.
+
 ## Run locally
 
 Use Node.js 22.12 or newer and npm.
