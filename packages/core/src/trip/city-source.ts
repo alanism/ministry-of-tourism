@@ -94,9 +94,19 @@ async function normalize(entry: CachedFeed): Promise<FccCityContent> {
 export function createFccAdapter(options: FccAdapterOptions) {
   const fetcher = options.fetcher ?? fetch, cache = options.cache ?? new MemoryCityCache(), now = options.now ?? (() => new Date());
   const retries = Math.max(0, Math.min(2, Math.floor(options.maxRetries ?? 1)));
-  async function readCached(cityId: string): Promise<CachedFeed | undefined> {
+  async function readCacheEntry(cityId: string, signal?: AbortSignal): Promise<CachedCity | undefined> {
+    if (!signal) return cache.read(cityId);
+    if (signal.aborted) throw new Error('cancelled');
+    let cancel!: () => void;
+    const interrupted = new Promise<never>((_resolve, reject) => { cancel = () => reject(new Error('cancelled')); signal.addEventListener('abort', cancel, { once: true }); });
     try {
-      const entry = await cache.read(cityId);
+      return await Promise.race([Promise.resolve().then(() => { if (signal.aborted) throw new Error('cancelled'); return cache.read(cityId); }), interrupted]);
+    } finally { signal.removeEventListener('abort', cancel); }
+  }
+  async function readCached(cityId: string, signal?: AbortSignal): Promise<CachedFeed | undefined> {
+    try {
+      const entry = await readCacheEntry(cityId, signal);
+      if (signal?.aborted) return;
       if (!entry || !entry.retrievedAt) return;
       const feed = fccCityFeedSchema.parse(entry.feed);
       return feed.city.id === cityId ? { ...entry, feed } : undefined;
@@ -108,7 +118,8 @@ export function createFccAdapter(options: FccAdapterOptions) {
   async function getCity(cityId: string, request: CityFetchOptions = {}): Promise<FccResult<FccCityContent>> {
     if (!cityIdSchema.safeParse(cityId).success) return unavailable(err('invalid_feed', 'Choose a valid FCC city ID.'));
     if (request.signal?.aborted) return unavailable(err('cancelled', 'FCC loading was cancelled.'));
-    const previous = await readCached(cityId);
+    const previous = await readCached(cityId, request.signal);
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'FCC loading was cancelled.'));
     if (request.offline) return previous ? result(previous, 'cached') : unavailable(err('offline', 'No cached FCC issue is available for this city.'));
     let url: string;
     try { url = options.feedUrl(cityId); } catch { return unavailable(err('invalid_url', 'An FCC feed URL has not been configured.')); }
@@ -166,7 +177,9 @@ export function createFccAdapter(options: FccAdapterOptions) {
     const cacheKey = `almanac:${cityId}`, url = `${FCC_ORIGIN}/almanac/city/${cityId}.json`;
     let previous: (CachedCity & { almanac: FccAlmanacSnapshot }) | undefined;
     try {
-      const stored = await cache.read(cacheKey), parsed = fccAlmanacSnapshotSchema.safeParse(stored?.almanac);
+      const stored = await readCacheEntry(cacheKey, request.signal);
+      if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
+      const parsed = fccAlmanacSnapshotSchema.safeParse(stored?.almanac);
       if (stored?.retrievedAt && parsed.success && parsed.data.slug === cityId) previous = { ...stored, almanac: parsed.data };
     } catch { /* An unreadable cache is unavailable; it never becomes trusted source data. */ }
     async function almanacResult(entry: CachedCity & { almanac: FccAlmanacSnapshot }, status: 'ready' | 'cached' | 'stale', error?: FccError): Promise<FccResult<FccAlmanacSnapshot>> {
@@ -174,6 +187,7 @@ export function createFccAdapter(options: FccAdapterOptions) {
       const hash = [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, '0')).join('');
       return { status, value: structuredClone(entry.almanac), retrievedAt: entry.retrievedAt, sourceVersion: `sha256:${hash}`, ...(error ? { error } : {}) };
     }
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
     if (request.offline) return previous ? almanacResult(previous, 'cached') : unavailable(err('offline', 'No cached Almanac snapshot is available for this city.'));
     if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
     const controller = new AbortController(), cancel = () => controller.abort();
