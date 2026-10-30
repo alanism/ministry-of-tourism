@@ -1,5 +1,6 @@
 // Trip document (MOT-10): its own Yjs doc, so Writer's Board boards stay untouched.
 import * as Y from 'yjs';
+import {validateLocalBallot} from './group-ballot.ts';
 import { SYSTEM_ORIGIN, type AgentMode } from '../doc/model.ts';
 import { assetSchema, presentationSchema, TRIP_SCHEMA_VERSION, tripCardSchema, tripMetaSchema, type Asset, type BoardKind, type Presentation, type TripCard, type TripMeta } from './schema.ts';
 
@@ -46,6 +47,10 @@ export interface CreateTripOptions {
   agentMode?: AgentMode;
   lineage?: TripMeta['lineage'];
   magazine?: TripMeta['magazine'];
+  groupPreferences?: TripMeta['groupPreferences'];
+  groupBallots?: TripMeta['groupBallots'];
+  groupWorkspace?: TripMeta['groupWorkspace'];
+  memoryWorkflow?:TripMeta['memoryWorkflow'];
   newId?: () => string;
 }
 
@@ -71,6 +76,10 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     agentMode: options.agentMode ?? 'together',
     lineage: options.lineage,
     magazine: options.magazine,
+    groupPreferences: options.groupPreferences,
+    groupBallots: options.groupBallots,
+    groupWorkspace: options.groupWorkspace,
+    memoryWorkflow:options.memoryWorkflow,
   });
   const parts = tripParts(doc);
   doc.transact(() => {
@@ -82,7 +91,10 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
 export function readTripMeta(doc: Y.Doc): TripMeta {
   const parts = tripParts(doc);
   const raw: Record<string, unknown> = Object.fromEntries(parts.meta.entries());
-  return tripMetaSchema.parse(raw);
+  const meta=tripMetaSchema.parse(raw);
+  for(const ballot of meta.groupBallots??[])validateLocalBallot(ballot,meta.groupPreferences);
+  if(meta.groupWorkspace&&(!meta.groupPreferences||(meta.groupWorkspace.ledger&&meta.groupWorkspace.ledger.trip_id!==meta.groupPreferences.trip_id)))throw new Error('Workspace belongs to another group');
+  return meta;
 }
 
 export function cardToPlain(card: Y.Map<unknown>): TripCard {
@@ -110,6 +122,7 @@ export function writeCard(parts: TripParts, card: TripCard): void {
   setOrDel('placeId', valid.placeId); setOrDel('location', valid.location);
   setOrDel('source', valid.source); setOrDel('lineage', valid.lineage);
   setOrDel('sourceText', valid.sourceText); setOrDel('travelerNote', valid.travelerNote); setOrDel('currentFacts', valid.currentFacts);
+  setOrDel('bookingAttention', valid.bookingAttention); setOrDel('booking', valid.booking);
 }
 
 export function readCard(parts: TripParts, id: string): TripCard | undefined {

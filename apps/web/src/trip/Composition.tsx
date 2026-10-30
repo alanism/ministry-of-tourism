@@ -1,44 +1,132 @@
-import { useRef, useState, type PointerEvent } from 'react';
-import { magazinePatternPlacement, PRESENTATION_PATTERNS, readAllCards, readAsset, readPresentation, readPresentations, type Actor, type Presentation, type TripSession } from '@writers-board/core';
-import { useAssetUrl } from './trip-assets';
+import {useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
+import {readAllCards,readAsset,readTripMeta,buildMagazine,readPresentation,readPresentations,magazinePatternPlacement,PRESENTATION_PATTERNS,MAGAZINE_ART_ROLES,type Actor,type MagazineDocument,type Presentation,type TripSession} from '@writers-board/core';
+import {prepareMagazine} from './artifacts';
+import {gridLines,moveBox,resizeBox,rotateTo,panCrop,zoomCrop,type Corner,type EditBox,type Guides} from './composition-geometry';
+import {compositionPages,liveCompositionObject,DEFAULT_LAYOUT,paintCompositionDraft,patchForBox,printDpi,type SceneObject} from './composition-scene';
 
-const clamp=(n:number)=>Math.max(0,Math.min(1,n));
-const ROLE_LABELS:Record<NonNullable<Presentation['magazineRole']>,string>={backdrop:'Cover backdrop',foreground:'Cover foreground','city-ink':'City panorama',specimen:'Food or culture specimen',facade:'Venue façade',interior:'Venue interior',postcard:'Postcard front',portrait:'Brush portrait',tag:'Luggage tag',stamp:'Postcard stamp',vehicle:'Route vehicle',vignette:'Small vignette',map:'Map illustration'};
-function ObjectView({object,session,selected,onSelect,onMove}:{object:Presentation;session:TripSession;selected:boolean;onSelect:()=>void;onMove:(x:number,y:number)=>void}) {
-  const url=useAssetUrl(session,object.assetId);
-  const card=object.cardId?readAllCards(session.parts).find(card=>card.id===object.cardId):undefined;
-  const asset=object.assetId?readAsset(session.parts,object.assetId):undefined;
-  const drag=useRef<{x:number;y:number;left:number;top:number;w:number;h:number}|null>(null);
-  const start=(event:PointerEvent<HTMLButtonElement>)=>{onSelect();if(object.locked)return;const rect=event.currentTarget.parentElement!.getBoundingClientRect();drag.current={x:event.clientX,y:event.clientY,left:object.x,top:object.y,w:rect.width,h:rect.height};event.currentTarget.setPointerCapture(event.pointerId);};
-  const end=(event:PointerEvent<HTMLButtonElement>)=>{const from=drag.current;drag.current=null;if(from)onMove(clamp(from.left+(event.clientX-from.x)/from.w),clamp(from.top+(event.clientY-from.y)/from.h));};
-  const [cx,cy,cw,ch]=object.crop;
-  return <button type="button" className={`mot-composition-object${selected?' selected':''}`} aria-label={`Select ${card?.title??'artwork'}${object.locked?' (locked)':''}`} aria-pressed={selected}
-    style={{left:`${object.x*100}%`,top:`${object.y*100}%`,width:`${object.width*100}%`,height:`${object.height*100}%`,transform:`rotate(${object.rotation}deg)`,zIndex:object.zIndex,touchAction:object.locked?'auto':'none'}} onPointerDown={start} onPointerUp={end} onPointerCancel={()=>{drag.current=null;}}
-    onClick={onSelect} onKeyDown={event=>{if(object.locked)return;const directions:Record<string,[number,number]>={ArrowLeft:[-.01,0],ArrowRight:[.01,0],ArrowUp:[0,-.01],ArrowDown:[0,.01]};const delta=directions[event.key];if(delta){event.preventDefault();onMove(clamp(object.x+delta[0]),clamp(object.y+delta[1]));}}}>
-    {url&&<span className="mot-composition-crop"><svg width="100%" height="100%" viewBox={`${cx*(asset?.width??1000)} ${cy*(asset?.height??1000)} ${cw*(asset?.width??1000)} ${ch*(asset?.height??1000)}`} preserveAspectRatio="xMidYMid meet" aria-hidden="true"><image href={url} width={asset?.width??1000} height={asset?.height??1000} preserveAspectRatio="xMidYMid meet" /></svg></span>}
-    {card&&!object.assetId&&<span className="mot-composition-text"><strong>{card.title}</strong><span>{card.body}</span></span>}
-  </button>;
-}
-
-export function Composition({session,actor,refresh,notify}:{session:TripSession;actor:Actor;refresh:()=>void;notify:(message:string)=>void}) {
-  const [selected,setSelected]=useState<string|null>(null),[cardId,setCardId]=useState('');
-  const objects=readPresentations(session.parts),current=selected?readPresentation(session.parts,selected):undefined,cards=readAllCards(session.parts);
-  const linked=current?.cardId?cards.find(card=>card.id===current.cardId):undefined;
-  const execute=(name:string,input:Record<string,unknown>)=>{try{session.execute(actor,name,input);refresh();}catch(error){notify(error instanceof Error?error.message:'The placement could not be changed.');}};
-  const update=(patch:Partial<Presentation>)=>{if(current)execute('trip_presentation_update',{id:current.id,...patch});};
-  return <section className="mot-composition" aria-label="Trip composition">
-    <div className="mot-action-row"><label>Card to place<select className="m-field" value={cardId} onChange={event=>setCardId(event.target.value)}><option value="">Choose a card</option>{cards.map(card=><option value={card.id} key={card.id}>{card.title}</option>)}</select></label><button className="m-btn" type="button" disabled={!cardId} onClick={()=>execute('trip_presentation_create',{cardId,x:.08,y:.08,width:.5,height:.18})}>Place card</button><button className="m-btn" type="button" onClick={()=>{session.undo(actor.id);refresh();}}>Undo</button><button className="m-btn" type="button" onClick={()=>{session.redo(actor.id);refresh();}}>Redo</button></div>
-    <div className="mot-composition-layout"><div className="mot-composition-sheet">{objects.map(object=><ObjectView key={object.id} object={object} session={session} selected={selected===object.id} onSelect={()=>setSelected(object.id)} onMove={(x,y)=>{if(!object.locked)execute('trip_presentation_update',{id:object.id,x,y});}} />)}{!objects.length&&<p className="m-muted">Place a card, or add FCC art from the Add menu.</p>}</div>
-      <aside className="m-panel mot-composition-tools" aria-label="Placement controls">{current?<>
-        <h2>Selected object</h2>{(['x','y','width','height','rotation','zIndex'] as const).map(key=><label key={key}>{key}<input type="number" className="m-field" aria-label={`Object ${key}`} value={current[key]} step={key==='rotation'||key==='zIndex'?1:.01} disabled={current.locked} onChange={event=>update({[key]:Number(event.target.value)})} /></label>)}
-        <label>Linked card<select className="m-field" value={current.cardId??''} onChange={event=>update({cardId:event.target.value||undefined})}><option value="" disabled={!current.assetId}>No linked card · decoration</option>{cards.map(card=><option key={card.id} value={card.id}>{card.title}</option>)}</select></label>
-        {current.assetId&&<label>Spread pattern<select className="m-field" value={current.pattern??''} disabled={current.locked} onChange={event=>{if(event.target.value)update(magazinePatternPlacement(event.target.value as typeof PRESENTATION_PATTERNS[number]));}}><option value="">Custom placement</option>{PRESENTATION_PATTERNS.map(pattern=><option key={pattern} value={pattern}>{pattern.replace(/-/g,' ')}</option>)}</select></label>}
-        {current.assetId&&<label>Magazine slot<select className="m-field" value={current.magazineRole??''} disabled={current.locked} onChange={event=>update({magazineRole:(event.target.value||undefined) as Presentation['magazineRole']})}><option value="">Use spread pattern</option>{Object.entries(ROLE_LABELS).map(([role,label])=><option key={role} value={role}>{label}</option>)}</select></label>}
-        {linked&&<><label>Card title<input className="m-field" key={`${linked.id}:${linked.title}`} defaultValue={linked.title} onBlur={event=>{if(event.target.value!==linked.title)execute('trip_card_update',{id:linked.id,title:event.target.value});}} /></label><label>Card notes<textarea className="m-field" key={`${linked.id}:${linked.body}`} defaultValue={linked.body} onBlur={event=>{if(event.target.value!==linked.body)execute('trip_card_update',{id:linked.id,body:event.target.value});}} /></label></>}
-        {current.assetId&&current.crop.map((value,index)=><label key={index}>Crop {['left','top','width','height'][index]}<input type="number" className="m-field" step="0.01" min="0" max="1" value={value} disabled={current.locked} onChange={event=>{const crop=[...current.crop] as Presentation['crop'];crop[index]=Number(event.target.value);update({crop});}} /></label>)}
-        <label>Visibility<select className="m-field" value={current.scope} onChange={event=>update({scope:event.target.value as Presentation['scope']})}>{['guide','stay','private'].map(scope=><option key={scope}>{scope}</option>)}</select></label>
-        <button className="m-btn" type="button" onClick={()=>update({locked:!current.locked})}>{current.locked?'Unlock object':'Lock object'}</button><button className="m-btn" type="button" onClick={()=>{execute('trip_presentation_delete',{id:current.id});setSelected(null);}}>Remove placement</button>
-      </>:<p className="m-muted">Select an object to resize, rotate, crop, reorder or lock it. Arrow keys move an unlocked selection.</p>}</aside>
+type Draft={object:SceneObject;patch:Partial<Presentation>;box:EditBox;guides:Guides};
+type Gesture={object:SceneObject;mode:string;x:number;y:number;scale:number;rev:number;angle:number;moved:boolean};
+const corners:Record<Corner,string>={nw:'top left',ne:'top right',sw:'bottom left',se:'bottom right'};
+export function Composition({session,actor,refresh,notify}:{session:TripSession;actor:Actor;refresh:()=>void;notify:(message:string)=>void}){
+ const [magazine,setMagazine]=useState<MagazineDocument>(),[error,setError]=useState(''),[loading,setLoading]=useState(true),[attempt,setAttempt]=useState(0),[spreadIndex,setSpreadIndex]=useState(0),[side,setSide]=useState(0),[phone,setPhone]=useState(false);
+ const [selected,setSelected]=useState<string>(),[cropping,setCropping]=useState(false),[grid,setGrid]=useState(true),[preview,setPreview]=useState(false),[cardId,setCardId]=useState('');
+ const [draft,setDraft]=useState<Draft>(),draftRef=useRef<Draft|undefined>(undefined),gesture=useRef<Gesture|undefined>(undefined),pending=useRef<number|undefined>(undefined),lastTap=useRef({key:'',at:0}),keyboardFocus=useRef(false),root=useRef<HTMLElement>(null),trim=useRef<HTMLDivElement>(null);
+ const mediaCache=useRef<{key:string;attempt:number;options:NonNullable<Parameters<typeof buildMagazine>[1]>}|undefined>(undefined),meta=readTripMeta(session.doc);
+ const mediaKey=JSON.stringify([session.boardId,meta.cityId,meta.city,meta.magazine?.wornTeeAssetId,[...session.parts.assets.keys()].sort().map(id=>readAsset(session.parts,id)),[...new Set([...readAllCards(session.parts).flatMap(c=>c.assetIds),...readPresentations(session.parts).flatMap(p=>p.assetId?[p.assetId]:[])])].sort()]);
+ const [history,setHistory]=useState<{past:string[];future:string[]}>({past:[],future:[]}),knownRevision=useRef(session.boardRev),rev=session.boardRev;
+ useEffect(()=>{const q=matchMedia('(max-width:760px)'),change=()=>setPhone(q.matches);change();q.addEventListener('change',change);return()=>q.removeEventListener('change',change);},[]);
+ useEffect(()=>{
+  const abort=new AbortController();setError('');
+  if(gesture.current&&gesture.current.rev!==rev){gesture.current=undefined;draftRef.current=undefined;setDraft(undefined);notify('The trip changed. Start the gesture again.');}
+  const ready=(value:MagazineDocument)=>{if(!abort.signal.aborted){setMagazine(value);setLoading(false);if(value.revision===session.boardRev){pending.current=undefined;draftRef.current=undefined;setDraft(undefined);}}};
+  const fail=(cause:unknown)=>{if(!abort.signal.aborted){setError(cause instanceof Error?cause.message:'The spread could not be loaded.');setLoading(false);}};
+  const cached=mediaCache.current;
+  if(cached?.key===mediaKey&&cached.attempt===attempt){try{ready(buildMagazine(session.doc,cached.options));}catch(cause){fail(cause);}}
+  else{setLoading(true);void prepareMagazine(session,abort.signal,true,{onPrepared:options=>{if(!abort.signal.aborted)mediaCache.current={key:mediaKey,attempt,options};}}).then(ready,fail);}
+  return()=>abort.abort();
+ },[session,rev,attempt,mediaKey]);
+ useEffect(()=>{if(knownRevision.current!==rev){knownRevision.current=rev;setHistory({past:[],future:[]});}},[rev]);
+ const groups=useMemo(()=>{if(!magazine)return[];const front=magazine.spreads.find(s=>s.section==='front-cover'),back=magazine.spreads.find(s=>s.section==='back-cover');return front&&back?[{...front,id:'jacket',title:'The cover',pageIds:[...back.pageIds,...front.pageIds]},...magazine.spreads.filter(s=>s!==front&&s!==back)]:magazine.spreads;},[magazine]);
+ const group=groups[Math.min(spreadIndex,Math.max(0,groups.length-1))],pages=useMemo(()=>group?.pageIds.flatMap(id=>magazine!.pages.filter(p=>p.id===id))??[],[group,magazine]);
+ const scene=useMemo(()=>compositionPages(pages,session),[pages,session]),object=scene.objects.find(o=>o.key===selected),current=object?readPresentation(session.parts,object.presentation.id):undefined;
+ useLayoutEffect(()=>draft&&root.current?paintCompositionDraft(root.current,draft.object,draft.patch):undefined,[draft]);
+ useLayoutEffect(()=>{if(keyboardFocus.current&&selected){const node=[...root.current!.querySelectorAll<SVGGraphicsElement>('[data-edit-id]')].find(n=>n.getAttribute('data-edit-id')===selected);node?.focus({preventScroll:true});}for(const [i,page] of [...root.current?.querySelectorAll('.mot-composition-page')??[]].entries())for(const node of page.querySelectorAll('[data-edit-id]')){node.setAttribute('tabindex',preview||(phone&&side!==i)?'-1':'0');node.setAttribute('aria-pressed',String(node.getAttribute('data-edit-id')===selected));}},[scene,selected,phone,side,preview]);
+ const showDraft=(value:Draft|undefined)=>{draftRef.current=value;setDraft(value);};
+ const commit=(name:string,input:Record<string,unknown>,label:string)=>{try{session.execute(actor,name,input);knownRevision.current=session.boardRev;pending.current=session.boardRev;setHistory(h=>({past:[...h.past,label],future:[]}));refresh();notify(label);return true;}catch(cause){showDraft(undefined);notify(cause instanceof Error?cause.message:'The object could not be changed.');return false;}};
+ const commitDraft=()=>{const d=draftRef.current;if(!d||pending.current!==undefined)return;if(gesture.current&&gesture.current.rev!==session.boardRev){showDraft(undefined);notify('The trip changed during the gesture. Try again.');return;}commit('trip_presentation_update',{id:d.object.presentation.id,...d.patch},`${cropping?'Crop':'Arrange'} ${d.object.label}`);};
+ const undo=(redo=false)=>{showDraft(undefined);gesture.current=undefined;const ok=redo?session.redo(actor.id):session.undo(actor.id);knownRevision.current=session.boardRev;pending.current=session.boardRev;if(ok){setHistory(h=>redo?{past:[...h.past,h.future.at(-1)??'Change'],future:h.future.slice(0,-1)}:{past:h.past.slice(0,-1),future:[...h.future,h.past.at(-1)??'Change']});refresh();notify(redo?'Redone':'Undone');}};
+ const select=(o:SceneObject)=>{setSelected(o.key);setSide(o.pageIndex);setCropping(false);};
+ const locked=(o:SceneObject)=>{if(readPresentation(session.parts,o.presentation.id)?.locked){notify('Locked. Press L or choose Unlock to arrange it.');return true;}return false;};
+ const begin=(event:PointerEvent,chosen?:SceneObject,mode='move')=>{
+  if(preview||event.button!==0)return;
+  const key=(event.target as Element).closest('[data-edit-id]')?.getAttribute('data-edit-id'),o=chosen??scene.objects.find(n=>n.key===key);
+  if(!o){setSelected(undefined);setCropping(false);return;}
+  setSelected(o.key);if(loading||locked(o))return;
+  event.preventDefault();event.stopPropagation();if(!(event.target as Element).closest('button'))root.current?.focus({preventScroll:true});const rect=trim.current!.getBoundingClientRect(),scale=rect.width/(phone?1184:2368),visible=phone?side*1184:0;
+  const cx=rect.left+(o.box.x+o.box.width/2-visible)*scale,cy=rect.top+(o.box.y+o.box.height/2)*scale;
+  if(mode==='move'&&lastTap.current.key===o.key&&performance.now()-lastTap.current.at<350&&o.presentation.assetId){lastTap.current={key:'',at:0};setCropping(v=>!v);return;}
+  gesture.current={object:o,mode:mode==='move'&&cropping?'pan':mode,x:event.clientX,y:event.clientY,scale,rev:session.boardRev,angle:Math.atan2(event.clientY-cy,event.clientX-cx)*180/Math.PI,moved:false};
+  event.currentTarget.setPointerCapture(event.pointerId);
+ };
+ const move=(event:PointerEvent)=>{
+  const g=gesture.current;if(!g)return;const dx=(event.clientX-g.x)/g.scale,dy=(event.clientY-g.y)/g.scale;g.moved||=Math.hypot(event.clientX-g.x,event.clientY-g.y)>2;
+  if(g.mode==='pan'){
+   const a=g.object.box.rotation*Math.PI/180,c=g.object.presentation.crop;showDraft({object:g.object,box:g.object.box,guides:{},patch:{crop:panCrop(c,-(dx*Math.cos(a)+dy*Math.sin(a))/g.object.box.width*c[2],-(-dx*Math.sin(a)+dy*Math.cos(a))/g.object.box.height*c[3])}});return;
+  }
+  let box:EditBox,guides:Guides={};
+  if(g.mode==='rotate'){
+   const rect=trim.current!.getBoundingClientRect(),visible=phone?side*1184:0,cx=rect.left+(g.object.box.x+g.object.box.width/2-visible)*g.scale,cy=rect.top+(g.object.box.y+g.object.box.height/2)*g.scale;
+   box={...g.object.box,rotation:rotateTo(g.object.box.rotation+Math.atan2(event.clientY-cy,event.clientX-cx)*180/Math.PI-g.angle,event.shiftKey)};
+  }else{const result=g.mode==='move'?moveBox(g.object.box,dx,dy,event.altKey):resizeBox(g.object.box,g.mode as Corner,dx,dy,event.shiftKey,event.altKey);box=result.box;guides=result.guides;}
+  showDraft({object:g.object,box,patch:patchForBox(g.object,box),guides});
+ };
+ const end=()=>{const g=gesture.current;if(!g)return;if(g.moved)commitDraft();else{showDraft(undefined);lastTap.current={key:g.object.key,at:performance.now()};}gesture.current=undefined;};
+ const update=(patch:Partial<Presentation>,label:string)=>{if(current)commit('trip_presentation_update',{id:current.id,...patch},label);};
+ const canOrder=!!object&&scene.objects.filter(o=>o.paintGroup===object.paintGroup).length>1;
+ const order=(direction:number)=>{if(!current||!canOrder)return;const values=scene.objects.map(o=>readPresentation(session.parts,o.presentation.id)?.magazineLayout?.order??0);update({magazineLayout:{...(current.magazineLayout??DEFAULT_LAYOUT),order:direction>0?Math.max(...values)+1:Math.min(...values)-1}},direction>0?'Bring forward':'Send backward');};
+ const keyDown=(event:KeyboardEvent)=>{
+  if((event.target as Element).closest('input,textarea,select'))return;
+  const k=event.key.toLowerCase();if((event.ctrlKey||event.metaKey)&&k==='z'){event.preventDefault();undo(event.shiftKey);return;}
+  if(k==='escape'){gesture.current=undefined;showDraft(undefined);if(cropping)setCropping(false);else setSelected(undefined);return;}
+  if(preview)return;
+  const targeted=(event.target as Element).closest('[data-edit-id]')?.getAttribute('data-edit-id'),initial=scene.objects.find(n=>n.key===targeted)??object;if(!initial)return;const p=readPresentation(session.parts,initial.presentation.id);if(!p)return;const o=liveCompositionObject(initial,p);
+  if(targeted&&(k==='enter'||k===' ')){event.preventDefault();setSelected(o.key);return;}
+  if(k==='l'){event.preventDefault();commit('trip_presentation_update',{id:o.presentation.id,locked:!o.presentation.locked},o.presentation.locked?'Unlock object':'Lock object');return;}
+  if(!['arrowleft','arrowright','arrowup','arrowdown',',','.','[',']','c','delete','backspace'].includes(k))return;event.preventDefault();if(locked(o)||(loading&&(p.pattern!==initial.presentation.pattern||p.magazineRole!==initial.presentation.magazineRole||p.assetId!==initial.presentation.assetId)))return;
+  if(k==='c'&&o.presentation.assetId){setCropping(v=>!v);return;}if(k==='['||k===']'){order(k===']'?1:-1);return;}
+  if(k==='delete'||k==='backspace'){commit('trip_presentation_delete',{id:o.presentation.id},'Remove placement');setSelected(undefined);return;}
+  let box={...o.box};
+  if(k===','||k==='.'||((event.target as Element).getAttribute('data-h')==='rotate'&&k.startsWith('arrow'))){const direction=k==='.'||k==='arrowright'||k==='arrowup'?1:-1,snaps=[-90,-45,-9,0,9,45,90];box.rotation=event.shiftKey?(snaps.filter(n=>direction>0?n>box.rotation+.01:n<box.rotation-.01).sort((a,b)=>direction*(a-b))[0]??box.rotation+direction):box.rotation+direction;}
+  else{
+   const dx=k==='arrowleft'?-11.84:k==='arrowright'?11.84:0,dy=k==='arrowup'?-11.84:k==='arrowdown'?11.84:0,handle=(event.target as Element).getAttribute('data-h');
+   if(cropping&&o.presentation.assetId){commit('trip_presentation_update',{id:o.presentation.id,crop:panCrop(o.presentation.crop,dx/1184,dy/1680)},`Crop ${o.label}`);return;}
+   if(handle&&handle!=='rotate')box=resizeBox(box,handle as Corner,dx,dy,false,true).box;
+   else if(event.shiftKey){const g=gridLines();if(dx)box.x=g.x.filter(n=>dx>0?n>box.x+.1:n<box.x-.1).sort((a,b)=>Math.sign(dx)*(a-b))[0]??box.x+dx;if(dy)box.y=g.y.filter(n=>dy>0?n>box.y+.1:n<box.y-.1).sort((a,b)=>Math.sign(dy)*(a-b))[0]??box.y+dy;}
+   else box=moveBox(box,dx,dy,true).box;
+  }
+  const patch=patchForBox(o,box);showDraft({object:initial,box,patch,guides:{}});commit('trip_presentation_update',{id:o.presentation.id,...patch},`Arrange ${o.label}`);
+ };
+ const shown=draft?.box??object?.box,crop=draft?.patch.crop??current?.crop,dpi=object&&shown&&crop?printDpi(object,shown,crop):null;
+ const retrieved=object?.retrievedAt&&Number.isFinite(Date.parse(object.retrievedAt))?new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Bangkok'}).format(new Date(object.retrievedAt)):undefined;
+ const breaks=new Set(scene.objects.filter(o=>Math.abs(o.box.rotation%90)>.1||o.box.x<o.pageIndex*1184||o.box.x+o.box.width>(o.pageIndex+1)*1184||o.box.y<0||o.box.y+o.box.height>1680).map(o=>o.presentation.id)).size;
+ const visibleStart=phone?side*1184:0,visibleWidth=phone?1184:2368;
+ const handleStyle=(x:number,y:number):CSSProperties=>({left:`clamp(22px, calc(32px + ${(x-visibleStart)/visibleWidth*100}% - ${(x-visibleStart)/visibleWidth*64}px), calc(100% - 22px))`,top:`clamp(22px, calc(32px + ${y/1680*100}% - ${y/1680*64}px), calc(100% - 22px))`});
+ const handlePoint=(x:number,y:number)=>{const a=shown!.rotation*Math.PI/180,dx=x*shown!.width/2,dy=y*shown!.height/2;return{x:shown!.x+shown!.width/2+dx*Math.cos(a)-dy*Math.sin(a),y:shown!.y+shown!.height/2+dx*Math.sin(a)+dy*Math.cos(a)};};
+ const cards=readAllCards(session.parts),linked=current?.cardId?cards.find(c=>c.id===current.cardId):undefined,placedIds=new Set(scene.objects.map(o=>o.presentation.id)),unplaced=readPresentations(session.parts).filter(p=>!placedIds.has(p.id));
+ return <section ref={root} className="mot-composition" aria-label="Trip composition" aria-busy={loading} data-magazine-revision={magazine?.revision} tabIndex={-1} onFocusCapture={e=>{const key=(e.target as Element).getAttribute('data-edit-id');keyboardFocus.current=!!key;if(key)setSelected(key);}} onKeyDown={keyDown} onPointerMove={move} onPointerUp={end} onPointerCancel={()=>{gesture.current=undefined;showDraft(undefined);}}>
+  <header className="mot-editor-heading"><div><h2>Arrange your issue</h2><p className="m-muted">Move the pictures, keep the trip. Each gesture undoes in one step.</p></div><button className="m-btn" type="button" aria-pressed={preview} onClick={()=>setPreview(v=>!v)}>{preview?'Back to editing':'Preview'}</button></header>
+  <div className="mot-editor-bar"><label>Spread<select aria-label="Spread" className="m-field" value={group?.id??''} onChange={e=>{setSpreadIndex(groups.findIndex(g=>g.id===e.target.value));setSelected(undefined);setCropping(false);setSide(0);}}>{groups.map((g,i)=><option key={g.id} value={g.id}>{g.title} · {i+1} of {groups.length}</option>)}</select></label><span className={`mot-edit-chip${breaks>1?' warning':''}`}>{breaks} grid {breaks===1?'break':'breaks'}{breaks>1?' · the guide allows one':''}</span><button className="m-btn" type="button" onClick={()=>undo()} aria-label="Undo composition change">Undo{history.past.length?` · ${history.past.at(-1)}`:''}</button><button className="m-btn" type="button" onClick={()=>undo(true)} aria-label="Redo composition change">Redo{history.future.length?` · ${history.future.at(-1)}`:''}</button><label><input type="checkbox" checked={grid} onChange={e=>setGrid(e.target.checked)} /> Grid</label></div>
+  {error&&<p role="alert">{error} Your board is unchanged. <button type="button" className="m-btn" onClick={()=>setAttempt(v=>v+1)}>Try again</button></p>}
+  {!magazine&&loading&&<p role="status">Gathering your saved pictures…</p>}
+  {magazine&&<div className={`mot-composition-layout${preview?' preview':''}`}>
+   <div className="mot-editor-main">{phone&&pages.length>1&&<div className="mot-page-switch" aria-label="Page to edit">{['Left','Right'].map((name,i)=><button className="m-btn" type="button" aria-pressed={side===i} key={name} onClick={()=>{setSide(i);setSelected(undefined);setCropping(false);}}>{name}</button>)}</div>}
+    <div className="mot-composition-pasteboard" data-side={side} onPointerDown={e=>begin(e)}>
+     <div ref={trim} className="mot-composition-trim"><div className="mot-composition-pages">{pages.map((p,i)=><div className="mot-composition-page" key={p.id} data-page-id={p.id} aria-hidden={phone&&side!==i} dangerouslySetInnerHTML={{__html:scene.markup[i]!}} />)}
+      {grid&&!preview&&<svg className="mot-composition-grid" viewBox="0 0 2368 1680" aria-hidden="true">{gridLines().x.map((x,i)=><line key={`x${i}`} x1={x} x2={x} y1="0" y2="1680" />)}{gridLines().y.map((y,i)=><line key={`y${i}`} x1="0" x2="2368" y1={y} y2={y} />)}</svg>}
+      {!preview&&shown&&<svg className="mot-composition-selection" viewBox="0 0 2368 1680" aria-hidden="true"><rect x={shown.x} y={shown.y} width={shown.width} height={shown.height} transform={`rotate(${shown.rotation} ${shown.x+shown.width/2} ${shown.y+shown.height/2})`} />{draft?.guides.x!==undefined&&<line x1={draft.guides.x} x2={draft.guides.x} y1="0" y2="1680" />}{draft?.guides.y!==undefined&&<line x1="0" x2="2368" y1={draft.guides.y} y2={draft.guides.y} />}</svg>}
+     </div></div>
+     {!preview&&object&&shown&&!current?.locked&&!cropping&&<>{Object.entries(corners).map(([corner,name])=>{const p=handlePoint(corner.includes('w')?-1:1,corner.includes('n')?-1:1);return <button className="mot-composition-handle" type="button" data-h={corner} key={corner} aria-label={`Resize ${name}`} style={handleStyle(p.x,p.y)} onPointerDown={e=>begin(e,object,corner)} />;})}{(()=>{const p=handlePoint(0,-1);return <button className="mot-composition-handle rotate" type="button" data-h="rotate" aria-label="Rotate selected object" style={handleStyle(p.x,p.y-90)} onPointerDown={e=>begin(e,object,'rotate')}>↻</button>;})()}</>}
     </div>
-  </section>;
+    {!preview&&<p className="m-muted mot-editor-hint">Drag to move · corners to resize · round handle to turn · double-press to crop. Shift frees resize and rotation; Alt turns snapping off.</p>}
+    {draft&&<output className="mot-edit-readout" aria-live="polite">{Math.round(draft.box.width/1184*148)} × {Math.round(draft.box.height/1680*210)} mm · {Math.round(draft.box.rotation)}°</output>}
+   </div>
+   {!preview&&<aside className="m-panel mot-composition-tools" aria-label="Placement controls">
+    {object&&current&&shown?<><h3>{object.label}</h3><div className="mot-editor-chips"><span className="mot-edit-chip">{object.origin?`FCC · ${object.origin}`:current.assetId?'Artwork':'Card'}</span>{current.locked&&<span className="mot-edit-chip">Locked</span>}</div>{object.credit&&<p className="m-muted">{object.credit}</p>}
+     {(current.assetId||linked?.source)&&<details><summary>Source details</summary>{object.sourceUrl?<a className="m-btn ink" href={object.sourceUrl} target="_blank" rel="noopener noreferrer">Open source</a>:<p className="m-muted">Source link not supplied.</p>}<p className="m-muted">{retrieved?`Retrieved ${retrieved}`:'Retrieved date not available.'}</p></details>}
+     <dl className="mot-edit-facts"><dt>Size</dt><dd>{Math.round(shown.width/1184*148)} × {Math.round(shown.height/1680*210)} mm</dd><dt>Turned</dt><dd>{Math.round(shown.rotation)}°</dd></dl>
+     {dpi!==null&&<div className={`mot-dpi${dpi<300?' soft':''}`}><b>{dpi} dpi at this size{dpi<300?' · soft on paper':' · sharp'}</b><div className="mot-dpi-bar" role="meter" aria-label="Effective print resolution" aria-valuemin={0} aria-valuemax={600} aria-valuenow={Math.min(600,dpi)} aria-valuetext={`${dpi} dpi; 300 dpi target`}><span style={{width:`${Math.min(100,dpi/600*100)}%`}} /></div>{dpi<300&&<p>Make it smaller, or crop less, to reach 300 dpi. Fine on screen.</p>}</div>}
+     {cropping&&current.assetId&&<label>Crop · drag the picture to choose what shows<input aria-label="Crop zoom" type="range" min="1" max="3" step="0.01" value={1/(crop?.[2]??1)} disabled={current.locked} onChange={e=>showDraft({object,box:object.box,guides:{},patch:{crop:zoomCrop(current.crop,Number(e.target.value))}})} onPointerUp={commitDraft} onKeyUp={commitDraft} onBlur={commitDraft} /></label>}
+     <div className="mot-edit-actions">{current.assetId&&<button className="m-btn" type="button" disabled={current.locked} aria-pressed={cropping} onClick={()=>setCropping(v=>!v)}>{cropping?'Done cropping':'Crop'}</button>}<button className="m-btn" type="button" onClick={()=>{setCropping(false);update({locked:!current.locked},current.locked?'Unlock object':'Lock object');}}>{current.locked?'Unlock':'Lock'}</button><button className="m-btn" type="button" disabled={current.locked} onClick={()=>update({magazineLayout:current.assetId?undefined:{...DEFAULT_LAYOUT,pageId:current.magazineLayout?.pageId},rotation:0,crop:[0,0,1,1]},'Reset to the pattern')}>Reset</button><button className="m-btn" type="button" disabled={current.locked||!canOrder} onClick={()=>order(1)}>Forward</button><button className="m-btn" type="button" disabled={current.locked||!canOrder} onClick={()=>order(-1)}>Back</button><button className="m-btn" type="button" disabled={current.locked} onClick={()=>{commit('trip_presentation_delete',{id:current.id},'Remove placement');setSelected(undefined);}}>Remove</button></div>
+     <details><summary>Exact values</summary><p className="m-muted">{Math.round(shown.x/1184*148)} mm from the left · {Math.round(shown.y/1680*210)} mm from the top · crop {Math.round((crop?.[2]??1)*100)}% × {Math.round((crop?.[3]??1)*100)}%</p></details>
+    </>:<><h3>Nothing selected</h3><p className="m-muted">Select a picture on the spread or choose it in Layers. Your edits use the same trip document.</p></>}
+    {current&&<details><summary>Magazine settings</summary><label>Linked card<select className="m-field" value={current.cardId??''} onChange={e=>update({cardId:e.target.value||undefined},'Link card')}><option value="" disabled={!current.assetId}>No linked card · decoration</option>{cards.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label>{current.assetId&&<><label>Spread pattern<select className="m-field" value={current.pattern??''} disabled={current.locked} onChange={e=>{if(e.target.value)update({...magazinePatternPlacement(e.target.value as typeof PRESENTATION_PATTERNS[number]),magazineLayout:undefined},'Change spread pattern');}}><option value="">Custom placement</option>{PRESENTATION_PATTERNS.map(p=><option key={p} value={p}>{p.replace(/-/g,' ')}</option>)}</select></label><label>Magazine slot<select className="m-field" value={current.magazineRole??''} disabled={current.locked} onChange={e=>update({magazineRole:e.target.value as Presentation['magazineRole']||undefined},'Change magazine slot')}><option value="">Use spread pattern</option>{MAGAZINE_ART_ROLES.map(r=><option key={r} value={r}>{r.replace(/-/g,' ')}</option>)}</select></label></>}<label>Visibility<select className="m-field" value={current.scope} onChange={e=>update({scope:e.target.value as Presentation['scope']},'Change visibility')}>{['guide','stay','private'].map(v=><option key={v} value={v}>{v}</option>)}</select></label></details>}
+    {linked&&<details><summary>Card text</summary><label>Card title<input className="m-field" aria-label="Card title" key={`${linked.id}:${linked.title}`} defaultValue={linked.title} onBlur={e=>{if(e.target.value!==linked.title)commit('trip_card_update',{id:linked.id,title:e.target.value},'Edit card title');}} /></label><label>{linked.provenance==='fcc'?'Your note':'Card notes'}<textarea className="m-field" aria-label="Card notes" key={`${linked.id}:${linked.body}:${linked.travelerNote}`} defaultValue={linked.provenance==='fcc'?linked.travelerNote:linked.body} onBlur={e=>{const field=linked.provenance==='fcc'?'travelerNote':'body';if(e.target.value!==(linked[field]??''))commit('trip_card_update',{id:linked.id,[field]:e.target.value},'Edit card note');}} /></label>{linked.provenance==='fcc'&&<p className="m-muted">The FCC source stays separate from your note.</p>}</details>}
+    {current&&!canOrder&&<p className="m-muted">This object is the only layer in its frame.</p>}
+    <h3>Layers</h3><div className="mot-editor-layers">{[...scene.objects].sort((a,b)=>(b.presentation.magazineLayout?.order??0)-(a.presentation.magazineLayout?.order??0)).map(o=><button className="m-btn" type="button" key={o.key} aria-pressed={o.key===selected} onClick={()=>select(o)}><span>{o.label}<small>{o.origin??'Trip'}{o.presentation.locked?' · locked':''}</small></span><span>{o.pageIndex?'R':'L'}</span></button>)}</div>
+    {!!unplaced.length&&<details><summary>Other placements ({unplaced.length})</summary><p className="m-muted">These belong to other spreads or do not yet have an editorial slot.</p>{unplaced.map(p=><p key={p.id}>{cards.find(c=>c.id===p.cardId)?.title??'Artwork'}</p>)}</details>}
+    <details><summary>Place a card</summary><label>Card<select className="m-field" value={cardId} onChange={e=>setCardId(e.target.value)}><option value="">Choose a card</option>{cards.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select></label><button className="m-btn" type="button" disabled={!cardId||!pages[side]} onClick={()=>commit('trip_presentation_create',{cardId,x:.1,y:.2,width:.7,height:.4,magazineLayout:{...DEFAULT_LAYOUT,pageId:pages[side]!.id}},'Place card')}>Place card</button></details>
+    <details><summary>Keyboard</summary><p className="m-muted">Tab selects. Arrows move 1 pu; Shift goes to a grid edge. Comma and period turn; Shift snaps. C crops, L locks, [ ] change order. Escape exits. Ctrl/⌘ Z undoes; Shift redoes. Arrow keys also work on corner handles.</p></details>
+   </aside>}
+  </div>}
+ </section>;
 }

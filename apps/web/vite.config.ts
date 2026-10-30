@@ -4,11 +4,11 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { renderAgentNotes } from './src/agentNotes/render.ts';
 
-/** Puts the notes for AI agents (public/agents.md) into the page as a collapsed block. */
+/** Puts the trip agent contract into the page as a collapsed block. */
 function agentNotes(): Plugin {
   return {
     name: 'agent-notes',
-    transformIndexHtml: (html) => html.replace('<!--agent-notes-->', renderAgentNotes(readFileSync(fileURLToPath(new URL('./public/agents.md', import.meta.url)), 'utf8'))),
+    transformIndexHtml: (html) => html.replace('<!--agent-notes-->', renderAgentNotes(readFileSync(fileURLToPath(new URL('./public/trip-agents.md', import.meta.url)), 'utf8'))),
   };
 }
 

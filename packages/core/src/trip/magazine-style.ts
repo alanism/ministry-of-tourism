@@ -1,4 +1,5 @@
 import { PLEX_CSS } from './fonts/plex.ts';
+import { recoverFccTitle } from './fcc-text.ts';
 
 export const MAGAZINE = { widthPx:1184,heightPx:1680,widthMm:148,heightMm:210,pageSize:[419.53,595.28] as [number,number] } as const;
 export const PAPER='#FAF7F2', INK='#000000', RED='#CC0000', BLUSH='#F9EDEB', BLUE='#BBD0DC', TAUPE='#CBB9B0';
@@ -8,7 +9,7 @@ export const escapeXml=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').
 
 /** Presentation-only aliases. Original labels and source evidence are never rewritten. */
 export function magazineLabel(value:string):string {
-  const repaired=value.replace(/Â·/g,'·').replace(/â€™/g,'’').replace(/â€“/g,'–').replace(/â€”/g,'—').replace(/\s*[·|—–-]\s*Version\s*\d+\s*$/i,'').replace(/_/g,' ').trim();
+  const repaired=recoverFccTitle(value).replace(/\s*[·|—–-]\s*Version\s*\d+\s*$/i,'').replace(/_/g,' ').trim();
   const aliases:Record<string,string>={
     'Hotel Maria Cristina A Luxury Collection Hotel Hotel Exterio':'Hotel María Cristina',
     'Flight luggage tag V2':'Luggage tag','Fu Fu No Yu Onsen':'Fu Fu no Yu onsen','La Cuchara De San Telmo':'La Cuchara de San Telmo',
@@ -42,10 +43,10 @@ export function flowText(value:string,columns:number,capacity:number):{lines:str
   }
   if(line)lines.push(line);return {lines,rest:value.slice(consumed).trimStart()};
 }
-export function rows(lines:readonly string[],x:number,y:number,size=2.5*PU,leading=L,family='IBM Plex Sans',weight:400|600=400,color=INK,italic=false):string{
-  return `<text x="${x}" y="${y}" font-family="${family}" font-size="${size}" font-weight="${weight}" fill="${color}"${italic?' font-style="italic"':''}>${lines.map((line,i)=>`<tspan x="${x}" dy="${i?leading:0}">${escapeXml(line)}</tspan>`).join('')}</text>`;
+export function rows(lines:readonly string[],x:number,y:number,size=2.5*PU,leading=L,family='IBM Plex Sans',weight:400|600=400,color=INK,italic=false,width=Math.max(1184-M-x,72),source?:string):string{
+  return `<text x="${x}" y="${y}" font-family="${family}" font-size="${size}" font-weight="${weight}" fill="${color}" data-flow-width="${width}" data-flow-leading="${leading}" data-flow-source="${escapeXml(source??lines.join('\n')).replace(/\n/g,'&#10;')}"${italic?' font-style="italic"':''}>${lines.map((line,i)=>`<tspan x="${x}" dy="${i?leading:0}">${escapeXml(line)}</tspan>`).join('')}</text>`;
 }
-export const kicker=(text:string,x=M,y=2*L,color=INK)=>`<text x="${x}" y="${y}" font-family="IBM Plex Mono" font-size="${2.1*PU}" font-weight="600" letter-spacing="${.08*2.1*PU}" fill="${color}">${escapeXml(text.toUpperCase())}</text>`;
+export const kicker=(text:string,x=M,y=2*L,color=INK)=>`<text x="${x}" y="${y}" font-family="IBM Plex Mono" font-size="${2.1*PU}" font-weight="600" letter-spacing="${.08*2.1*PU}" fill="${color}" data-flow-width="${Math.max(1184-M-x,72)}" data-flow-leading="${L}">${escapeXml(text.toUpperCase())}</text>`;
 export function shell(content:string,title:string,folio:number|undefined,side:'left'|'right'|'single'='single',paper=PAPER):string{
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1184" height="1680" viewBox="0 0 1184 1680" role="img" aria-label="${escapeXml(title)}"><defs><style>${PLEX_CSS}</style><filter id="paper-grain"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="1184" height="1680" fill="${paper}"/>${content}<rect width="1184" height="1680" filter="url(#paper-grain)" opacity=".035" style="mix-blend-mode:multiply" pointer-events="none"/>${folio===undefined?'':rows([String(folio)],side==='right'?1080:M,1680-3.2*PU,1.9*PU,L,'IBM Plex Mono')}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1184" height="1680" viewBox="0 0 1184 1680" role="img" aria-label="${escapeXml(title)}"><defs><style>${PLEX_CSS}</style><filter id="paper-grain"><feTurbulence type="fractalNoise" baseFrequency=".7" numOctaves="3" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="1184" height="1680" fill="${paper}"/>${content}<rect width="1184" height="1680" filter="url(#paper-grain)" opacity=".035" style="mix-blend-mode:multiply" pointer-events="none"/>${folio===undefined?'':rows([String(folio)],side==='right'?1080:M,1680-3.2*PU,1.9*PU,L,'IBM Plex Mono').replace('<text','<text data-folio="true"')}</svg>`;
 }

@@ -1,0 +1,30 @@
+import {expect,it,vi} from 'vitest';
+import * as core from '../index.ts';
+import {problem} from './planning-test-fixtures.ts';
+const person={kind:'human' as const,id:'owner',name:'Owner'},agent={kind:'agent' as const,id:'helper',name:'Helper'};
+function setup(){const session=new core.TripSession(core.createTrip({title:'Group',city:'Bangkok',timeZone:'Asia/Bangkok',boardId:'trip'})),p=problem(),configuration={version:1,trip_id:'trip',households:p.households.map(h=>({household_id:h.household_id,display_name:h.household_id})),rounds:[{proposal_version:1,round_id:'venues',kind:'city_venue',city_id:'bangkok',option_ids:p.activities.map(a=>a.option_id),rank_limit:3,household_weighting:'one_household_one_vote'}]};session.execute(person,'trip_group_configure',configuration);session.execute(person,'trip_ballot_update',{proposal_version:1,round_id:'venues',household_id:'a',rankings:[{option_id:'beach',rank:1}],stamps:[{option_id:'beach',value:'maybe'}],shared_note:'Explicit shared note'});return{session,p,configuration};}
+const key={proposal_version:1,round_id:'venues',household_id:'a'};
+it('exports an explicitly chosen local response as real JSON/ZIP, reuses unchanged exports and advances revisions across Undo/reopen',async()=>{
+ const{session,configuration}=setup(),first=await core.exportLocalGroupResponse(session,person,key,'json'),second=await core.exportLocalGroupResponse(session,person,key,'zip');expect(second.response).toEqual(first.response);expect((await core.parseGroupResponseFile(second.bytes,configuration)).response_id).toBe(first.response.response_id);
+ session.execute(person,'trip_ballot_update',{...key,rankings:[{option_id:'boat',rank:1}],stamps:[],shared_note:''});const changed=await core.exportLocalGroupResponse(session,person,key,'json');expect(changed.response.response_revision).toBe(2);session.undo(person.id);const undo=await core.exportLocalGroupResponse(session,person,key,'json');expect(undo.response.response_revision).toBe(3);
+ const zip=await core.exportTripPackage(session.doc,new Map(),{variant:'private'}),loaded=await core.importTripPackage(zip),fresh=new core.TripSession(loaded.doc),same=await core.exportLocalGroupResponse(fresh,person,key,'json');expect(same.response).toEqual(undo.response);
+});
+it('imports revision files into one durable native ledger, flags unfamiliar labels and resolves them explicitly',async()=>{
+ const{session}=setup(),file=await core.exportLocalGroupResponse(session,person,key,'json'),held=await core.mergeGroupResponseFiles(session,person,[file.bytes],[]);expect(held.pending).toHaveLength(1);const accepted=await core.mergeGroupResponseFiles(session,person,[file.bytes],['a']);expect(accepted.current).toHaveLength(1);const repeat=await core.mergeGroupResponseFiles(session,person,[file.bytes],['a']);expect(repeat.ledger).toEqual(accepted.ledger);expect(core.readTripMeta(session.doc).groupWorkspace?.ledger).toEqual(accepted.ledger);
+ const restored=core.loadTrip(core.encodeTrip(session.doc));expect(core.readTripMeta(restored).groupWorkspace?.ledger).toEqual(accepted.ledger);
+});
+it('rejects forged receipts, agent writes, invalid batches and stale async imports without changing the last good ledger',async()=>{
+ const{session}=setup(),file=await core.exportLocalGroupResponse(session,person,key,'json');await core.mergeGroupResponseFiles(session,person,[file.bytes],['a']);const before=core.encodeTrip(session.doc);
+ expect(()=>session.execute(person,'trip_group_commit',{prepared:{}})).toThrow();await expect(core.mergeGroupResponseFiles(session,agent,[file.bytes],['a'])).rejects.toThrow();await expect(core.mergeGroupResponseFiles(session,person,[file.bytes,new TextEncoder().encode('{')],['a'])).rejects.toThrow();expect(core.encodeTrip(session.doc)).toEqual(before);
+ const promise=core.mergeGroupResponseFiles(session,person,[file.bytes],['a']);session.execute(person,'trip_card_create',{kind:'note',title:'Concurrent person edit'});await expect(promise).rejects.toThrow(/stale|changed/i);expect(core.readAllCards(session.parts).some(c=>c.title==='Concurrent person edit')).toBe(true);
+});
+it('persists explicit planning policy/facts privately and omits workspace/outbound caches from shared packages and agent reads',async()=>{
+ const{session,p}=setup();session.execute(person,'trip_group_planning_set',{planning:p,policy:core.DEFAULT_GROUP_POLICY});const file=await core.exportLocalGroupResponse(session,person,key,'json');await core.mergeGroupResponseFiles(session,person,[file.bytes],['a']);
+ for(const variant of ['private','stay','guide'] as const){const result=await core.importTripPackage(await core.exportTripPackage(session.doc,new Map(),{variant}));expect(core.readTripMeta(result.doc).groupWorkspace).toEqual(variant==='private'?core.readTripMeta(session.doc).groupWorkspace:undefined);expect([...core.tripParts(result.doc).clock.keys()].some(k=>k.startsWith('groupResponse:'))).toBe(variant==='private');}
+ expect(JSON.stringify(session.execute(agent,'trip_read',{}))).not.toContain('Explicit shared note');
+ const before=core.encodeTrip(session.doc);expect(()=>session.execute(agent,'trip_group_planning_set',{planning:p,policy:core.DEFAULT_GROUP_POLICY})).toThrow();expect(()=>session.execute(person,'trip_group_planning_set',{planning:{...p,trip_id:'wrong'},policy:core.DEFAULT_GROUP_POLICY})).toThrow();expect(core.encodeTrip(session.doc)).toEqual(before);
+});
+it('serializes concurrent exports so distinct file hashes cannot share a new revision',async()=>{
+ const{session}=setup(),original=Date.prototype.toISOString;let tick=0;const clock=vi.spyOn(Date.prototype,'toISOString').mockImplementation(()=>original.call(new Date(Date.UTC(2026,9,30,12,0,tick++))));
+ try{const results=await Promise.allSettled([core.exportLocalGroupResponse(session,person,key,'json'),core.exportLocalGroupResponse(session,person,key,'json')]);expect(results.filter(r=>r.status==='fulfilled')).toHaveLength(1);expect(results.filter(r=>r.status==='rejected')).toHaveLength(1);}finally{clock.mockRestore();}
+});

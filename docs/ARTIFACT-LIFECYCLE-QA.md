@@ -1,0 +1,11 @@
+# Kept export restore/remove lifecycle (MOT-94)
+
+Run `npm run check` and `npm run build -w apps/web`. Focused regressions: `npx vitest run apps/web/src/trip/artifact-restore-race.test.ts apps/web/src/trip/artifact-store.test.ts apps/web/src/trip/artifact-delivery.test.ts apps/web/src/trip/artifact-privacy.test.ts`.
+
+A removal invalidates every outstanding restore for that exact artifact ID and prevents a new restore while storage deletion is pending. Concurrent restores reuse the already verified live URL; concurrent removals share one deletion and revoke it once. The pending-operation maps contain only active work. Failed durable deletion leaves the existing file/URL available and clears the removal guard for retry. Other artifact IDs, boards and original trip media are unaffected. Byte verification, export scopes, ZIP/PDF formats and explicit private-content choice remain unchanged.
+
+The browser evidence helper is retained outside source with the task's evidence bundle. It needs sandboxed Playwright Chromium, a running app, `MOT_SOURCE_ROOT`, `MOT_TEST_ORIGIN`, `MOT_EVIDENCE_DIR` and `MOT_PLAYWRIGHT_MODULE`. It creates fictional shared/private notes through the human command path, exports a real shared ZIP, verifies its SHA-256 and privacy, and keeps a separate board's export as a control. After reload it holds all matching WebCrypto read-back completions, removes the file through the actual Export screen, then releases the reads. No removed file may return as Download ready or allocate a ZIP URL. Holding all matching reads also covers React's concurrent development restores.
+
+The helper then injects one IndexedDB deletion failure: the existing verified download must remain usable, and a normal retry must remove it. The other board's stored checksum and trip document must remain unchanged. Captures check 1920/1440/1280/768/375/280 px; no provider request or external publication is needed. Browser plugin not available; this is Chromium viewport evidence, not physical iOS/Safari validation.
+
+The regression suite was RED before the lifecycle change. No existing harness assertion, timeout, schema or permission was changed. This engineering fix leaves MOT-94 Implemented and its Opus design hold untouched; it supplies no independent sign-off or new visual score.

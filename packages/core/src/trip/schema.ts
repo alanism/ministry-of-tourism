@@ -1,7 +1,13 @@
 // Trip schema v1 (MOT-10). Validated at every boundary: commands, import, copy.
 import { z } from 'zod';
 import { apparelArtRefSchema } from './merch.ts';
+import {groupWorkspaceSchema} from './planning-constraints.ts';
+import {bookingAttentionSchema} from './booking-attention.ts';
+import { groupBallotsSchema } from './group-ballot.ts';
+import { groupPreferencesSchema } from './group-preferences.ts';
 
+export const bookingSchema=z.object({status:z.enum(['confirmed','held','not_booked']),reference:z.string().max(200).optional()}).strict();
+export const memoryWorkflowSchema=z.object({version:z.literal(1),reactions:z.record(z.string().min(1).max(200),z.enum(['keep','maybe','skip'])).refine(r=>Object.keys(r).length<=500,'At most 500 memory reactions')}).strict();
 export const TRIP_SCHEMA_VERSION = 2;
 export const STAGES = ['plan', 'prepare', 'arrive', 'explore', 'remember'] as const;
 export type Stage = (typeof STAGES)[number];
@@ -17,6 +23,9 @@ export const TASK_STATUSES = ['open', 'done'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 const id = z.string().min(1).max(200);
+// Shared ISO choices: explicit country validation is identical in commands and the picker.
+export const COUNTRY_CODES = 'AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'.split(' ');
+export const countryCodeSchema=z.string().refine(value=>COUNTRY_CODES.includes(value),'Choose an ISO country code');
 const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'day must be YYYY-MM-DD').refine(value=>{
   const date=new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0,10)===value;
@@ -47,13 +56,17 @@ export const tripMetaSchema = z.object({
   boardId: id,
   kind: z.enum(BOARD_KINDS),
   title: z.string().min(1).max(300),
-  city: z.string().min(1).max(120),
+  city: z.string().trim().min(1).max(120),
   cityId: id.optional(),
-  countryCode: z.string().regex(/^[A-Z]{2}$/).optional(),
+  countryCode: countryCodeSchema.optional(),
   timeZone: timeZoneSchema,
   dates: datesSchema.optional(),
   party: z.enum(['solo', 'couple', 'family', 'business']).optional(),
   agentMode: z.enum(['solo', 'together', 'autopilot']),
+  groupPreferences: groupPreferencesSchema.optional(),
+  groupBallots: groupBallotsSchema.optional(),
+  groupWorkspace: groupWorkspaceSchema.optional(),
+  memoryWorkflow:memoryWorkflowSchema.optional(),
   lineage: z.object({ guideBoardId: id, copiedAt: z.string().min(1) }).optional(),
   magazine: z.object({wornTeeAssetId:id,apparelAssetIds:z.array(id).min(1).max(3).refine(ids=>new Set(ids).size===ids.length)}).strict()
     .refine(value=>value.apparelAssetIds.includes(value.wornTeeAssetId),'The chosen tee must be cached').optional(),
@@ -81,6 +94,8 @@ export const tripCardSchema = z.object({
   sourceText: z.string().max(100000).optional(),
   travelerNote: z.string().max(20000).optional(),
   currentFacts: z.array(currentFactSchema).max(100).optional(),
+  booking: bookingSchema.optional(),
+  bookingAttention: bookingAttentionSchema.optional(),
   assetIds: z.array(id).max(100),
   x: z.number().finite(),
   y: z.number().finite(),
@@ -116,6 +131,7 @@ export const presentationFieldsSchema = z.object({
   x: z.number().min(0).max(1), y: z.number().min(0).max(1),
   width: z.number().positive().max(1), height: z.number().positive().max(1),
   crop: cropSchema, rotation: z.number().finite(), zIndex: z.number().int(), locked: z.boolean(), scope: z.enum(SCOPES),
+  magazineLayout:z.object({dx:z.number().finite().min(-2).max(2),dy:z.number().finite().min(-2).max(2),scaleX:z.number().positive().max(4),scaleY:z.number().positive().max(4),order:z.number().int().optional(),pageId:id.optional()}).strict().optional(),
   pattern:z.enum(PRESENTATION_PATTERNS).optional(),
   magazineRole:z.enum(MAGAZINE_ART_ROLES).optional(),
 }).strict();

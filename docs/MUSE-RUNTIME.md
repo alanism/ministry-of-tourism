@@ -2,7 +2,7 @@
 
 The server implements the documented Meta Chat Completions protocol. It is disabled until the owner configures the key, model, and privacy acknowledgement. No provider calls were made while implementing or testing it. A successful fixture response is not a live-service acceptance result.
 
-## Source contract checked 28 October 2026
+## Source contract checked 29 October 2026
 
 - [Meta Chat Completions documentation](https://dev.meta.ai/docs/protocols/chat-completions): fixed `POST https://api.meta.ai/v1/chat/completions`, bearer authentication, structured messages, `max_completion_tokens`, and `choices[0].message.content` for output.
 - [Meta model documentation](https://dev.meta.ai/docs/models): the supported Standard-mode IDs are `muse-spark-1.3` and `muse-wonder-1.0`. Contributor model IDs are intentionally excluded from this private-board runtime.
@@ -35,13 +35,13 @@ Typed adapter errors distinguish invalid input/output, rate limit, provider unav
 
 ## Data leaving the device
 
-Only a deliberate proposal request sends data. The client constructs the payload from selected non-private cards: ID, title, body, stage, day/time; selected associated asset IDs; the board ID; the person's prompt; and selected-city FCC article titles, bodies, and provenance. Image bytes, unselected/private cards, host access codes, and other guests' data are not part of this request schema. Explicitly selected card text and the person's prompt can still contain personal information; selection is not anonymization.
+Only a deliberate proposal request sends data. The client constructs the payload from selected non-private cards: ID, title, body, stage, day/time; the board ID; the person's prompt; and selected-city FCC article titles, bodies, and provenance. The composer sends an empty asset-ID list because it has no picture selection. Image bytes, unselected/private cards, dedicated host-access fields, and other guests' data are not part of this request schema. Explicitly selected card text and the person's prompt can still contain personal information; selection is not anonymization.
 
 The server forwards that bounded JSON as user-role data, separately from its fixed developer instructions. Provider output has no network tools or independent access to the board. The browser's existing command permissions decide what may change.
 
 ## Limits and recovery
 
-- At most one active provider call per adapter, no automatic retries, and a 30-second timeout. Browser cancellation aborts the provider request.
+- At most one active provider call per adapter, no automatic retries, and a 30-second timeout. Browser cancellation aborts the provider request. Timeout/Stop settle the job even when transport ignores abort; that transport retains the single-call lease until it ends, so an immediate retry returns busy instead of starting an overlapping paid request. Late results are discarded and cannot produce a second success receipt/log.
 - Prompt: 8,000 characters; 40 selected cards; 100 asset IDs; total UTF-8 request: 96,000 bytes. Oversized context fails clearly rather than silently dropping articles or notes.
 - Response: at most 2,048 completion tokens and 128,000 response bytes. Truncated, malformed, or wrong-board proposals fail without an applied change.
 - HTTP boundary: at most six accepted-origin requests per minute per socket IP; client-supplied forwarding headers do not establish identity.
@@ -52,6 +52,10 @@ The server forwards that bounded JSON as user-role data, separately from its fix
 Server diagnostics contain only request ID, model ID, timestamp, error class, latency, call units, and numeric token usage. They never contain prompt/card/article text, image bytes, names, credentials, stay details, or provider error bodies. The application writes these records only to the owning process's standard error; there is no web endpoint to read logs, and it creates no durable log file or database.
 
 Application retention is process/terminal-session only. If the owner deliberately captures standard error, that sink must be readable only by the owner and rotate/delete entries within 24 hours. Production deployment must enforce those access and retention rules in its logging configuration; this local implementation does not claim to configure an external platform's log retention.
+
+The browser preserves typed failures and offers **Copy diagnostic receipt**. Its allowlisted projection contains request ID, operation, board ID, revision, error class, start/finish time, app version and numeric latency. It excludes prompt/card/article text, board title, provider error text and arbitrary server receipt fields. The same projection is applied again on copy. Local transport/proxy failures receive a locally generated request ID; that ID does not claim a provider call took place.
+
+The header distinguishes checking, confirmed connection, observed work/elapsed time, manual-only, paused limit and test adapter. A model ID appears only after server status reports it. Stop, failure, invalid response and limits leave the board unchanged. Recovery is explicit; no automatic provider retry occurs. Fixture-created cards keep a `test-adapter:` creation context through persistence and are labelled **Test adapter** on the board. The approving human retains their command role and Undo; this marker grants no agent permissions and does not change the card schema.
 
 ## Production gate and live evidence still required
 

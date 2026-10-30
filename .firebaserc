@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "nonhumanintelligence"
+  },
+  "targets": {
+    "nonhumanintelligence": {
+      "hosting": {
+        "mot": [
+          "ministryoftourism"
+        ]
+      }
+    }
+  }
+}

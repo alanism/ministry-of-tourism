@@ -1,6 +1,6 @@
 // Page + poster + photobook renders (MOT-40A/B/C/D): pure, no AI, private/excluded never render.
 import type * as Y from 'yjs';
-import { readAllCards, readTripMeta, tripParts } from './model.ts';
+import { readAllCards, readAsset, readTripMeta, tripParts,readPresentations,presentationScope } from './model.ts';
 import { boardProjection, todayProjection } from './projections.ts';
 import { mapPins } from './keepsake.ts';
 import { PRESENTATION_PATTERNS } from './schema.ts';
@@ -17,13 +17,16 @@ export function itineraryHtml(doc: Y.Doc): string {
 }
 
 /** MOT-40B: memorabilia page. An excluded photo never appears, even if requested. */
-export function memorabiliaHtml(doc: Y.Doc, excludedAssetIds: Set<string> = new Set()): string {
-  const cards = readAllCards(tripParts(doc)).filter((c) => c.scope !== 'private');
+export function memorabiliaHtml(doc: Y.Doc, excludedAssetIds: Set<string> = new Set(), cardIds?: ReadonlySet<string>, media?:ReadonlyMap<string,string>): string {
+  const cards = readAllCards(tripParts(doc)).filter((c) => c.scope !== 'private' && (!cardIds || cardIds.has(c.id)));
+  const photo=(id:string,title:string)=>{const url=media?.get(id);if(!url||!/^data:image\/(?:png|jpeg|webp|gif|avif);base64,[A-Za-z0-9+/]+=*$/.test(url))throw new Error('Missing or unsupported memory media');const asset=readAsset(tripParts(doc),id);return `<figure data-asset="${esc(id)}"><img src="${esc(url)}" alt="${esc(title)}">${asset?.credit?`<figcaption>${esc(asset.credit)}</figcaption>`:''}</figure>`;};
   const items = cards.map((c) => {
     const assets = c.assetIds.filter((a) => !excludedAssetIds.has(a));
-    return `<article><h3>${esc(c.title)}</h3><p>${esc(c.body)}</p>${assets.map((a) => `<figure data-asset="${esc(a)}">Photo ${esc(a)}</figure>`).join('')}</article>`;
+    const photos=assets.map(a=>media?photo(a,c.title):`<figure data-asset="${esc(a)}">Photo ${esc(a)}</figure>`).join('');
+    return `<article><h3>${esc(c.title)}</h3><p>${esc(media?(c.travelerNote??c.body):c.body)}</p>${photos}</article>`;
   }).join('');
-  return `<!doctype html><title>Trip memorabilia</title><h1>Memorabilia</h1><p>Rendered without AI. Excluded photos never appear.</p>${items}`;
+  const used=new Set(cards.flatMap(c=>c.assetIds)),art=media?[...new Set(readPresentations(tripParts(doc)).filter(p=>presentationScope(tripParts(doc),p)!=='private'&&(!p.cardId||cards.some(c=>c.id===p.cardId))).flatMap(p=>p.assetId&&!used.has(p.assetId)&&!excludedAssetIds.has(p.assetId)?[p.assetId]:[]))].map(id=>photo(id,'Trip artwork')).join(''):'';
+  return `<!doctype html>${media?'<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:16px/1.6 system-ui;margin:24px auto;padding:0 16px;max-width:760px}article{margin:28px 0;overflow-wrap:anywhere}img{display:block;max-width:100%;height:auto}figure{margin:16px 0}figcaption{font-size:13px}p{white-space:pre-wrap}</style>':''}<title>Trip memorabilia</title><h1>Memorabilia</h1><p>Rendered without AI. Excluded photos never appear.</p>${items}${art}`;
 }
 
 /** MOT-40C: route/stay-pin poster SVG at a declared size. Preflight = exact mm + traced pins. */

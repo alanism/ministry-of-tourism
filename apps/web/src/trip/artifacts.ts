@@ -1,7 +1,8 @@
-import { buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, rgbPdfImage, tripParts, type DiagnosticReceipt, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
+import { buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, rgbPdfImage, TRIP_PACKAGE_LIMITS, tripParts, type DiagnosticReceipt, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
 import { getTripBlob } from './trip-assets';
 import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
+import { svgPdfTextLayer } from './pdf-text-layer';
 
 export const diagnostics=new DiagnosticLog();
 let lastOperation:OperationState|undefined;
@@ -11,6 +12,7 @@ export interface ArtifactProgress {stage:'collect'|'layout'|'write'|'verify';com
 export interface ArtifactOptions {includePrivate?:boolean;variant?:ArtifactScope;onProgress?:(progress:ArtifactProgress)=>void;onState?:(state:OperationState)=>void;onDiagnostic?:(receipt:DiagnosticReceipt)=>void;}
 export interface ExportArtifact extends TripArtifact {id:string;createdAt:string;sha256:string;kept:boolean;scope:ArtifactScope;urlExpiresAt:null;inventory:ArtifactInventory;coverSvg?:string;storageDiagnostic?:DiagnosticReceipt;}
 const available=new Map<string,{record:StoredArtifact;artifact:ExportArtifact}>();
+const restoring=new Map<string,Set<{cancelled:boolean}>>(),removing=new Map<string,Promise<void>>();
 function selection(doc:import('yjs').Doc,scope:ArtifactScope){
   const parts=tripParts(doc),visible=(value:string)=>scope==='personal'||(scope==='guide'?value==='guide':value!=='private');
   const cards=readAllCards(parts).filter(card=>visible(card.scope)),ids=new Set(cards.map(card=>card.id));
@@ -29,7 +31,7 @@ async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:A
   signal?.throwIfAborted();onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:true});return bytes;
 }
 
-export async function prepareMagazine(session:TripSession,signal?:AbortSignal,includePrivate=true,options:Pick<ArtifactOptions,'variant'|'onProgress'>={}):Promise<MagazineDocument> {
+export async function prepareMagazine(session:TripSession,signal?:AbortSignal,includePrivate=true,options:Pick<ArtifactOptions,'variant'|'onProgress'>&{onPrepared?:(assets:NonNullable<Parameters<typeof buildMagazine>[1]>)=>void}={}):Promise<MagazineDocument> {
   const doc=loadTrip(encodeTrip(session.doc));
   try {
     const urls=new Map<string,string>(),dimensions=new Map<string,{width:number;height:number}>();
@@ -40,7 +42,16 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
       const asset=doc.getMap<import('yjs').Map<unknown>>('tripAssets').get(id)!;
       const blob=await getTripBlob(String(asset.get('hash')))??new Blob([original as BlobPart],{type:String(asset.get('mime'))});
       urls.set(id,await dataUrl(blob));
-      const image=await createImageBitmap(blob);dimensions.set(id,{width:image.width,height:image.height});image.close();
+      const image=await new Promise<ImageBitmap>((resolve,reject)=>{
+        const stop=()=>reject(signal?.reason??new DOMException('Export cancelled','AbortError'));
+        if(signal?.aborted){stop();return;}
+        signal?.addEventListener('abort',stop,{once:true});
+        Promise.resolve().then(()=>{signal?.throwIfAborted();return createImageBitmap(blob);}).then(
+          image=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){image.close();stop();}else resolve(image);},
+          error=>{signal?.removeEventListener('abort',stop);reject(error);},
+        );
+      });
+      try{signal?.throwIfAborted();dimensions.set(id,{width:image.width,height:image.height});}finally{image.close();}
     }
     signal?.throwIfAborted();
     const meta=readTripMeta(doc),cityId=meta.cityId??meta.city.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -48,21 +59,42 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
     let apparel:Awaited<ReturnType<typeof loadCityApparel>>=[...cached];const warnings:string[]=[];
     try{
       const fresh=await loadCityApparel(cityId,{signal});
-      apparel=[...cached,...fresh.filter(art=>!cached.some(saved=>saved.assetId===art.assetId))].slice(0,3);
+      const variants=fresh.some(art=>art.role)?fresh.filter(art=>art.role):fresh;
+      apparel=[...cached,...variants.filter(art=>!cached.some(saved=>saved.assetId===art.assetId))].slice(0,3);
       const downloads=apparel.filter(art=>!urls.has(art.assetId));
+      let failed=0,downloaded=0;
       for(const [index,art] of downloads.entries()){
-        options.onProgress?.({stage:'collect',completed:bytes.size+index,total:bytes.size+downloads.length,unit:'assets',done:false});
+        options.onProgress?.({stage:'collect',completed:bytes.size+downloaded,total:bytes.size+downloads.length,unit:'assets',done:false});
         signal?.throwIfAborted();
-        const response=await fetch(art.originalUrl??art.renditionUrl,{signal,credentials:'omit',redirect:'error'});
-        if(!response.ok)throw new Error('FCC tee image unavailable');
-        const image=await response.blob();if(!/^image\/(png|jpeg|webp|avif)$/.test(image.type))throw new Error('FCC tee image is not a supported raster');
-        urls.set(art.assetId,await dataUrl(image));dimensions.set(art.assetId,{width:art.width,height:art.height});
-        options.onProgress?.({stage:'collect',completed:bytes.size+index+1,total:bytes.size+downloads.length,unit:'assets',done:index===downloads.length-1});
+        try{
+          const response=await fetch(art.originalUrl??art.renditionUrl,{signal,credentials:'omit',redirect:'error'});
+          if(!response.ok)throw new Error('FCC tee image unavailable');
+          if(Number(response.headers.get('content-length'))>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('FCC tee image exceeds the portable image limit');
+          const image=await response.blob();
+          if(image.type!==art.mimeType||!image.size||image.size>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('FCC tee image does not match its declared raster');
+          const hash=await artifactSha256(image);
+          if((art.hash&&art.hash!==hash)||(art.source.contentHash&&art.source.contentHash!==hash))throw new Error('FCC tee original changed');
+          const decoded=await new Promise<ImageBitmap>((resolve,reject)=>{
+            const stop=()=>reject(signal?.reason??new DOMException('Export cancelled','AbortError'));
+            if(signal?.aborted){stop();return;}
+            signal?.addEventListener('abort',stop,{once:true});
+            Promise.resolve().then(()=>{signal?.throwIfAborted();return createImageBitmap(image);}).then(
+              decoded=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){decoded.close();stop();}else resolve(decoded);},
+              error=>{signal?.removeEventListener('abort',stop);reject(error);},
+            );
+          });
+          try{signal?.throwIfAborted();if(decoded.width!==art.width||decoded.height!==art.height)throw new Error('FCC tee dimensions changed');}finally{decoded.close();}
+          signal?.throwIfAborted();
+          urls.set(art.assetId,await dataUrl(image));dimensions.set(art.assetId,{width:art.width,height:art.height});downloaded++;
+        }catch(error){if(signal?.aborted)throw error;failed++;}
+        options.onProgress?.({stage:'collect',completed:bytes.size+downloaded,total:bytes.size+downloads.length,unit:'assets',done:index===downloads.length-1});
       }
+      apparel=apparel.filter(art=>urls.has(art.assetId));
+      if(failed)warnings.push(`${failed} FCC tee photo${failed===1?' is':'s are'} unavailable; the remaining trip pages are kept.`);
     }catch(error){if(signal?.aborted)throw error;apparel=[...cached];warnings.push(cached.length?'FCC is unavailable; your cached tee choice is kept.':'FCC tee pages are unavailable; your trip pages are kept.');}
     options.onProgress?.({stage:'layout',completed:0,unit:'pages',done:false});
     const renderOptions:NonNullable<Parameters<typeof buildMagazine>[1]>&{artwork:readonly unknown[]}={assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:apparel};
-    const magazine=buildMagazine(doc,renderOptions);magazine.warnings.push(...warnings);
+    const magazine=buildMagazine(doc,renderOptions);magazine.warnings.push(...warnings);signal?.throwIfAborted();options.onPrepared?.(renderOptions);
     options.onProgress?.({stage:'layout',completed:magazine.pages.length,total:magazine.pages.length,unit:'pages',done:true});return magazine;
   } finally {doc.destroy();}
 }
@@ -75,16 +107,23 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
     signal?.throwIfAborted();
     const url=URL.createObjectURL(new Blob([page.svg],{type:'image/svg+xml'}));
     try {
-      const image=new Image();image.src=url;await image.decode();
+      const image=new Image();image.src=url;
+      await new Promise<void>((resolve,reject)=>{
+        const stop=()=>{image.src='';reject(signal?.reason??new DOMException('Export cancelled','AbortError'));};
+        if(signal?.aborted){stop();return;}
+        signal?.addEventListener('abort',stop,{once:true});
+        image.decode().then(resolve,reject).finally(()=>signal?.removeEventListener('abort',stop));
+      });
       const canvas=document.createElement('canvas');canvas.width=MAGAZINE.widthPx;canvas.height=MAGAZINE.heightPx;
       const context=canvas.getContext('2d');if(!context)throw new Error('This browser could not render the PDF.');
       context.drawImage(image,0,0);
       const pixels=context.getImageData(0,0,canvas.width,canvas.height);
-      pages.push({...rgbPdfImage(pixels.data,canvas.width,canvas.height),pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links});
+      const textLayer=await svgPdfTextLayer(page.svg,signal);
+      pages.push({...rgbPdfImage(pixels.data,canvas.width,canvas.height),pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links,label:page.pattern,textLayer});
       onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:false});
     }finally{URL.revokeObjectURL(url);}
   }
-  signal?.throwIfAborted();const bytes=buildPdf(pages,magazine.title);onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:true});return bytes;
+  signal?.throwIfAborted();const bytes=buildPdf(pages,magazine.title,{producer:'Ministry of Tourism'});onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:true});return bytes;
 }
 
 export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',signal?:AbortSignal,options:ArtifactOptions={}):Promise<ExportArtifact> {
@@ -131,14 +170,27 @@ export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',
 
 /** A kept file gets a fresh URL after reload. Tab-only bytes stay available until explicit removal or tab close. */
 export async function restoreTripArtifact(id:string):Promise<ExportArtifact>{
+  if(removing.has(id))throw new Error('This export is being removed. Make a fresh export from your board.');
   const live=available.get(id);if(live)return live.artifact;
-  const record=await readArtifact(id);if(!record)throw new Error('This export is no longer kept in this browser. Make a fresh export.');
-  const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},coverSvg:record.coverSvg};
-  available.set(id,{record,artifact});return artifact;
+  const pending={cancelled:false},readers=restoring.get(id)??new Set<{cancelled:boolean}>();readers.add(pending);restoring.set(id,readers);
+  try{
+    const record=await readArtifact(id);
+    if(pending.cancelled)throw new Error('This export was removed while restoring. Make a fresh export.');
+    if(!record)throw new Error('This export is no longer kept in this browser. Make a fresh export.');
+    const existing=available.get(id);if(existing)return existing.artifact;
+    const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},coverSvg:record.coverSvg};
+    available.set(id,{record,artifact});return artifact;
+  }finally{readers.delete(pending);if(!readers.size&&restoring.get(id)===readers)restoring.delete(id);}
 }
 export async function forgetTripArtifact(id:string):Promise<void>{
-  const live=available.get(id);if(live?.artifact.kept!==false)await removeArtifact(id);else try{await removeArtifact(id);}catch{/* No verified durable copy exists; remove the tab-only file. */}
-  if(live)URL.revokeObjectURL(live.artifact.url);available.delete(id);
+  const pending=removing.get(id);if(pending)return pending;
+  restoring.get(id)?.forEach(reader=>{reader.cancelled=true;});
+  const removal=(async()=>{
+    const live=available.get(id);if(live?.artifact.kept!==false)await removeArtifact(id);else try{await removeArtifact(id);}catch{/* No verified durable copy exists; remove the tab-only file. */}
+    const current=available.get(id);if(current)URL.revokeObjectURL(current.artifact.url);available.delete(id);
+  })();
+  removing.set(id,removal);
+  try{await removal;}finally{if(removing.get(id)===removal)removing.delete(id);}
 }
 
 export function downloadArtifact(artifact:TripArtifact):void {

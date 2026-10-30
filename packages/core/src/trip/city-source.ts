@@ -1,5 +1,6 @@
 // Public FCC content boundary. Feed URLs are configured only after FCC publishes them (MOT-74/78).
 import { z } from 'zod';
+import { recoverFccTitle } from './fcc-text.ts';
 
 export const FCC_ORIGIN = 'https://foreignclubberscorespondence.web.app';
 const FCC_HOSTS = new Set(['foreignclubberscorespondence.web.app', 'foreignclubberscorespondence.firebaseapp.com']);
@@ -21,7 +22,7 @@ export const fccCityFeedSchema = z.object({
   articles: z.array(articleSchema).max(200), places: z.array(placeSchema).max(2000), almanac: z.array(almanacSchema).max(500),
 }).strict().refine(feed => new Set(feed.articles.map(a => a.id)).size === feed.articles.length && new Set(feed.places.map(p => p.id)).size === feed.places.length, 'Source IDs must be unique within a city');
 export type FccCityFeed = z.infer<typeof fccCityFeedSchema>;
-const localDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const localDate = z.iso.date();
 const citationUrl = z.string().max(2000).refine(value => {
   if (!value) return true;
   try { const url = new URL(value); return url.protocol === 'https:' && !url.username && !url.password; } catch { return false; }
@@ -86,7 +87,7 @@ async function normalize(entry: CachedFeed): Promise<FccCityContent> {
   const articles = await Promise.all(feed.articles.map(async article => {
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(article.body));
     const contentHash = [...new Uint8Array(digest)].map(v => v.toString(16).padStart(2, '0')).join('');
-    return { id: compositeId(feed.city.id, article.id), cityId: feed.city.id, title: article.title, body: article.body, source: { ...source(article, 'article'), contentHash } };
+    return { id: compositeId(feed.city.id, article.id), cityId: feed.city.id, title: recoverFccTitle(article.title), body: article.body, source: { ...source(article, 'article'), contentHash } };
   }));
   return { city: { ...feed.city }, articles, places: feed.places.map(place => ({ id: compositeId(feed.city.id, place.id), city: feed.city.id, name: place.name, lat: place.lat, lng: place.lng, provenance: 'fcc', retrievedAt, fixture: false, source: source(place, 'venue') })), almanac: structuredClone(feed.almanac) };
 }
@@ -94,9 +95,19 @@ async function normalize(entry: CachedFeed): Promise<FccCityContent> {
 export function createFccAdapter(options: FccAdapterOptions) {
   const fetcher = options.fetcher ?? fetch, cache = options.cache ?? new MemoryCityCache(), now = options.now ?? (() => new Date());
   const retries = Math.max(0, Math.min(2, Math.floor(options.maxRetries ?? 1)));
-  async function readCached(cityId: string): Promise<CachedFeed | undefined> {
+  async function readCacheEntry(cityId: string, signal?: AbortSignal): Promise<CachedCity | undefined> {
+    if (!signal) return cache.read(cityId);
+    if (signal.aborted) throw new Error('cancelled');
+    let cancel!: () => void;
+    const interrupted = new Promise<never>((_resolve, reject) => { cancel = () => reject(new Error('cancelled')); signal.addEventListener('abort', cancel, { once: true }); });
     try {
-      const entry = await cache.read(cityId);
+      return await Promise.race([Promise.resolve().then(() => { if (signal.aborted) throw new Error('cancelled'); return cache.read(cityId); }), interrupted]);
+    } finally { signal.removeEventListener('abort', cancel); }
+  }
+  async function readCached(cityId: string, signal?: AbortSignal): Promise<CachedFeed | undefined> {
+    try {
+      const entry = await readCacheEntry(cityId, signal);
+      if (signal?.aborted) return;
       if (!entry || !entry.retrievedAt) return;
       const feed = fccCityFeedSchema.parse(entry.feed);
       return feed.city.id === cityId ? { ...entry, feed } : undefined;
@@ -108,37 +119,51 @@ export function createFccAdapter(options: FccAdapterOptions) {
   async function getCity(cityId: string, request: CityFetchOptions = {}): Promise<FccResult<FccCityContent>> {
     if (!cityIdSchema.safeParse(cityId).success) return unavailable(err('invalid_feed', 'Choose a valid FCC city ID.'));
     if (request.signal?.aborted) return unavailable(err('cancelled', 'FCC loading was cancelled.'));
-    const previous = await readCached(cityId);
+    const previous = await readCached(cityId, request.signal);
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'FCC loading was cancelled.'));
     if (request.offline) return previous ? result(previous, 'cached') : unavailable(err('offline', 'No cached FCC issue is available for this city.'));
     let url: string;
     try { url = options.feedUrl(cityId); } catch { return unavailable(err('invalid_url', 'An FCC feed URL has not been configured.')); }
     if (!isPublicFccUrl(url)) return unavailable(err('invalid_url', 'The configured source must be a public FCC HTTPS URL.'));
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'FCC loading was cancelled.'));
+    const controller = new AbortController(), cancel = () => controller.abort();
+    request.signal?.addEventListener('abort', cancel, { once: true });
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, Math.min(20000, options.timeoutMs ?? 20000)));
+    let interrupt!: () => void;
+    const interrupted = new Promise<never>((_resolve, reject) => { interrupt = () => reject(new Error('cancelled')); controller.signal.addEventListener('abort', interrupt, { once: true }); });
     let failure = err('network', 'FCC could not be reached. Retry or use the dated cache.');
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const response = await fetcher(url, { signal: request.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} });
-        if (request.signal?.aborted) { failure = err('cancelled', 'FCC loading was cancelled.'); break; }
-        if (response.status === 304 && previous) return result(previous, 'cached');
-        if (!response.ok) {
-          failure = err(response.status === 404 ? 'not_found' : 'http', response.status === 404 ? 'This FCC city feed is not published. Your trip remains available.' : 'FCC returned an error. Retry or use the dated cache.', response.status);
-          if (response.status >= 500 && attempt < retries) continue;
-          break;
+    try {
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          const transport = fetcher(url, { signal: controller.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} }).then(response => {
+            if (controller.signal.aborted) { void response.body?.cancel().catch(() => {}); throw new Error('cancelled'); }
+            return response;
+          });
+          const response = await Promise.race([transport, interrupted]);
+          if (controller.signal.aborted) throw new Error('cancelled');
+          if (response.status === 304 && previous) return result(previous, 'cached');
+          if (!response.ok) {
+            failure = err(response.status === 404 ? 'not_found' : 'http', response.status === 404 ? 'This FCC city feed is not published. Your trip remains available.' : 'FCC returned an error. Retry or use the dated cache.', response.status);
+            if (response.status >= 500 && attempt < retries) continue;
+            break;
+          }
+          let raw: unknown;
+          try { raw = await Promise.race([response.json(), interrupted]); } catch { if (controller.signal.aborted) throw new Error('cancelled'); failure = err('invalid_feed', 'FCC returned an unreadable city feed. The previous issue was kept.'); break; }
+          const parsed = fccCityFeedSchema.safeParse(raw);
+          if (!parsed.success || parsed.data.city.id !== cityId) { failure = err('invalid_feed', 'FCC returned an invalid or different-city feed. The previous issue was kept.'); break; }
+          if (controller.signal.aborted) throw new Error('cancelled');
+          const entry: CachedFeed = { feed: parsed.data, retrievedAt: now().toISOString(), ...(response.headers.get('ETag') ? { etag: response.headers.get('ETag')! } : {}) };
+          // Usable fetched content does not imply caching succeeded; never clear existing content to make space.
+          try { await cache.write(cityId, entry); } catch { /* Existing board and cached issue remain untouched. */ }
+          return result(entry, 'ready');
+        } catch {
+          failure = request.signal?.aborted ? err('cancelled', 'FCC loading was cancelled.') : timedOut ? err('network', 'FCC loading timed out. Retry or use the dated cache.') : err('network', 'FCC could not be reached. Retry or use the dated cache.');
+          if (controller.signal.aborted) break;
         }
-        let raw: unknown;
-        try { raw = await response.json(); } catch { failure = err('invalid_feed', 'FCC returned an unreadable city feed. The previous issue was kept.'); break; }
-        const parsed = fccCityFeedSchema.safeParse(raw);
-        if (!parsed.success || parsed.data.city.id !== cityId) { failure = err('invalid_feed', 'FCC returned an invalid or different-city feed. The previous issue was kept.'); break; }
-        if (request.signal?.aborted) { failure = err('cancelled', 'FCC loading was cancelled.'); break; }
-        const entry: CachedFeed = { feed: parsed.data, retrievedAt: now().toISOString(), ...(response.headers.get('ETag') ? { etag: response.headers.get('ETag')! } : {}) };
-        // Usable fetched content does not imply caching succeeded; never clear existing content to make space.
-        try { await cache.write(cityId, entry); } catch { /* Existing board and cached issue remain untouched. */ }
-        return result(entry, 'ready');
-      } catch {
-        failure = request.signal?.aborted ? err('cancelled', 'FCC loading was cancelled.') : err('network', 'FCC could not be reached. Retry or use the dated cache.');
-        if (failure.code === 'cancelled') break;
       }
-    }
-    options.onDiagnostic?.({ operation: 'fcc-city-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) });
+    } finally { clearTimeout(timer); request.signal?.removeEventListener('abort', cancel); controller.signal.removeEventListener('abort', interrupt); }
+    try { options.onDiagnostic?.({ operation: 'fcc-city-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) }); } catch { /* Diagnostics cannot discard the dated issue or replace a typed failure. */ }
     if (failure.code === 'cancelled') return unavailable(failure);
     return previous ? result(previous, 'stale', failure) : unavailable(failure);
   }
@@ -153,7 +178,9 @@ export function createFccAdapter(options: FccAdapterOptions) {
     const cacheKey = `almanac:${cityId}`, url = `${FCC_ORIGIN}/almanac/city/${cityId}.json`;
     let previous: (CachedCity & { almanac: FccAlmanacSnapshot }) | undefined;
     try {
-      const stored = await cache.read(cacheKey), parsed = fccAlmanacSnapshotSchema.safeParse(stored?.almanac);
+      const stored = await readCacheEntry(cacheKey, request.signal);
+      if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
+      const parsed = fccAlmanacSnapshotSchema.safeParse(stored?.almanac);
       if (stored?.retrievedAt && parsed.success && parsed.data.slug === cityId) previous = { ...stored, almanac: parsed.data };
     } catch { /* An unreadable cache is unavailable; it never becomes trusted source data. */ }
     async function almanacResult(entry: CachedCity & { almanac: FccAlmanacSnapshot }, status: 'ready' | 'cached' | 'stale', error?: FccError): Promise<FccResult<FccAlmanacSnapshot>> {
@@ -161,16 +188,24 @@ export function createFccAdapter(options: FccAdapterOptions) {
       const hash = [...new Uint8Array(digest)].map(value => value.toString(16).padStart(2, '0')).join('');
       return { status, value: structuredClone(entry.almanac), retrievedAt: entry.retrievedAt, sourceVersion: `sha256:${hash}`, ...(error ? { error } : {}) };
     }
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
     if (request.offline) return previous ? almanacResult(previous, 'cached') : unavailable(err('offline', 'No cached Almanac snapshot is available for this city.'));
+    if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
     const controller = new AbortController(), cancel = () => controller.abort();
     request.signal?.addEventListener('abort', cancel, { once: true });
     if (request.signal?.aborted) cancel();
     let timedOut = false, failure = err('network', 'The Almanac could not be reached. Retry or use the dated cache.');
     const timer = setTimeout(() => { timedOut = true; controller.abort(); }, Math.max(1, Math.min(options.timeoutMs ?? 10000, 30000)));
+    let interrupt!: () => void;
+    const interrupted = new Promise<never>((_resolve, reject) => { interrupt = () => reject(new Error('cancelled')); controller.signal.addEventListener('abort', interrupt, { once: true }); });
     try {
       for (let attempt = 0; attempt <= retries; attempt++) {
         try {
-          const response = await fetcher(url, { signal: controller.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} });
+          const transport = fetcher(url, { signal: controller.signal, credentials: 'omit', redirect: 'error', headers: previous?.etag ? { 'If-None-Match': previous.etag } : {} }).then(response => {
+            if (controller.signal.aborted) { void response.body?.cancel().catch(() => {}); throw new Error('cancelled'); }
+            return response;
+          });
+          const response = await Promise.race([transport, interrupted]);
           if (controller.signal.aborted) break;
           if (response.status === 304 && previous) return almanacResult(previous, 'cached');
           if (!response.ok) {
@@ -179,7 +214,7 @@ export function createFccAdapter(options: FccAdapterOptions) {
             break;
           }
           let raw: unknown;
-          try { raw = await response.json(); } catch { failure = err('invalid_feed', 'The Almanac response is unreadable. The previous snapshot was kept.'); break; }
+          try { raw = await Promise.race([response.json(), interrupted]); } catch { if (controller.signal.aborted) throw new Error('cancelled'); failure = err('invalid_feed', 'The Almanac response is unreadable. The previous snapshot was kept.'); break; }
           const parsed = fccAlmanacSnapshotSchema.safeParse(raw);
           if (!parsed.success || parsed.data.slug !== cityId) { failure = err('invalid_feed', 'FCC returned an invalid or different-city Almanac snapshot. The previous snapshot was kept.'); break; }
           if (controller.signal.aborted) break;
@@ -191,10 +226,10 @@ export function createFccAdapter(options: FccAdapterOptions) {
           if (controller.signal.aborted) break;
         }
       }
-    } finally { clearTimeout(timer); request.signal?.removeEventListener('abort', cancel); }
+    } finally { clearTimeout(timer); request.signal?.removeEventListener('abort', cancel); controller.signal.removeEventListener('abort', interrupt); }
     if (request.signal?.aborted) return unavailable(err('cancelled', 'Almanac loading was cancelled.'));
     if (timedOut) failure = err('network', 'Almanac loading timed out. Retry or use the dated cache.');
-    options.onDiagnostic?.({ operation: 'fcc-almanac-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) });
+    try { options.onDiagnostic?.({ operation: 'fcc-almanac-fetch', sourceUrl: url, errorClass: failure.code, ...(failure.httpStatus === undefined ? {} : { httpStatus: failure.httpStatus }) }); } catch { /* Diagnostics cannot replace a typed source result or discard a dated copy. */ }
     return previous ? almanacResult(previous, 'stale', failure) : unavailable(failure);
   }
   return {

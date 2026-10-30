@@ -6,6 +6,7 @@ import { readAllCards, readCard } from './model.ts';
 import { appliedPart, hasApplied, markApplied, tokenMatches } from './revisions.ts';
 import type { ComparisonToken } from './revisions.ts';
 import type { TripSession } from './session.ts';
+import {tripCardSchema} from './schema.ts';
 
 export interface ProposalOp { command: string; input: Record<string, unknown>; }
 export interface SourceRef { id: string; url?: string; retrievedAt: string; }
@@ -35,6 +36,7 @@ export function prevalidateProposal(session: TripSession, proposal: Proposal, ow
     if (!parsed.success) throw new CommandError('invalid_input', `Proposal op ${op.command} is invalid`);
     // Who can see a card is the person's call, never an agent's.
     if (op.input.scope !== undefined) throw new CommandError('scope', 'Agents cannot change who can see a card');
+    if(op.input.booking!==undefined)throw new CommandError('scope','Booking status must be recorded by a person, never a proposed purchase');
     if(op.input.currentFacts!==undefined || (op.command==='trip_card_update' && (op.input.source!==undefined || op.input.sourceText!==undefined)))throw new CommandError('scope','Agents cannot replace source evidence or assert independently verified facts');
     if(op.command==='trip_card_create')assertAgentMediaAccess(session.parts,(parsed.data as {assetIds:string[]}).assetIds);
     if(op.command==='trip_asset_attach')assertAgentMediaAccess(session.parts,[(parsed.data as {asset:{id:string}}).asset.id]);
@@ -63,7 +65,10 @@ export function applyProposal(session: TripSession, approver: Actor, proposal: P
   if (!idx.length) return { ...done(), remainingOps: proposal.ops.length - prior.ops.length };
   const chosen: Proposal = { ...proposal, ops: idx.map((i) => proposal.ops[i]!) };
   prevalidateProposal(session, chosen, prior.revs);
-  session.executeAll(approver, chosen.ops, proposalUndoKey(proposal.id));
+  // The approving person keeps their role; a namespaced creation context makes test output durable and explicit.
+  const context=proposal.author==='agent:fake'||proposal.author==='test-adapter'?{...approver,id:`test-adapter:${approver.id}`}:approver;
+  if(context!==approver)tripCardSchema.shape.createdBy.parse(context.id);
+  session.executeAll(context, chosen.ops, proposalUndoKey(proposal.id));
   const ops = [...prior.ops, ...idx].sort((a, b) => a - b);
   const revs = { ...prior.revs };
   for (const op of chosen.ops) { const id = touchedCardId(op); if (id) revs[id] = session.cardRev(id); }

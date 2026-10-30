@@ -1,9 +1,18 @@
 // Trip commands (MOT-12): the only way to change a trip. Validate before writing.
 import { z } from 'zod';
+import {preparedGroupChangeSchema,commitPreparedGroupChange,validatePlanningGroup} from './group-workspace.ts';
+import {proposeGroupSchedule} from './schedule-proposal.ts';
+import {checkScheduleFeasibility} from './schedule-feasibility.ts';
+import {mergeResponseLedger} from './response-ledger.ts';
+import {planningProblemSchema,scheduleAssignmentsSchema,groupPolicySchema} from './planning-constraints.ts';
+import {bookingAttention,bookingAttentionSchema} from './booking-attention.ts';
+import {preferenceRoundSchema,tallyGroupPreferences} from './preference-tally.ts';
+import {ballotKey,groupBallotKeySchema,groupBallotSchema,validateLocalBallot} from './group-ballot.ts';
+import { groupPreferencesSchema, validateGroupUpdate } from './group-preferences.ts';
 import * as Y from 'yjs';
 import { CommandError, type CommandContext, type CommandDef } from '../commands/define.ts';
 import { presentationScope, readAllCards, readAsset, readCard, readPresentation, readPresentations, readTripMeta, writeAsset, writeCard, writePresentation, type TripParts } from './model.ts';
-import { assetSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
+import { tripMetaSchema, assetSchema, bookingSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
 
 /** Trip commands run against the trip doc's own parts, typed as such (#10: no BoardParts stand-in). */
 export interface TripCommandContext { doc: Y.Doc; parts: TripParts; actor: CommandContext['actor']; newId: () => string; destinations?: readonly DestinationRecord[]; }
@@ -37,12 +46,13 @@ export const tripCardCreate = defineTripCommand({
     stage: z.enum(STAGES).default('plan'), status: opt(z.enum(TASK_STATUSES)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
     time: opt(z.string().regex(/^\d{2}:\d{2}$/)), placeId: opt(id),
     location: opt(z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), source: z.enum(['catalog', 'traveler']) })),
-    scope: opt(z.enum(SCOPES)), provenance: z.enum(PROVENANCES).default('traveler'),
+    booking:opt(bookingSchema), scope: opt(z.enum(SCOPES)), provenance: z.enum(PROVENANCES).default('traveler'),
     source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)),
     assetIds: z.array(id).max(100).default([]), x: z.number().finite().default(0), y: z.number().finite().default(0),
   }).strict(),
   run: (ctx, input) => {
     if (input.status !== undefined && input.kind !== 'task') throw new CommandError('invalid_input', 'status is only for kind task');
+    if(ctx.actor.kind==='agent'&&input.booking!==undefined)throw new CommandError('scope','Only a person records booking status');
     if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,input.assetIds);
     const cardId = ctx.newId();
     // A host publishes deliberately, so host cards start private. A traveler's own cards are their trip.
@@ -55,12 +65,13 @@ export const tripCardCreate = defineTripCommand({
 export const tripCardUpdate = defineTripCommand({
   name: 'trip_card_update', title: 'Update a trip card', description: 'Changes title, body, day, time or scope after validating. null clears day or time.',
   access: 'write',
-  input: z.object({ id, title: opt(z.string().max(500)), body: opt(z.string().max(20000)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()), time: opt(z.string().regex(/^\d{2}:\d{2}$/).nullable()), scope: opt(z.enum(SCOPES)), source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)) }).strict(),
+  input: z.object({ id, booking:opt(bookingSchema), title: opt(z.string().max(500)), body: opt(z.string().max(20000)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()), time: opt(z.string().regex(/^\d{2}:\d{2}$/).nullable()), scope: opt(z.enum(SCOPES)), source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)) }).strict(),
   run: (ctx, input) => {
+    if(ctx.actor.kind==='agent'&&input.booking!==undefined)throw new CommandError('scope','Only a person records booking status');
     const card = find(ctx.parts, input.id);
     const day = input.day === null ? undefined : input.day ?? card.day;
     const time = input.time === null ? undefined : input.time ?? card.time;
-    writeCard(ctx.parts, { ...card, title: input.title ?? card.title, body: input.body ?? card.body, day, time, scope: input.scope ?? card.scope, source: input.source ?? card.source, sourceText: input.sourceText ?? card.sourceText, travelerNote: input.travelerNote ?? card.travelerNote, currentFacts: input.currentFacts ?? card.currentFacts, updatedAt: now() });
+    writeCard(ctx.parts, { ...card, booking:input.booking??card.booking, title: input.title ?? card.title, body: input.body ?? card.body, day, time, scope: input.scope ?? card.scope, source: input.source ?? card.source, sourceText: input.sourceText ?? card.sourceText, travelerNote: input.travelerNote ?? card.travelerNote, currentFacts: input.currentFacts ?? card.currentFacts, updatedAt: now() });
     return { id: input.id };
   },
 });
@@ -137,7 +148,7 @@ export const tripRead = defineTripCommand({
 
 export const tripMetaUpdate = defineTripCommand({
   name: 'trip_meta_update', title: 'Set destination', description: 'Changes validated trip destination and dates without altering cards.', access: 'write',
-  input: z.object({city:z.string().min(1).max(120),cityId:opt(id),countryCode:opt(z.string().regex(/^[A-Z]{2}$/)),timeZone:timeZoneSchema,dates:opt(datesSchema)}).strict(),
+  input: z.object({city:tripMetaSchema.shape.city,cityId:opt(id),countryCode:tripMetaSchema.shape.countryCode,timeZone:timeZoneSchema,dates:opt(datesSchema)}).strict(),
   run: (ctx,input) => {
     if (input.cityId) {
       const destination = ctx.destinations?.find(d => d.id === input.cityId);
@@ -147,7 +158,8 @@ export const tripMetaUpdate = defineTripCommand({
     ctx.parts.meta.set('city',input.city);ctx.parts.meta.set('timeZone',input.timeZone);
     for (const key of ['cityId','countryCode'] as const) if (input[key] === undefined) ctx.parts.meta.delete(key); else ctx.parts.meta.set(key,input[key]);
     if (input.dates) ctx.parts.meta.set('dates',input.dates);
-    return readTripMeta(ctx.doc);
+    const {groupPreferences,groupBallots,groupWorkspace,memoryWorkflow,...publicMeta}=readTripMeta(ctx.doc);
+    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{}),...(groupWorkspace?{groupWorkspace}:{}),...(memoryWorkflow?{memoryWorkflow}:{})};
   },
 });
 
@@ -194,4 +206,52 @@ export const tripPresentationDelete = defineTripCommand({
   name:'trip_presentation_delete',title:'Remove trip art',description:'Removes a placement without deleting its media.',access:'write',input:z.object({id}).strict(),
   run:(ctx,input)=>{if(!readPresentation(ctx.parts,input.id))throw new CommandError('not_found','No such presentation');ctx.parts.presentations.delete(input.id);return{id:input.id};},
 });
-export const TRIP_COMMANDS: TripCommand[] = [tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];
+export const tripMemoryReact=defineTripCommand({name:'trip_memory_react',title:'Choose a memory reaction',description:'Person-only Keep/Maybe/Skip for a permitted memory. Never starts voting/planning, shares publicly or modifies source cards.',access:'write',humanOnly:true,input:z.object({cardId:id,reaction:z.enum(['keep','maybe','skip']).nullable()}).strict(),run:(ctx,input)=>{const card=find(ctx.parts,input.cardId);if(card.scope==='private')throw new CommandError('scope','Private cards stay outside the shared memory shortlist');const meta=readTripMeta(ctx.doc),reactions={...meta.memoryWorkflow?.reactions};if(input.reaction===null)delete reactions[input.cardId];else reactions[input.cardId]=input.reaction;ctx.parts.meta.set('memoryWorkflow',{version:1,reactions});return{cardId:input.cardId,reaction:input.reaction};}});
+
+export const tripGroupPlan=defineTripCommand({name:'trip_group_plan',title:'Propose a group schedule from supplied data',description:'Read-only, deterministic bounded heuristic. Explicit configuration, ledger and dated facts only; no private board reads, Apply or booking.',access:'read',input:z.object({configuration:groupPreferencesSchema,ledger:z.unknown().optional(),planning:planningProblemSchema,policy:groupPolicySchema}).strict(),run:(_ctx,input)=>proposeGroupSchedule(input.configuration,input.ledger,input.planning,input.policy)});
+export const tripGroupFeasibility=defineTripCommand({name:'trip_group_feasibility',title:'Check a supplied group schedule',description:'Read-only feasibility under explicit dated facts and accepted current response stamps. Missing facts stay tentative.',access:'read',input:z.object({configuration:groupPreferencesSchema,ledger:z.unknown().optional(),planning:planningProblemSchema,assignments:scheduleAssignmentsSchema}).strict(),run:async(_ctx,input)=>{validatePlanningGroup(input.planning,input.configuration);if(input.planning.proposal_version!==Math.max(...input.configuration.rounds.map(r=>r.proposal_version)))throw new Error('Stale proposal version');const merged=await mergeResponseLedger(input.configuration,input.ledger,[]),denied=merged.current.filter(r=>r.round_id===input.planning.round_id).flatMap(r=>r.stamps.filter(s=>s.value==='denied').map(s=>({household_id:r.household_id,option_id:s.option_id})));return checkScheduleFeasibility(input.planning,input.assignments,denied);}});
+export const tripBookingAttention=defineTripCommand({name:'trip_booking_attention',title:'Evaluate a supplied booking deadline',description:'Read-only attention window; never changes preferences, activity dates or makes a purchase.',access:'read',input:z.object({attention:bookingAttentionSchema,as_of:z.iso.datetime({offset:true})}).strict(),run:(_ctx,input)=>bookingAttention(input.attention,input.as_of)});
+
+export const tripGroupCommit=defineTripCommand({name:'trip_group_commit',title:'Commit validated group response exchange',description:'Person-only prepared, cryptographically validated response changes. No arbitrary JSON can bypass validation.',access:'write',humanOnly:true,input:z.object({prepared:preparedGroupChangeSchema}).strict(),run:(ctx,input)=>commitPreparedGroupChange(ctx.doc,ctx.parts,input.prepared)});
+export const tripGroupPlanningSet=defineTripCommand({name:'trip_group_planning_set',title:'Save explicit group planning facts and policy',description:'Person-only dated facts and visible fairness policy. This proposes no itinerary and makes no booking.',access:'write',humanOnly:true,input:z.object({planning:planningProblemSchema,policy:groupPolicySchema}).strict(),run:(ctx,input)=>{const meta=readTripMeta(ctx.doc);try{validatePlanningGroup(input.planning,meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid planning facts');}ctx.parts.meta.set('groupWorkspace',{version:1,...meta.groupWorkspace,...input});return{status:'saved_in_document'};}});
+
+export const tripBookingAttentionAdd=defineTripCommand({name:'trip_booking_attention_add',title:'Add booking attention task',description:'Person-only private reminder. Booking deadline is separate from activity date and never authorizes purchase.',access:'write',humanOnly:true,input:z.object({attention:bookingAttentionSchema,as_of:z.iso.datetime({offset:true})}).strict(),run:(ctx,input)=>{
+ const source=find(ctx.parts,input.attention.option_id),evaluation=bookingAttention(input.attention,input.as_of);
+ const card=tripCardSchema.parse({id:ctx.newId(),kind:'task',title:`Booking attention: ${source.title}`.slice(0,500),body:evaluation.reason,stage:'prepare',status:'open',scope:'private',provenance:'traveler',assetIds:[],x:0,y:0,createdBy:ctx.actor.id,updatedAt:now(),bookingAttention:input.attention});
+ writeCard(ctx.parts,card);return{id:card.id};
+}});
+
+export const tripPreferenceTally=defineTripCommand({name:'trip_preference_tally',title:'Tally supplied household responses',description:'Read-only deterministic K3/K5 points and response coverage from explicitly supplied configuration and ledger. Never reads private board ballots, changes the board or books anything.',access:'read',input:z.object({configuration:groupPreferencesSchema,ledger:z.unknown().optional(),round:preferenceRoundSchema}).strict(),run:async(_ctx,input)=>tallyGroupPreferences(input.configuration,input.ledger,input.round)});
+
+export const tripBallotUpdate=defineTripCommand({
+  name:'trip_ballot_update',title:'Save household shortlist',description:'Person-only local response. Rank, stamp and optional shared note stay independent; never books or shares anything.',access:'write',humanOnly:true,input:groupBallotSchema,
+  run:(ctx,input)=>{
+    const meta=readTripMeta(ctx.doc);
+    try{validateLocalBallot(input,meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+    const ballots=meta.groupBallots??[],index=ballots.findIndex(b=>ballotKey(b)===ballotKey(input));
+    if(index<0)ballots.push(input);else ballots[index]=input;
+    ctx.parts.meta.set('groupBallots',ballots);return structuredClone(input);
+  },
+});
+export const tripBallotRead=defineTripCommand({name:'trip_ballot_read',title:'Read local household responses',description:'Person-only local responses; no response is distinct from an empty shortlist.',access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupBallots??[]});
+export const tripBallotClear=defineTripCommand({name:'trip_ballot_clear',title:'Remove local household response',description:'Return a household and round to no response; Undo is available.',access:'write',humanOnly:true,input:groupBallotKeySchema,run:(ctx,input)=>{
+  const meta=readTripMeta(ctx.doc);
+  try{validateLocalBallot({...input,rankings:[],stamps:[],shared_note:''},meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+  ctx.parts.meta.set('groupBallots',(meta.groupBallots??[]).filter(b=>ballotKey(b)!==ballotKey(input)));return structuredClone(input);
+}});
+
+export const tripGroupConfigure = defineTripCommand({
+  name:'trip_group_configure',title:'Declare group preference rounds',description:'Person-only: declare stable household labels and immutable K3/K5 rounds. This never records a vote or authenticates a household.',
+  access:'write',humanOnly:true,input:groupPreferencesSchema,
+  run:(ctx,input)=>{
+    const meta=readTripMeta(ctx.doc);
+    try{validateGroupUpdate(meta.groupPreferences,input,meta.boardId);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid group declaration');}
+    ctx.parts.meta.set('groupPreferences',input);return structuredClone(input);
+  },
+});
+export const tripGroupRead = defineTripCommand({
+  name:'trip_group_read',title:'Read group preference rounds',description:'Person-only roster and declared rounds. Household IDs are labels, not authentication.',
+  access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupPreferences??null,
+});
+
+export const TRIP_COMMANDS: TripCommand[] = [tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];

@@ -1,9 +1,11 @@
+import {agentGuidanceSchema} from './guidance.ts';
 // Safe import (MOT-31): every archive is hostile until proven otherwise.
 import { unzipSync, strFromU8 } from 'fflate';
 import * as Y from 'yjs';
 import { z } from 'zod';
 import { fromBase64 } from '../doc/board-file.ts';
 import { loadTrip } from './persist.ts';
+import {validateStoredGroupResponses} from './group-workspace.ts';
 import { createTrip, readAllCards, readAsset, readPresentations, readTripMeta, tripParts, writeAsset, writeCard, writePresentation } from './model.ts';
 import { sha256Hex, TRIP_PACKAGE_FORMAT, TRIP_PACKAGE_LIMITS, TRIP_PACKAGE_VERSION } from './package.ts';
 import { presentationSchema, tripCardSchema, tripMetaSchema } from './schema.ts';
@@ -64,12 +66,13 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
   try {
   // Rebuild into a fresh doc with a new board identity, so old tokens can never match.
   const meta = readTripMeta(source);
+  await validateStoredGroupResponses(source);
   if(meta.boardId!==manifest.boardId)fail('Package board identity does not match its manifest');
   const readable=files['trip.json'];
   if(readable){
     const raw=JSON.parse(strFromU8(readable));
     if(manifest.version===1 && raw.meta?.schemaVersion===1)raw.meta.schemaVersion=2;
-    const parsed=z.object({meta:tripMetaSchema,cards:z.array(tripCardSchema),presentations:z.array(presentationSchema).optional()}).strict().safeParse(raw);
+    const parsed=z.object({meta:tripMetaSchema,cards:z.array(tripCardSchema),presentations:z.array(presentationSchema).optional(),agent_guidance:agentGuidanceSchema.optional()}).strict().safeParse(raw);
     if(!parsed.success)fail('Readable trip has unknown or unsupported schema fields');
   }
   const srcParts=tripParts(source);
@@ -84,9 +87,10 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
   // Imported metadata cannot grant tools (MOT-31): Autopilot never arrives switched on.
   const agentMode = meta.agentMode === 'autopilot' ? 'together' : meta.agentMode;
   if(meta.magazine?.apparelAssetIds.some(id=>!assets.has(id)||!readAsset(srcParts,id)?.apparel))fail('Magazine preference references missing apparel');
-  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,newId: options.newId });
+  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,memoryWorkflow:meta.memoryWorkflow,newId: options.newId });
   const dstParts = tripParts(fresh);
   fresh.transact(() => {
+    for(const [key,value] of srcParts.clock)if(key.startsWith('groupResponse:'))dstParts.clock.set(key,structuredClone(value));
     for (const card of readAllCards(srcParts)) writeCard(dstParts, card);
     for (const assetId of srcParts.assets.keys()) { const a = readAsset(srcParts, assetId); if (a) writeAsset(dstParts, a); }
     for(const p of readPresentations(srcParts))writePresentation(dstParts,{...p,boardId:readTripMeta(fresh).boardId});

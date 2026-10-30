@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import {artRefSchema} from '@writers-board/core';
 
 const id = z.string().min(1).max(160);
 const label = z.string().min(1).max(300);
@@ -12,7 +13,7 @@ const crop = z.tuple([z.number().min(0), z.number().min(0), z.number().positive(
 
 export const registrySchema = z.object({
   version: z.literal(1),
-  styles: z.array(z.object({ id, label, manifest: catalogUrl })).min(1),
+  styles: z.array(z.object({ id, label, manifest: catalogUrl,credit:z.string().min(1).max(1000).optional(),rightsStatus:z.enum(['approved','unknown','restricted']).optional() })).min(1),
 }).refine(value => new Set(value.styles.map(style => style.id)).size === value.styles.length, 'Style IDs must be unique');
 
 export const manifestSchema = z.object({
@@ -20,6 +21,7 @@ export const manifestSchema = z.object({
   subjects: z.array(z.object({ id, label })).min(1),
   cities: z.array(z.object({ id, label })),
   catalogs: z.array(z.object({ subject: id, city: id.optional(), url: catalogUrl, count: z.number().int().nonnegative() })),
+  credit:z.string().min(1).max(1000).optional(),rightsStatus:z.enum(['approved','unknown','restricted']).optional(),
 }).refine(value => value.catalogs.every(catalog => value.subjects.some(subject => subject.id === catalog.subject)
   && (!catalog.city || value.cities.some(city => city.id === catalog.city))), 'Unknown artwork subject or city');
 
@@ -28,6 +30,9 @@ export const artworkSchema = z.object({
   thumb: imageUrl, src: imageUrl, original: imageUrl.optional(),
   sourceHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   width: z.number().positive(), height: z.number().positive(), crop: crop.optional(),
+  artRef:artRefSchema.optional(),
+}).superRefine((art,ctx)=>{
+  const ref=art.artRef;if(ref&&(art.id!==ref.assetId||art.city!==ref.originCityId||art.width!==ref.width||art.height!==ref.height||art.thumb!==ref.thumbnailUrl||art.src!==ref.renditionUrl||art.original!==ref.originalUrl))ctx.addIssue({code:'custom',message:'Artwork display fields conflict with its ArtRef'});
 });
 
 export const catalogSchema = z.object({ version: z.literal(1), styleId: id, items: z.array(artworkSchema) })
@@ -39,11 +44,21 @@ export type StylePack = z.infer<typeof registrySchema>['styles'][number];
 export type Manifest = z.infer<typeof manifestSchema>;
 
 export async function readCatalog<T>(url: string, schema: z.ZodType<T>, signal: AbortSignal, fetcher: typeof fetch = fetch): Promise<T> {
-  const response = await fetcher(url, { signal, credentials: 'omit' });
-  if (!response.ok) throw new Error(`Could not load artwork (${response.status}). Please retry.`);
-  const result = schema.safeParse(await response.json());
-  if (!result.success) throw new Error('This artwork catalog is not supported. Please retry or choose another style.');
-  return result.data;
+  signal.throwIfAborted();
+  let abort!:()=>void;
+  const cancelled=new Promise<never>((_resolve,reject)=>{abort=()=>reject(signal.reason??new DOMException('Catalog cancelled','AbortError'));signal.addEventListener('abort',abort,{once:true});});
+  try {
+    const work=(async()=>{
+      const response = await fetcher(url, { signal, credentials: 'omit' });
+      if(signal.aborted){void response.body?.cancel().catch(()=>{});signal.throwIfAborted();}
+      if (!response.ok) throw new Error(`Could not load artwork (${response.status}). Please retry.`);
+      const body=await response.json();signal.throwIfAborted();
+      const result = schema.safeParse(body);
+      if (!result.success) throw new Error('This artwork catalog is not supported. Please retry or choose another style.');
+      return result.data;
+    })();
+    return await Promise.race([work,cancelled]);
+  } finally {signal.removeEventListener('abort',abort);}
 }
 
 /** Normalized source crops also work on the recorded optimized image variant. */
