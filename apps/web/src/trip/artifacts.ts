@@ -27,7 +27,7 @@ export function artifactInventory(doc:import('yjs').Doc,scope:ArtifactScope='sta
 async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress'],stage:ArtifactProgress['stage']='collect'){
   const selected=selection(doc,scope),bytes=new Map<string,Uint8Array>();
   onProgress?.({stage,completed:0,total:selected.assets.length,unit:'assets',done:false});
-  for(const id of selected.assets){signal?.throwIfAborted();const asset=readAsset(selected.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)throw new Error('A selected image is missing. Restore its original bytes and retry.');if(await artifactSha256(blob)!==asset.hash)throw new Error('A selected image failed its checksum. Restore its original bytes.');bytes.set(id,new Uint8Array(await blob.arrayBuffer()));onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:false});}
+  for(const id of selected.assets){signal?.throwIfAborted();const asset=readAsset(selected.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)throw Object.assign(new Error('A selected image is missing. Restore its original bytes and retry.'),{code:'storage'});if(await artifactSha256(blob)!==asset.hash)throw Object.assign(new Error('A selected image failed its checksum. Restore its original bytes.'),{code:'storage'});bytes.set(id,new Uint8Array(await blob.arrayBuffer()));onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:false});}
   signal?.throwIfAborted();onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:true});return bytes;
 }
 
@@ -50,7 +50,7 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
           image=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){image.close();stop();}else resolve(image);},
           error=>{signal?.removeEventListener('abort',stop);reject(error);},
         );
-      });
+      }).catch(error=>{if(signal?.aborted)throw error;throw Object.assign(new Error('A source picture could not be rendered.'),{code:'decode'});});
       try{signal?.throwIfAborted();dimensions.set(id,{width:image.width,height:image.height});}finally{image.close();}
     }
     signal?.throwIfAborted();
@@ -100,7 +100,7 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
 }
 
 export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress']):Promise<Uint8Array> {
-  if(!magazine.pages.length)throw new Error('Add a card or artwork before exporting a magazine.');
+  if(!magazine.pages.length)throw Object.assign(new Error('Add a card or artwork before exporting a magazine.'),{code:'empty'});
   const pages=[];
   onProgress?.({stage:'write',completed:0,total:magazine.pages.length,unit:'pages',done:false});
   for(const page of magazine.pages){
@@ -113,7 +113,7 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
         if(signal?.aborted){stop();return;}
         signal?.addEventListener('abort',stop,{once:true});
         image.decode().then(resolve,reject).finally(()=>signal?.removeEventListener('abort',stop));
-      });
+      }).catch(error=>{if(signal?.aborted)throw error;throw Object.assign(new Error('A magazine page could not be rendered.'),{code:'decode'});});
       const canvas=document.createElement('canvas');canvas.width=MAGAZINE.widthPx;canvas.height=MAGAZINE.heightPx;
       const context=canvas.getContext('2d');if(!context)throw new Error('This browser could not render the PDF.');
       context.drawImage(image,0,0);
@@ -129,8 +129,10 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
 export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',signal?:AbortSignal,options:ArtifactOptions={}):Promise<ExportArtifact> {
   const snapshot=loadTrip(encodeTrip(session.doc)),frozen=new (session.constructor as typeof import('@writers-board/core').TripSession)(snapshot);
   const id=crypto.randomUUID(),startedAt=new Date().toISOString();
+  let step:ArtifactProgress['stage']='collect';
+  const progress=(value:ArtifactProgress)=>{step=value.stage;options.onProgress?.(value);};
   const diagnostic=(receipt:DiagnosticReceipt)=>{diagnostics.record(receipt);options.onDiagnostic?.(receipt);};
-  const tracker=new OperationTracker({id,boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',operation:'export',onChange:state=>{lastOperation=state;options.onState?.(state);},onDiagnostic:diagnostic});
+  const tracker=new OperationTracker({id,boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',operation:'export',step:()=>step,onChange:state=>{lastOperation=state;options.onState?.(state);},onDiagnostic:diagnostic});
   const cancel=()=>tracker.cancel();signal?.addEventListener('abort',cancel,{once:true});
   if(signal?.aborted)tracker.cancel();
   try{
@@ -141,28 +143,28 @@ export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',
     let magazine:MagazineDocument|undefined;
     let bytes:Uint8Array;
     if(format==='pdf'){
-      magazine=await tracker.run('fetching','validating',()=>prepareMagazine(frozen,signal,scope==='personal',{variant:scope,onProgress:options.onProgress}));
-      bytes=await tracker.run('exporting','exported',()=>magazinePdf(magazine!,signal,options.onProgress));
+      magazine=await tracker.run('fetching','validating',()=>prepareMagazine(frozen,signal,scope==='personal',{variant:scope,onProgress:progress}));
+      bytes=await tracker.run('exporting','exported',()=>magazinePdf(magazine!,signal,progress));
     }else{
-      options.onProgress?.({stage:'collect',completed:inventory.cards,total:inventory.cards,unit:'cards',done:true});
-      const media=await tracker.run('fetching','validating',()=>collectAssets(snapshot,scope,signal,options.onProgress,'layout'));
-      options.onProgress?.({stage:'write',completed:0,unit:'bytes',done:false});
+      progress({stage:'collect',completed:inventory.cards,total:inventory.cards,unit:'cards',done:true});
+      const media=await tracker.run('fetching','validating',()=>collectAssets(snapshot,scope,signal,progress,'layout'));
+      progress({stage:'write',completed:0,unit:'bytes',done:false});
       bytes=await tracker.run('exporting','exported',()=>exportTripPackage(snapshot,media,{includePrivate:scope==='personal',variant:scope==='personal'?'private':scope}));
-      options.onProgress?.({stage:'write',completed:bytes.length,total:bytes.length,unit:'bytes',done:true});
+      progress({stage:'write',completed:bytes.length,total:bytes.length,unit:'bytes',done:true});
     }
     signal?.throwIfAborted();
     const title=readTripMeta(snapshot).title.replace(/[^\p{L}\p{N}-]+/gu,'-').replace(/^-|-$/g,'')||'trip';
     const mime=format==='pdf'?'application/pdf':'application/zip',filename=`${title}.${format==='pdf'?'pdf':'mot.zip'}`;
-    options.onProgress?.({stage:'verify',completed:0,total:bytes.length,unit:'bytes',done:false});
+    progress({stage:'verify',completed:0,total:bytes.length,unit:'bytes',done:false});
     const blob=new Blob([bytes as BlobPart],{type:mime}),readback=new Uint8Array(await blob.arrayBuffer());
     if(readback.length!==bytes.length||!readback.every((byte,index)=>byte===bytes[index]))throw new Error('Export read-back failed. Retry from the unchanged board.');
     const sha256=await artifactSha256(blob),createdAt=new Date().toISOString();signal?.throwIfAborted();
     const record:StoredArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,createdAt,sha256,scope,format,blob,inventory,...(magazine?.pages[0]?{coverSvg:magazine.pages[0].svg}:{})};
     let kept=false,storageDiagnostic:DiagnosticReceipt|undefined;
     try{await keepArtifact(record);kept=true;}
-    catch(error){storageDiagnostic=createDiagnostic({requestId:id,operation:'keep-export',boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',startedAt,errorClass:'storage',error});diagnostic(storageDiagnostic);}
+    catch(error){storageDiagnostic=createDiagnostic({requestId:id,operation:'keep-export',boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',startedAt,step,errorClass:'storage',error});diagnostic(storageDiagnostic);}
     if(signal?.aborted){if(kept)try{await removeArtifact(id);}catch{/* The cancelled file is never advertised as ready. */}signal.throwIfAborted();}
-    options.onProgress?.({stage:'verify',completed:blob.size,total:blob.size,unit:'bytes',done:true});
+    progress({stage:'verify',completed:blob.size,total:blob.size,unit:'bytes',done:true});
     const artifact:ExportArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,url:URL.createObjectURL(blob),createdAt,sha256,kept,scope,urlExpiresAt:null,inventory,coverSvg:record.coverSvg,...(storageDiagnostic?{storageDiagnostic}:{})};
     available.set(id,{record,artifact});return artifact;
   }catch(error){tracker.fail(error);throw error;}finally{signal?.removeEventListener('abort',cancel);frozen.destroy();snapshot.destroy();}

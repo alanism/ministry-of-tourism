@@ -1,5 +1,6 @@
 // Local, allowlisted diagnostics. Error messages and arbitrary context never enter a receipt.
-export type DiagnosticErrorClass = 'failed' | 'cancelled' | 'timed_out' | 'unavailable' | 'invalid_input' | 'storage' | 'network' | 'rate_limited' | 'quota_exhausted';
+export type DiagnosticErrorClass = 'failed' | 'cancelled' | 'timed_out' | 'unavailable' | 'invalid_input' | 'storage' | 'network' | 'rate_limited' | 'quota_exhausted' | 'decode' | 'empty';
+export type DiagnosticStep = 'collect' | 'layout' | 'write' | 'verify';
 export interface DiagnosticReceipt {
   requestId: string;
   operation: string;
@@ -11,12 +12,15 @@ export interface DiagnosticReceipt {
   appVersion: string;
   sourceUrl?: string;
   httpStatus?: number;
+  step?: DiagnosticStep;
 }
 export interface DiagnosticInput {
   requestId: string; operation: string; boardId: string; revision: number; appVersion: string;
   error?: unknown; errorClass?: DiagnosticErrorClass; startedAt?: string; sourceUrl?: string; httpStatus?: number;
+  step?: DiagnosticStep;
 }
-const ERROR_CLASSES = new Set<DiagnosticErrorClass>(['failed', 'cancelled', 'timed_out', 'unavailable', 'invalid_input', 'storage', 'network', 'rate_limited', 'quota_exhausted']);
+const ERROR_CLASSES = new Set<DiagnosticErrorClass>(['failed', 'cancelled', 'timed_out', 'unavailable', 'invalid_input', 'storage', 'network', 'rate_limited', 'quota_exhausted', 'decode', 'empty']);
+const STEPS = new Set<DiagnosticStep>(['collect','layout','write','verify']);
 function errorClass(error: unknown): DiagnosticErrorClass {
   if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled';
   if (error instanceof DOMException && error.name === 'QuotaExceededError') return 'storage';
@@ -42,6 +46,7 @@ export function createDiagnostic(input: DiagnosticInput): DiagnosticReceipt {
     startedAt: input.startedAt ?? now, finishedAt: now, appVersion: input.appVersion,
     ...(sourceUrl ? { sourceUrl } : {}),
     ...(Number.isInteger(input.httpStatus) && input.httpStatus! >= 100 && input.httpStatus! <= 599 ? { httpStatus: input.httpStatus } : {}),
+    ...(input.step && STEPS.has(input.step) ? { step: input.step } : {}),
   };
 }
 export function diagnosticText(receipt: DiagnosticReceipt): string {

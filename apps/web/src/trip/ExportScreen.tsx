@@ -1,9 +1,10 @@
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
-import {diagnosticText,readTripMeta,type DiagnosticReceipt,type MagazineDocument,type OperationState,type TripSession} from '@writers-board/core';
+import {diagnosticText,readTripMeta,type DiagnosticErrorClass,type DiagnosticReceipt,type MagazineDocument,type OperationState,type TripSession} from '@writers-board/core';
 import {artifactInventory,createTripArtifact,downloadArtifact,forgetTripArtifact,prepareMagazine,restoreTripArtifact,type ArtifactProgress,type ExportArtifact} from './artifacts';
 import {listArtifacts,type ArtifactScope,type StoredArtifact} from './artifact-store';
 import {Icon} from './ui';
 import type {TripArtifact} from './agentApi';
+import {exportSteps as steps,exportFailureText} from './export-feedback';
 import '@fontsource/ibm-plex-serif/400.css';
 import '@fontsource/ibm-plex-serif/600.css';
 import './export.css';
@@ -11,7 +12,6 @@ import './export.css';
 type Format='pdf'|'zip';
 type Output={status:'idle'|'running'|'done'|'failed'|'cancelled';progress:Partial<Record<ArtifactProgress['stage'],ArtifactProgress>>;operation?:OperationState;artifact?:ExportArtifact;message?:string;diagnostic?:DiagnosticReceipt;};
 const initial=():Output=>({status:'idle',progress:{}});
-const steps:Record<Format,Record<ArtifactProgress['stage'],string>>={pdf:{collect:'Gather the art',layout:'Lay out the pages',write:'Write the PDF',verify:'Read it back'},zip:{collect:'Collect board, layout and notes',layout:'Copy art and credits',write:'Write the ZIP',verify:'Read it back'}};
 const stages=['collect','layout','write','verify'] as const;
 const scopeLabel=(scope:ArtifactScope)=>scope==='personal'?'Personal · includes private content':scope==='guide'?'Guide only':'Shared trip copy';
 const bytes=(size:number)=>size<1024?`${size.toLocaleString()} bytes`:`${(size/1024/1024>=1?size/1024/1024:size/1024).toFixed(1)} ${size/1024/1024>=1?'MB':'KB'} · ${size.toLocaleString()} bytes`;
@@ -41,12 +41,13 @@ export function ExportScreen({session,tick,onBack,notify,onExported}:ExportScree
   },[session,tick,scope,includePrivate]);
   const update=(format:Format,change:Partial<Output>)=>{if(alive.current)setOutputs(previous=>({...previous,[format]:{...previous[format],...change}}));};
   const run=async(format:Format)=>{
+    let step:ArtifactProgress['stage']='collect',failureClass:DiagnosticErrorClass='failed';
     const controller=new AbortController();controllers.current[format]=controller;update(format,{status:'running',progress:{},artifact:undefined,message:undefined,diagnostic:undefined});
     const current=()=>alive.current&&controllers.current[format]===controller;
     try{
-      const artifact=await createTripArtifact(session,format,controller.signal,{includePrivate,variant:scope,onProgress:progress=>{if(current())setOutputs(previous=>({...previous,[format]:{...previous[format],progress:{...previous[format].progress,[progress.stage]:progress}}}));},onState:operation=>{if(current())update(format,{operation});},onDiagnostic:diagnostic=>{if(current())update(format,{diagnostic});}});
+      const artifact=await createTripArtifact(session,format,controller.signal,{includePrivate,variant:scope,onProgress:progress=>{step=progress.stage;if(current())setOutputs(previous=>({...previous,[format]:{...previous[format],progress:{...previous[format].progress,[progress.stage]:progress}}}));},onState:operation=>{if(current())update(format,{operation});},onDiagnostic:diagnostic=>{failureClass=diagnostic.errorClass;if(current())update(format,{diagnostic});}});
       if(current()){update(format,{status:'done',artifact,diagnostic:artifact.storageDiagnostic});onExported?.(artifact);void refreshSaved();}
-    }catch(error){if(current())update(format,{status:controller.signal.aborted?'cancelled':'failed',message:controller.signal.aborted?'Cancelled. Your board is unchanged.':error instanceof Error?error.message:'The export could not finish. Your board is unchanged.'});}
+    }catch{if(current())update(format,{status:controller.signal.aborted?'cancelled':'failed',message:exportFailureText(format,step,controller.signal.aborted?'cancelled':failureClass)});}
     finally{if(controllers.current[format]===controller)delete controllers.current[format];}
   };
   const copy=async(receipt:DiagnosticReceipt)=>{try{await navigator.clipboard.writeText(diagnosticText(receipt));notify?.('Diagnostic receipt copied. Nothing was sent anywhere.');}catch{notify?.('Select the diagnostic receipt below and copy it.');}};
@@ -78,6 +79,6 @@ export function ExportScreen({session,tick,onBack,notify,onExported}:ExportScree
   return <section className="mot-export" aria-label="Export your trip"><header className="mot-export-heading"><div>{onBack&&<button type="button" className="m-btn small ghost" onClick={onBack}><Icon name="chevronLeft" />Back to board</button>}<h1>Export</h1><p>Two things you can take away. Each is a real file with a receipt.</p></div></header>
     <div className="mot-export-privacy"><label><input type="checkbox" checked={includePrivate} disabled={busy} onChange={event=>setIncludePrivate(event.target.checked)} />Include private content</label>{!includePrivate&&<label>Shared copy <select aria-label="Export copy scope" value={sharedVariant} disabled={busy} onChange={event=>setSharedVariant(event.target.value as 'guide'|'stay')}><option value="stay">Trip · guide and stay</option><option value="guide">Guide only</option></select></label>}<p>{includePrivate?'A personal keepsake containing your private material. Check the file before sharing.':'Shared by default: private cards, layers and their media are excluded.'}</p></div>
     <div className="mot-export-outputs">{card('pdf')}{card('zip')}</div>
-    <section className="mot-export-kept" aria-label="Kept exports"><h2>Kept in this browser</h2><p>These are exported files. Removing one leaves your trip board and its original media unchanged.</p>{storageUnavailable?<p className="mot-export-note">Export storage is unavailable. New files can still be downloaded from this tab.</p>:saved.length?<ul>{saved.map(record=><li key={record.id}><Icon name="file" /><span><strong>{record.filename}</strong><small>{scopeLabel(record.scope)} · r{record.revision} · {new Date(record.createdAt).toLocaleString()} · {bytes(record.byteCount)}</small></span><button className="m-btn small" type="button" onClick={()=>void restore(record.id)}>Download</button><button className="m-btn small ghost" type="button" onClick={()=>void remove(record.id)}>Remove</button></li>)}</ul>:<p className="mot-export-note">No exported files have been kept for this board yet.</p>}</section>
+    <section className="mot-export-kept" aria-label="Kept exports"><h2>Kept in this browser</h2><p>These are exported files. Removing one leaves your trip board and its original media unchanged.</p>{storageUnavailable?<p className="mot-export-note">Export storage is unavailable. New files can still be downloaded from this tab.</p>:saved.length?<ul>{saved.map(record=><li key={record.id}><Icon name="file" /><span><strong>{record.filename}</strong><small>{scopeLabel(record.scope)} · r{record.revision} · {new Date(record.createdAt).toLocaleString()} · {bytes(record.byteCount)}</small></span><div className="mot-export-kept-actions"><button className="m-btn small" type="button" onClick={()=>void restore(record.id)}>Download</button><button className="m-btn small ghost" type="button" onClick={()=>void remove(record.id)}>Remove</button></div></li>)}</ul>:<p className="mot-export-note">No exported files have been kept for this board yet.</p>}</section>
   </section>;
 }

@@ -153,7 +153,12 @@ export function TripApp() {
   }, []);
   const title = session ? readTripMeta(session.doc).title : null;
   useEffect(() => { document.title = title ? `${title} · MOT` : 'MOT · Ministry of Tourism'; }, [title]);
-  useEffect(() => { shellRef.current?.scrollTo(0, 0);shellRef.current?.querySelector<HTMLElement>('.mot-nav button[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'}); }, [tab, open]);
+  useEffect(() => {
+    shellRef.current?.scrollTo(0, 0);
+    const nav=shellRef.current?.querySelector<HTMLElement>('.mot-nav');if(!nav)return;
+    const reveal=()=>{const active=nav.querySelector<HTMLElement>('[aria-current="page"]');if(!active)return;const a=active.getBoundingClientRect(),n=nav.getBoundingClientRect();if(a.left<n.left)nav.scrollLeft+=a.left-n.left-4;else if(a.right>n.right)nav.scrollLeft+=a.right-n.right+4;};
+    reveal();const observer=new ResizeObserver(reveal);observer.observe(nav);return()=>observer.disconnect();
+  }, [tab, open]);
 
   const destinationProps={registry:destinations,registryStatus:destinationIndex?.status??'loading' as const,registryUpdatedAt:destinationIndex?.retrievedAt,registryError:destinationIndex?.error,onRetryRegistry:registryAttempt<3?()=>setRegistryAttempt(attempt=>attempt+1):undefined};
   if (booting) return <main className="mot" />;
@@ -279,7 +284,7 @@ export function TripApp() {
           <Menu label="Add" items={[{label:'FCC art',onSelect:()=>setPanel('art')}]} trigger={{className:'m-btn pill small',content:<>Add <Icon name="plus" /></>}} />
           <Menu label={`Switch board. Current: ${chip}`} items={boardItems} trigger={{ className: 'm-btn pill small trip-chip', content: <><span className="chip-text">{chip}</span><Icon name="chevronDown" /></> }} />
           <button type="button" className="m-btn pill mot-header-undo" onClick={undo}>Undo</button>
-          <button type="button" className="m-btn pill mot-export-trigger" aria-label="Open export" onClick={()=>setTab('export')}><Icon name="file" /><span>Export</span></button>
+          <button type="button" className="m-btn pill mot-export-trigger" aria-label="Open export" title="Export your trip" onClick={()=>setTab('export')}><Icon name="file" /><span>Export</span></button>
         </div>
       </header>
       <input ref={fileRef} type="file" accept=".zip,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void onImport(f); }} />

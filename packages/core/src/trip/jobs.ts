@@ -1,5 +1,5 @@
 // Cancellable jobs (MOT-21): Stop means a late result cannot commit.
-import { createDiagnostic, type DiagnosticReceipt } from './diagnostics.ts';
+import { createDiagnostic, type DiagnosticReceipt, type DiagnosticStep } from './diagnostics.ts';
 export type JobStatus = 'running' | 'done' | 'cancelled' | 'failed' | 'timed-out';
 export interface Job<T> { id: string; status: JobStatus; result?: T; error?: string; code?: AgentErrorCode; }
 
@@ -77,6 +77,7 @@ export interface OperationOptions {
   operation?: 'agent' | 'export' | 'persist' | 'source';
   onChange?: (state: OperationState) => void;
   onDiagnostic?: (receipt: DiagnosticReceipt) => void;
+  step?: () => DiagnosticStep;
 }
 const TERMINAL = new Set<OperationPhase>(['delivery_failed', 'blocked', 'cancelled', 'failed']);
 
@@ -116,7 +117,7 @@ export class OperationTracker {
   fail(error: unknown, phase: 'failed' | 'delivery_failed' | 'blocked' | 'cancelled' = 'failed'): void {
     if (TERMINAL.has(this.current.phase)) return;
     this.current.phase = phase;
-    this.current.diagnostic = createDiagnostic({ requestId: this.options.id, operation: this.options.operation ?? 'agent', boardId: this.current.boardId, revision: this.current.revision, appVersion: this.options.appVersion, startedAt: this.current.startedAt, error, ...(phase === 'cancelled' ? { errorClass: 'cancelled' as const } : {}) });
+    this.current.diagnostic = createDiagnostic({ requestId: this.options.id, operation: this.options.operation ?? 'agent', boardId: this.current.boardId, revision: this.current.revision, appVersion: this.options.appVersion, startedAt: this.current.startedAt, error, step: this.options.step?.(), ...(phase === 'cancelled' ? { errorClass: 'cancelled' as const } : {}) });
     this.options.onDiagnostic?.(structuredClone(this.current.diagnostic)); this.publish();
   }
   private publish(): void { this.current.updatedAt = new Date().toISOString(); this.options.onChange?.(this.state); }

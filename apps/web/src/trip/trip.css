@@ -515,3 +515,5 @@ textarea.m-field { resize: vertical; line-height: var(--lh-2); }
 .mot-next { position: relative; }
 .mot-next-label { position: absolute; top: -12px; left: var(--u); padding: 4px 12px; background: var(--m-red); color: #fff; border-radius: 6px; transform: rotate(-2deg); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14); }
 @media (max-width: 1100px) { .mot-next-label { left: 16px; } .mot-next-when { padding-top: 8px; } }
+
+@media(max-width:600px){.mot-header{grid-template-columns:72px minmax(0,1fr);}.mot-header .mot-brand{width:72px;}.mot-header .mot-logo{width:72px;height:auto;margin:0;max-width:none;}.mot-header-end{min-width:0;}}
