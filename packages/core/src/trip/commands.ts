@@ -1,5 +1,6 @@
 // Trip commands (MOT-12): the only way to change a trip. Validate before writing.
 import { z } from 'zod';
+import { groupPreferencesSchema, validateGroupUpdate } from './group-preferences.ts';
 import * as Y from 'yjs';
 import { CommandError, type CommandContext, type CommandDef } from '../commands/define.ts';
 import { presentationScope, readAllCards, readAsset, readCard, readPresentation, readPresentations, readTripMeta, writeAsset, writeCard, writePresentation, type TripParts } from './model.ts';
@@ -147,7 +148,8 @@ export const tripMetaUpdate = defineTripCommand({
     ctx.parts.meta.set('city',input.city);ctx.parts.meta.set('timeZone',input.timeZone);
     for (const key of ['cityId','countryCode'] as const) if (input[key] === undefined) ctx.parts.meta.delete(key); else ctx.parts.meta.set(key,input[key]);
     if (input.dates) ctx.parts.meta.set('dates',input.dates);
-    return readTripMeta(ctx.doc);
+    const {groupPreferences,...publicMeta}=readTripMeta(ctx.doc);
+    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{})};
   },
 });
 
@@ -194,4 +196,18 @@ export const tripPresentationDelete = defineTripCommand({
   name:'trip_presentation_delete',title:'Remove trip art',description:'Removes a placement without deleting its media.',access:'write',input:z.object({id}).strict(),
   run:(ctx,input)=>{if(!readPresentation(ctx.parts,input.id))throw new CommandError('not_found','No such presentation');ctx.parts.presentations.delete(input.id);return{id:input.id};},
 });
-export const TRIP_COMMANDS: TripCommand[] = [tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];
+export const tripGroupConfigure = defineTripCommand({
+  name:'trip_group_configure',title:'Declare group preference rounds',description:'Person-only: declare stable household labels and immutable K3/K5 rounds. This never records a vote or authenticates a household.',
+  access:'write',humanOnly:true,input:groupPreferencesSchema,
+  run:(ctx,input)=>{
+    const meta=readTripMeta(ctx.doc);
+    try{validateGroupUpdate(meta.groupPreferences,input,meta.boardId);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid group declaration');}
+    ctx.parts.meta.set('groupPreferences',input);return structuredClone(input);
+  },
+});
+export const tripGroupRead = defineTripCommand({
+  name:'trip_group_read',title:'Read group preference rounds',description:'Person-only roster and declared rounds. Household IDs are labels, not authentication.',
+  access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupPreferences??null,
+});
+
+export const TRIP_COMMANDS: TripCommand[] = [tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];

@@ -1,6 +1,7 @@
 // Trip schema v1 (MOT-10). Validated at every boundary: commands, import, copy.
 import { z } from 'zod';
 import { apparelArtRefSchema } from './merch.ts';
+import { groupPreferencesSchema } from './group-preferences.ts';
 
 export const TRIP_SCHEMA_VERSION = 2;
 export const STAGES = ['plan', 'prepare', 'arrive', 'explore', 'remember'] as const;
@@ -57,6 +58,7 @@ export const tripMetaSchema = z.object({
   dates: datesSchema.optional(),
   party: z.enum(['solo', 'couple', 'family', 'business']).optional(),
   agentMode: z.enum(['solo', 'together', 'autopilot']),
+  groupPreferences: groupPreferencesSchema.optional(),
   lineage: z.object({ guideBoardId: id, copiedAt: z.string().min(1) }).optional(),
   magazine: z.object({wornTeeAssetId:id,apparelAssetIds:z.array(id).min(1).max(3).refine(ids=>new Set(ids).size===ids.length)}).strict()
     .refine(value=>value.apparelAssetIds.includes(value.wornTeeAssetId),'The chosen tee must be cached').optional(),
