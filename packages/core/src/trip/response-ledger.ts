@@ -38,13 +38,13 @@ export async function mergeResponseLedger(configuration:unknown,previous:unknown
  for(const list of buckets.values()){
   const highest=Math.max(...list.map(r=>r.response_revision)),latest=list.filter(r=>r.response_revision===highest);
   if(latest[0]!.proposal_version!==activeProposal)continue;
-  if(latest.length===1)current.push(latest[0]!);
+  if(latest.length===1)current.push(structuredClone(latest[0]!));
   else conflicts.push({proposal_version:activeProposal,round_id:latest[0]!.round_id,household_id:latest[0]!.household_id,response_revision:highest,response_ids:latest.map(r=>r.response_id).sort(compare)});
  }
  current.sort((a,b)=>compare(key(a),key(b)));conflicts.sort((a,b)=>compare(JSON.stringify([a.round_id,a.household_id]),JSON.stringify([b.round_id,b.household_id])));
  const receipts=[...incoming.values()].sort((a,b)=>compare(a.response_id,b.response_id)).map(response=>{
   const saved=entries.get(response.response_id)!,prior=before.get(response.response_id),list=buckets.get(key(response))??[],highest=Math.max(0,...list.map(r=>r.response_revision));
-  const status=!saved.sender_resolved?'needs_resolution':prior?.sender_resolved?'duplicate':response.response_revision<highest?'stale':list.filter(r=>r.response_revision===highest).length>1?'conflict':prior?'resolved':'accepted';
+  const status=!saved.sender_resolved?'needs_resolution':prior?.sender_resolved?'duplicate':response.proposal_version!==activeProposal||response.response_revision<highest?'stale':list.filter(r=>r.response_revision===highest).length>1?'conflict':prior?'resolved':'accepted';
   return {response_id:response.response_id,status};
  });
  return {ledger,current,conflicts,pending:ledger.entries.filter(e=>!e.sender_resolved).map(e=>e.response.response_id),stale_proposals:[...new Set(ledger.entries.map(e=>e.response.proposal_version).filter(v=>v<activeProposal))].sort((a,b)=>a-b),receipts,identity:'household_labels_only' as const};

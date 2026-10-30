@@ -16,3 +16,9 @@ it.each([3,5] as const)('renders declared K%s scale, household identity and inde
  const html=renderToStaticMarkup(createElement(RankBallot,{session,actor,refresh:()=>{},notify:()=>{},onClose:()=>{}}));
  expect(html).toContain(`Rank points: ${K===3?'3, 2, 1':'5, 4, 3, 2, 1'}`);expect(html).toContain('Family A');expect(html).toContain('No response');expect(html).toContain('Approved');expect(html).toContain('Maybe');expect(html).toContain('Denied');expect(html).toContain('No stamp');expect(html).toContain('Shared note');
 });
+it('keeps households with the same display name distinguishable in the responding-household selector (Wonder W2 F2)',()=>{
+ const session=new TripSession(createTrip({title:'City trip',city:'Bangkok',timeZone:null,boardId:'ballot-trip'}));session.execute(actor,'trip_group_configure',{version:1,trip_id:'ballot-trip',households:[{household_id:'smith-1',display_name:'Smith'},{household_id:'smith-2',display_name:'Smith'},{household_id:'lee',display_name:'Lee'}],rounds:[{round_id:'venues',proposal_version:1,kind:'city_venue',city_id:'bangkok',option_ids:['beach'],rank_limit:3,household_weighting:'one_household_one_vote'}]});
+ const html=renderToStaticMarkup(createElement(RankBallot,{session,actor,refresh:()=>{},notify:()=>{},onClose:()=>{}}));
+ const select=html.match(/<select[^>]*aria-label="Responding household"[^>]*>(.*?)<\/select>/)![1]!,labels=[...select.matchAll(/<option[^>]*>(.*?)<\/option>/g)].map(m=>m[1]);
+ expect(labels).toHaveLength(3);expect(new Set(labels).size).toBe(3);expect(labels).toContain('Lee');expect(labels.filter(l=>l!.startsWith('Smith'))).toHaveLength(2);
+});

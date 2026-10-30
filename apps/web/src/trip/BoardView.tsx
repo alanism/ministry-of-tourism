@@ -10,6 +10,7 @@ import { HOST_LANES, cardProvenanceLabel, STAGE_NAME, dayLabel, longDayLabel } f
 import { recordOutcome } from './metrics';
 import type { Ghost } from './ProposalReview';
 import {AdaptPanel,NextStepPanel} from './TripAdjustment';
+import {formatTripInstant} from './group-planning-ui';
 
 export interface ViewProps { session: TripSession; actor: Actor; tick: number; refresh: () => void; notify: (m: string) => void; updatedSources?:ReadonlySet<string>; whenSaved?:()=>Promise<void>; }
 
@@ -263,7 +264,7 @@ export function BoardView({ session, actor, tick, refresh, notify, header, top, 
 
 export function TodayView({ session, actor, tick, refresh, notify,updatedSources,whenSaved }: ViewProps) {
   const attentionTasks=readAllCards(session.parts).filter(c=>c.kind==='task'&&c.status!=='done'&&c.bookingAttention);
-  const attentionPanel=attentionTasks.length?<section className="mot-group-attention" aria-label="Booking attention tasks"><h3>Booking attention · separate from activity dates</h3>{attentionTasks.map(card=>{const a=bookingAttention(card.bookingAttention,new Date().toISOString());return <article key={card.id}><strong>{card.title}</strong><p>{a.urgency} · {a.important?'important':'optional'} · {a.reason}</p><p>Activity: {a.activity_start??'unknown'} · booking deadline: {a.deadline??'unknown'}</p><small>Source: {a.source} · {a.source_date??'date unknown'} · cost {a.cost_confirmed?'confirmed':'unconfirmed'}</small><button type="button" className="m-btn small" onClick={()=>{session.execute(actor,'trip_task_set_status',{id:card.id,status:'done'});refresh();}}>Mark attention complete</button></article>;})}</section>:null;
+  const attentionPanel=attentionTasks.length?<section className="mot-group-attention" aria-label="Booking attention tasks"><h3>Booking attention · separate from activity dates</h3>{attentionTasks.map(card=>{const a=bookingAttention(card.bookingAttention,new Date().toISOString());return <article key={card.id}><strong>{card.title}</strong><p>{a.urgency} · {a.important?'important':'optional'} · {a.reason}</p><p>Activity: {formatTripInstant(a.activity_start,readTripMeta(session.doc).timeZone)} · booking deadline: {formatTripInstant(a.deadline,readTripMeta(session.doc).timeZone)}</p><small>Source: {a.source} · {a.source_date??'date unknown'} · cost {a.cost_confirmed?'confirmed':'unconfirmed'}</small><button type="button" className="m-btn small" onClick={()=>{session.execute(actor,'trip_task_set_status',{id:card.id,status:'done'});refresh();}}>Mark attention complete</button></article>;})}</section>:null;
 
   void tick;
   const meta = readTripMeta(session.doc);

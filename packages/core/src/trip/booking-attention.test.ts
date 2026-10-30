@@ -21,3 +21,11 @@ it('rejects agents, malformed dates and unknown source options before writes',()
  for(const actor of [{kind:'human' as const,id:'owner',name:'Owner'},{kind:'agent' as const,id:'agent',name:'Agent'}])expect(()=>session.execute(actor,'trip_booking_attention_add',{attention:attention(),as_of:'2026-10-30T12:00:00Z'})).toThrow();expect(core.encodeTrip(session.doc)).toEqual(before);
  expect(()=>core.bookingAttention({...attention(),deadline:fact('2026-02-30T10:00:00Z')},'2026-10-30T12:00:00Z')).toThrow();
 });
+it('W4-O1: the stored task body makes no time-dependent urgency claim that goes stale after creation',()=>{
+ const session=new core.TripSession(core.createTrip({title:'Trip',city:'Bangkok',timeZone:'Asia/Bangkok',boardId:'trip'})),person={kind:'human' as const,id:'owner',name:'Owner'};
+ const card=session.execute<core.TripCard>(person,'trip_card_create',{kind:'place',title:'Garden',scope:'stay'});
+ session.execute(person,'trip_booking_attention_add',{attention:{...attention(),option_id:card.id},as_of:'2026-10-30T12:00:00Z'});
+ const task=core.readAllCards(session.parts).find(c=>c.kind==='task')!;expect(core.bookingAttention(task.bookingAttention,'2026-10-30T12:00:00Z').urgency).toBe('urgent');
+ expect(task.body).not.toMatch(/within 24 hours|has passed|is later|can wait/i);expect(task.body).toMatch(/does not book|never books/i);
+ expect(core.bookingAttention(task.bookingAttention,'2026-11-02T12:00:00Z').urgency).toBe('passed');
+});

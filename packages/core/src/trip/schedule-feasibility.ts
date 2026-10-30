@@ -2,7 +2,8 @@ import {confirmedFact,planningProblemSchema,scheduleAssignmentsSchema,type Plann
 
 export interface DeniedAttendance {household_id:string;option_id:string;}
 const overlaps=(a:{start:string;end:string},b:{start:string;end:string})=>Date.parse(a.start)<Date.parse(b.end)&&Date.parse(b.start)<Date.parse(a.end);
-const covers=(windows:{start:string;end:string}[],slot:{start:string;end:string})=>{let through=Date.parse(slot.start);for(const w of [...windows].sort((a,b)=>Date.parse(a.start)-Date.parse(b.start))){if(Date.parse(w.start)>through)break;through=Math.max(through,Date.parse(w.end));if(through>=Date.parse(slot.end))return true;}return false;};
+/** True when the (possibly adjacent or overlapping) windows jointly cover the whole slot. */
+export const covers=(windows:{start:string;end:string}[],slot:{start:string;end:string})=>{let through=Date.parse(slot.start);for(const w of [...windows].sort((a,b)=>Date.parse(a.start)-Date.parse(b.start))){if(Date.parse(w.start)>through)break;through=Math.max(through,Date.parse(w.end));if(through>=Date.parse(slot.end))return true;}return false;};
 /** Internal typed checker also supports partial search states; final checks enforce required dependencies. */
 export function evaluateSchedule(p:PlanningProblem,assignments:ScheduleAssignment[],denied:readonly DeniedAttendance[]=[],partial=false){
  const errors:string[]=[],tentative:string[]=[],timeBlocks=p.commitments.map(c=>({...c,label:`${c.kind} ${c.id}`}));
@@ -11,6 +12,8 @@ export function evaluateSchedule(p:PlanningProblem,assignments:ScheduleAssignmen
  const selected=new Set(assignments.map(a=>a.option_id));
  if(selected.size!==assignments.length)errors.push('An activity cannot occupy duplicate slots');
  if(new Set(assignments.map(a=>a.slot_id)).size!==assignments.length)errors.push('A slot can contain only one activity');
+ const fixedOptions=new Set(p.commitments.filter(c=>c.kind==='fixed_booking'&&c.option_id).map(c=>c.option_id!));
+ for(const a of assignments)if(fixedOptions.has(a.option_id))errors.push(`${a.option_id}: already a protected fixed booking; it cannot be scheduled again`);
  for(const a of assignments){
   const slot=p.slots.find(s=>s.slot_id===a.slot_id)!,activity=p.activities.find(x=>x.option_id===a.option_id)!;
   const subset=a.household_ids.length!==slot.household_ids.length||slot.household_ids.some(id=>!a.household_ids.includes(id));
@@ -34,7 +37,7 @@ export function evaluateSchedule(p:PlanningProblem,assignments:ScheduleAssignmen
   if(activity&&!selected.has(activity.option_id)&&known(activity.cost,`${activity.option_id} booked cost`,fixed.end))cost+=Math.round(activity.cost.value!*scale);
   for(const id of fixed.household_ids){
    if(denied.some(d=>d.household_id===id&&d.option_id===fixed.option_id))errors.push(`${fixed.option_id}: booked household ${id} denied participation`);
-   const access=activity?.access.find(a=>a.household_id===id)?.allowed;if(access&&known(access,`${fixed.option_id} booked access for ${id}`,fixed.end)&&access.value===false)errors.push(`${fixed.option_id}: inaccessible booked activity for ${id}`);
+   const access=activity?.access.find(a=>a.household_id===id)?.allowed;if(activity&&!access)tentative.push(`${fixed.option_id}: booked access for ${id} unknown (source: not supplied)`);if(access&&known(access,`${fixed.option_id} booked access for ${id}`,fixed.end)&&access.value===false)errors.push(`${fixed.option_id}: inaccessible booked activity for ${id}`);
   }
  }
  const lastEnd=[...assignments.map(a=>p.slots.find(s=>s.slot_id===a.slot_id)!.end),...p.commitments.map(c=>c.end)].sort((a,b)=>Date.parse(b)-Date.parse(a))[0]??p.as_of;

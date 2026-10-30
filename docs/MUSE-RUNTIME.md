@@ -1,11 +1,11 @@
 # Muse runtime (MOT-95)
 
-The server implements the documented Meta Chat Completions protocol. It is disabled until the owner configures the key, model, and privacy acknowledgement. No provider calls were made while implementing or testing it. A successful fixture response is not a live-service acceptance result.
+The server implements the documented Meta Chat Completions protocol. It is disabled until the owner configures the key, model, and privacy acknowledgement. Unit tests use transport fixtures; a fixture response is not a live-service result. The first live round trip is recorded under "Live evidence" below.
 
-## Source contract checked 29 October 2026
+## Source contract checked 29 October 2026, rechecked 31 October 2026
 
 - [Meta Chat Completions documentation](https://dev.meta.ai/docs/protocols/chat-completions): fixed `POST https://api.meta.ai/v1/chat/completions`, bearer authentication, structured messages, `max_completion_tokens`, and `choices[0].message.content` for output.
-- [Meta model documentation](https://dev.meta.ai/docs/models): the supported Standard-mode IDs are `muse-spark-1.3` and `muse-wonder-1.0`. Contributor model IDs are intentionally excluded from this private-board runtime.
+- [Meta model documentation](https://dev.meta.ai/docs/models): the supported Standard-mode IDs are `muse-spark-1.3` and `muse-wonder-1.0`. Contributor model IDs are intentionally excluded from this private-board runtime. Rechecked 31 October 2026: the models page lists `muse-wonder-1.0` (Standard only on the Model API) and `muse-spark-1.3` as Standard with Responses, Chat Completions and Messages endpoints; `muse-spark-1.3-contributor` is Contributor mode, where content may be used to train Meta models, so it stays excluded even though the endpoint accepts it.
 
 The model documentation says Standard-mode content is not used for model training. That is not a guarantee of zero provider retention. Provider storage, abuse monitoring, contractual retention, and account settings must be checked by the owner before enabling production requests. This implementation makes no zero-retention claim.
 
@@ -37,7 +37,7 @@ Typed adapter errors distinguish invalid input/output, rate limit, provider unav
 
 Only a deliberate proposal request sends data. The client constructs the payload from selected non-private cards: ID, title, body, stage, day/time; the board ID; the person's prompt; and selected-city FCC article titles, bodies, and provenance. The composer sends an empty asset-ID list because it has no picture selection. Image bytes, unselected/private cards, dedicated host-access fields, and other guests' data are not part of this request schema. Explicitly selected card text and the person's prompt can still contain personal information; selection is not anonymization.
 
-The server forwards that bounded JSON as user-role data, separately from its fixed developer instructions. Provider output has no network tools or independent access to the board. The browser's existing command permissions decide what may change.
+The server forwards that bounded JSON as user-role data, separately from its fixed developer instructions. The provider request body has exactly `model`, `messages` (one `developer`, one `user`), `max_completion_tokens` and `stream:false`, all documented Chat Completions fields. The developer instruction names each proposable command's input fields with an example op that the app's own command schema accepts; without them the first live answer used invented fields and was refused by the browser validator. Provider output has no network tools or independent access to the board. The browser's existing command permissions decide what may change.
 
 ## Limits and recovery
 
@@ -56,6 +56,10 @@ Application retention is process/terminal-session only. If the owner deliberatel
 The browser preserves typed failures and offers **Copy diagnostic receipt**. Its allowlisted projection contains request ID, operation, board ID, revision, error class, start/finish time, app version and numeric latency. It excludes prompt/card/article text, board title, provider error text and arbitrary server receipt fields. The same projection is applied again on copy. Local transport/proxy failures receive a locally generated request ID; that ID does not claim a provider call took place.
 
 The header distinguishes checking, confirmed connection, observed work/elapsed time, manual-only, paused limit and test adapter. A model ID appears only after server status reports it. Stop, failure, invalid response and limits leave the board unchanged. Recovery is explicit; no automatic provider retry occurs. Fixture-created cards keep a `test-adapter:` creation context through persistence and are labelled **Test adapter** on the board. The approving human retains their command role and Undo; this marker grants no agent permissions and does not change the card schema.
+
+## Live evidence (31 October 2026)
+
+Local loopback only, owner-directed: built web app (`vite preview`, 127.0.0.1:5173) → mot-server (127.0.0.1:8788, key in the process environment only) → `POST https://api.meta.ai/v1/chat/completions` with `muse-wonder-1.0` → proposal validated in the browser by `parseMuseOutput`/`prevalidateProposal`, applied by the person and undone. Request `chatcmpl-01a18e26-6d97-7411-bd25-7a5b2555c83b`, reported model `muse-wonder-1.0`, 7.2 s server latency, 4,189 input / 972 output tokens. Board: a new labelled QA trip with no cards; the request carried the QA prompt and the public San Sebastián issue (8 articles). Evidence: `Design Sprints/Meta-Review-W6-2026-10-31/README.md`. Production ingress, owner-only log retention and design sign-off remain open below.
 
 ## Production gate and live evidence still required
 
