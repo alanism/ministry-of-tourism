@@ -1,6 +1,6 @@
 // Board, Today and Map: three views of the same cards, all drawn with one card brick.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { STAGES, boardProjection, localDateFor, mapPins, readTripMeta, todayProjection, type Actor, type BoardKind, type RevCard, type Scope, type Stage, type TripSession } from '@writers-board/core';
+import { bookingAttention, readAllCards, STAGES, boardProjection, localDateFor, mapPins, readTripMeta, todayProjection, type Actor, type BoardKind, type RevCard, type Scope, type Stage, type TripSession } from '@writers-board/core';
 import { FocusSheet, Icon, Menu, type MenuEntry } from './ui';
 import { CardContent, CheckedFacts, EditedExcerpt, SourceLink, SourceRecord } from './SourceContent';
 import { cardEditInput, editsSourceNote, sourceHref, sourceKey, sourceTextFor } from './source-card';
@@ -259,9 +259,12 @@ export function BoardView({ session, actor, tick, refresh, notify, header, top, 
 }
 
 export function TodayView({ session, actor, tick, refresh, notify,updatedSources }: ViewProps) {
+  const attentionTasks=readAllCards(session.parts).filter(c=>c.kind==='task'&&c.status!=='done'&&c.bookingAttention);
+  const attentionPanel=attentionTasks.length?<section className="mot-group-attention" aria-label="Booking attention tasks"><h3>Booking attention · separate from activity dates</h3>{attentionTasks.map(card=>{const a=bookingAttention(card.bookingAttention,new Date().toISOString());return <article key={card.id}><strong>{card.title}</strong><p>{a.urgency} · {a.important?'important':'optional'} · {a.reason}</p><p>Activity: {a.activity_start??'unknown'} · booking deadline: {a.deadline??'unknown'}</p><small>Source: {a.source} · {a.source_date??'date unknown'} · cost {a.cost_confirmed?'confirmed':'unconfirmed'}</small><button type="button" className="m-btn small" onClick={()=>{session.execute(actor,'trip_task_set_status',{id:card.id,status:'done'});refresh();}}>Mark attention complete</button></article>;})}</section>:null;
+
   void tick;
   const meta = readTripMeta(session.doc);
-  if(!meta.timeZone)return <section className="m-panel mot-day" aria-label="Today"><h2>Timezone unknown</h2><p>Choose the destination timezone before using Today. Your dated cards are unchanged.</p></section>;
+  if(!meta.timeZone)return <section className="m-panel mot-day" aria-label="Today">{attentionPanel}<h2>Timezone unknown</h2><p>Choose the destination timezone before using Today. Your dated cards are unchanged.</p></section>;
   const today = localDateFor(new Date(), meta.timeZone);
   const all = Object.values(boardProjection(session.doc)).flat().filter((c) => c.kind !== 'brief');
   const todays = todayProjection(session.doc).filter((c) => c.kind !== 'brief');
@@ -276,6 +279,7 @@ export function TodayView({ session, actor, tick, refresh, notify,updatedSources
     <div className="mot-edge-wrap">
     {shownDay && <span className="mot-edge-tab" aria-hidden="true"><small>{weekdayOf(shownDay)}</small>{Number(shownDay.slice(8))}</span>}
     <section className="m-panel mot-day" aria-label="Today">
+      {attentionPanel}
       <p className="m-eyebrow">Today · {dayLabel(today)} · {meta.timeZone.replace('_', ' ')} time</p>
       <h2>{shownDay ? longDayLabel(shownDay) : 'Nothing planned yet'}</h2>
       {next && <p className="mot-day-note m-muted">Nothing scheduled today. Here's what's next on your trip.</p>}

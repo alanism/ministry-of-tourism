@@ -1,7 +1,7 @@
 // Trip persistence (MOT-15): one y-indexeddb store per trip, named by its board id, honest saved state.
 import * as Y from 'yjs';
 import { IndexeddbPersistence } from 'y-indexeddb';
-import { createTrip, encodeTrip, loadTrip, loadTripWithMigration, readTripMeta, TRIP_SCHEMA_VERSION, type BoardKind, type TripMeta } from '@writers-board/core';
+import { validateStoredGroupResponses, createTrip, encodeTrip, loadTrip, loadTripWithMigration, readTripMeta, TRIP_SCHEMA_VERSION, type BoardKind, type TripMeta } from '@writers-board/core';
 
 export const TRIP_PREFIX = 'mot-trip:';
 /** Window event carrying a plain message when the open board's storage fails. */
@@ -67,6 +67,7 @@ export async function openTrip(boardId: string, init?: NewTrip | { from: Y.Doc }
     doc='from' in init?loadTrip(encodeTrip(init.from)):createTrip({...init,boardId});
   }
   if(readTripMeta(doc).boardId!==boardId){doc.destroy();throw new Error('Saved trip identity does not match the requested board.');}
+  await validateStoredGroupResponses(doc);
   const persistence=new IndexeddbPersistence(storageName,doc);
   let exportedAt:string|null=null;
   let failure:Error|null=null,pending=0,destroyed=false;

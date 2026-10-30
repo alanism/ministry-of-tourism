@@ -1,6 +1,6 @@
 # MOT-105 group round and household response contract
 
-The optional `meta.groupPreferences` contract is version 1 inside the existing trip document version 2. Trips without it remain valid and are not rewritten. Existing v1 trip migration still produces a preserved copy; unsupported future trip or group versions fail on load. This task defines and persists rounds and validates responses. Voting UI, response merging/history and tallying remain MOT-106, MOT-107 and MOT-108; the WP9 stand-ins are unchanged.
+The optional `meta.groupPreferences` contract is version 1 inside the existing trip document version 2. Trips without it remain valid and are not rewritten. Existing v1 trip migration still produces a preserved copy; unsupported future trip or group versions fail on load. This task defines and persists rounds and validates responses. Companion MOT-106/107/108 provide the voting UI, response ledger and tally. The completed WP8 organizer workflow is documented in GROUP-PLANNING.md; WP9 integration remains separate.
 
 A person declares the roster and rounds with `session.execute(person, 'trip_group_configure', configuration)` and reads them with `trip_group_read`. Both commands are human-only and cannot be proposed by agents. Configuration uses the existing schema/transaction/revision/Undo path. An agent may not create a new voter. Public trip reads and metadata-command results omit this roster. Existing cards and itinerary are untouched.
 

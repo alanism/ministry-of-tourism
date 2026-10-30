@@ -49,6 +49,7 @@ export interface CreateTripOptions {
   magazine?: TripMeta['magazine'];
   groupPreferences?: TripMeta['groupPreferences'];
   groupBallots?: TripMeta['groupBallots'];
+  groupWorkspace?: TripMeta['groupWorkspace'];
   newId?: () => string;
 }
 
@@ -76,6 +77,7 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     magazine: options.magazine,
     groupPreferences: options.groupPreferences,
     groupBallots: options.groupBallots,
+    groupWorkspace: options.groupWorkspace,
   });
   const parts = tripParts(doc);
   doc.transact(() => {
@@ -89,6 +91,7 @@ export function readTripMeta(doc: Y.Doc): TripMeta {
   const raw: Record<string, unknown> = Object.fromEntries(parts.meta.entries());
   const meta=tripMetaSchema.parse(raw);
   for(const ballot of meta.groupBallots??[])validateLocalBallot(ballot,meta.groupPreferences);
+  if(meta.groupWorkspace&&(!meta.groupPreferences||(meta.groupWorkspace.ledger&&meta.groupWorkspace.ledger.trip_id!==meta.groupPreferences.trip_id)))throw new Error('Workspace belongs to another group');
   return meta;
 }
 
@@ -117,6 +120,7 @@ export function writeCard(parts: TripParts, card: TripCard): void {
   setOrDel('placeId', valid.placeId); setOrDel('location', valid.location);
   setOrDel('source', valid.source); setOrDel('lineage', valid.lineage);
   setOrDel('sourceText', valid.sourceText); setOrDel('travelerNote', valid.travelerNote); setOrDel('currentFacts', valid.currentFacts);
+  setOrDel('bookingAttention', valid.bookingAttention); setOrDel('booking', valid.booking);
 }
 
 export function readCard(parts: TripParts, id: string): TripCard | undefined {

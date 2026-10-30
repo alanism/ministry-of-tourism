@@ -25,7 +25,7 @@ import { FccBrowser,SourceFreshness,citySlug,type FccBrowserState } from './FccB
 import { MusePlan } from './MusePlan';
 
 const ArtworkPicker=lazy(()=>import('../artwork/ArtworkPicker'));
-const RankBallot=lazy(()=>import('./RankBallot').then(module=>({default:module.RankBallot})));
+const GroupPreferences=lazy(()=>import('./GroupPreferences').then(module=>({default:module.GroupPreferences})));
 
 const YOU: Actor = { kind: 'human', id: 'traveler-1', name: 'You' };
 type Tab = 'board' | 'composition' | 'fcc' | 'today' | 'map' | 'keepsakes' | 'export';
@@ -291,7 +291,7 @@ export function TripApp() {
           </div>
         </div>
       )}
-      {panel==='ballot'&&<FocusSheet label="Group preferences" onClose={()=>setPanel(null)}><Suspense fallback={<p role="status">Opening group preferences…</p>}><RankBallot key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} /></Suspense></FocusSheet>}
+      {panel==='ballot'&&<FocusSheet label="Group preferences" onClose={()=>setPanel(null)}><Suspense fallback={<p role="status">Opening group preferences…</p>}><GroupPreferences key={meta.boardId} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} whenSaved={async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are still in this tab. Download a personal ZIP backup.');}} onClose={()=>setPanel(null)} /></Suspense></FocusSheet>}
       {panel === 'review' && <FocusSheet label="Review changes" onClose={() => setPanel(null)}><ProposalReview key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={() => setPanel(null)} pending={pending} focus={focusOp} onPending={setPending} /></FocusSheet>}
       {panel === 'guest' && host && <FocusSheet label="Create a guest copy" onClose={() => setPanel(null)}><GuestCopyPanel key={meta.boardId} session={session} onCreate={(t, ids) => void guestCopy(t, ids)} onClose={() => setPanel(null)} /></FocusSheet>}
       {panel==='destination'&&<FocusSheet label="Change destination" onClose={()=>setPanel(null)}><DestinationPicker current={meta} kind={meta.kind} {...destinationProps} preservedCards={readAllCards(session.parts).map(card=>({id:card.id,title:card.title,sourceCity:destinations.find(row=>row.id===card.source?.cityId)?.name??card.source?.cityId}))} onClose={()=>setPanel(null)} onSave={details=>{try{session.execute(YOU,'trip_meta_update',{city:details.city,cityId:details.cityId,countryCode:details.countryCode,timeZone:details.timeZone,dates:details.dates});setPanel(null);refresh();notify('Destination changed. Existing cards keep their sources; refresh FCC content when ready.');}catch(error){notify(error instanceof Error?error.message:'Destination could not be changed.');}}} /></FocusSheet>}

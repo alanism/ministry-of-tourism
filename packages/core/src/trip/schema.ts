@@ -1,9 +1,12 @@
 // Trip schema v1 (MOT-10). Validated at every boundary: commands, import, copy.
 import { z } from 'zod';
 import { apparelArtRefSchema } from './merch.ts';
+import {groupWorkspaceSchema} from './planning-constraints.ts';
+import {bookingAttentionSchema} from './booking-attention.ts';
 import { groupBallotsSchema } from './group-ballot.ts';
 import { groupPreferencesSchema } from './group-preferences.ts';
 
+export const bookingSchema=z.object({status:z.enum(['confirmed','held','not_booked']),reference:z.string().max(200).optional()}).strict();
 export const TRIP_SCHEMA_VERSION = 2;
 export const STAGES = ['plan', 'prepare', 'arrive', 'explore', 'remember'] as const;
 export type Stage = (typeof STAGES)[number];
@@ -61,6 +64,7 @@ export const tripMetaSchema = z.object({
   agentMode: z.enum(['solo', 'together', 'autopilot']),
   groupPreferences: groupPreferencesSchema.optional(),
   groupBallots: groupBallotsSchema.optional(),
+  groupWorkspace: groupWorkspaceSchema.optional(),
   lineage: z.object({ guideBoardId: id, copiedAt: z.string().min(1) }).optional(),
   magazine: z.object({wornTeeAssetId:id,apparelAssetIds:z.array(id).min(1).max(3).refine(ids=>new Set(ids).size===ids.length)}).strict()
     .refine(value=>value.apparelAssetIds.includes(value.wornTeeAssetId),'The chosen tee must be cached').optional(),
@@ -88,6 +92,8 @@ export const tripCardSchema = z.object({
   sourceText: z.string().max(100000).optional(),
   travelerNote: z.string().max(20000).optional(),
   currentFacts: z.array(currentFactSchema).max(100).optional(),
+  booking: bookingSchema.optional(),
+  bookingAttention: bookingAttentionSchema.optional(),
   assetIds: z.array(id).max(100),
   x: z.number().finite(),
   y: z.number().finite(),

@@ -3,7 +3,7 @@ import {ballotKey,readAllCards,readTripMeta,type Actor,type GroupBallot,type Gro
 import {Icon} from './ui';
 import './rank-ballot.css';
 
-type Props={session:TripSession;actor:Actor;refresh:()=>void;notify:(message:string)=>void;onClose:()=>void};
+type Props={session:TripSession;actor:Actor;refresh:()=>void;notify:(message:string)=>void;onClose:()=>void;notice?:string;exportBusy?:boolean;onOrganizer?:()=>void;onExport?:(key:Pick<GroupBallot,'proposal_version'|'round_id'|'household_id'>,format:'json'|'zip')=>void};
 
 /** Selects reorder an existing shortlist. Adding at capacity must never discard a choice. */
 export function changeRank(ballot:GroupBallot,optionId:string,rank:number,K:3|5):GroupBallot{
@@ -27,7 +27,7 @@ function RoundSetup({session,actor,refresh,notify}:Omit<Props,'onClose'>){
  </div>;
 }
 
-function BallotEditor({session,actor,refresh,notify,group,round,householdId}:{session:TripSession;actor:Actor;refresh:()=>void;notify:Props['notify'];group:GroupPreferences;round:GroupPreferences['rounds'][number];householdId:string}){
+function BallotEditor({session,actor,refresh,notify,group,round,householdId,onExport,exportBusy}:{session:TripSession;actor:Actor;refresh:()=>void;notify:Props['notify'];group:GroupPreferences;round:GroupPreferences['rounds'][number];householdId:string;onExport?:Props['onExport'];exportBusy?:boolean}){
  const key={proposal_version:round.proposal_version,round_id:round.round_id,household_id:householdId},saved=readTripMeta(session.doc).groupBallots?.find(b=>ballotKey(b)===ballotKey(key));
  const ballot=saved??{...key,rankings:[],stamps:[],shared_note:''},[note,setNote]=useState<string|null>(null);
  const cards=new Map(readAllCards(session.parts).map(c=>[c.id,c])),household=group.households.find(h=>h.household_id===householdId)!;
@@ -56,20 +56,22 @@ function BallotEditor({session,actor,refresh,notify,group,round,householdId}:{se
    {!saved&&<button type="button" className="m-btn" onClick={()=>update(ballot)}>Respond without ranks</button>}
    {saved&&<button type="button" className="m-btn" onClick={()=>{session.execute(actor,'trip_ballot_clear',key);setNote(null);refresh();}}>Remove response</button>}
   </div>
+  {onExport&&<div className="mot-ballot-actions"><button type="button" className="m-btn" disabled={!saved||exportBusy} onClick={()=>onExport(key,'json')}>Export response JSON</button><button type="button" className="m-btn" disabled={!saved||exportBusy} onClick={()=>onExport(key,'zip')}>Export response ZIP</button></div>}
  </section>;
 }
 
-export function RankBallot({session,actor,refresh,notify,onClose}:Props){
+export function RankBallot({session,actor,refresh,notify,onClose,notice,onOrganizer,onExport,exportBusy}:Props){
  const group=readTripMeta(session.doc).groupPreferences,[roundKey,setRoundKey]=useState(''),[householdId,setHouseholdId]=useState('');
  const round=group?.rounds.find(r=>`${r.proposal_version}:${r.round_id}`===roundKey)??group?.rounds.at(-1),household=group?.households.find(h=>h.household_id===householdId)??group?.households[0];
  return <aside className="m-panel mot-sheet mot-ballot" aria-label="Group preferences">
   <div className="mot-sheet-head"><h2>Group preferences</h2><button type="button" className="m-icon-btn" aria-label="Close" onClick={onClose}><Icon name="close" /></button></div>
   <div className="mot-sheet-scroll">
+   {onOrganizer&&<button type="button" className="m-btn" onClick={onOrganizer}>Organizer summary</button>}{notice&&<p role="status">{notice}</p>}
    {group&&round&&household?<>
     <div className="mot-ballot-selectors"><label>Round<select className="m-field" aria-label="Round" value={`${round.proposal_version}:${round.round_id}`} onChange={e=>setRoundKey(e.target.value)}>{group.rounds.map(r=><option key={`${r.proposal_version}:${r.round_id}`} value={`${r.proposal_version}:${r.round_id}`}>{r.kind==='destination'?'Destinations':`City: ${r.city_id}`} · proposal {r.proposal_version} · {r.rank_limit} ranks</option>)}</select></label>
     <label>Responding household<select className="m-field" aria-label="Responding household" value={household.household_id} onChange={e=>setHouseholdId(e.target.value)}>{group.households.map(h=><option key={h.household_id} value={h.household_id}>{h.display_name}</option>)}</select></label></div>
     <p className="m-muted t-1">One household, one response. Household names are labels, not verified identities.</p>
-    <BallotEditor key={`${round.proposal_version}:${round.round_id}:${household.household_id}`} session={session} actor={actor} refresh={refresh} notify={notify} group={group} round={round} householdId={household.household_id} />
+    <BallotEditor key={`${round.proposal_version}:${round.round_id}:${household.household_id}`} session={session} actor={actor} refresh={refresh} notify={notify} group={group} round={round} householdId={household.household_id} onExport={onExport} exportBusy={exportBusy} />
    </>:<RoundSetup session={session} actor={actor} refresh={refresh} notify={notify} />}
   </div>
   <div className="mot-sheet-foot"><button type="button" className="m-btn" disabled={!session.canUndo(actor.id)} onClick={()=>{session.undo(actor.id);refresh();notify('Undone');}}>Undo</button><button type="button" className="m-btn primary" onClick={onClose}>Done</button></div>

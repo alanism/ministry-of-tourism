@@ -34,6 +34,7 @@ const validResponse=(response:z.infer<typeof responseBase>)=>unique(response.ran
 export const groupResponseSchema=responseBase.extend({response_id:z.string().regex(/^[a-f0-9]{64}$/)}).refine(validResponse,'Ranks must be unique and contiguous; stamps and constraints must be unique');
 const responseBodySchema=responseBase.refine(validResponse,'Ranks must be unique and contiguous; stamps and constraints must be unique');
 export type GroupResponse=z.infer<typeof groupResponseSchema>;
+export const responseLedgerSchema=z.object({version:z.literal(1),trip_id:groupPreferencesSchema.shape.trip_id,entries:z.array(z.object({response:groupResponseSchema,sender_resolved:z.boolean()}).strict()).max(1000)}).strict();
 
 /** Canonical content identity, not a signature. Household labels never authenticate a sender. */
 export async function createGroupResponse(raw:unknown):Promise<GroupResponse>{

@@ -31,7 +31,7 @@ export function tokenMatches(parts: TripParts, boardId: string, token: Compariso
 
 function snapshot(parts: TripParts): Map<string, string> {
   const m = new Map<string, string>();
-  for (const c of readAllCards(parts)) m.set(c.id, syncedSnapshot(c as TripCard) + '|' + (c.travelerNote ?? '') + '|' + (c.status ?? '') + '|' + (c.day ?? '') + '|' + (c.time ?? '') + '|' + c.x + ',' + c.y);
+  for (const c of readAllCards(parts)) m.set(c.id, syncedSnapshot(c as TripCard) + '|' + (c.travelerNote ?? '') + '|' + (c.status ?? '') + '|' + (c.day ?? '') + '|' + (c.time ?? '') + '|' + c.x + ',' + c.y + '|' + JSON.stringify(c.booking??null) + '|' + JSON.stringify(c.bookingAttention??null));
   m.set('@meta',JSON.stringify([...parts.meta.entries()].sort(([a],[b])=>a.localeCompare(b))));
   m.set('@assets',JSON.stringify([...parts.assets.entries()].map(([id,a])=>[id,a.toJSON()]).sort(([a],[b])=>String(a).localeCompare(String(b)))));
   for(const p of readPresentations(parts))m.set(`@presentation:${p.id}`,JSON.stringify(p));

@@ -35,6 +35,7 @@ export function prevalidateProposal(session: TripSession, proposal: Proposal, ow
     if (!parsed.success) throw new CommandError('invalid_input', `Proposal op ${op.command} is invalid`);
     // Who can see a card is the person's call, never an agent's.
     if (op.input.scope !== undefined) throw new CommandError('scope', 'Agents cannot change who can see a card');
+    if(op.input.booking!==undefined)throw new CommandError('scope','Booking status must be recorded by a person, never a proposed purchase');
     if(op.input.currentFacts!==undefined || (op.command==='trip_card_update' && (op.input.source!==undefined || op.input.sourceText!==undefined)))throw new CommandError('scope','Agents cannot replace source evidence or assert independently verified facts');
     if(op.command==='trip_card_create')assertAgentMediaAccess(session.parts,(parsed.data as {assetIds:string[]}).assetIds);
     if(op.command==='trip_asset_attach')assertAgentMediaAccess(session.parts,[(parsed.data as {asset:{id:string}}).asset.id]);

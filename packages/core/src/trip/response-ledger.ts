@@ -1,11 +1,10 @@
 // MOT-107: response files are data. This ledger never replaces a board or itinerary.
 import {z} from 'zod';
 import {unzipSync,zipSync} from 'fflate';
-import {groupPreferencesSchema,groupResponseSchema,validateGroupResponse,type GroupResponse} from './group-preferences.ts';
+import {groupPreferencesSchema,responseLedgerSchema,validateGroupResponse,type GroupResponse} from './group-preferences.ts';
 import {sha256Hex,TRIP_PACKAGE_LIMITS} from './package.ts';
 
-const entrySchema=z.object({response:groupResponseSchema,sender_resolved:z.boolean()}).strict();
-const ledgerSchema=z.object({version:z.literal(1),trip_id:groupPreferencesSchema.shape.trip_id,entries:z.array(entrySchema).max(1000)}).strict();
+const ledgerSchema=responseLedgerSchema,entrySchema=responseLedgerSchema.shape.entries.element;
 export type ResponseLedger=z.infer<typeof ledgerSchema>;
 export interface ResponseMergeOptions { /** Explicit organizer resolution of household labels; never authentication. */ resolvedHouseholds?:readonly string[]; }
 const encode=(value:unknown)=>new TextEncoder().encode(JSON.stringify(value));
