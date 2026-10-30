@@ -15,7 +15,7 @@
 .mot-destination-search { display: flex !important; flex-direction: row; align-items: center; gap: 12px; min-height: 52px; padding: 0 14px; border: 1px solid var(--m-line-2); border-radius: 12px; background: var(--m-surface); }
 .mot-destination-search:focus-within { border-color: var(--m-ink); outline: 2px solid var(--m-red); }
 .mot-destination-search svg { width: 20px; height: 20px; flex: none; color: var(--m-ink-2); }
-.mot-destination-search input { width: 100%; min-width: 0; border: 0; outline: none; padding: 12px 0; background: transparent; color: var(--m-ink); font: 15px/20px var(--m-sans); }
+.mot-destination-search input, .mot-destination-search input:focus-visible { width: 100%; min-width: 0; border: 0; outline: none; padding: 12px 0; background: transparent; color: var(--m-ink); font: 15px/20px var(--m-sans); }
 .mot-destination-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mot-destination-status { display: flex; align-items: center; gap: 8px; font: 12px/16px var(--m-mono); color: var(--m-ink-2); }
 .mot-destination-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--m-guide-ink); flex: none; }
@@ -34,11 +34,13 @@
 .mot-destination-tag-drawn { position: relative; display: grid; place-items: center; width: 44px; height: 56px; padding-top: 10px; border: 1.5px solid var(--m-ink); border-radius: 7px 7px 9px 9px; background: var(--m-paper); font: 600 12px/1 var(--m-mono); }
 .mot-destination-tag-drawn::before { content: ''; position: absolute; top: 5px; left: calc(50% - 4px); width: 8px; height: 8px; border: 1.5px solid var(--m-ink); border-radius: 50%; }
 .mot-destination-results { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.mot-destination-result { display: grid; grid-template-columns: 56px minmax(0,1fr) 82px; align-items: center; gap: 12px; width: 100%; min-height: 72px; padding: 8px; text-align: left; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--m-ink); cursor: pointer; }
+.mot-destination-result { display: grid; grid-template-columns: 56px minmax(0,1fr) 104px; align-items: center; gap: 12px; width: 100%; min-height: 72px; padding: 8px; text-align: left; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--m-ink); cursor: pointer; }
 .mot-destination-result:hover,.mot-destination-result[aria-selected='true'] { background: var(--m-wash); border-color: var(--m-line); }
 .mot-destination-result .mot-destination-tag { width: 56px; height: 56px; }
 .mot-destination-result strong { display: block; font: 600 19px/24px 'IBM Plex Serif',Georgia,serif; overflow-wrap: anywhere; }
 .mot-destination-result small { display: block; margin-top: 3px; font: 12px/16px var(--m-sans); color: var(--m-ink-2); }
+.mot-destination-hit { padding: 0 1px; border-radius: 3px; background: var(--m-line); color: inherit; }
+.mot-destination-result small .mot-destination-hit { background: none; color: var(--m-ink); font-weight: 600; }
 .mot-destination-result.typed strong { font: 400 15px/20px var(--m-sans); }
 .mot-destination-result-meta { font: 12px/16px var(--m-mono); text-align: right; color: var(--m-ink-2); }
 .mot-destination-text-button { min-height: 44px; padding: 4px 0; border: 0; background: transparent; color: var(--m-ink); font: 600 12px/16px var(--m-sans); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -49,6 +51,7 @@
 .mot-destination-who { display: flex; align-items: center; gap: 16px; min-width: 0; }
 .mot-destination-who > div { min-width: 0; }
 .mot-destination-who .mot-destination-tag { width: 72px; height: 72px; }
+.mot-destination-who h3:focus-visible { outline: none; }
 .mot-destination-who h3 { margin: 0 0 6px; font: 600 24px/28px 'IBM Plex Serif',Georgia,serif; overflow-wrap: anywhere; }
 .mot-destination-who p,.mot-destination-preview > p { font: 12px/16px var(--m-sans); color: var(--m-ink-2); }
 .mot-destination-lanes { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; }

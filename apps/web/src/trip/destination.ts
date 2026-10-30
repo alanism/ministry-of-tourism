@@ -17,6 +17,15 @@ export const destinationRows = z.array(z.object({
 }).strict()).max(1000).refine(rows => new Set(rows.map(row => row.id)).size === rows.length, 'Destination IDs must be unique');
 export type DestinationRow = z.infer<typeof destinationRows>[number];
 export interface DestinationMatch { row: DestinationRow; via?: string; }
+/** The [start, end) code-point range of `text` that a folded query matches, mapping each folded character back to its source. */
+export function matchRange(text: string, query: string): [number, number] | undefined {
+  const q = foldDestination(query), owner: number[] = [];
+  let hay = '';
+  Array.from(text).forEach((char, index) => { for (const c of char.normalize('NFKD').replace(/\p{M}/gu, '').toLocaleLowerCase('en').replace(/[-_/\s]/g, ' ')) { if (c === ' ' && (!hay || hay.endsWith(' '))) continue; hay += c; owner.push(index); } });
+  const start = q ? hay.indexOf(q) : -1;
+  return start < 0 ? undefined : [owner[start]!, owner[start + q.length - 1]! + 1];
+}
+
 export function searchDestinations(rows: readonly DestinationRow[], query: string): DestinationMatch[] {
   const q = foldDestination(query);
   if (!q) return rows.map(row => ({ row }));

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { countryChoices, destinationDetails, destinationRows, foldDestination, loadDestinations, searchDestinations } from './destination';
+import { countryChoices, destinationDetails, destinationRows, foldDestination, loadDestinations, matchRange, searchDestinations } from './destination';
 
 const cities = [
   { id: 'san-sebastian', name: 'San Sebastián', aliases: ['Donostia'], countryCode: 'ES', timeZone: 'Europe/Madrid' },
@@ -19,6 +19,15 @@ describe('MOT-77 destination search and explicit selection', () => {
     expect(searchDestinations(cities, 'zurich')[0]?.row.id).toBe('zurich');
     expect(searchDestinations(cities, 'kyō')[0]?.row.id).toBe('kyoto');
     expect(searchDestinations(cities, 'bilbao')).toEqual([]);
+  });
+  it('highlights the matched characters of the original name, through accents, ligatures and spacing', () => {
+    expect(matchRange('San Sebastián', 'sebastian')).toEqual([4, 13]);
+    expect(matchRange('Donostia', 'DONOSTIA')).toEqual([0, 8]);
+    expect(matchRange('New  York', 'new york')).toEqual([0, 9]);
+    expect(matchRange('Saint-Tropez', 'saint tro')).toEqual([0, 9]);
+    expect(matchRange('ﬁesta', 'iesta')).toEqual([0, 5]);
+    expect(matchRange('Bilbao', 'porto')).toBeUndefined();
+    expect(matchRange('Bilbao', '  ')).toBeUndefined();
   });
   it('preserves ambiguous matching cities for an explicit choice instead of guessing a country', () => {
     const ambiguous = [...cities, { id: 'san-sebastian-other', name: 'San Sebastián', countryCode: 'US', timeZone: null }];

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { BoardKind, TripMeta } from '@writers-board/core';
 import type { NewTrip } from './trip-store';
-import { countryChoices, countryName, destinationDetails, foldDestination, searchDestinations, type DestinationRegistryStatus, type DestinationRow } from './destination';
+import { countryChoices, countryName, destinationDetails, foldDestination, matchRange, searchDestinations, type DestinationRegistryStatus, type DestinationRow } from './destination';
 import './destination.css';
 
 export { destinationRows, type DestinationRow } from './destination';
@@ -16,6 +16,13 @@ function Tag({ row, city }: { row?: DestinationRow; city: string }) {
   return <span className="mot-destination-tag" aria-hidden="true">{row?.tagUrl && !failed
     ? <img src={row.tagUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} />
     : <span className="mot-destination-tag-drawn"><span>{Array.from(city).slice(0, 3).join('').toLocaleUpperCase()}</span></span>}</span>;
+}
+/** Marks the part of `text` that the folded query matched, so Donostia or "sebastian" shows why a row is here. */
+function Hit({ text, query }: { text: string; query: string }) {
+  const range = matchRange(text, query);
+  if (!range) return <>{text}</>;
+  const chars = Array.from(text);
+  return <>{chars.slice(0, range[0]).join('')}<mark className="mot-destination-hit">{chars.slice(...range).join('')}</mark>{chars.slice(range[1]).join('')}</>;
 }
 export function DestinationPicker({ kind = 'traveler', current, onSave, onClose, registry, registryStatus, registryUpdatedAt, registryError, onRetryRegistry, preservedCards }: DestinationPickerProps) {
   const [step, setStep] = useState<'city' | 'country' | 'preview'>('city');
@@ -62,7 +69,7 @@ export function DestinationPicker({ kind = 'traveler', current, onSave, onClose,
           {(status === 'unavailable' || registryError) && <p className="mot-destination-muted">{registryError ?? 'The city list is waiting on FCC publication. Your trip can still start with a city and a country you choose.'}{onRetryRegistry && <> <button type="button" className="mot-destination-text-button" onClick={onRetryRegistry}>Retry the list</button></>}</p>}
           {showResults ? <ul className="mot-destination-results" id={listId} role="listbox" aria-label="Destinations">
             {results.map(({ row, via }, index) => <li role="none" key={row.id}><button type="button" id={`${listId}-${index}`} className="mot-destination-result" role="option" aria-selected={activeOption === index} tabIndex={-1} onClick={() => chooseCity(row)}>
-              <Tag row={row} city={row.name} /><span><strong>{row.name}</strong><small>{countryName(row.countryCode)}{via && <> · also {via}</>}</small></span><span className="mot-destination-result-meta">{row.artworkCount === undefined ? 'Choose →' : row.artworkCount ? `${row.artworkCount} FCC illustrations` : 'No FCC art yet'}</span>
+              <Tag row={row} city={row.name} /><span><strong><Hit text={row.name} query={query} /></strong><small>{countryName(row.countryCode)}{via && <> · also <Hit text={via} query={query} /></>}</small></span><span className="mot-destination-result-meta">{row.artworkCount === undefined ? 'Choose →' : row.artworkCount ? `${row.artworkCount} FCC illustrations` : 'No FCC art yet'}</span>
             </button></li>)}
             <li role="none"><button type="button" id={`${listId}-${results.length}`} className="mot-destination-result typed" role="option" aria-selected={activeOption === results.length} tabIndex={-1} onClick={chooseTyped}><Tag city={query.trim()} /><span><strong>Use “{query.trim()}” as you typed it</strong><small>Choose its country next. We won’t guess.</small></span><span className="mot-destination-result-meta">Your own city</span></button></li>
           </ul> : registry.length ? <div><p className="mot-destination-label">Or pick a tag</p><div className="mot-destination-tagwall" aria-label="Destination luggage tags">{registry.slice(0, wallLimit).map(row => <button type="button" key={row.id} aria-label={`Choose ${row.name}, ${countryName(row.countryCode)}`} onClick={() => chooseCity(row)}><Tag row={row} city={row.name} /><span>{row.name}</span><small>{countryName(row.countryCode)}</small></button>)}</div>{registry.length > wallLimit && <button type="button" className="mot-destination-text-button" onClick={() => setWallLimit(value => value + 24)}>Show more cities</button>}</div>
