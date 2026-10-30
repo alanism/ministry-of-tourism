@@ -1093,5 +1093,451 @@
       "testFiles": [],
       "otherSessionClaimPreserved": false
     }
-  ]
+  ],
+  "latestCandidateRevision": "884bcf357426f532c5f08f19b7bc1ce82ee511d7",
+  "requestedWp6Integration": {
+    "requestedInput": "d23b16308749443fddf708844839dfe7a1809de0",
+    "mergedCodeRevision": "884bcf357426f532c5f08f19b7bc1ce82ee511d7",
+    "previousCandidate": "c3e62da59842c783a08e54391558c7657dc9434e",
+    "sourceIsAncestor": true,
+    "all2622PreviouslyTrackedFilesUnchangedAtMerge": true,
+    "addedFiles": [
+      "docs/WP6-APP-VERIFICATION.md",
+      "scripts/test-mot-origins-app-only.cjs"
+    ],
+    "laterWorkExcluded": [
+      "2a9dbe8",
+      "0355bb6",
+      "uncommitted source-worktree edits"
+    ],
+    "verification": {
+      "testsAcrossComplementaryRuns": 890,
+      "testFiles": 161,
+      "typescriptProjects": 4,
+      "buildPass": true,
+      "defaultCheckPass": false,
+      "defaultCheckLimitation": "Unchanged ledger CLI unfamiliar-reply test exceeds 5000ms in combined run; all seven CLI tests pass in isolation, complementary 883 tests pass.",
+      "configCases": 9,
+      "localOriginHelperRuns": 4
+    },
+    "boardBaselineSerial": 191,
+    "boardProposedSerial": 192,
+    "existingRecordsAndHoldsPreserved": true,
+    "publicFccProductionOriginAccepted": false,
+    "freshPerformanceOrPhysicalDeviceAccepted": false,
+    "tasksAtLatestSnapshot": [
+      {
+        "task": "MOT-69",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-70",
+        "status": "complete",
+        "latestRecordedRevision": "258b0d3",
+        "kind": "self",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-71",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-72",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-73",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-74",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-75",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-76",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-77",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-78",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-79",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-80",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-81",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-82",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-83",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-84",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-85",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-86",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-87",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-88",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-89",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-90",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-91",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-92",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-93",
+        "status": "complete",
+        "latestRecordedRevision": "939ff96bb11549bb01285dffcb3ec84df3ca0cc4",
+        "kind": "self",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-94",
+        "status": "complete",
+        "latestRecordedRevision": "939ff96bb11549bb01285dffcb3ec84df3ca0cc4",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-95",
+        "status": "complete",
+        "latestRecordedRevision": "939ff96bb11549bb01285dffcb3ec84df3ca0cc4",
+        "kind": "self",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-96",
+        "status": "complete",
+        "latestRecordedRevision": "939ff96bb11549bb01285dffcb3ec84df3ca0cc4",
+        "kind": "self",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-97",
+        "status": "complete",
+        "latestRecordedRevision": "939ff96bb11549bb01285dffcb3ec84df3ca0cc4",
+        "kind": "self",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-98",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-99",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-100",
+        "status": "implemented",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-101",
+        "status": "implemented",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-102",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-103",
+        "status": "complete",
+        "latestRecordedRevision": "5b283b6",
+        "kind": "acceptance",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-104",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-105",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-106",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-107",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-108",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-109",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-110",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-111",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-112",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-113",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-114",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-115",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-116",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-117",
+        "status": "complete",
+        "latestRecordedRevision": "0355bb66ba3499a330c713d4cd36de6e8006c193",
+        "kind": "independent",
+        "isAncestorOfLocalCandidate": false,
+        "recordPreservedUnchanged": true
+      },
+      {
+        "task": "MOT-118",
+        "status": "complete",
+        "latestRecordedRevision": "aa8a9bd",
+        "kind": "deployment",
+        "isAncestorOfLocalCandidate": true,
+        "recordPreservedUnchanged": true
+      }
+    ],
+    "boardSavedSerial": 192,
+    "savedBoardValidatedAtWidths": [
+      1440,
+      375
+    ],
+    "finalGate": {
+      "liveErrors": 39,
+      "manualErrors": 37,
+      "absentLatestLaterSourceReferences": 27,
+      "recordFormatErrors": 0,
+      "releaseAccepted": false
+    }
+  }
 }

@@ -1,5 +1,67 @@
 # Local release candidate — 31 October 2026
 
+## Latest integration: requested WP6 revision d23b163
+
+The current local code checkpoint is
+`884bcf357426f532c5f08f19b7bc1ce82ee511d7`, merging exactly
+`d23b16308749443fddf708844839dfe7a1809de0` into the previous local candidate
+`c3e62da`. All **2,622 previously tracked files retain their Git blobs** across
+this merge. Six incoming files already matched byte for byte, including the
+thumbnail implementation/test and performance/loading tools. Only the app-only
+origins runner and its documentation are added. Existing harness files,
+application behavior, final Muse diagnostics and ledger durability are retained.
+The later `2a9dbe8` / `0355bb6` work and source-worktree uncommitted edits are not
+part of this requested revision.
+
+The unchanged default `npm run check` was run twice. Both runs reached
+889/890 passing tests and timed out in the existing five-second unfamiliar-reply
+ledger CLI test. The CLI file then passes **7/7 in isolation** in 7.84 seconds;
+the complementary **160 files / 883 tests** pass in 29.98 seconds, with the same
+assertions and timeouts. All **890 tests / 161 files** therefore pass across
+complementary runs. All four TypeScript projects and the production web build
+pass (5.46 seconds; existing chunk-size advisory). The default-command timing
+failure remains a local limitation; no timeout, worker configuration, existing
+test or durability implementation was altered to hide it. Revisit this empirical
+timing failure on 30 April 2027; no automation is created.
+
+The new runner's nine fail-fast configuration cases pass without a browser or
+network. Its unchanged negative CORS CLI self-test verifies denied fetch,
+tainted canvas and a positive control using loopback servers. The exported
+`testOrigin` helper passes four runs: development and built loopback apps at
+1440/375 pixels. All helper assertions remain intact. An external fixture driver
+supplies the viewport and explicit loopback feed/manifest/image resources;
+background destination tags use declared local placeholders. Actual photo file
+selection/import, canvas non-taint, exact original-byte hash, save/reload,
+nonblank page identity, framework-overlay absence and runtime errors are checked.
+Screenshots were inspected. Browser plugin is unavailable; sandboxed Playwright
+was used. No requests reached external hosts, providers or production services.
+This is local helper verification, **not** a full public-FCC CLI origin pass,
+fresh production CORS acceptance, timing-budget acceptance or physical-device
+evidence. The initial denied-background-image fixture run is retained separately.
+
+Against frozen board save189, the unchanged release checker still reports
+17 live / 15 manual errors, while the one absent latest revision (`d23b163`)
+becomes a genuine ancestor and record-format errors remain zero. Its 11 self-tests
+pass; existing 4s/2s performance boundary tests pass without a new timing claim.
+
+The board advanced independently to save191 while checks ran. That session's
+`0355bb6` production acceptance records, Implemented WP6 statuses, device-pending
+scope and owner-authorized hold resolutions are preserved verbatim. A separate
+local-candidate banner/metadata receipt records this older requested checkpoint;
+it does not replace those newer acceptance records or claim their source is
+integrated here. The unresolved Muse key hold remains. This task makes no status
+promotion, production approval, deployment, push, credential use, paid model
+request, guide activation or PDF claim. Raw evidence is local:
+`Design Sprints/Local-WP6-d23b163-Integration-2026-10-31/` beside the canonical plan.
+Board save192 records the local checkpoint in a separate banner and metadata;
+all task/review records remain unchanged. Against the newer board snapshot, the
+legacy gate remains blocked with 39 live / 37 manual errors and 27 later-source
+references outside this candidate. Those newer acceptance records are retained,
+not relabelled as acceptance of this older source. Saved-board checks pass at
+1440/375 without changing its existing overflow or model-suggestion warnings.
+
+## Prior consolidation checkpoint (5e15f7c)
+
 The tested code is `5e15f7c0e7a5c00062c5ecf4dba5095fa8f9a8b4` on
 `codex/local-release-consolidation-20261031`. This is an isolated local candidate,
 not a new release authority or deployment. Public `main` remains authoritative.
