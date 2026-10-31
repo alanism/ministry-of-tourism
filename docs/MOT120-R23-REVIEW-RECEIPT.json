@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-01",
+  "reviewId": "R24",
+  "reviewerModel": "gpt-6-astra",
+  "modelCallMade": true,
+  "reviewerTask": "/root/mot120_r23_astra_rereview",
+  "reviewedRevision": "a30ab8da84c21bbab94a3e2ab42353331a36f564",
+  "testedCheckpoint": "ae17580dacdce88a8c2f60ef6a05462af5ac4d71",
+  "disposition": "APPROVE FIXES",
+  "scope": "R23-1/C1 native bitmap resource lifetime only",
+  "resolvedFindings": [
+    "R23-1"
+  ],
+  "newFindings": [],
+  "independentChecks": {
+    "focusedTests": 54,
+    "focusedFiles": 6,
+    "defaultTests": 1200,
+    "defaultFiles": 182,
+    "testDurationSeconds": 41.8,
+    "typescriptProjects": 4,
+    "buildPass": true,
+    "builderBrowserProbeRerun": true,
+    "independentlyAuthoredNativeProbeCases": 3,
+    "peakOutstandingBitmaps": 1,
+    "eventualLiveBitmaps": 0,
+    "sourceAndHarnessUnchanged": true
+  },
+  "reportSha256": "bbfcc9f52b3b8d8404a253c12ec0de79ad51f49a5d92a8f0183597459e500993",
+  "report": "docs/MOT120-R23-ASTRA-REREVIEW.md",
+  "externalEvidence": "screenshot journey map/MOT-120-R23-Astra-ReReview-2026-11-01/",
+  "physicalSafari": "pending",
+  "fullFeatureAccepted": false,
+  "productionAcceptance": false
+}

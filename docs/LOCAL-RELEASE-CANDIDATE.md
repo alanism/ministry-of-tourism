@@ -9,10 +9,13 @@ cancellation and retry keep the slot until the native bitmap closes. No existing
 harness or image limits changed. All 1,200 tests /182 files, four typechecks and
 the production build pass. See [MOT120-R23-CATALOG-CORRECTION.md](MOT120-R23-CATALOG-CORRECTION.md).
 
-The correction is locally implemented; independent R23 correction re-review is
-pending. Earlier REQUEST CHANGES history remains. MOT-119 integration and memory
-evidence are retained, as are physical Safari, broader catalog/feature and release
-holds. Port 5196 serves the corrected compiled app. No push or deployment.
+Actual independent gpt-6-astra re-review **R24 APPROVE FIXES** resolves R23-1/C1
+at the same code revision, with no new actionable finding. Fresh 54 focused tests,
+1,200 default tests, four typechecks, build and independent native bitmap probes
+pass. See [MOT120-R23-ASTRA-REREVIEW.md](MOT120-R23-ASTRA-REREVIEW.md).
+Earlier REQUEST CHANGES history remains. MOT-119 integration and memory evidence
+are retained, as are physical Safari, broader catalog/feature and release holds.
+Port 5196 serves the corrected compiled app. No push or deployment.
 
 ## Historical local checkpoint: MOT-119 HTML and memory integration — 1 November 2026
 

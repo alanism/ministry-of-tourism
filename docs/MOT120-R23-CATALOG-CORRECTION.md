@@ -58,7 +58,13 @@ planning workspace. Browser-content screenshots include baseline overlap,
 pending Add, cancel/retry, preview failure and added images at desktop/touch
 widths. Browser plugin unavailable; bundled Playwright fallback used.
 
-Independent correction re-review has **not** been run. Preserve the original
-R23 REQUEST CHANGES history and mark the fix implemented pending re-review,
-not independently accepted or full MOT-120 completion. No push, deployment or
-new PDF work. MOT-119 memory/Safari and all other release holds are retained.
+Actual independent **gpt-6-astra re-review R24: APPROVE FIXES for R23-1/C1 only**.
+The reviewer reran 54 focused tests, the full 1,200-test/four-typecheck suite and
+production build, then the compiled UI probe plus three independently authored
+native queue cases. All passed; peak outstanding bitmaps stayed one and eventual
+live count zero. No new actionable finding. The original R23 REQUEST CHANGES is
+preserved as history and R23-1 is resolved. The verbatim [independent report](MOT120-R23-ASTRA-REREVIEW.md)
+and [receipt](MOT120-R23-REVIEW-RECEIPT.json) distinguish inherited evidence,
+fresh reruns and independently new probes. This is not full MOT-120 acceptance.
+Physical Safari, MOT-119 memory and all broader release holds remain. No push,
+deployment or new PDF work.
