@@ -62,6 +62,6 @@ export function GroupOrganizer({session,actor,tick,refresh,onClose,whenSaved,onH
   <button type="button" className="m-btn" disabled={busy} onClick={()=>{setBusy(true);void createTripArtifact(session,'zip',undefined,{includePrivate:true,variant:'personal'}).then(file=>{downloadArtifact(file);setMessage('Personal backup ready. Keep the downloaded ZIP before closing this tab.');},error=>setMessage(error instanceof Error?error.message:'Personal backup unavailable; keep this tab open and retry.')).finally(()=>setBusy(false));}}>Download personal backup</button>
   <BookingAttentionForm session={session} actor={actor} refresh={refresh} whenSaved={whenSaved} onMessage={setMessage} />
   </>}
-  <VotingHistory session={session} />
+  <VotingHistory session={session} actor={actor} refresh={refresh} notify={setMessage} onRoundChange={key=>{setRoundKey(`${key.proposal_version}:${key.round_id}`);setReview(null);}} />
  </div><div className="mot-sheet-foot"><button type="button" className="m-btn primary" onClick={onClose}>Done</button></div></aside>;
 }

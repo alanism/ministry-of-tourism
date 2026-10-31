@@ -88,3 +88,26 @@ it('rejects a seal from another stable trip even when its body and digest are in
  const canonical=JSON.stringify(fault,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a<b?-1:a>b?1:0)):item);
  session.parts.clock.delete(record);session.parts.clock.set(core.votingSealKey('foreign',key),{...fault,digest:await core.sha256Hex(strToU8(canonical))});await expect(validateVotingLifecycle(session.doc)).rejects.toThrow(/another trip|trip identity/);
 });
+
+// Astra AS123 follow-up: a later sealed round may outlive its live definition while an older group remains.
+async function partiallyUndoneSealedRounds(){
+ const {session}=setup();openVotingRound(session,person,key);await reply(session,'h1',['A']);commitVotingClose(session,person,await prepareVotingClose(session,person,key));
+ const second=startNextVotingRound(session,person,key,{rank_limit:5,option_ids:['B','C']});openVotingRound(session,person,second);
+ session.execute(person,'trip_ballot_update',{...second,household_id:'h2',rankings:[{option_id:'B',rank:1}],stamps:[],shared_note:'PRIVATE second round'});
+ const exported=await core.exportLocalGroupResponse(session,person,{...second,household_id:'h2'},'json');await core.mergeGroupResponseFiles(session,person,[exported.bytes],['h2']);commitVotingClose(session,person,await prepareVotingClose(session,person,second));
+ while(core.readTripMeta(session.doc).groupPreferences!.rounds.some(r=>r.round_id===second.round_id))expect(session.undo(person.id)).toBe(true);
+ expect(core.readTripMeta(session.doc).groupPreferences!.rounds).toHaveLength(1);expect(await readVotingSeals(session)).toHaveLength(2);return{session,second};
+}
+it('validates and privately round-trips an orphaned later-round response cache beside an older live group (Astra)',async()=>{
+ const {session,second}=await partiallyUndoneSealedRounds();await expect(core.validateStoredGroupResponses(session.doc)).resolves.toBeUndefined();
+ const before=await readVotingSeals(session),restored=await core.importTripPackage(await core.exportTripPackage(session.doc,new Map(),{variant:'private'})),copy=new core.TripSession(restored.doc);
+ await expect(core.validateStoredGroupResponses(copy.doc)).resolves.toBeUndefined();expect(await readVotingSeals(copy)).toEqual(before);expect(core.readTripMeta(copy.doc).groupPreferences!.rounds).toEqual(core.readTripMeta(session.doc).groupPreferences!.rounds);expect((await getVotingRoundView(copy,second)).tally!.options.find(o=>o.option_id==='B')!.points).toBe(5);
+});
+it('starts above the sealed version floor from an orphaned round while preserving older live rounds and roster (Astra)',async()=>{
+ const {session,second}=await partiallyUndoneSealedRounds(),prior=structuredClone(core.readTripMeta(session.doc).groupPreferences!),seals=await readVotingSeals(session),next=startNextVotingRound(session,person,second),group=core.readTripMeta(session.doc).groupPreferences!;
+ expect(next.proposal_version).toBe(3);expect(group.households).toEqual(prior.households);expect(group.rounds.slice(0,-1)).toEqual(prior.rounds);expect(group.rounds.at(-1)).toMatchObject({...next,rank_limit:5,option_ids:['B','C']});expect(next.round_id).not.toBe(second.round_id);expect((await getVotingRoundView(session,next)).status).toBe('draft');openVotingRound(session,person,next);expect((await getVotingRoundView(session,next)).tally!.coverage.responding).toBe(0);expect(await readVotingSeals(session)).toEqual(seals);await expect(core.validateStoredGroupResponses(session.doc)).resolves.toBeUndefined();
+});
+
+it('can start from the selected second seal after all live configuration is undone, without reopening either old identity',async()=>{
+ const {session,second}=await partiallyUndoneSealedRounds();while(session.canUndo(person.id))session.undo(person.id);expect(core.readTripMeta(session.doc).groupPreferences).toBeUndefined();const before=await readVotingSeals(session),next=startNextVotingRound(session,person,second);expect(next.proposal_version).toBe(3);expect(core.readTripMeta(session.doc).groupPreferences!.rounds.at(-1)).toMatchObject({rank_limit:5,option_ids:['B','C']});expect(await readVotingSeals(session)).toEqual(before);expect(core.votingRoundState(session,key)).toBe('closed');expect(core.votingRoundState(session,second)).toBe('closed');await expect(core.validateStoredGroupResponses(session.doc)).resolves.toBeUndefined();
+});

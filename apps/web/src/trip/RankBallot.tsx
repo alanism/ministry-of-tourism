@@ -84,7 +84,7 @@ export function RankBallot({session,actor,refresh,notify,onClose,notice,onOrgani
     <VotingRoundControls session={session} actor={actor} round={round} refresh={refresh} notify={notify} onRoundChange={key=>setRoundKey(`${key.proposal_version}:${key.round_id}`)} />
     <BallotEditor key={`${round.proposal_version}:${round.round_id}:${household.household_id}`} session={session} actor={actor} refresh={refresh} notify={notify} group={group} round={round} householdId={household.household_id} onExport={onExport} exportBusy={exportBusy} />
    </>:<RoundSetup session={session} actor={actor} refresh={refresh} notify={notify} />}
-   <VotingHistory session={session} />
+   <VotingHistory session={session} actor={actor} refresh={refresh} notify={notify} onRoundChange={key=>setRoundKey(`${key.proposal_version}:${key.round_id}`)} />
   </div>
   <div className="mot-sheet-foot"><button type="button" className="m-btn" disabled={!session.canUndo(actor.id)} onClick={()=>{session.undo(actor.id);refresh();notify('Undone');}}>Undo</button><button type="button" className="m-btn primary" onClick={onClose}>Done</button></div>
  </aside>;

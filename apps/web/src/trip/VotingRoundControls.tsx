@@ -60,10 +60,11 @@ export function VotingRoundControls({session,actor,round,refresh,notify,onRoundC
 }
 
 /** Seals remain visible even if ordinary Undo removed the live configuration. */
-export function VotingHistory({session}:{session:TripSession}){
+export function VotingHistory({session,actor,refresh,notify,onRoundChange}:Omit<Props,'round'>){
  const [seals,setSeals]=useState<Awaited<ReturnType<typeof readVotingSeals>>>([]),[error,setError]=useState('');const revision=session.boardRev;
  useEffect(()=>{let current=true;setError('');void readVotingSeals(session).then(rows=>{if(current)setSeals(rows);},cause=>{if(current)setError(cause instanceof Error?cause.message:'Closed result history unavailable.');});return()=>{current=false;};},[session,revision]);
  if(error)return <p role="alert">{error}</p>;
  if(!seals.length)return null;
- return <section aria-label="Closed voting history"><h3>Closed voting history</h3>{seals.map(seal=><details key={`${seal.trip_id}:${seal.proposal_version}:${seal.round_id}`}><summary>Proposal {seal.proposal_version} · {seal.round_id} · sealed result</summary><p>Closed by local actor {seal.closedBy} at {seal.closedAt}.</p><p>{seal.tally.coverage.responding} responding · {seal.tally.coverage.pending} pending · {seal.tally.coverage.conflicting} conflicting · {seal.tally.coverage.needs_resolution} needing resolution</p><TallyTable tally={seal.tally} session={session} /></details>)}</section>;
+ const rounds=readTripMeta(session.doc).groupPreferences?.rounds??[];
+ return <section aria-label="Closed voting history"><h3>Closed voting history</h3>{seals.map(seal=><details key={`${seal.trip_id}:${seal.proposal_version}:${seal.round_id}`}><summary>Proposal {seal.proposal_version} · {seal.round_id} · sealed result</summary><p>Closed by local actor {seal.closedBy} at {seal.closedAt}.</p><p>{seal.tally.coverage.responding} responding · {seal.tally.coverage.pending} pending · {seal.tally.coverage.conflicting} conflicting · {seal.tally.coverage.needs_resolution} needing resolution</p><TallyTable tally={seal.tally} session={session} />{!rounds.some(round=>round.round_id===seal.round_id&&round.proposal_version===seal.proposal_version)&&<VotingRoundControls session={session} actor={actor} round={seal} refresh={refresh} notify={notify} onRoundChange={onRoundChange} />}</details>)}</section>;
 }

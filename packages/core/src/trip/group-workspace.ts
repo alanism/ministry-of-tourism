@@ -54,6 +54,6 @@ export async function validateStoredGroupResponses(doc:TripSession['doc']){
  const meta=readTripMeta(doc),group=meta.groupPreferences;
  if(meta.groupWorkspace?.ledger){if(!group)throw new Error('Response ledger has no declared group');await mergeResponseLedger(group,meta.groupWorkspace.ledger,[]);}
  const clock=tripParts(doc).clock;
- const seals=group?[]:await readVotingSeals({doc,parts:tripParts(doc)});
- for(const key of clock.keys())if(key.startsWith('groupResponse:')){const value=clock.get(key),response=value as {proposal_version?:number;round_id?:string},retained=group??seals.find(s=>s.proposal_version===response?.proposal_version&&s.round_id===response?.round_id)?.configuration;if(!retained)throw new Error('Outbound response has no declared group');const checked=await validateGroupResponse(value,retained);if(key!==`groupResponse:${ballotKey(checked.response)}`)throw new Error('Outbound response cache identity mismatch');}
+ const seals=await readVotingSeals({doc,parts:tripParts(doc)});
+ for(const key of clock.keys())if(key.startsWith('groupResponse:')){const value=clock.get(key),response=value as {proposal_version?:number;round_id?:string},retained=group?.rounds.some(r=>r.proposal_version===response?.proposal_version&&r.round_id===response?.round_id)?group:seals.find(s=>s.proposal_version===response?.proposal_version&&s.round_id===response?.round_id)?.configuration;if(!retained)throw new Error('Outbound response has no declared group');const checked=await validateGroupResponse(value,retained);if(key!==`groupResponse:${ballotKey(checked.response)}`)throw new Error('Outbound response cache identity mismatch');}
 }
