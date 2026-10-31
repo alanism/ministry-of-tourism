@@ -8,7 +8,9 @@ and the public trip-agent PDF entry point are retired.
 
 `window.motTrip.exportArtifact('html')` defaults to a shared copy. The receipt
 contains filename, MIME, bytes, SHA-256, board ID, revision and retention status.
-`embeddedMedia` distinguishes source and embedded hashes. Ready bytes, a
+`embeddedMedia` distinguishes source and embedded hashes. `selection` lists the
+frozen cards, media, placements and their reading/page representations, including
+exact-image aliases. Out-of-scope cards have an aggregate count only. Ready bytes, a
 download, browser retention and an observed offline reopen are different facts.
 
 ## Snapshot and media
@@ -54,15 +56,36 @@ output. Header arithmetic is checked before decode; repeated payloads and both
 page variants count toward output. These are enforced engineering bounds, not
 measured physical-Safari memory guarantees. Native package limits are unchanged.
 
+## Larger trips and reading text
+
+Routes paginate in groups of eight diagram nodes, followed by complete wrapped
+names and saved dates in timetable pages. Unscheduled ideas are labelled as such;
+dates are never inferred. Notebook and contents pages continue until all selected
+material is accounted for. Every distinct selected image is represented; exact
+saved-hash aliases retain their captions and point to the displayed image.
+
+An actual saved brief leads the issue, with the day plan and personal material
+ahead of source/editorial and apparel pages. Complete visible reading text follows
+the pages in both Magazine and HTML. Page links lead to it. A constrained Markdown
+subset renders headings, emphasis, lists, quotes, code and safe HTTP(S) links.
+Raw HTML is escaped and Markdown images stay inert. Stored bodies and source
+evidence remain unchanged. Replacement semantics and other MOT-133 views are
+outside this bounded MOT-135 work supporting MOT-119.
+
+Page and cumulative SVG-byte limits apply during pagination. Complete text and
+manifest expansion are bounded before final HTML assembly. An over-limit or
+unrepresented selection fails explicitly and retains the editable ZIP option.
+
 ## Remaining acceptance
 
-This is bounded MOT-119 serializer implementation, not full launch acceptance.
-The existing editorial renderer still has a five-item contents summary and an
-eight-stop route. HTML explicitly refuses a trip with more than eight route
-candidates instead of reporting success with a silently capped route. Content
-eligibility, replacement, editorial hierarchy and safe Markdown remain the
-MOT-133/135 contracts; no renderer redesign is included here.
-
 Actual physical iPhone/iPad Safari file-open, full eligible fixtures at the limits,
-remaining launch evidence and deployment approval remain separate. The ordinary
-unchanged regression suite runs; no PDF is generated or separately retested.
+remaining launch evidence and deployment approval remain separate. The exercised
+four-day London fixture has 23 shared cards, six pictures and 53 pages; preview,
+moved offline HTML and ZIP round-trip preserve the selection. Chromium checks at
+1440, 375 and 280 pixels do not establish physical-Safari memory guarantees.
+A 128-page text fixture exports all tails; the next larger input fails during
+pagination without changing the trip. A real four-image 64 MP collection passes;
+an additional 16 MP image fails before decode. The 128 MiB serialization preflight
+also rejects excess input. These separate boundary probes do not establish the
+worst combined source/output memory footprint on a device. The ordinary unchanged
+regression suite runs; no PDF is generated or separately retested.

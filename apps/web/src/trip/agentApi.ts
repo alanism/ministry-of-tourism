@@ -8,7 +8,7 @@ const routeExtraSchema=z.object({answers:z.record(z.string().max(60),z.object({s
 const groupRouteExtraSchema=routeExtraSchema.extend({ledger:z.unknown().optional()}).strict();
 const reactionsSchema=z.record(z.string().min(1).max(200),z.enum(['keep','maybe','skip']));
 const parse=<T,>(schema:z.ZodType<T>,raw:unknown,what:string):T=>{const parsed=schema.safeParse(raw);if(!parsed.success)throw new CommandError('invalid_input',`Invalid ${what}. Nothing changed.`);return parsed.data;};
-export interface TripArtifact {filename:string;mime:string;byteCount:number;boardId:string;revision:number;url:string;id?:string;createdAt?:string;sha256?:string;kept?:boolean;scope?:'guide'|'stay'|'personal';urlExpiresAt?:string|null;embeddedMedia?:import('./standalone-media').EmbeddedMedia[];}
+export interface TripArtifact {filename:string;mime:string;byteCount:number;boardId:string;revision:number;url:string;id?:string;createdAt?:string;sha256?:string;kept?:boolean;scope?:'guide'|'stay'|'personal';urlExpiresAt?:string|null;embeddedMedia?:import('./standalone-media').EmbeddedMedia[];selection?:import('@writers-board/core').MagazineDocument['selection'];}
 export interface TripApiOptions {onChange?:()=>void;providers?:()=>{fcc:boolean;muse:boolean};whenSaved?:()=>Promise<void>;onDiagnostic?:(receipt:DiagnosticReceipt)=>void;exportState?:()=>OperationState|undefined;exportArtifact?:(format:'html'|'zip',signal?:AbortSignal)=>Promise<TripArtifact>;}
 
 export function createTripApi(session:TripSession,options:TripApiOptions={}) {

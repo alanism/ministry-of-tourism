@@ -37,8 +37,7 @@ async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:A
 export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSignal,scope:ArtifactScope='stay',onProgress?:ArtifactOptions['onProgress']):Promise<{magazine:MagazineDocument;media:EmbeddedMedia[]}> {
   const doc=loadTrip(encodeTrip(session.doc));
   try{
-    const selected=selection(doc,scope),stops=selected.cards.filter(card=>card.kind==='place'||card.day||card.location);
-    if(stops.length>8)throw new Error('This magazine layout currently shows at most eight route stops. Use the editable ZIP to keep this larger trip; HTML export is held until the full route layout is available.');
+    const selected=selection(doc,scope);
     const bytes=await collectAssets(doc,scope,signal,onProgress,'collect',true,true),sizes=new Map<string,{width:number;height:number}>();
     let pixels=0;
     for(const [id,original] of bytes){
@@ -59,7 +58,9 @@ export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSigna
       }catch(error){signal?.throwIfAborted();throw new Error(`Image ${id}: ${error instanceof Error?error.message:'Privacy sanitation failed.'}`);}
     }
     signal?.throwIfAborted();onProgress?.({stage:'layout',completed:0,unit:'pages',done:false});
-    const magazine=buildMagazine(doc,{assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:readMagazineApparel(selected.parts,scope==='personal').map(asset=>asset.apparel!)});
+    const magazine=buildMagazine(doc,{assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:readMagazineApparel(selected.parts,scope==='personal').map(asset=>asset.apparel!),limits:{pages:HTML_LIMITS.pages,svgBytes:HTML_LIMITS.outputBytes},signal});
+    const missing=magazine.selection?.assets.find(asset=>!asset.pageIds.length);
+    if(missing)throw new Error(`Selected image ${missing.id} has no reading representation. Review its placement or keep the complete trip in an editable ZIP.`);
     if(magazine.pages.length>HTML_LIMITS.pages)throw new Error('The magazine exceeds the experimental 128-page HTML limit. Keep the complete trip in an editable ZIP.');
     onProgress?.({stage:'layout',completed:magazine.pages.length,total:magazine.pages.length,unit:'pages',done:true});return {magazine,media};
   }finally{doc.destroy();}
@@ -201,7 +202,7 @@ export async function createTripArtifact(session:TripSession,format:'html'|'pdf'
     const blob=new Blob([bytes as BlobPart],{type:mime}),readback=new Uint8Array(await blob.arrayBuffer());
     if(readback.length!==bytes.length||!readback.every((byte,index)=>byte===bytes[index]))throw new Error('Export read-back failed. Retry from the unchanged board.');
     const sha256=await artifactSha256(blob),createdAt=new Date().toISOString();signal?.throwIfAborted();
-    const record:StoredArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,createdAt,sha256,scope,format,blob,inventory,embeddedMedia,...(magazine?.pages[0]?{coverSvg:magazine.pages[0].svg}:{})};
+    const record:StoredArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,createdAt,sha256,scope,format,blob,inventory,embeddedMedia,selection:magazine?.selection,...(magazine?.pages[0]?{coverSvg:magazine.pages[0].svg}:{})};
     let kept=false,storageDiagnostic:DiagnosticReceipt|undefined;
     if(format==='zip')zipStep='persist';
     try{await keepArtifact(record);kept=true;}
@@ -210,7 +211,7 @@ export async function createTripArtifact(session:TripSession,format:'html'|'pdf'
     options.onProgress?.({stage:'verify',completed:blob.size,total:blob.size,unit:'bytes',done:true});
     if(format==='html')await tracker.run('validating','exported',async()=>readback);
     if(format==='html'&&signal?.aborted){if(kept)try{await removeArtifact(id);}catch{/* Cancelled bytes are never advertised as ready. */}signal.throwIfAborted();}
-    const artifact:ExportArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,url:URL.createObjectURL(blob),createdAt,sha256,kept,scope,urlExpiresAt:null,inventory,embeddedMedia,coverSvg:record.coverSvg,...(storageDiagnostic?{storageDiagnostic}:{})};
+    const artifact:ExportArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,url:URL.createObjectURL(blob),createdAt,sha256,kept,scope,urlExpiresAt:null,inventory,embeddedMedia,selection:record.selection,coverSvg:record.coverSvg,...(storageDiagnostic?{storageDiagnostic}:{})};
     available.set(id,{record,artifact});return artifact;
   }catch(error){tracker.fail(error);throw error;}finally{signal?.removeEventListener('abort',cancel);frozen.destroy();snapshot.destroy();}
 }
@@ -225,7 +226,7 @@ export async function restoreTripArtifact(id:string):Promise<ExportArtifact>{
     if(pending.cancelled)throw new Error('This export was removed while restoring. Make a fresh export.');
     if(!record)throw new Error('This export is no longer kept in this browser. Make a fresh export.');
     const existing=available.get(id);if(existing)return existing.artifact;
-    const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},embeddedMedia:record.embeddedMedia,coverSvg:record.coverSvg};
+    const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},embeddedMedia:record.embeddedMedia,selection:record.selection,coverSvg:record.coverSvg};
     available.set(id,{record,artifact});return artifact;
   }finally{readers.delete(pending);if(!readers.size&&restoring.get(id)===readers)restoring.delete(id);}
 }

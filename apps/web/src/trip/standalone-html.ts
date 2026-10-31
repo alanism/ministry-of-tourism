@@ -1,4 +1,4 @@
-import type {MagazineDocument} from '@writers-board/core';
+import {magazineReadingHtml,type MagazineDocument} from '@writers-board/core';
 import {PLEX_CSS} from '../../../../packages/core/src/trip/fonts/plex';
 import plexLicense from '../../../../packages/core/src/trip/fonts/OFL.txt?raw';
 import {readableMagazineSvg} from './magazine-reading';
@@ -68,13 +68,14 @@ export async function standaloneMagazineHtml(magazine:MagazineDocument,signal?:A
   if(cssHash!==fontCoverage.cssSha256)throw new Error('Embedded fonts changed. Refresh the glyph and license audit before HTML export.');
   checkGlyphs(magazine.title,'IBM Plex Serif','600');
   for(const page of magazine.pages){checkGlyphs(page.title??`Page ${page.folio}`,'IBM Plex Sans','400');for(const credit of page.credits)checkGlyphs(credit,'IBM Plex Sans','400');}
+  for(const item of magazine.reading??[]){checkGlyphs(item.title,'IBM Plex Sans','600');checkGlyphs(item.text,'IBM Plex Sans','400');}
   if(!magazine.pages.length)throw new Error('Add a card or artwork before exporting a magazine.');
   if(magazine.pages.length>HTML_LIMITS.pages)throw new Error('The magazine exceeds the experimental HTML page limit.');
   // Source growth is bounded before XML parsing and narrow-layout work, as well as after serialization.
   let size=byteLength(PLEX_CSS)+byteLength(plexLicense)+4096;
   for(const page of magazine.pages){size+=byteLength(page.svg)*2;if(size>HTML_LIMITS.outputBytes)throw new Error('The magazine exceeds the experimental 128 MiB HTML limit. Keep the full trip in an editable ZIP.');}
   const parts=[`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${escape(magazine.title)}</title><style>${PLEX_CSS}
-body{margin:0;background:#FAF7F2;color:#000000;font:16px 'IBM Plex Sans',sans-serif}main,header,footer{max-width:1184px;margin:24px auto;padding:0 16px}h1{font:600 30px 'IBM Plex Serif',serif}nav{display:flex;gap:12px;flex-wrap:wrap}a{color:inherit}figure{margin:24px 0;background:white}svg{display:block;width:100%;height:auto}figcaption{padding:12px}.narrow{display:none}pre{white-space:pre-wrap;overflow-wrap:anywhere}footer{font-size:12px}@media(max-width:600px){.wide{display:none}.narrow{display:block}}@media print{header,footer{display:none}.wide{display:block}.narrow{display:none}figure{break-after:page;margin:0}}</style></head><body><header><h1>${escape(magazine.title)}</h1><p>${magazine.pages.length} pages · revision ${magazine.revision}</p><p>Saved trip material, with metadata-free PNG image representations. Your editable ZIP keeps the originals. Live catalogue previews are not added to this file.</p><nav aria-label="Magazine pages">${magazine.pages.map((page,i)=>`<a href="#page-${i+1}">${escape(page.title??`Page ${page.folio}`)}</a>`).join('')}</nav></header><main>`];
+body{margin:0;background:#FAF7F2;color:#000000;font:16px 'IBM Plex Sans',sans-serif}main,header,footer{max-width:1184px;margin:24px auto;padding:0 16px}h1{font:600 30px 'IBM Plex Serif',serif}nav{display:flex;gap:12px;flex-wrap:wrap}a{color:inherit;overflow-wrap:anywhere}#trip-reading{max-width:72ch;margin:32px auto}#trip-reading article{padding:20px 0;border-bottom:1px solid}#trip-reading p,#trip-reading li{white-space:pre-wrap;line-height:1.6}figure{margin:24px 0;background:white}svg{display:block;width:100%;height:auto}figcaption{padding:12px}.narrow{display:none}pre{white-space:pre-wrap;overflow-wrap:anywhere}footer{font-size:12px}@media(max-width:600px){.wide{display:none}.narrow{display:block}}@media print{header,footer{display:none}.wide{display:block}.narrow{display:none}figure{break-after:page;margin:0}}</style></head><body><header><h1>${escape(magazine.title)}</h1><p>${magazine.pages.length} pages · revision ${magazine.revision}</p><p>Saved trip material, with metadata-free PNG image representations. Your editable ZIP keeps the originals. Live catalogue previews are not added to this file.</p><nav aria-label="Magazine pages">${(magazine.navigation??magazine.pages.map(page=>({title:page.title??`Page ${page.folio}`,pageIds:[page.id]}))).map(item=>`<a href="#page-${magazine.pages.findIndex(page=>page.id===item.pageIds[0])+1}">${escape(item.title)}</a>`).join('')}</nav></header><main>`];
   size=byteLength(parts[0]!);
   const controller=signal??new AbortController().signal;
   for(const [index,page] of magazine.pages.entries()){
@@ -83,10 +84,18 @@ body{margin:0;background:#FAF7F2;color:#000000;font:16px 'IBM Plex Sans',sans-se
     checkedMagazineSvg(page.svg,`check-${index}`);
     const narrow=await readableMagazineSvg(page.svg,248,controller);signal?.throwIfAborted();
     const wideSvg=checkedMagazineSvg(page.svg,`wide-${index}`),narrowSvg=checkedMagazineSvg(narrow,`narrow-${index}`);
-    const part=`<figure id="page-${index+1}" aria-label="${escape(page.title??`Page ${page.folio}`)}"><div class="wide">${wideSvg}</div><div class="narrow">${narrowSvg}</div><figcaption>Page ${page.folio}${page.credits.length?` · ${page.credits.map(escape).join(' · ')}`:''}</figcaption></figure>`;
+    const part=`<figure id="page-${index+1}" aria-label="${escape(page.title??`Page ${page.folio}`)}"><div class="wide">${wideSvg}</div><div class="narrow">${narrowSvg}</div><figcaption>Page ${page.folio}${page.credits.length?` · ${page.credits.map(escape).join(' · ')}`:''} · <a href="#trip-reading">Read complete text</a></figcaption></figure>`;
     size+=byteLength(part);if(size>HTML_LIMITS.outputBytes)throw new Error('The magazine exceeds the experimental 128 MiB HTML limit. Keep the complete trip in an editable ZIP.');
     parts.push(part);onPage?.(index+1,magazine.pages.length);
   }
-  parts.push(`</main><footer><details><summary>Embedded font license · IBM Plex</summary><pre>${escape(plexLicense)}</pre></details></footer></body></html>`);
+  const append=(part:string)=>{size+=byteLength(part);if(size>HTML_LIMITS.outputBytes)throw new Error('The complete reading text exceeds the HTML output limit. Keep the complete trip in an editable ZIP.');parts.push(part);};
+  const manifest=magazine.selection?JSON.stringify(magazine.selection,null,2):'';
+  let readingBound=byteLength(manifest)*6;
+  for(const item of magazine.reading??[]){readingBound+=(item.title.length+item.body.length+(item.note?.length??0)+item.id.length)*6+1024;}
+  if(size+readingBound>HTML_LIMITS.outputBytes)throw new Error('The complete reading text and inclusion manifest exceed the HTML output limit. Keep the full trip in an editable ZIP.');
+  append('<section id="trip-reading"><h2>Complete trip text</h2>');
+  for(const item of magazine.reading??[]){signal?.throwIfAborted();append(`<article id="reading-${encodeURIComponent(item.id)}"><h3>${escape(item.title)}</h3><p>${item.source?'Source material':'Your trip'}${item.day?' · '+escape(item.day)+(item.time?' · '+escape(item.time):' · day only'):''}</p>${magazineReadingHtml(item.body)+(item.note?'<h4>Your note</h4>'+magazineReadingHtml(item.note):'')}</article>`);}
+  if(magazine.selection?.assets.length)append(`<section><h3>Saved pictures</h3><ul>${magazine.selection.assets.map(asset=>`<li>${escape(asset.caption??asset.id)}${asset.representedBy?' · same image as '+escape(magazine.selection!.assets.find(other=>other.id===asset.representedBy)?.caption??asset.representedBy):''}${asset.credit?' · '+escape(asset.credit):''}</li>`).join('')}</ul></section>`);
+  append(`</section></main><footer>${manifest?`<details><summary>Included material · revision ${magazine.selection!.revision}</summary><pre>${escape(manifest)}</pre></details>`:''}<details><summary>Embedded font license · IBM Plex</summary><pre>${escape(plexLicense)}</pre></details></footer></body></html>`);
   const result=new TextEncoder().encode(parts.join(''));if(result.length>HTML_LIMITS.outputBytes)throw new Error('The HTML exceeds its output limit. Nothing was exported.');return result;
 }

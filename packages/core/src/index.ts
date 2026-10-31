@@ -69,3 +69,4 @@ export * from './trip/agent-context.ts';
 export * from './trip/trip-adaptation.ts';
 
 export * from './trip/group-routing.ts';
+export * from './trip/magazine-markdown.ts';

@@ -3,7 +3,7 @@ export type ArtifactScope='guide'|'stay'|'personal';
 export interface ArtifactInventory {cards:number;placements:number;assets:number;notes:number;credits:number;}
 export interface StoredArtifact {
   id:string;boardId:string;revision:number;filename:string;mime:string;byteCount:number;createdAt:string;sha256:string;
-  scope:ArtifactScope;format:'html'|'pdf'|'zip';blob:Blob;coverSvg?:string;inventory?:ArtifactInventory;embeddedMedia?:import('./standalone-media').EmbeddedMedia[];
+  scope:ArtifactScope;format:'html'|'pdf'|'zip';blob:Blob;coverSvg?:string;inventory?:ArtifactInventory;embeddedMedia?:import('./standalone-media').EmbeddedMedia[];selection?:import('@writers-board/core').MagazineDocument['selection'];
 }
 const DB='mot-export-artifacts',STORE='artifacts';
 let pendingDb:Promise<IDBDatabase>|null=null;
