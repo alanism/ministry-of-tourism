@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-31",
+  "task": "MOT-120",
+  "slice": "approved geometry foundation only",
+  "baseline": "f40dc7d01247de32ce2b21c5c79d9807e7b9cd1a",
+  "testedCodeCommit": "e3d2e84364ede4a43f3048160cad5828c9ecc5d8",
+  "modelCalls": [
+    {
+      "file": "implementation-receipt.json",
+      "id": "chatcmpl-01a19089-86d0-7336-a6c5-f8444dcbbee1",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 2852,
+        "prompt_tokens": 6272,
+        "total_tokens": 9124,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1113
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 13.34,
+      "finishReason": "stop"
+    },
+    {
+      "file": "test-type-repair-receipt.json",
+      "id": "chatcmpl-01a1908b-670a-7678-9ab3-7d33e597f578",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 470,
+        "prompt_tokens": 205,
+        "total_tokens": 675,
+        "completion_tokens_details": {
+          "reasoning_tokens": 365
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 3.97,
+      "finishReason": "stop"
+    },
+    {
+      "file": "tests-receipt.json",
+      "id": "chatcmpl-01a19088-d943-7598-b5ff-703a9351483c",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 11326,
+        "prompt_tokens": 689,
+        "total_tokens": 12015,
+        "completion_tokens_details": {
+          "reasoning_tokens": 5180
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 59.49,
+      "finishReason": "stop"
+    }
+  ],
+  "red": {
+    "tests": 112,
+    "passed": 1,
+    "failed": 111,
+    "baseline": "Explicit throwing scaffold; preserved in red-scaffold.ts"
+  },
+  "greenFocusedTests": 112,
+  "mutationChecks": {
+    "green": {
+      "exitCode": 0,
+      "seconds": 0.752
+    },
+    "edge": {
+      "exitCode": 1,
+      "seconds": 0.769
+    },
+    "card-link": {
+      "exitCode": 1,
+      "seconds": 0.768
+    },
+    "locale": {
+      "exitCode": 1,
+      "seconds": 0.761
+    }
+  },
+  "defaultTests": 1014,
+  "existingTestsPreserved": 902,
+  "testFiles": 163,
+  "typecheckProjects": 4,
+  "checks": {
+    "defaultCheck": {
+      "exitCode": 0,
+      "seconds": 33.02
+    },
+    "build": {
+      "exitCode": 0,
+      "seconds": 5.676
+    }
+  },
+  "initialTypecheckFailureRetained": true,
+  "scopePreservation": {
+    "existingFilesChanged": 0,
+    "schemaVersionStill2": true,
+    "noRuntimeUIWiring": true,
+    "noBarrelExport": true,
+    "catalogUnchanged": true,
+    "harnessUnchanged": true,
+    "productionHoldsPreserved": true
+  },
+  "remaining": "MOT-120 UI, schema migration/recovery, persisted fields, gestures/copy/paste, browser/device/independent acceptance remain incomplete; other task-definition and privacy holds preserved",
+  "noPushOrDeploy": true,
+  "proofSha256": {
+    "scope.txt": "c85f99f6b6d98bc0ae0092f2a6929b5b27b0f372a0576363f7965c6b6181d094",
+    "red-scaffold.ts": "0b91adb5b215fd1d5467f93d09a7b1449aebe729be607b64db18b6644def165f",
+    "red.log": "129ce160423440146edba0dfe28b3a51f0755b478e8a13120a5ba05ca8489ae0",
+    "green.log": "b83d32eb29c927c24cce2539715ab421bfd5b7c6aac030f086bff698bed050bc",
+    "mutation-edge.log": "042d7e5fc6d336d1c61e0f2d1e02e5e150c60d7823dc041d14dfcaa2dd0e788c",
+    "mutation-card-link.log": "291769dbdfc5ad40b1b8882742fee8b521d387ca1d5a245805c4bd8b3b9a0a4d",
+    "mutation-locale.log": "2d3f5a484fedc431a162a68aff266a1ae7ecf9a6b17669753addec6451b44e83",
+    "first-defaultCheck.log": "cacb3c65cd53ef9d80a86bb0f1763ee558d248d1ed7a011d6bf9da899a8f73f8",
+    "defaultCheck.log": "6e6c278df7084fee193beb8618500b5282e80ea1a83b411fcec338963be30775",
+    "build.log": "a6cc9424e70443d06a955ae37850a889d3f395223d4413c33cfaf6299ba0ab8f",
+    "implementation-receipt.json": "fa6c5d23d3e49c651202cd250601b0965c915bb861005b63c1789e1f796b0176",
+    "test-type-repair-receipt.json": "597278d781bec2d4c71b30cb5ef8c21b96cb28f41cf4e2ba4389e627929913d7",
+    "tests-receipt.json": "29b51abd5ee3af3c7974f611f54548dafd5c5fcd0f9279e7e43b16e670f34f2f",
+    "implementation-response.txt": "4f716e2fff4ddd4f85ceb79435623e966c4c638302baa7851ce56f812781d772",
+    "test-type-repair-response.txt": "92016bca194cd5a1869957b81b8f03557860fb63716108ae6bb00b5c4a3308f6",
+    "tests-response.txt": "91ecfdb12bc12adb332ab49ab58c7a313b346d8e574a126d17ebd3a048d6c00a"
+  }
+}
