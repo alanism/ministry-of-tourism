@@ -75,17 +75,23 @@ outside this bounded MOT-135 work supporting MOT-119.
 Page and cumulative SVG-byte limits apply during pagination. Complete text and
 manifest expansion are bounded before final HTML assembly. An over-limit or
 unrepresented selection fails explicitly and retains the editable ZIP option.
+In the integrated G6 app, HTML excludes board-only placements from collection and
+inventory; ZIP retains them. A saved card or explicit magazine tee may still use
+the same image on both surfaces.
 
 ## Remaining acceptance
 
-Actual physical iPhone/iPad Safari file-open, full eligible fixtures at the limits,
-remaining launch evidence and deployment approval remain separate. The exercised
+Actual physical iPhone/iPad Safari file-open, remaining launch evidence and
+deployment approval remain separate. The exercised
 four-day London fixture has 23 shared cards, six pictures and 53 pages; preview,
 moved offline HTML and ZIP round-trip preserve the selection. Chromium checks at
 1440, 375 and 280 pixels do not establish physical-Safari memory guarantees.
 A 128-page text fixture exports all tails; the next larger input fails during
 pagination without changing the trip. A real four-image 64 MP collection passes;
-an additional 16 MP image fails before decode. The 128 MiB serialization preflight
-also rejects excess input. These separate boundary probes do not establish the
-worst combined source/output memory footprint on a device. The ordinary unchanged
-regression suite runs; no PDF is generated or separately retested.
+an additional 16 MP image fails before decode. A separate source-SVG working
+preflight rejects excessive intermediate expansion; this is distinct from actual
+serialized HTML size. Combined 50 MiB/64 MP fixtures and an 87 MiB standalone file
+are profiled in [HTML-MAGAZINE-MEMORY.md](HTML-MAGAZINE-MEMORY.md), including the
+observed 1,597.4 MiB browser-private peak and repeated cleanup. This desktop
+characterization does not establish physical-device memory suitability. The
+ordinary unchanged regression suite runs; no PDF is generated or separately retested.

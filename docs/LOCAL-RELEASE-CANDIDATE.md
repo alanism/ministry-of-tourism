@@ -1,6 +1,23 @@
 # Local release candidate — 31 October 2026
 
-## Current local checkpoint: MOT-120 direct catalog insertion — 1 November 2026
+## Current local checkpoint: MOT-119 HTML and memory integration — 1 November 2026
+
+Tested code `e26ec8775aee11d7a6e08355eac28c3ebfc0f29b` integrates the two
+MOT-119 HTML/larger-trip commits as `7423282` and `f2878c5`, preserving the
+existing G6 board/recovery/catalog candidate. Integration regressions correct
+board-only media collection, intentionally shared magazine apparel and working-
+budget error classification. All 1,196 tests /181 files, four typechecks and the
+web build pass; existing harness files remain unchanged.
+
+The combined-bound memory work is recorded in [HTML-MAGAZINE-MEMORY.md](HTML-MAGAZINE-MEMORY.md).
+The 87 MiB file exports repeatedly and opens in a fresh offline browser. The
+observed process-private peak is about 1.56 GiB; this is not mobile suitability.
+The local preview at port 5196 now serves this integrated candidate. Physical
+Safari stays pending. MOT-120's existing R23 catalog review requests changes;
+that finding and all broader feature/production/release holds remain open.
+No push, deployment or PDF work.
+
+## Historical local checkpoint: MOT-120 direct catalog insertion — 1 November 2026
 
 Tested code `b11909964b26e7ec02efdfe726af797349867339` adds **Add FCC art** to
 the free board, reusing the existing catalog picker. Selected originals create
