@@ -1,4 +1,4 @@
-# F136-v1: Foundation validation protocol
+# F136-v1.1: Foundation validation protocol
 
 31 October 2026 · Owner approved before observations; requested Astra review tracked separately
 
@@ -45,6 +45,14 @@ Moderator may read the same neutral task wording and clarify the scenario. Point
 
 A purposeful action advances the requested trip task; merely opening a menu does not qualify. A wrong turn requires backtracking from an action that did not advance it. A repair is extra work to correct an error or recover state. Normal supported handoff steps are recorded as effort, not mislabeled errors. Record first-action and completion outcomes separately. T2/T4 comprehension thresholds apply to each candidate being recommended, not a pooled score across variants.
 
+### Paired effort comparison
+
+The owner's latest explicit disposition selects an **equal-weight combined total**: `effort = wrong turns + repair steps`. B improves a participant's paired run exactly when `effort_B < effort_A`; equal totals do not count as an improvement. A lower total can include a tradeoff between the two counts. Preserve both raw counts so the tradeoff remains visible; do not add weights after observing results. Gate-zero correctness/privacy failures still block acceptance regardless of the total.
+
+Use a unique ID for each observed action. Count an erroneous action as one wrong turn; count a distinct corrective action as one repair step. If an attempted repair itself takes a wrong turn, classify that action as a wrong turn only. Do not count the same action in both categories or count a single physical action twice. Thus one erroneous action followed by two distinct corrective actions yields one wrong turn and two repair steps.
+
+Examples: A=(3 wrong turns, 0 repairs), B=(0, 2) gives totals 3 and 2, so B improves. A=(2, 0), B=(0, 2) is a tie and does not count. A=(1, 0), B=(0, 2) does not count. These are protocol examples, not participant observations.
+
 After both variants, ask which they would choose for another trip and why. A preference counts toward the decision rule only when grounded in the tested job/control/effort rather than appearance alone. Preserve raw answers and the moderator's coding explanation; a reviewer can dispute the classification. Give the actual participant count and each paired result, not just an average.
 
 ## T2: predict inclusion and preserve a personal collection
@@ -77,7 +85,7 @@ These production gates are independent of T1's comparative study. Preserve exist
 
 ## Predeclared decision rules
 
-The owner approved these rules on 31 October 2026, before any participant observation. They determine the recommendation presented for a later owner decision; they do not automatically change the live app.
+The owner approved the original packet and explicitly selected the combined-total effort rule and A-retention precedence on 31 October 2026, before any participant observation. This F136-v1.1 clarification supersedes the ambiguous F136-v1 wording; the latest specific effort selection supersedes the earlier general instruction to use both recommendations. The six-participant design, timing and 5/6 and 4/6 thresholds remain unchanged. These rules determine the recommendation presented for a later owner decision; they do not automatically change the live app.
 
 Apply the rows in order: correctness failure, missing prerequisites, B-backup recommendation, A-retention, then inconclusive/revise. Preference is one first-choice answer per participant; ties/undecided answers count for neither candidate.
 
@@ -85,9 +93,11 @@ Apply the rows in order: correctness failure, missing prerequisites, B-backup re
 |---|---|
 | Any gate-zero failure | Hold acceptance/release for that defect. Repair and rerun the affected checks. Preference or visual quality cannot override it. |
 | Missing owner-approved protocol, matched variants, required fixture/version bindings, real comparator capability or authorized participants | Validation pending/inconclusive. Do not claim A or B won. Owner's current A selection remains a product decision, not a validated preference. |
-| B meets the same 5/6 first-action, completion and T2/T4 thresholds and has no fewer T1 completions than A; at least 4/6 participants prefer B for a qualified job/control/effort reason AND at least 4/6 paired runs need fewer wrong turns/repair steps in B; all applicable correctness gates pass | Recommend the B backup to the owner. Preserve the same full trip, manual route and publication capability. Do not switch the live default without the later owner decision. |
+| B meets the same 5/6 first-action, completion and T2/T4 thresholds and has no fewer T1 completions than A; at least 4/6 participants prefer B for a qualified job/control/effort reason AND at least 4/6 paired runs have a strictly lower combined total of wrong turns plus repair steps in B; all applicable correctness gates pass | Recommend the B backup to the owner. Preserve the same full trip, manual route and publication capability. Do not switch the live default without the later owner decision. |
 | A has at least 5/6 unassisted first purposeful actions within 60 seconds and 5/6 T1 completions within eight minutes, T2/T4 comprehension each at least 5/6, at least 4/6 participants prefer A for a qualified job/control/effort reason, all applicable correctness gates pass, and the backup rule is not met | Retain A as the supported direction for this tested cohort/build. Report uncertainty; no population/product-market-fit claim. |
-| Neither direction meets its rule, or preference/repair evidence conflicts | Revise the first useful state or hypothesis and repeat under a new protocol/build binding. Do not rescue the hypothesis with a post-hoc score or silently lower a threshold. |
+| Neither direction meets its rule after the preceding rows are applied | Revise the first useful state or hypothesis and repeat under a new protocol/build binding. Do not rescue the hypothesis with a post-hoc score or silently lower a threshold. |
+
+**A-retention precedence:** after correctness and prerequisite gates pass, retain A when its success/comprehension thresholds and at least 4/6 qualified A preferences are met, even if B has lower combined effort in at least 4/6 pairs but lacks its own required preference support. Effort alone cannot override qualified A preference. This case is not routed to the inconclusive row. Any raw effort/preference disagreement remains visible in the receipt.
 
 Participant attrition, prior exposure, access differences, protocol deviations and missing environments stay visible in the denominator. Six is the owner-approved completed paired sample; fewer records are incomplete evidence for these cutoffs. Revisions occur prospectively, not by rewriting an observed result into a pass.
 
