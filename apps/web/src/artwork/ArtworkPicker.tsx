@@ -106,15 +106,19 @@ function PackBrowser({ pack, onPick, busy,trip,onUpload }: { pack: StylePack; on
   return <>{resource.cachedAt&&<p className="artwork-count">Saved catalogue · {new Date(resource.cachedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} · couldn’t refresh. Artwork copies keep their own dates.</p>}{trip&&pack.id==='fcc-editorial'?<TripArtworkBrowser manifest={resource.data} trip={trip} onPick={onPick} busy={busy} onUpload={onUpload}/>:<CatalogBrowser key={pack.id} manifest={resource.data} onPick={onPick} busy={busy} trip={trip}/>}</>;
 }
 
-export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload?:(file:File,signal:AbortSignal)=>Promise<void>;onInsert?:(artwork:Artwork,signal:AbortSignal)=>Promise<void>;onClose?:()=>void;trip?:TripArtContext}={}) {
+export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload?:(file:File,signal:AbortSignal)=>Promise<void>;onInsert?:(artwork:Artwork,signal:AbortSignal,onCommitted?:()=>void)=>Promise<void>;onClose?:()=>void;trip?:TripArtContext}={}) {
   const registry = useCatalog('/artwork/index.json', registrySchema);
   const [styleId, setStyleId] = useState('');
   const [busy, setBusy] = useState('');
+  const [committed, setCommitted] = useState(false);
+  const committedRef = useRef(false);
+  const liveRef = useRef(true);
   const [error, setError] = useState('');
   const section = useRef<HTMLElement>(null);
   const fileInput=useRef<HTMLInputElement>(null);
   const insertion = useRef<AbortController | null>(null);
   const close = onClose??(()=>useUi.getState().setDialog(null));
+  useEffect(()=>{liveRef.current=true;return()=>{liveRef.current=false;};},[]);
   useEffect(()=>{
     // Disabling a download button can move focus to body; Escape must still cancel the sheet.
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();}};
@@ -126,20 +130,22 @@ export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload
     const previous=document.activeElement as HTMLElement|null;
     const trigger=document.querySelector<HTMLButtonElement>('.mot-header button[aria-label="Add"]');
     section.current?.querySelector<HTMLButtonElement>('button')?.focus();
-    return () => { insertion.current?.abort(); if(previous?.isConnected&&previous!==document.body)previous.focus();else trigger?.focus(); };
+    return () => { if(!committedRef.current)insertion.current?.abort(); if(previous?.isConnected&&previous!==document.body)previous.focus();else trigger?.focus(); };
   }, []);
   const pick = async (artwork: Artwork|File) => {
     if (insertion.current) return;
     const controller = new AbortController();
     insertion.current = controller;
     const timer = setTimeout(() => controller.abort(new Error('Download took too long. Please try again.')), 30000);
+    committedRef.current=false; setCommitted(false);
+    const onCommitted=()=>{committedRef.current=true;clearTimeout(timer);if(liveRef.current)setCommitted(true);};
     setBusy(artwork instanceof File?artwork.name:artwork.label); setError('');
-    try { if(artwork instanceof File){if(!onUpload)throw Error('Photo uploads are unavailable here.');await onUpload(artwork,controller.signal);}else await (onInsert??placeArtwork)(artwork, controller.signal); close(); }
+    try { if(artwork instanceof File){if(!onUpload)throw Error('Photo uploads are unavailable here.');await onUpload(artwork,controller.signal);}else if(onInsert)await onInsert(artwork,controller.signal,onCommitted);else await placeArtwork(artwork,controller.signal); if(liveRef.current)close(); }
     catch (cause) {
-      if (!controller.signal.aborted || cause instanceof Error && cause.name !== 'AbortError') {
+      if (liveRef.current && (!controller.signal.aborted || cause instanceof Error && cause.name !== 'AbortError')) {
         setError(controller.signal.aborted ? 'Download took too long. Please try again.' : cause instanceof Error ? cause.message : 'Could not add artwork. Please try again.');
       }
-    } finally { clearTimeout(timer); insertion.current = null; setBusy(''); }
+    } finally { clearTimeout(timer); insertion.current = null; if(liveRef.current)setBusy(''); }
   };
   return <div className={'dialog-backdrop'+(trip?' trip-art-backdrop':'')} onMouseDown={event => event.target === event.currentTarget && close()} onKeyDown={event => {
     event.stopPropagation();
@@ -154,7 +160,7 @@ export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload
     <section ref={section} className={'dialog artwork-picker'+(trip?' trip-artwork':'')} role="dialog" aria-modal="true" aria-labelledby="artwork-title" aria-busy={!!busy}>
       <div className="artwork-heading"><h2 id="artwork-title">{trip?'Add FCC art':'Artwork'}</h2><button type="button" onClick={close} aria-label="Close artwork">Close</button></div>
       <p className="dialog-note">{trip?'Drawings for your trip. Choose a picture, then add its original.':'People, places and objects for your ideas. Images load as you browse.'}</p>
-      {busy && <p className="artwork-notice" role="status">Adding {busy}…</p>}
+      {busy && <p className="artwork-notice" role="status">{committed?'Saving image bytes…':`Adding ${busy}…`}</p>}
       {error && <p className="dialog-error" role="alert">{error}</p>}
       {onUpload&&<input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" hidden onChange={event=>{const file=event.target.files?.[0];event.target.value='';if(file)void pick(file);}}/>}
       {!registry.data ? <LoadState error={registry.error} retry={registry.retry} /> : <>

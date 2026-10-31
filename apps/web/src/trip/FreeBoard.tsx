@@ -1,13 +1,17 @@
 // Free board: the default board view. Lanes remain one click away, untouched.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { boardAssetRect, boardCardRect, boardProjection, captureSameBoardClipboard, compareBoardObjects, readAsset, readCard, readPresentation, readPresentations, readTripMeta, resolveSameBoardClipboard, type Actor, type Presentation, type RevCard, type SameBoardClipboard, type TripSession } from '@writers-board/core';
 import { BoardView, TripCardView, type ViewProps } from './BoardView';
 import { FocusSheet } from './ui';
 import { coverAssetId, useAssetUrl } from './trip-assets';
 import { buildMoveCommand, classifyPaste, imagePlacementRect, ingestBoardImages, moveRect, nextStack, rectsEqual, resizeRect, textNoteInput, validateBoardRect, type BoardObjectRef, type BoardRect } from './free-board-actions';
+import { placeBoardArtwork } from './board-artwork';
+import type { Artwork } from '../artwork/catalog';
+import type { ArtDestination } from '../artwork/country-art';
+const ArtworkPicker = lazy(() => import('../artwork/ArtworkPicker'));
 import './free-board.css';
 import type { Ghost } from './ProposalReview';
-type Props = ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void };
+type Props = ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void; destinations?: readonly ArtDestination[] };
 interface Obj { ref: BoardObjectRef; rect: BoardRect; card?: RevCard; presentation?: Presentation }
 const CARD_LIMITS = { minWidth: 400, minHeight: 300, maxWidth: 5000, maxHeight: 5000 };
 const ASSET_LIMITS = { minWidth: 100, minHeight: 100, maxWidth: 10000, maxHeight: 10000 };
@@ -25,7 +29,7 @@ function FreeCardPhoto({ session, card }: { session: TripSession; card: RevCard 
   return <div className="m-free-photo"><img src={url} alt="" draggable={false} /></div>;
 }
 export function FreeBoard(props: Props) {
-  const { session, actor, refresh, notify, header, top, ghosts = [], onReview } = props;
+  const { session, actor, refresh, notify, header, top, ghosts = [], onReview, destinations = [] } = props;
   const [view, setView] = useState<'free' | 'lanes'>('free');
   const [zoom, setZoom] = useState(0.2);
   const [selected, setSelected] = useState<BoardObjectRef | null>(null);
@@ -34,6 +38,7 @@ export function FreeBoard(props: Props) {
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [openAssetId, setOpenAssetId] = useState<string | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [artOpen, setArtOpen] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
@@ -50,7 +55,9 @@ export function FreeBoard(props: Props) {
   const [ingestCommitted, setIngestCommitted] = useState(false);
   const gestureRef = useRef<{ ref: BoardObjectRef; mode: 'move' | 'resize'; pointerId: number; startX: number; startY: number; startRect: BoardRect; current: BoardRect; snapshot: string } | null>(null);
   const openTriggerRef = useRef<HTMLElement | null>(null);
-  useEffect(() => { const c = new AbortController(); controllerRef.current = c; return () => { controllerRef.current?.abort(); generationRef.current += 1; busyRef.current = false; setBusy(false); committedRef.current = false; setIngestCommitted(false); gestureRef.current = null; clipboardRef.current = null; clipboardNonceRef.current = null; setPreview(null); setGestureLabel(null); }; }, [session, actor, view]);
+  const artTriggerRef = useRef<HTMLElement | null>(null);
+  const artContextRef = useRef<{ session: TripSession; actor: Props['actor']; view: 'free' | 'lanes' } | null>(null);
+  useEffect(() => { const c = new AbortController(); controllerRef.current = c; const artContext = { session, actor, view }; artContextRef.current = artContext; return () => { if (artContextRef.current === artContext) artContextRef.current = null; setArtOpen(false); controllerRef.current?.abort(); generationRef.current += 1; busyRef.current = false; setBusy(false); committedRef.current = false; setIngestCommitted(false); gestureRef.current = null; clipboardRef.current = null; clipboardNonceRef.current = null; setPreview(null); setGestureLabel(null); }; }, [session, actor, view]);
   const objects = useMemo<Obj[]>(() => {
     if (view !== 'free') return [];
     const out: Obj[] = [];
@@ -122,6 +129,19 @@ export function FreeBoard(props: Props) {
     finally { if (gen === generationRef.current) { busyRef.current = false; setBusy(false); committedRef.current = false; setIngestCommitted(false); } }
   };
   const cancelIngest = () => { if (committedRef.current) return; controllerRef.current?.abort(); generationRef.current += 1; busyRef.current = false; setBusy(false); committedRef.current = false; setIngestCommitted(false); controllerRef.current = new AbortController(); };
+  const closeArtworkPicker = () => { setArtOpen(false); window.setTimeout(() => artTriggerRef.current?.focus(), 0); };
+  const insertBoardArtwork = async (artwork: Artwork, signal: AbortSignal, onCommitted?: () => void) => {
+    const context = artContextRef.current;
+    const capturedOrigin = origin();
+    const result = await placeBoardArtwork(session, actor as Actor, artwork, signal, { origin: capturedOrigin, onCommitted: () => { try { onCommitted?.(); } catch { /* Picker notification cannot affect the committed board item. */ } if (context && artContextRef.current === context) refresh(); } });
+    if (context && artContextRef.current === context) {
+      refresh();
+      const placedPresentation = readPresentation(session.parts, result.presentationId);
+      if (placedPresentation) { try { const rect = boardAssetRect(placedPresentation); setSelected({ kind: 'asset', id: result.presentationId, stack: rect?.stack ?? placedPresentation.zIndex }); } catch { setSelected({ kind: 'asset', id: result.presentationId, stack: placedPresentation.zIndex }); } }
+      setError(null);
+      notify(result.persisted ? 'Artwork added to the board' : 'Artwork is available in this tab only. Download a ZIP backup before closing.');
+    }
+  };
   const addText = (text: string) => {
     try { const input = textNoteInput(text, origin()); session.execute(actor, 'trip_card_create', input); setNoteText(''); setPasteText(''); setNoteOpen(false); setPasteOpen(false); refresh(); setError(null); notify('Private note added'); } catch (e) { fail(e); }
   };
@@ -187,6 +207,7 @@ export function FreeBoard(props: Props) {
         <label className="m-free-item-picker">Item <select aria-label="Board item" value={selectedObj ? `${selectedObj.ref.kind}:${selectedObj.ref.id}` : ''} onChange={(e) => { const key = e.target.value; if (!key) return; const obj = objects.find((o) => `${o.ref.kind}:${o.ref.id}` === key); if (!obj) return; setSelected(obj.ref); const el = Array.from(viewportRef.current?.querySelectorAll('[data-board-item]') ?? []).find((node) => (node as HTMLElement).dataset.boardItem === key); el?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }}><option value="">Select an item</option>{objects.map((obj) => { const key = `${obj.ref.kind}:${obj.ref.id}`; const asset = obj.presentation?.assetId ? readAsset(session.parts, obj.presentation.assetId) : undefined; const label = obj.card ? (obj.card.title || 'Untitled') : (asset?.caption || 'Image'); return <option key={key} value={key}>{label}</option>; })}</select></label>
         <button type="button" className="m-btn" onClick={() => { setNoteOpen(!noteOpen); setPasteOpen(false); }}>New note</button>
         <button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Add images</button>
+        <button type="button" className="m-btn" disabled={busy} onClick={(e) => { artTriggerRef.current = e.currentTarget; setArtOpen(true); }}>Add FCC art</button>
         <button type="button" className="m-btn" onClick={() => setPasteOpen(!pasteOpen)}>Paste</button>
         <button type="button" className="m-btn" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.05, +(z - 0.05).toFixed(2)))}>Zoom out</button>
         <span aria-live="polite">{Math.round(zoom * 100)}%</span>
@@ -226,6 +247,7 @@ export function FreeBoard(props: Props) {
           })}
         </div>
       </div>
+      {artOpen && <Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{ destination: readTripMeta(session.doc), destinations }} onClose={closeArtworkPicker} onInsert={insertBoardArtwork} /></Suspense>}
       {openCard && <FocusSheet label={`Card · ${openCard.title || 'Untitled'}`} onClose={() => { setOpenCardId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}><button type="button" className="m-btn" onClick={() => { setOpenCardId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}>Close</button><TripCardView card={openCard} session={session} actor={actor as Actor} kind={readTripMeta(session.doc).kind} refresh={refresh} notify={notify} updatedSources={props.updatedSources} /></FocusSheet>}
       {openPresentation && <FocusSheet label="Image" onClose={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}><div><button type="button" className="m-btn" onClick={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}>Close</button>{openPresentation.assetId && <AssetLarge session={session} assetId={openPresentation.assetId} />}<p>{openAsset?.caption || 'Image'}</p>{openAsset?.credit && <p>Credit: {openAsset.credit}</p>}</div></FocusSheet>}
     </section>
