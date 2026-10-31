@@ -2,7 +2,7 @@
 
 Decision revision: F136-v1.1 · 31 October 2026
 
-Owner decision recorded in the working chat: **human visual trip first, with reviewed Muse planning as the backup**. Alan approved the complete decision packet and validation protocol, authorized Astra review, and subsequently selected the equal-weight combined-total effort rule and A-retention precedence for F136-v1.1 on 31 October 2026. His latest specific effort selection supersedes the earlier general instruction to use both recommendations. Requested reviewer disposition is recorded separately. Product validation remains pending; no app feature or customer-study result is claimed.
+Owner decision recorded in the working chat: **human visual trip first, with reviewed Muse planning as the backup**. Alan approved the complete decision packet and validation protocol, authorized Astra review, and subsequently selected the equal-weight combined-total effort rule and A-retention precedence for F136-v1.1 on 31 October 2026. His latest specific effort selection supersedes the earlier general instruction to use both recommendations. Actual delegated reviewer `gpt-6-astra` approved F136-v1.1 at `5a85aff87ce95c3f53f4d34ed49364676ff1e079` and closed AS136-01. Product validation remains pending; no app feature or customer-study result is claimed.
 
 The Foundation Sprint establishes a hypothesis and an approach to test. Experiments follow that decision; choosing an approach does not validate it. This is an accelerated application of the [official Knapp/Zeratsky method](https://www.character.vc/guide/foundation-sprint), not a simulated two-day human workshop.
 
@@ -70,7 +70,9 @@ O1/O2/O3 and related media/caption/selection reports justify reliability investi
 
 MOT-136 is a decision/validation-contract card. Its completion requires actual owner disposition of D136-01–07 and the requested Astra reviewer disposition on this exact revision. Approval of a protocol is not a customer-validation result.
 
-Actual reviewer `gpt-6-astra` returned **request changes** on F136-v1's AS136-01: define the paired wrong-turn/repair comparison, tie/overlap handling and A-retention precedence deterministically. The remainder of the contract was supportable. The owner subsequently explicitly selected equal-weight combined effort and retaining A when its qualified-preference rule is met. F136-v1.1 records those choices, ties and non-overlapping action counts. MOT-136 remains In progress pending the actual repeat Astra disposition; no final approval is inferred.
+Actual reviewer `gpt-6-astra` first returned **request changes** on F136-v1's AS136-01: define the paired wrong-turn/repair comparison, tie/overlap handling and A-retention precedence deterministically. The owner subsequently explicitly selected equal-weight combined effort and retaining A when its qualified-preference rule is met. F136-v1.1 records those choices, ties and non-overlapping action counts. In the actual repeat review, Astra **approved F136-v1.1**, closed AS136-01 and reported no remaining substantive findings against AC1–5. The reviewed commit is `5a85aff87ce95c3f53f4d34ed49364676ff1e079`; these final governance fields record that verdict without changing protocol behavior.
+
+**MOT-136 is complete as a decision/validation-contract card**, on the actual owner and reviewer dispositions. This completion passes A31's decision/contract requirement only. All five product-test results remain pending with zero observations, and customer, feature, device, production and release validation remain outside this completion.
 
 **MOT-129 owns execution and result/disposition recording for F136-v1.1**, using its Hashimoto builder / Carlini reviewer responsibilities. MOT-136's builder prepares the contract; the later implementation's non-author reviewer checks execution receipts. No named human operator, external participant or reviewer is fictionalized as already assigned or participating.
 
