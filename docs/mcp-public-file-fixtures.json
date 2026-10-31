@@ -1,0 +1,133 @@
+{
+  "label": "Synthetic contract examples. No Muse agent executed; no local context issued by the product; no real FCC inventory or trip.",
+  "context": {
+    "format": "mot.context",
+    "version": 1,
+    "contextRequestId": "fixture-request-01",
+    "boardId": "fixture-trip-01",
+    "baseBoardRevision": 12,
+    "nativeToken": {
+      "boardId": "fixture-trip-01",
+      "cardRevs": {}
+    },
+    "createdAt": "2026-11-01T03:00:00Z",
+    "expiresAt": "2026-11-02T03:00:00Z",
+    "capabilitiesVersion": "mot.public-file/1",
+    "guideVersion": "0.2.0",
+    "catalogSnapshot": "fixture-catalog-01",
+    "privacy": "shared-selected",
+    "purpose": "trip-ideas",
+    "allowedCommands": [
+      "trip_card_create",
+      "trip_card_update",
+      "trip_card_move",
+      "trip_task_set_status",
+      "trip_asset_attach"
+    ],
+    "selectedCardIds": [],
+    "context": {
+      "trip": {
+        "title": "Synthetic contract probe — no real trip",
+        "cityId": "fixture-city-01",
+        "timeZone": null
+      },
+      "cards": [],
+      "assetRefs": [],
+      "constraints": []
+    },
+    "contextDigest": "9b9c02d2442d3186336b35c538b503fa8985aba0147f6f211dc4934f3d876d09"
+  },
+  "proposal": {
+    "format": "mot.proposal",
+    "version": 1,
+    "contextRequestId": "fixture-request-01",
+    "boardId": "fixture-trip-01",
+    "baseBoardRevision": 12,
+    "contextDigest": "9b9c02d2442d3186336b35c538b503fa8985aba0147f6f211dc4934f3d876d09",
+    "createdAt": "2026-11-01T03:05:00Z",
+    "expiresAt": "2026-11-02T03:00:00Z",
+    "proposal": {
+      "id": "fixture-proposal-01",
+      "boardId": "fixture-trip-01",
+      "token": {
+        "boardId": "fixture-trip-01",
+        "cardRevs": {}
+      },
+      "ops": [
+        {
+          "command": "trip_card_create",
+          "input": {
+            "kind": "note",
+            "title": "Synthetic assistant file probe",
+            "body": "This proposal is a fixture. It has not been applied.",
+            "stage": "plan"
+          }
+        }
+      ],
+      "sources": [],
+      "reason": "Check the bounded exchange shape without any private trip.",
+      "author": "external-assistant-untrusted",
+      "status": "proposed"
+    }
+  },
+  "catalogSearch": {
+    "query": "fixture",
+    "types": [
+      "art",
+      "sticker"
+    ],
+    "purpose": "personal-trip",
+    "limit": 20,
+    "cursor": null
+  },
+  "catalogItem": {
+    "id": "fixture-art-01",
+    "type": "art",
+    "title": "Synthetic catalogue record — not FCC inventory",
+    "originCityId": "fixture-city-01",
+    "countryCode": null,
+    "sourceId": "fixture-source-01",
+    "sourceVersion": "fixture-source-v1",
+    "catalogSnapshot": "fixture-catalog-01",
+    "retrievedAt": "2026-11-01T03:00:00Z",
+    "freshness": "unavailable",
+    "rights": {
+      "credit": "Fixture only",
+      "evidence": "unknown",
+      "policyRef": "existing-owner-policy"
+    },
+    "eligibility": {
+      "discover": {
+        "allowed": false,
+        "reason": "Synthetic fixture; not a published or licensed asset."
+      },
+      "preview": {
+        "allowed": false,
+        "reason": "Synthetic fixture; not a published or licensed asset."
+      },
+      "insert": {
+        "allowed": false,
+        "reason": "Synthetic fixture; not a published or licensed asset."
+      },
+      "share": {
+        "allowed": false,
+        "reason": "Synthetic fixture; not a published or licensed asset."
+      },
+      "embed": {
+        "allowed": false,
+        "reason": "Synthetic fixture; not a published or licensed asset."
+      },
+      "shop": {
+        "allowed": false,
+        "reason": "Synthetic fixture; not a published or licensed asset."
+      }
+    }
+  },
+  "failure": {
+    "contractVersion": 1,
+    "requestId": "fixture-failure-01",
+    "code": "CONTEXT_REQUIRED",
+    "message": "Open a fresh context request in MoT before applying.",
+    "retryable": false
+  }
+}
