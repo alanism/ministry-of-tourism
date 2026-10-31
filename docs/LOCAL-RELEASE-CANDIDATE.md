@@ -1,6 +1,29 @@
 # Local release candidate — 31 October 2026
 
-## Current local checkpoint: MOT-120 G6
+## Current local checkpoint: MOT-120 free-board interactions
+
+Tested code `35f642fd2f43b907855a45366d88a488c475e177` adds the main free board,
+optional lanes, local gesture previews, movement/resizing/layers, readable card
+editing, human-only duplicate, same-board clipboard, private text capture and
+bounded image insertion. Actual Muse Wonder implemented this slice. All 1,142
+tests in 172 files, four TypeScript projects and the web build pass. The 33 new
+tests are additive; every existing harness file and assertion is unchanged.
+
+Local Chromium checks cover desktop pointer/keyboard, Undo/Redo/reload, native
+package media/geometry, stale edits, cancellation across leave/return, invalid
+second images, locked images, quota recovery, tiny-image selection and a 390px
+50-object emulated touch flow. Two injected faults were detected. Browser plugin
+was unavailable; installed Playwright used isolated contexts and loopback-only
+requests. No physical-device, Safari, peak-memory or independent acceptance is
+claimed. Details and extension rules: [free-board coding reference](MOT120-FREE-BOARD-INTERACTIONS.md).
+
+MOT-120 remains In progress. Cross-board clipboard graphs, direct catalog-to-board
+insertion and broader human/device/independent acceptance remain open. The G6
+implementation and owner/Astra geometry disposition are preserved, along with
+all existing definition, privacy, production and PDF holds. Nothing pushed or
+deployed. External evidence: `Design Sprints/MOT120-Wonder-Interactions-2026-10-31/`.
+
+## Historical local checkpoint: MOT-120 G6
 
 Tested code `de02965b2672068553af606e39e00a9ffac6b9f1` adds approved schema-3 migration and explicit local recovery to the prior geometry foundation (`3caf1cb`). All 1,109 tests, four TypeScript projects and web build pass. Seven recovery scenarios plus native source-race, save-abort/retry and cancellation checks pass in isolated Chromium contexts. Only the two explicitly approved existing version assertions changed; all other harness settings and assertions remain intact.
 
