@@ -27,6 +27,8 @@ export * from './trip/model.ts';
 export * from './trip/revisions.ts';
 export * from './trip/commands.ts';
 export * from './trip/board-duplicate.ts';
+export * from './trip/board-clipboard.ts';
+export * from './trip/asset-closure.ts';
 export * from './trip/board-geometry.ts';
 export * from './trip/session.ts';
 export * from './trip/projections.ts';

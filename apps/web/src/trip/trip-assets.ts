@@ -1,7 +1,7 @@
 // Trip photos (#6): bytes in the shared SHA-256 blob store, metadata on the trip doc.
 import { useEffect, useState } from 'react';
 import type * as Y from 'yjs';
-import { presentationScope, readAllCards, readAsset, readPresentations, tripParts, type Actor, type TripCard, type TripSession } from '@writers-board/core';
+import { selectedAssetClosure, presentationScope, readAllCards, readAsset, readPresentations, tripParts, type Actor, type TripCard, type TripSession } from '@writers-board/core';
 import { getBlob, hashBlob, putBlob } from '../state/blobs';
 import type { Artwork } from '../artwork/catalog';
 
@@ -116,6 +116,7 @@ export async function assetBytes(doc: Y.Doc,options:{includePrivate?:boolean}={}
   const cards=readAllCards(parts).filter(card=>options.includePrivate!==false||card.scope!=='private'),included=new Set(cards.map(card=>card.id));
   const placements=readPresentations(parts).filter(object=>(options.includePrivate!==false||presentationScope(parts,object)!=='private')&&(!object.cardId||included.has(object.cardId)));
   const wanted=new Set([...cards.flatMap(card=>card.assetIds),...placements.flatMap(object=>object.assetId?[object.assetId]:[])]);
+  if (options.includePrivate !== false) for (const asset of selectedAssetClosure(parts,wanted)) wanted.add(asset.id);
   for (const id of wanted) {
     const meta = readAsset(parts, id);
     const blob = meta ? await getTripBlob(meta.hash) : null;
