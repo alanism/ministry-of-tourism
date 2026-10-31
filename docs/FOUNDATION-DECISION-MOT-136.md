@@ -2,7 +2,7 @@
 
 Decision revision: F136-v1 · 31 October 2026
 
-Owner decision recorded in the working chat: **human visual trip first, with reviewed Muse planning as the backup**. The rest of this packet is submitted for owner disposition. Product validation remains pending; no app feature or customer-study result is claimed.
+Owner decision recorded in the working chat: **human visual trip first, with reviewed Muse planning as the backup**. Alan also approved the complete F136-v1 decision packet and validation protocol, and explicitly authorized its Astra review, on 31 October 2026. Requested reviewer disposition is being recorded separately. Product validation remains pending; no app feature or customer-study result is claimed.
 
 The Foundation Sprint establishes a hypothesis and an approach to test. Experiments follow that decision; choosing an approach does not validate it. This is an accelerated application of the [official Knapp/Zeratsky method](https://www.character.vc/guide/foundation-sprint), not a simulated two-day human workshop.
 
@@ -10,13 +10,13 @@ The Foundation Sprint establishes a hypothesis and an approach to test. Experime
 
 | Decision | Disposition | Record |
 |---|---|---|
-| D136-01 Primary customer/job | Proposed for owner disposition | Traveler or organizing household turning scattered ideas, links, pictures and local material into a trip they can shape, agree on, use and keep. Hosts supply starting material; an agent assists the human rather than becoming another traveler or voter. |
+| D136-01 Primary customer/job | Owner approved, 31 Oct 2026 | Traveler or organizing household turning scattered ideas, links, pictures and local material into a trip they can shape, agree on, use and keep. Hosts supply starting material; an agent assists the human rather than becoming another traveler or voter. |
 | D136-02 Default and backup | Owner selected | A: human visual trip first. B: reviewed own-Muse plan as backup. C: publication first remains a request-driven entry. All operate on one canonical trip. |
-| D136-03 First useful state | Proposed for owner disposition | Destination and editable brief; clear place/note/photo capture; real available FCC inspiration; an accessible own-Muse route. No blank-canvas homework, compulsory lane administration, account setup or hosted-model setup before manual collection. |
-| D136-04 Two differentiators | Proposed for owner disposition | A personal trip people can shape; continuity of that same trip through human/Muse work, shared decisions and keepsakes. These are promises to prove, not measured competitive advantages. |
-| D136-05 Practical principles | Proposed for owner disposition | Make exploration reversible; explain identity, inclusion and save state; preserve the actual selected trip through every supported view/output. |
-| D136-06 Editorial priority | Proposed for owner disposition | Recognizable brief and useful day plan, selected personal material, clearly identified source/editorial material, and intentional FCC apparel discovery. Apparel remains a required capability, not a replacement for the trip. No fixed per-place page mandate. |
-| D136-07 Validation protocol | Proposed for owner disposition | Approve [F136-v1 protocol](FOUNDATION-VALIDATION-MOT-136.md), its operational rules, execution assignment and limits. No automatic live default change follows from a small study. |
+| D136-03 First useful state | Owner approved, 31 Oct 2026 | Destination and editable brief; clear place/note/photo capture; real available FCC inspiration; an accessible own-Muse route. No blank-canvas homework, compulsory lane administration, account setup or hosted-model setup before manual collection. |
+| D136-04 Two differentiators | Owner approved, 31 Oct 2026 | A personal trip people can shape; continuity of that same trip through human/Muse work, shared decisions and keepsakes. These are promises to prove, not measured competitive advantages. |
+| D136-05 Practical principles | Owner approved, 31 Oct 2026 | Make exploration reversible; explain identity, inclusion and save state; preserve the actual selected trip through every supported view/output. |
+| D136-06 Editorial priority | Owner approved, 31 Oct 2026 | Recognizable brief and useful day plan, selected personal material, clearly identified source/editorial material, and intentional FCC apparel discovery. Apparel remains a required capability, not a replacement for the trip. No fixed per-place page mandate. |
+| D136-07 Validation protocol | Owner approved, 31 Oct 2026 | Approved [F136-v1 protocol](FOUNDATION-VALIDATION-MOT-136.md), its operational rules, execution assignment and limits. No automatic live default change follows from a small study. |
 | D136-08 Production scope | Preserved owner constraint | Keep the complete approved scope, including hosts, full eligible FCC discovery, apparel, voting, shared rooms, own-Muse, offline HTML and native portability. Sequence delivery; do not replace the scope with an MVP. |
 
 ### What the first useful state means
@@ -69,6 +69,8 @@ O1/O2/O3 and related media/caption/selection reports justify reliability investi
 ## Completion and validation handoff
 
 MOT-136 is a decision/validation-contract card. Its completion requires actual owner disposition of D136-01–07 and the requested Astra reviewer disposition on this exact revision. Approval of a protocol is not a customer-validation result.
+
+The owner approved F136-v1 and explicitly delegated its required review. Actual reviewer `gpt-6-astra` returned **request changes** on AS136-01: define the paired wrong-turn/repair comparison, tie/overlap handling and A-retention precedence deterministically. The remainder of the contract was supportable. The owner has been asked to select the clarified rule; no answer or final reviewer approval is inferred. MOT-136 remains In progress until that issue is resolved and re-reviewed.
 
 **MOT-129 owns execution and result/disposition recording for F136-v1**, using its Hashimoto builder / Carlini reviewer responsibilities. MOT-136's builder prepares the contract; the later implementation's non-author reviewer checks execution receipts. No named human operator, external participant or reviewer is fictionalized as already assigned or participating.
 
