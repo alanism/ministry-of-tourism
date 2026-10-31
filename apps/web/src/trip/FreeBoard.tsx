@@ -1,6 +1,7 @@
 // Free board: the default board view. Lanes remain one click away, untouched.
 import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { boardAssetRect, boardCardRect, boardProjection, captureSameBoardClipboard, compareBoardObjects, readAsset, readCard, readPresentation, readPresentations, readTripMeta, resolveSameBoardClipboard, type Actor, type Presentation, type RevCard, type SameBoardClipboard, type TripSession } from '@writers-board/core';
+import { useBoardClipboard } from './useBoardClipboard';
 import { BoardView, TripCardView, type ViewProps } from './BoardView';
 import { FocusSheet } from './ui';
 import { coverAssetId, useAssetUrl } from './trip-assets';
@@ -77,6 +78,7 @@ export function FreeBoard(props: Props) {
   const openAsset = openPresentation?.assetId ? readAsset(session.parts, openPresentation.assetId) : undefined;
   const fail = (e: unknown, fallback = 'That did not work. Nothing changed.') => { const m = e instanceof Error ? e.message : fallback; setError(m); notify(m); };
   const origin = () => { const v = viewportRef.current; const x = (v?.scrollLeft ?? 0) / zoom + 120; const y = (v?.scrollTop ?? 0) / zoom + 120; if (!Number.isFinite(x) || !Number.isFinite(y)) throw new RangeError('That position is not valid. Nothing changed.'); return { x, y }; };
+  const crossClipboard = useBoardClipboard({session,actor:actor as Actor,view,origin,refresh,notify});
   const snapshotOf = (ref: BoardObjectRef): string => {
     try { return JSON.stringify(ref.kind === 'card' ? readCard(session.parts, ref.id) : readPresentation(session.parts, ref.id)); } catch { return 'invalid-current-state'; }
   };
@@ -143,9 +145,11 @@ export function FreeBoard(props: Props) {
     }
   };
   const addText = (text: string) => {
+    if (crossClipboard.handleText(text)) { setPasteOpen(false); setPasteText(''); return; }
     try { const input = textNoteInput(text, origin()); session.execute(actor, 'trip_card_create', input); setNoteText(''); setPasteText(''); setNoteOpen(false); setPasteOpen(false); refresh(); setError(null); notify('Private note added'); } catch (e) { fail(e); }
   };
   const handlePasteText = (planText: string, html = '', uriList = '') => {
+    if (crossClipboard.handleText(planText)) { setPasteOpen(false); return; }
     const plan = classifyPaste({ text: planText, html, uriList });
     if (plan.kind === 'html-only') { setPasteOpen(true); setError('That paste has no plain text we can safely add. Paste plain text below, or choose an image file. Nothing was added.'); notify('Paste plain text or choose a file instead. Nothing was added.'); return; }
     if (plan.kind === 'empty') return;
@@ -208,7 +212,7 @@ export function FreeBoard(props: Props) {
         <button type="button" className="m-btn" onClick={() => { setNoteOpen(!noteOpen); setPasteOpen(false); }}>New note</button>
         <button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Add images</button>
         <button type="button" className="m-btn" disabled={busy} onClick={(e) => { artTriggerRef.current = e.currentTarget; setArtOpen(true); }}>Add FCC art</button>
-        <button type="button" className="m-btn" onClick={() => setPasteOpen(!pasteOpen)}>Paste</button>
+        <button type="button" className="m-btn" onClick={() => { crossClipboard.cancel(); setPasteOpen(!pasteOpen); }}>Paste</button>
         <button type="button" className="m-btn" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.05, +(z - 0.05).toFixed(2)))}>Zoom out</button>
         <span aria-live="polite">{Math.round(zoom * 100)}%</span>
         <button type="button" className="m-btn" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(1, +(z + 0.05).toFixed(2)))}>Zoom in</button>
@@ -220,12 +224,13 @@ export function FreeBoard(props: Props) {
       </div>
       <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={(e) => { const files = Array.from(e.target.files ?? []); e.target.value = ''; void ingest(files); }} />
       {error && <p className="m-free-error" role="alert">{error}</p>}
+      {crossClipboard.panels}
       {noteOpen && <div className="m-free-panel"><label htmlFor="m-free-note-text">New private note</label><textarea id="m-free-note-text" value={noteText} onChange={(e) => setNoteText(e.target.value)} /><button type="button" className="m-btn primary" onClick={() => addText(noteText)}>Add note</button><button type="button" className="m-btn" onClick={() => setNoteOpen(false)}>Cancel</button></div>}
-      {pasteOpen && <div className="m-free-panel" role="region" aria-label="Paste text or choose a file"><p>Paste plain text here, or choose an image file. Copied board items from another board cannot be pasted as board items.</p><label htmlFor="m-free-paste-text">Plain text</label><textarea id="m-free-paste-text" value={pasteText} onChange={(e) => setPasteText(e.target.value)} /><button type="button" className="m-btn primary" onClick={() => addText(pasteText)}>Add text</button><button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Choose image files</button><button type="button" className="m-btn" onClick={() => { setPasteOpen(false); setPasteText(''); }}>Cancel</button></div>}
+      {pasteOpen && <div className="m-free-panel" role="region" aria-label="Paste text or choose a file"><p>Paste plain text here, or choose an image file. For a board copy, read the system clipboard or use the copy kept in this app.</p>{crossClipboard.pasteControls}<label htmlFor="m-free-paste-text">Plain text</label><textarea id="m-free-paste-text" value={pasteText} onChange={(e) => setPasteText(e.target.value)} /><button type="button" className="m-btn primary" onClick={() => addText(pasteText)}>Add text</button><button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Choose image files</button><button type="button" className="m-btn" onClick={() => { crossClipboard.cancel(); setPasteOpen(false); setPasteText(''); }}>Cancel</button></div>}
       {selectedObj && <details className="m-free-selected-details"><summary>Arrange selected item</summary><div className="m-free-selectedbar" role="toolbar" aria-label="Selected item actions">
         <button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(-20, 0)}>Move left</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(20, 0)}>Move right</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(0, -20)}>Move up</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(0, 20)}>Move down</button>
         <button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => scaleSelected(0.9)}>Resize smaller</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => scaleSelected(1.1)}>Resize larger</button>
-        <button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={duplicateSelected}>Duplicate</button><button type="button" className="m-btn small" onClick={copySelected}>Copy</button><button type="button" className="m-btn small" onClick={pasteCopied}>Paste copied item</button>
+        <button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={duplicateSelected}>Duplicate</button><button type="button" className="m-btn small" onClick={copySelected}>Copy</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => void crossClipboard.openCopy(selectedObj.ref.kind === 'card' ? {sourceCardId:selectedObj.ref.id} : {sourcePresentationId:selectedObj.ref.id})}>Copy to another trip</button><button type="button" className="m-btn small" onClick={pasteCopied}>Paste copied item</button>
         <button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => layer('front')}>Bring to front</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => layer('back')}>Send to back</button>
         <button type="button" className="m-btn small" data-free-open={selectedObj.ref.id} onClick={(e) => { openTriggerRef.current = e.currentTarget; if (selectedObj.card) setOpenCardId(selectedObj.card.id); else setOpenAssetId(selectedObj.presentation!.id); }}>Open / edit</button>
       </div></details>}

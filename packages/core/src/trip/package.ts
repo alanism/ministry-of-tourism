@@ -5,6 +5,7 @@ import {agentGuidance,startHereMarkdown} from './guidance.ts';
 import { zipSync, strToU8 } from 'fflate';
 import * as Y from 'yjs';
 import { assertShareableAsset, createTrip, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, tripParts, writeAsset, writeCard, writePresentation } from './model.ts';
+import { selectedAssetClosure } from './asset-closure.ts';
 import { encodeTrip } from './persist.ts';
 import { inspectLegacyTrip } from './trip-recovery.ts';
 import { stripImageMetadata } from './image-meta.ts';
@@ -73,6 +74,7 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
   const meta={...plainMeta,...(personal&&groupVotingVersion?{groupVotingVersion}:{}),...(personal&&groupPreferences?{groupPreferences}:{}),...(personal&&groupBallots?{groupBallots}:{}),...(personal&&groupWorkspace?{groupWorkspace}:{}),...(magazine?{magazine}:{}),...(memoryWorkflow&&Object.keys(retainedReactions).length?{memoryWorkflow:{version:1 as const,reactions:retainedReactions}}:{})};
   const presentations=readPresentations(parts).filter(p=>included(presentationScope(parts,p)) && (!p.cardId || cardIds.has(p.cardId)) && (!options.selectedCardIds || !!p.cardId));
   const wantedAssets = new Set([...cards.flatMap((c) => c.assetIds),...presentations.flatMap(p=>p.assetId?[p.assetId]:[]),...apparel.map(asset=>asset.id)]);
+  if (personal) for (const asset of selectedAssetClosure(parts,wantedAssets)) wantedAssets.add(asset.id);
   const assets: PackageAsset[] = [];
   const files: Record<string, Uint8Array> = {};
   const hashes = new Map<string, string>();

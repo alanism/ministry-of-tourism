@@ -14,6 +14,8 @@ import * as Y from 'yjs';
 import { CommandError, type CommandContext, type CommandDef } from '../commands/define.ts';
 import { presentationScope, readAllCards, readAsset, readCard, readPresentation, readPresentations, readTripMeta, writeAsset, writeCard, writePresentation, type TripParts } from './model.ts';
 import { tripBoardDuplicate } from './board-duplicate.ts';
+import { tripBoardPaste } from './board-clipboard.ts';
+import { selectedAssetClosure } from './asset-closure.ts';
 import { tripMetaSchema, assetSchema, bookingSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
 
 /** Trip commands run against the trip doc's own parts, typed as such (#10: no BoardParts stand-in). */
@@ -36,8 +38,11 @@ const now = () => new Date().toISOString();
 
 /** Referencing media is a read/sharing operation even when no existing card is being edited. */
 export function assertAgentMediaAccess(parts:TripParts,assetIds:readonly string[]):void {
-  const wanted=new Set(assetIds);
-  if(readAllCards(parts).some(card=>card.scope==='private'&&card.assetIds.some(id=>wanted.has(id))) || readPresentations(parts).some(p=>p.assetId&&wanted.has(p.assetId)&&presentationScope(parts,p)==='private'))throw new CommandError('scope','Agents cannot reference private media');
+  if(!assetIds.length)return;
+  const privateRoots=[...readAllCards(parts).filter(card=>card.scope==='private').flatMap(card=>card.assetIds),...readPresentations(parts).filter(p=>presentationScope(parts,p)==='private').flatMap(p=>p.assetId?[p.assetId]:[])];
+  const protectedIds=new Set([...privateRoots,...selectedAssetClosure(parts,privateRoots).map(a=>a.id)]);
+  const wanted=new Set([...assetIds,...selectedAssetClosure(parts,assetIds.filter(id=>parts.assets.has(id))).map(a=>a.id)]);
+  if([...wanted].some(id=>protectedIds.has(id)))throw new CommandError('scope','Agents cannot reference private media or its original/source ancestors');
 }
 
 export const tripCardCreate = defineTripCommand({
@@ -107,7 +112,7 @@ export const tripAssetAttach = defineTripCommand({
   input: z.object({ cardId: id, asset: assetSchema }).strict(),
   run: (ctx, input) => {
     const card = find(ctx.parts, input.cardId);
-    if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id]);
+    if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id,...(input.asset.derivedFrom?[input.asset.derivedFrom]:[])]);
     writeAsset(ctx.parts, input.asset);
     if (!card.assetIds.includes(input.asset.id)) writeCard(ctx.parts, { ...card, assetIds: [...card.assetIds, input.asset.id], updatedAt: now() });
     return { id: input.asset.id };
@@ -167,7 +172,7 @@ export const tripMetaUpdate = defineTripCommand({
 
 export const tripAssetRegister = defineTripCommand({
   name:'trip_asset_register',title:'Register trip media',description:'Registers media for a native decoration.',access:'write',input:z.object({asset:assetSchema}).strict(),
-  run:(ctx,input)=>{if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id]);writeAsset(ctx.parts,input.asset);return{id:input.asset.id};},
+  run:(ctx,input)=>{if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id,...(input.asset.derivedFrom?[input.asset.derivedFrom]:[])]);writeAsset(ctx.parts,input.asset);return{id:input.asset.id};},
 });
 
 export const tripMagazineTeeSelect=defineTripCommand({
@@ -260,4 +265,4 @@ export const tripVotingDeclare=defineTripCommand({name:'trip_voting_declare',tit
 export const tripVotingOpen=defineTripCommand({name:'trip_voting_open',title:'Open a declared voting round',description:'Person-only opening; responses delivered before opening remain uncounted.',access:'write',humanOnly:true,input:preferenceRoundSchema,run:(ctx,input)=>commitVotingOpen(ctx.doc,input)});
 export const tripVotingClose=defineTripCommand({name:'trip_voting_close',title:'Seal a confirmed voting result',description:'Person-only prepared close. A readable sealed result survives ordinary Undo; revising needs a fresh round.',access:'write',humanOnly:true,input:z.object({prepared:preparedVotingCloseSchema}).strict(),run:(ctx,input)=>commitPreparedVotingClose(ctx.doc,ctx.actor,input.prepared)});
 
-export const TRIP_COMMANDS: TripCommand[] = [tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate];
+export const TRIP_COMMANDS: TripCommand[] = [tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate,tripBoardPaste];

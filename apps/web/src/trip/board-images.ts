@@ -160,6 +160,7 @@ export async function prepareBoardImages(files: readonly File[], signal?: AbortS
   }
   if (total > MAX_BOARD_IMAGE_TOTAL_BYTES) throw new Error('Images are over the 50 MiB per-gesture limit; nothing was decoded.');
   const headers: Header[] = [];
+  let pixels = 0;
   for (const file of files) {
     signal?.throwIfAborted();
     const head = new Uint8Array(await file.slice(0, BOARD_IMAGE_HEADER_BYTES).arrayBuffer());
@@ -169,6 +170,8 @@ export async function prepareBoardImages(files: readonly File[], signal?: AbortS
     if (header.width > MAX_BOARD_IMAGE_SIDE || header.height > MAX_BOARD_IMAGE_SIDE) fail(file.name, `Image exceeds ${MAX_BOARD_IMAGE_SIDE} pixels on a side; nothing was decoded.`);
     if (header.width * header.height > MAX_BOARD_IMAGE_PIXELS) fail(file.name, `Image exceeds ${MAX_BOARD_IMAGE_PIXELS} pixels; nothing was decoded.`);
     if (!UNKNOWN_FILE_TYPES.has(file.type) && file.type !== header.mime) fail(file.name, `File type ${file.type} does not match its ${header.mime} header; nothing was decoded.`);
+    pixels += header.width * header.height;
+    if (pixels > MAX_BOARD_IMAGE_PIXELS) fail(file.name, `Images exceed ${MAX_BOARD_IMAGE_PIXELS} pixels total; nothing was decoded.`);
     headers.push(header);
   }
   const out: PreparedBoardImage[] = [];
