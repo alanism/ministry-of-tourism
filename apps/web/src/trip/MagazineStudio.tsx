@@ -45,7 +45,7 @@ export function MagazineStudio({session,tick,onExport}:{session:TripSession;tick
   return <section className="mot-magazine-studio" aria-label="Trip magazine studio">
     <header className="mot-issue-heading"><div><h2>Your trip magazine</h2><p className="m-muted">Your artwork, places and notes, composed as an issue.</p></div><button type="button" className="m-btn primary" onClick={onExport}>Open Export</button></header>
     <label className="mot-issue-privacy"><input type="checkbox" checked={includePrivate} onChange={event=>setIncludePrivate(event.target.checked)} /> Include private notes and artwork in this preview</label>
-    <div className="mot-issue-view"><label><input type="checkbox" checked={fitPages} onChange={event=>setFitPages(event.target.checked)} /> Show the fixed print layout</label><p className="m-muted">On a phone, words wrap within the page. The PDF keeps the A5 print layout.</p></div>
+    <div className="mot-issue-view"><label><input type="checkbox" checked={fitPages} onChange={event=>setFitPages(event.target.checked)} /> Show the fixed print layout</label><p className="m-muted">On a phone, words wrap within the page. Export offers a standalone HTML magazine and an editable ZIP.</p></div>
     <details className="mot-issue-transcript"><summary>Read the trip text</summary>{readAllCards(session.parts).filter(card=>includePrivate||card.scope!=='private').map(card=><article key={card.id}><h3>{card.title}</h3>{card.day&&<p className="m-muted">{card.day}{card.time?` · ${card.time}`:''}</p>}<p>{card.body}</p>{card.travelerNote&&<p>{card.travelerNote}</p>}</article>)}</details>
     {error&&<p role="alert">{error}</p>}
     {!magazine&&!error&&<p role="status">Composing your issue…</p>}

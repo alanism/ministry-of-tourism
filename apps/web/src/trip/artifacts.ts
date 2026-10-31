@@ -3,6 +3,7 @@ import { getTripBlob } from './trip-assets';
 import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
 import { svgPdfTextLayer } from './pdf-text-layer';
+import {checkedPixels,HTML_LIMITS,rasterDimensions,sanitizedRaster,type EmbeddedMedia} from './standalone-media';
 
 export const diagnostics=new DiagnosticLog();
 let lastOperation:OperationState|undefined;
@@ -24,11 +25,44 @@ export function artifactInventory(doc:import('yjs').Doc,scope:ArtifactScope='sta
   const selected=selection(doc,scope);
   return {cards:selected.cards.length,placements:selected.placements.length,assets:selected.assets.length,notes:selected.cards.filter(card=>card.kind==='note'||card.kind==='brief'||!!card.travelerNote).length,credits:selected.assets.filter(id=>readAsset(selected.parts,id)?.credit?.trim()).length};
 }
-async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress'],stage:ArtifactProgress['stage']='collect',classifyErrors=false){
+async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress'],stage:ArtifactProgress['stage']='collect',classifyErrors=false,html=false){
   const selected=selection(doc,scope),bytes=new Map<string,Uint8Array>();
+  let total=0;
   onProgress?.({stage,completed:0,total:selected.assets.length,unit:'assets',done:false});
-  for(const id of selected.assets){signal?.throwIfAborted();const asset=readAsset(selected.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)throw Object.assign(new Error('A selected image is missing. Restore its original bytes and retry.'),classifyErrors?{code:'unavailable'}:{});if(await artifactSha256(blob)!==asset.hash)throw Object.assign(new Error('A selected image failed its checksum. Restore its original bytes.'),classifyErrors?{code:'invalid_input'}:{});bytes.set(id,new Uint8Array(await blob.arrayBuffer()));onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:false});}
+  for(const id of selected.assets){signal?.throwIfAborted();const asset=readAsset(selected.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)throw Object.assign(new Error(`A selected image is missing${html?` (${id})`:''}. Restore its original bytes and retry.`),classifyErrors?{code:'unavailable'}:{});total+=blob.size;if(html&&(!blob.size||blob.size>HTML_LIMITS.fileBytes||total>HTML_LIMITS.sourceBytes))throw new Error(`Image ${id} exceeds the HTML source limit. Keep your originals in an editable ZIP.`);if(await artifactSha256(blob)!==asset.hash)throw Object.assign(new Error('A selected image failed its checksum. Restore its original bytes.'),classifyErrors?{code:'invalid_input'}:{});bytes.set(id,new Uint8Array(await blob.arrayBuffer()));onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:false});}
   signal?.throwIfAborted();onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:true});return bytes;
+}
+
+/** HTML pins saved selections and bytes; live catalogue previews never join an export implicitly. */
+export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSignal,scope:ArtifactScope='stay',onProgress?:ArtifactOptions['onProgress']):Promise<{magazine:MagazineDocument;media:EmbeddedMedia[]}> {
+  const doc=loadTrip(encodeTrip(session.doc));
+  try{
+    const selected=selection(doc,scope),stops=selected.cards.filter(card=>card.kind==='place'||card.day||card.location);
+    if(stops.length>8)throw new Error('This magazine layout currently shows at most eight route stops. Use the editable ZIP to keep this larger trip; HTML export is held until the full route layout is available.');
+    const bytes=await collectAssets(doc,scope,signal,onProgress,'collect',true,true),sizes=new Map<string,{width:number;height:number}>();
+    let pixels=0;
+    for(const [id,original] of bytes){
+      const asset=readAsset(selected.parts,id)!;
+      try{const size=rasterDimensions(original,asset.mime);pixels+=checkedPixels(size);sizes.set(id,size);}catch(error){throw new Error(`Image ${id}: ${error instanceof Error?error.message:'Unsupported original.'}`);}
+      if(asset.source?.provider==='fcc'&&!asset.credit?.trim())throw new Error(`FCC image ${id} needs its actual credit before HTML export.`);
+      if(pixels>HTML_LIMITS.totalPixels)throw new Error('Selected images exceed the experimental HTML decode limit (64 megapixels total). Use an editable ZIP to keep the full trip.');
+    }
+    const urls=new Map<string,string>(),dimensions=new Map<string,{width:number;height:number}>(),media:EmbeddedMedia[]=[];
+    let embeddedBytes=0;
+    for(const [id,original] of bytes){
+      signal?.throwIfAborted();const asset=readAsset(selected.parts,id)!;
+      try{
+        const png=await sanitizedRaster(new Blob([original as BlobPart],{type:asset.mime}),sizes.get(id)!,signal);embeddedBytes+=png.size;
+        if(embeddedBytes>HTML_LIMITS.sourceBytes)throw new Error('Sanitized images exceed 50 MiB. Keep the originals in an editable ZIP.');
+        const data=await dataUrl(png),size=rasterDimensions(new Uint8Array(await png.arrayBuffer()),'image/png');urls.set(id,data);dimensions.set(id,size);
+        media.push({assetId:id,sourceSha256:asset.hash,embeddedSha256:await artifactSha256(png),...size});
+      }catch(error){signal?.throwIfAborted();throw new Error(`Image ${id}: ${error instanceof Error?error.message:'Privacy sanitation failed.'}`);}
+    }
+    signal?.throwIfAborted();onProgress?.({stage:'layout',completed:0,unit:'pages',done:false});
+    const magazine=buildMagazine(doc,{assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:readMagazineApparel(selected.parts,scope==='personal').map(asset=>asset.apparel!)});
+    if(magazine.pages.length>HTML_LIMITS.pages)throw new Error('The magazine exceeds the experimental 128-page HTML limit. Keep the complete trip in an editable ZIP.');
+    onProgress?.({stage:'layout',completed:magazine.pages.length,total:magazine.pages.length,unit:'pages',done:true});return {magazine,media};
+  }finally{doc.destroy();}
 }
 
 export async function prepareMagazine(session:TripSession,signal?:AbortSignal,includePrivate=true,options:Pick<ArtifactOptions,'variant'|'onProgress'>&{onPrepared?:(assets:NonNullable<Parameters<typeof buildMagazine>[1]>)=>void}={}):Promise<MagazineDocument> {
@@ -126,7 +160,7 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
   signal?.throwIfAborted();const bytes=buildPdf(pages,magazine.title,{producer:'Ministry of Tourism'});onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:true});return bytes;
 }
 
-export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',signal?:AbortSignal,options:ArtifactOptions={}):Promise<ExportArtifact> {
+export async function createTripArtifact(session:TripSession,format:'html'|'pdf'|'zip',signal?:AbortSignal,options:ArtifactOptions={}):Promise<ExportArtifact> {
   const snapshot=loadTrip(encodeTrip(session.doc)),frozen=new (session.constructor as typeof import('@writers-board/core').TripSession)(snapshot);
   const id=crypto.randomUUID(),startedAt=new Date().toISOString();
   let zipStep:DiagnosticStep='collect';
@@ -140,8 +174,13 @@ export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',
     const scope:ArtifactScope=options.includePrivate===false?(options.variant==='guide'?'guide':'stay'):options.variant??(options.includePrivate===true?'personal':'stay');
     const inventory=artifactInventory(snapshot,scope);
     let magazine:MagazineDocument|undefined;
+    let embeddedMedia:EmbeddedMedia[]|undefined;
     let bytes:Uint8Array;
-    if(format==='pdf'){
+    if(format==='html'){
+      const prepared=await tracker.run('fetching','validating',()=>prepareHtmlMagazine(frozen,signal,scope,options.onProgress));magazine=prepared.magazine;embeddedMedia=prepared.media;
+      const {standaloneMagazineHtml}=await import('./standalone-html');
+      bytes=await tracker.run('exporting','validating',()=>standaloneMagazineHtml(magazine!,signal,(completed,total)=>options.onProgress?.({stage:'write',completed,total,unit:'pages',done:completed===total})));
+    }else if(format==='pdf'){
       magazine=await tracker.run('fetching','validating',()=>prepareMagazine(frozen,signal,scope==='personal',{variant:scope,onProgress:options.onProgress}));
       bytes=await tracker.run('exporting','exported',()=>magazinePdf(magazine!,signal,options.onProgress));
     }else{
@@ -156,20 +195,22 @@ export async function createTripArtifact(session:TripSession,format:'pdf'|'zip',
     }
     signal?.throwIfAborted();
     const title=readTripMeta(snapshot).title.replace(/[^\p{L}\p{N}-]+/gu,'-').replace(/^-|-$/g,'')||'trip';
-    const mime=format==='pdf'?'application/pdf':'application/zip',filename=`${title}.${format==='pdf'?'pdf':'mot.zip'}`;
+    const mime=format==='html'?'text/html;charset=utf-8':format==='pdf'?'application/pdf':'application/zip',filename=`${title}.${format==='html'?'html':format==='pdf'?'pdf':'mot.zip'}`;
     if(format==='zip')zipStep='verify';
     options.onProgress?.({stage:'verify',completed:0,total:bytes.length,unit:'bytes',done:false});
     const blob=new Blob([bytes as BlobPart],{type:mime}),readback=new Uint8Array(await blob.arrayBuffer());
     if(readback.length!==bytes.length||!readback.every((byte,index)=>byte===bytes[index]))throw new Error('Export read-back failed. Retry from the unchanged board.');
     const sha256=await artifactSha256(blob),createdAt=new Date().toISOString();signal?.throwIfAborted();
-    const record:StoredArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,createdAt,sha256,scope,format,blob,inventory,...(magazine?.pages[0]?{coverSvg:magazine.pages[0].svg}:{})};
+    const record:StoredArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,createdAt,sha256,scope,format,blob,inventory,embeddedMedia,...(magazine?.pages[0]?{coverSvg:magazine.pages[0].svg}:{})};
     let kept=false,storageDiagnostic:DiagnosticReceipt|undefined;
     if(format==='zip')zipStep='persist';
     try{await keepArtifact(record);kept=true;}
     catch(error){storageDiagnostic=diagnostic(createDiagnostic({requestId:id,operation:'keep-export',boardId:frozen.boardId,revision:frozen.boardRev,appVersion:'mot-integration-v2',startedAt,errorClass:'storage',error}));}
     if(signal?.aborted){if(kept)try{await removeArtifact(id);}catch{/* The cancelled file is never advertised as ready. */}signal.throwIfAborted();}
     options.onProgress?.({stage:'verify',completed:blob.size,total:blob.size,unit:'bytes',done:true});
-    const artifact:ExportArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,url:URL.createObjectURL(blob),createdAt,sha256,kept,scope,urlExpiresAt:null,inventory,coverSvg:record.coverSvg,...(storageDiagnostic?{storageDiagnostic}:{})};
+    if(format==='html')await tracker.run('validating','exported',async()=>readback);
+    if(format==='html'&&signal?.aborted){if(kept)try{await removeArtifact(id);}catch{/* Cancelled bytes are never advertised as ready. */}signal.throwIfAborted();}
+    const artifact:ExportArtifact={id,filename,mime,byteCount:blob.size,boardId:frozen.boardId,revision:frozen.boardRev,url:URL.createObjectURL(blob),createdAt,sha256,kept,scope,urlExpiresAt:null,inventory,embeddedMedia,coverSvg:record.coverSvg,...(storageDiagnostic?{storageDiagnostic}:{})};
     available.set(id,{record,artifact});return artifact;
   }catch(error){tracker.fail(error);throw error;}finally{signal?.removeEventListener('abort',cancel);frozen.destroy();snapshot.destroy();}
 }
@@ -184,7 +225,7 @@ export async function restoreTripArtifact(id:string):Promise<ExportArtifact>{
     if(pending.cancelled)throw new Error('This export was removed while restoring. Make a fresh export.');
     if(!record)throw new Error('This export is no longer kept in this browser. Make a fresh export.');
     const existing=available.get(id);if(existing)return existing.artifact;
-    const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},coverSvg:record.coverSvg};
+    const artifact:ExportArtifact={id:record.id,filename:record.filename,mime:record.mime,byteCount:record.byteCount,boardId:record.boardId,revision:record.revision,url:URL.createObjectURL(record.blob),createdAt:record.createdAt,sha256:record.sha256,kept:true,scope:record.scope,urlExpiresAt:null,inventory:record.inventory??{cards:0,placements:0,assets:0,notes:0,credits:0},embeddedMedia:record.embeddedMedia,coverSvg:record.coverSvg};
     available.set(id,{record,artifact});return artifact;
   }finally{readers.delete(pending);if(!readers.size&&restoring.get(id)===readers)restoring.delete(id);}
 }
