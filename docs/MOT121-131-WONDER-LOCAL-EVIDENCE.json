@@ -1,0 +1,358 @@
+{
+  "date": "2026-10-31",
+  "baseline": "e3b9d4015b76fafc7f0bd3966ed5307e9d837a96",
+  "testedCodeRevision": "80ff1117a01044e4162f0baa7ff24c65c7ecb677",
+  "candidateBranch": "codex/local-release-consolidation-20261031",
+  "model": "muse-wonder-1.0",
+  "actualModelCalls": [
+    {
+      "evidence": "geometry-receipt.json",
+      "id": "chatcmpl-01a18fb9-38bb-7403-94a8-434ee0afecef",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 8813,
+        "prompt_tokens": 53194,
+        "total_tokens": 62007,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1139
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 68.19,
+      "finishReason": "stop"
+    },
+    {
+      "evidence": "geometry-repair-receipt.json",
+      "id": "chatcmpl-01a18fbd-4a84-7287-a247-e0e7e80dee31",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 8553,
+        "prompt_tokens": 10861,
+        "total_tokens": 19414,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1980
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 54.77,
+      "finishReason": "stop"
+    },
+    {
+      "evidence": "type-implementation-receipt.json",
+      "id": "chatcmpl-01a18fbd-c7ff-711d-b805-d3c1929d61e8",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 1307,
+        "prompt_tokens": 21010,
+        "total_tokens": 22317,
+        "completion_tokens_details": {
+          "reasoning_tokens": 1063
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 8.1,
+      "finishReason": "stop"
+    },
+    {
+      "evidence": "type-tests-receipt.json",
+      "id": "chatcmpl-01a18fbb-2ecb-713a-92c1-8e03c1b92b3a",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 8259,
+        "prompt_tokens": 2793,
+        "total_tokens": 11052,
+        "completion_tokens_details": {
+          "reasoning_tokens": 5199
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 52.25,
+      "finishReason": "stop"
+    },
+    {
+      "evidence": "type-tests-repair-receipt.json",
+      "id": "chatcmpl-01a18fbc-aa06-735a-a50e-196fcbfbb22b",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 4091,
+        "prompt_tokens": 3299,
+        "total_tokens": 7390,
+        "completion_tokens_details": {
+          "reasoning_tokens": 911
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 13.51,
+      "finishReason": "stop"
+    }
+  ],
+  "orchestrator": "Codex",
+  "focus": "MOT-121 declared-type audit correction and source-gap diagnosis; MOT-131 reviewed proposal only",
+  "evidenceDirectory": "Design Sprints/MOT121-131-Wonder-Next-2026-10-31/",
+  "checks": {
+    "defaultCheck": {
+      "exitCode": 0,
+      "seconds": 37.613
+    },
+    "build": {
+      "exitCode": 0,
+      "seconds": 6.518
+    },
+    "artVerifier": {
+      "exitCode": 0,
+      "seconds": 1.024
+    }
+  },
+  "focusedTests": {
+    "red": {
+      "total": 9,
+      "passed": 5,
+      "failed": 4
+    },
+    "green": {
+      "total": 53,
+      "passed": 53,
+      "exitCode": 0,
+      "seconds": 1.64
+    }
+  },
+  "defaultTests": {
+    "passed": 902,
+    "files": 162,
+    "typescriptProjects": 4,
+    "existingHarnessUnchanged": true
+  },
+  "audit": {
+    "summary": {
+      "sourceRows": 8507,
+      "motItems": 5203,
+      "matched": 5205,
+      "missing": 2469,
+      "unresolved": 833,
+      "extra": 1,
+      "duplicates": 0
+    },
+    "reportSha256": "a5edaafa6ca992a2a142fc7ca6f45fd301dd7fb6d995b3c5583deb0191eff659",
+    "reportBytes": 24260147,
+    "inputs": 2573,
+    "inputBytes": 72274703,
+    "fullRepeatByteIdentical": true,
+    "sourceMetadataFilesUnchanged": 611,
+    "sourceVersions": {
+      "registryReleaseVersion": "9f3d017515cfc341",
+      "optimizedContentVersion": "9c36fe186ebe8d38",
+      "snapshotDate": "2026-10-29"
+    },
+    "limitations": [
+      "Inline locators encountered in metadata are hashed as text, not decoded or copied; no separate image files were fetched or read.",
+      "Journal runtime collections retained as provenance: 202 collections and 3432 declared derivatives, including empty universal/special collections; no city was manufactured for non-city collections.",
+      "Offline metadata audit only: registry availability is release-declared, not freshly verified live; no URLs were fetched and no image bytes were read.",
+      "Optional per-collection art JSON absent/not present for 2 collection(s) in the supplied snapshot; absence was not treated as additional provenance.",
+      "Shop route is unverified unless explicit source metadata proves it; discover/preview/insert are catalog-present/needs-product-check, not proven product behaviour.",
+      "Source registry releaseVersion (9f3d017515cfc341) differs from optimized contentVersion (9c36fe186ebe8d38); both versions are recorded as supplied and neither was live-verified.",
+      "Standalone HTML embedding permission remains unresolved; this audit does not invent a license and does not change the existing credited unknown/restricted sharing policy."
+    ],
+    "derivativeRowsByStatus": {
+      "matched": 3416,
+      "unresolved": 16
+    },
+    "categoryStatusCounts": {
+      "artwork": {
+        "unresolved": 1
+      },
+      "activities": {
+        "matched": 177,
+        "missing": 15
+      },
+      "apparel": {
+        "matched": 649
+      },
+      "cafe": {
+        "matched": 201
+      },
+      "city-illustrations": {
+        "missing": 2030,
+        "matched": 400
+      },
+      "city-ink": {
+        "matched": 198,
+        "unresolved": 2
+      },
+      "hotels": {
+        "matched": 318
+      },
+      "journal": {
+        "unresolved": 745
+      },
+      "objects": {
+        "matched": 640
+      },
+      "people": {
+        "matched": 640
+      },
+      "portraits": {
+        "missing": 400,
+        "matched": 1584,
+        "unresolved": 16
+      },
+      "restaurants": {
+        "matched": 246
+      },
+      "stickers": {
+        "matched": 152
+      },
+      "catalog": {
+        "unresolved": 69
+      },
+      "itineraries": {
+        "missing": 4
+      },
+      "thesis": {
+        "missing": 4
+      },
+      "feature-two": {
+        "missing": 3
+      },
+      "neighborhoods": {
+        "missing": 4
+      },
+      "feature-one": {
+        "missing": 2
+      },
+      "food": {
+        "missing": 6
+      },
+      "costs": {
+        "missing": 1
+      }
+    },
+    "issueCounts": {
+      "registry-unaccounted-use": 814
+    }
+  },
+  "reconciliation": {
+    "sourceRowsUnchanged": 8507,
+    "sourceIdsUrlsFramesCreditRightsPreserved": true,
+    "categoryCorrections": [
+      {
+        "id": "source:osaka:/magazine/restaurant-art/osaka/f9eed29c8bf3-1200.webp:original-art",
+        "from": "food",
+        "to": "restaurants",
+        "declaredType": "restaurant"
+      },
+      {
+        "id": "source:taipei:/magazine/restaurant-art/taipei/8e5507dfe539-1200.webp:original-art",
+        "from": "food",
+        "to": "restaurants",
+        "declaredType": "restaurant"
+      }
+    ],
+    "newMatches": [
+      "source:osaka:/magazine/restaurant-art/osaka/f9eed29c8bf3-1200.webp:original-art",
+      "source:taipei:/magazine/restaurant-art/taipei/8e5507dfe539-1200.webp:original-art"
+    ],
+    "existingMatchesPreserved": true,
+    "publicCatalogUnchanged": true,
+    "existingHarnessUnchanged": true,
+    "summary": {
+      "sourceRows": 8507,
+      "motItems": 5203,
+      "matched": 5205,
+      "missing": 2469,
+      "unresolved": 833,
+      "extra": 1,
+      "duplicates": 0
+    },
+    "geometryInputsUnchanged": 20
+  },
+  "geometry": {
+    "draftedBy": "muse-wonder-1.0",
+    "reviewedEditedBy": "Codex",
+    "sourceRevision": "e3b9d4015b76fafc7f0bd3966ed5307e9d837a96",
+    "jsonExamplesParse": true,
+    "foundationIds": [
+      "U1",
+      "U2",
+      "U3",
+      "U4",
+      "U6",
+      "U8"
+    ],
+    "ownerDecisions": [
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6"
+    ],
+    "allDecisionsPending": true,
+    "astraCallMade": false,
+    "runtimeImplementation": false,
+    "sha256": "718462f0ebfd9ed4665d7e24d3307a8be92bb8e7c338a8853285bdd71caadec3",
+    "sha256Meaning": "Git blob with LF line endings",
+    "workingCopySha256": "41b01d0b32f9003933b5a5bb53a400eca7c436066e0f86d78d2f8c723d34b559",
+    "workingCopyUsesCRLF": true
+  },
+  "publicationSha256": "3a14903b2643a0f5571fd46c0e1130117d86cd5ccefc8d2539c0e8598dc72740",
+  "publicCatalogUnchanged": true,
+  "runtimeGeometryImplemented": false,
+  "astraCallMade": false,
+  "ownerDecisionsApproved": false,
+  "productionDevicePdfAndHarnessHoldsPreserved": true,
+  "pushOrDeploy": false,
+  "releaseAccepted": false,
+  "proofSha256": {
+    "type-red.log": "b7a692dbd9a0543a84b27e295a6ba27da93a29afcb5a82addc76c2b3396c7295",
+    "type-green.log": "9505694a69858fb90526755d9646397ec33300a3d252bf31e059de7a675c9fb8",
+    "type-tests.json": "a8bb1ebaa2cdd23ca3201e68fe914f4d66cd058ee8b2369a2df743a2149f44a1",
+    "missing-worktree-dependency.log": "f3a42aba21e8486edd667f8c3b0aae0084140c6c5e12d6a20ffdd529adff1f53",
+    "checks.json": "e3186bf72f03e81dc527482c9d047f0b59985df2285d7ad129ae700acae1197b",
+    "defaultCheck.log": "976f78b40408fad4b4bd1629b300d65df60b2a70c054da44d8364e01addae351",
+    "build.log": "58ceb9f51732a45655cfccddf3aaf396f44ffca85f8c4aa922ab110682ba32ed",
+    "art-verifier.json": "e63c8261069fb55cac51586854c6eca9ae24e74d87328dec6d09b0736cb24ef1",
+    "audit-summary.json": "2cd298adaad2d2255782946d5e8cd50851d767d03f10c2bc911889383aa1c7bb",
+    "audit-execution.json": "253e72ce6c1a789fa9612fc52511823206a71d705177542b3db7dac2fa0ce404",
+    "audit-reconciliation.json": "1de39ec27f58437429a6b2fb040368bfa3dffa7279a1e08f33406cd54542484d",
+    "audit-full.json": "a5edaafa6ca992a2a142fc7ca6f45fd301dd7fb6d995b3c5583deb0191eff659",
+    "audit-repeat.json": "a5edaafa6ca992a2a142fc7ca6f45fd301dd7fb6d995b3c5583deb0191eff659",
+    "source-gap-diagnosis.json": "daa334bdaf9d3678701c807918fd5f9e494cd5bc6e65a525bcc37065d157e600",
+    "MOT121-SOURCE-GAPS.md": "33eaa7e196e21edd44aa9751dce758596a72cc51a88b915045e3c16c0209ed9a",
+    "probe-source-gaps.py": "ecadf8a91c58d1ca8ae205881a0254df2d12974c68203ba3f73ea8e57926a0c2",
+    "input-hashes.json": "c217e998618005e622983772745f4269fcb6d1fa889482d0623d8780db96087f",
+    "geometry-validation.json": "cd1c876fb0467407a7418d3dab06b26c6119558b761a52bc1980a7fb89b27916",
+    "MOT131-BOARD-GEOMETRY-PROPOSAL.md": "41b01d0b32f9003933b5a5bb53a400eca7c436066e0f86d78d2f8c723d34b559",
+    "geometry-review.txt": "eac81f81c15659af3a6f8820208c3cf0a6906783367e6fddfab9aedb266b13fa",
+    "geometry-orchestrator-corrections.diff": "68ae355eb93d93db633772f0fa1f6347508aba19143b346d5a3156eaf9cac35d",
+    "geometry-receipt.json": "37644044c1b1b9b67d1a2cbe4b54e7afa9fed1cd6cace6e13d07e5cecfc8dbff",
+    "geometry-repair-receipt.json": "683056d3c1ecff4207cca42bda0c57eec538c897edd075763dbfc5e7dcc42254",
+    "type-implementation-receipt.json": "99cefa0fddbc18ea4490b9a66089e60235aa020309cc6bbe0ac38c44d85ea91a",
+    "type-tests-receipt.json": "dbab10b3cf099176bcb59342cb7d2d25f1933241812637833f8689bb7bc26418",
+    "type-tests-repair-receipt.json": "72305d7abb10af9741503e7acefd7a2cc42346eb6b32d313ea48afde22934a3c",
+    "geometry-prompt.txt": "637c562b16f78964f065bcb34d674697efc4988db3f400880d61771c09dc4c65",
+    "geometry-repair-prompt.txt": "3b731523ed8935bbf45addbd5115e9b9aff3607d33550015cd7b1da1571f9176",
+    "type-implementation-prompt.txt": "96fb6c24b1b3b4a6224ac2de667ded50775b97d1cfbf7b1bb8fbc712c4df277b",
+    "type-tests-prompt.txt": "c1c9bf18d54b170b5ca6c8621635da5307e13c909efb827b484e259bfe108408",
+    "type-tests-repair-prompt.txt": "9abb3066985d252ea3bafed5a97f00c2b485a993d273fc21063b917e7be76b42",
+    "geometry-repair-response.txt": "fef2e76fdc5aecdb476183d4b0aa6a3e17206d89d1bf9fd7689c94fd0fd10298",
+    "geometry-response.txt": "3e8b02f3c092f6cd9c932ba2fd64ab37878aa2665fbd5fb9682d17999f394dd3",
+    "type-implementation-response.txt": "fe689c16edf705298ee320d2b50da64fefac54f7e732d56cbb69fe03950ad113",
+    "type-tests-repair-response.txt": "f58a9ef23a09db1db8f21ab8845d48eef0071d5468225093794b4479214c3a03",
+    "type-tests-response.txt": "a4fa1068e2b8421530316e3dc4a4f37c16cf912a46099dddf548c63915ba2e7c"
+  }
+}
