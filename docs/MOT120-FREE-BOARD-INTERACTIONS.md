@@ -70,13 +70,26 @@ privacy, physical-device, performance, production or PDF holds.
   suppresses stale UI feedback and aborts precommit work. Existing Composition
   insertion stays separate; no new agent authority, places or bookings are created.
 
+## Local R23 correction — 1 November 2026
+
+Code `a30ab8da84c21bbab94a3e2ab42353331a36f564` corrects R23-1/C1 by sharing
+the native bitmap lifetime slot between artwork preview and board insertion.
+Actual native-delivery probes reduce the outstanding peak from two to one,
+including close/cancel and retry; Add after preview failure remains available.
+All 1,200 tests /182 files, four types and build pass with the existing harness
+unchanged. [Correction evidence](MOT120-R23-CATALOG-CORRECTION.md) records the
+failing/green regressions, compiled desktop/touch screenshots and retained
+initial check/probe failures. Independent correction re-review is pending;
+this does not establish physical Safari or full MOT-120 acceptance.
+
 ## Remaining work and acceptance
 
 Cross-board clipboard graphs remain unimplemented. Use native package exchange
 for cross-board data. Direct catalog insertion, local image upload/drop/paste
 support board photos and transparent PNG stickers. The existing catalog/Composition
-flow remains intact. Direct catalog insertion awaits independent review; R22
-approved only the earlier R21 corrections. This is not full MOT-120
+flow remains intact. R23 requested changes to direct catalog insertion; its
+local correction awaits independent re-review. R22 approved only the earlier
+R21 corrections. This is not full MOT-120
 completion. Astra requested changes in R21 and approved the three corrections
 at `896b0c8` on 1 November 2026; broader acceptance remains open. Emulated Chromium touch is not
 physical iPhone/iPad or Safari acceptance. The 50-object exercise is functional

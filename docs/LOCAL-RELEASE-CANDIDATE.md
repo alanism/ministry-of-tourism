@@ -1,6 +1,20 @@
 # Local release candidate — 31 October 2026
 
-## Current local checkpoint: MOT-119 HTML and memory integration — 1 November 2026
+## Current local checkpoint: MOT-120 R23 catalog correction — 1 November 2026
+
+Tested code `a30ab8da84c21bbab94a3e2ab42353331a36f564` gives selected artwork
+preview and board insertion the same native bitmap resource slot. The actual
+pending-preview/Add probe changes from two outstanding bitmaps to one; late
+cancellation and retry keep the slot until the native bitmap closes. No existing
+harness or image limits changed. All 1,200 tests /182 files, four typechecks and
+the production build pass. See [MOT120-R23-CATALOG-CORRECTION.md](MOT120-R23-CATALOG-CORRECTION.md).
+
+The correction is locally implemented; independent R23 correction re-review is
+pending. Earlier REQUEST CHANGES history remains. MOT-119 integration and memory
+evidence are retained, as are physical Safari, broader catalog/feature and release
+holds. Port 5196 serves the corrected compiled app. No push or deployment.
+
+## Historical local checkpoint: MOT-119 HTML and memory integration — 1 November 2026
 
 Tested code `e26ec8775aee11d7a6e08355eac28c3ebfc0f29b` integrates the two
 MOT-119 HTML/larger-trip commits as `7423282` and `f2878c5`, preserving the
