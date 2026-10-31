@@ -1,6 +1,6 @@
 // Digital A5 editorial layout. Pure, offline, audience-filtered; no producer classification inference.
 import type * as Y from 'yjs';
-import { readAllCards, readTripMeta, tripParts } from './model.ts';
+import { readAllCards, readMagazineApparel, readTripMeta, tripParts } from './model.ts';
 import { cropSchema, presentationFieldsSchema, MAGAZINE_ART_ROLES, PRESENTATION_PATTERNS, STAGES, type MagazineArtRole, type Presentation, type TripCard } from './schema.ts';
 import { fccShopUrl, selectCityApparel, type ApparelArtRef } from './merch.ts';
 import { isPublicFccUrl } from './city-source.ts';
@@ -39,7 +39,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const selectedCards=readAllCards(parts).filter(c=>visible(c.scope)).sort((a,b)=>STAGES.indexOf(a.stage)-STAGES.indexOf(b.stage)||a.y-b.y||a.x-b.x||a.id.localeCompare(b.id));
   const cards=selectedCards.map(c=>({...c,title:c.provenance==='fcc'||c.source?.provider==='fcc'?recoverFccTitle(c.title):c.title,body:magazineReadingText(c.body),travelerNote:magazineReadingText(c.travelerNote??'')})),visibleIds=new Set(cards.map(c=>c.id));
   const layers=[...doc.getMap<Presentation>('tripPresentations').values()].filter(p=>p.boardId===meta.boardId&&p.surface!=='board'&&visible(p.scope)&&(!p.cardId||visibleIds.has(p.cardId))).sort((a,b)=>a.zIndex-b.zIndex||a.id.localeCompare(b.id));
-  const selected=new Set([...cards.flatMap(c=>c.assetIds),...layers.flatMap(p=>p.assetId?[p.assetId]:[])]);
+  const selected=new Set([...cards.flatMap(c=>c.assetIds),...layers.flatMap(p=>p.assetId?[p.assetId]:[]),...readMagazineApparel(parts,personal).map(asset=>asset.id)]);
   const allOwned=new Set([...readAllCards(parts).flatMap(c=>c.assetIds),...[...doc.getMap<Presentation>('tripPresentations').values()].flatMap(p=>p.assetId?[p.assetId]:[])]);
   const pages:MagazinePage[]=[],spreads:MagazineSpread[]=[],creditAppendix:string[]=[],pictureDpi=new Map<string,MagazinePictureDpi>();
   let svgBytes=0;

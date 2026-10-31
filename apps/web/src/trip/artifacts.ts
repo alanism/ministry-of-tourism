@@ -14,19 +14,19 @@ export interface ArtifactOptions {includePrivate?:boolean;variant?:ArtifactScope
 export interface ExportArtifact extends TripArtifact {id:string;createdAt:string;sha256:string;kept:boolean;scope:ArtifactScope;urlExpiresAt:null;inventory:ArtifactInventory;coverSvg?:string;storageDiagnostic?:DiagnosticReceipt;}
 const available=new Map<string,{record:StoredArtifact;artifact:ExportArtifact}>();
 const restoring=new Map<string,Set<{cancelled:boolean}>>(),removing=new Map<string,Promise<void>>();
-function selection(doc:import('yjs').Doc,scope:ArtifactScope){
+function selection(doc:import('yjs').Doc,scope:ArtifactScope,html=false){
   const parts=tripParts(doc),visible=(value:string)=>scope==='personal'||(scope==='guide'?value==='guide':value!=='private');
   const cards=readAllCards(parts).filter(card=>visible(card.scope)),ids=new Set(cards.map(card=>card.id));
-  const placements=readPresentations(parts).filter(p=>visible(presentationScope(parts,p))&&(!p.cardId||ids.has(p.cardId)));
+  const placements=readPresentations(parts).filter(p=>(!html||p.surface!=='board')&&visible(presentationScope(parts,p))&&(!p.cardId||ids.has(p.cardId)));
   const assets=[...new Set([...cards.flatMap(card=>card.assetIds),...placements.flatMap(p=>p.assetId?[p.assetId]:[]),...readMagazineApparel(parts,scope==='personal').map(asset=>asset.id)])];
   return {parts,cards,placements,assets};
 }
-export function artifactInventory(doc:import('yjs').Doc,scope:ArtifactScope='stay'):ArtifactInventory{
-  const selected=selection(doc,scope);
+export function artifactInventory(doc:import('yjs').Doc,scope:ArtifactScope='stay',format:'html'|'pdf'|'zip'='zip'):ArtifactInventory{
+  const selected=selection(doc,scope,format==='html');
   return {cards:selected.cards.length,placements:selected.placements.length,assets:selected.assets.length,notes:selected.cards.filter(card=>card.kind==='note'||card.kind==='brief'||!!card.travelerNote).length,credits:selected.assets.filter(id=>readAsset(selected.parts,id)?.credit?.trim()).length};
 }
 async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress'],stage:ArtifactProgress['stage']='collect',classifyErrors=false,html=false){
-  const selected=selection(doc,scope),bytes=new Map<string,Uint8Array>();
+  const selected=selection(doc,scope,html),bytes=new Map<string,Uint8Array>();
   let total=0;
   onProgress?.({stage,completed:0,total:selected.assets.length,unit:'assets',done:false});
   for(const id of selected.assets){signal?.throwIfAborted();const asset=readAsset(selected.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)throw Object.assign(new Error(`A selected image is missing${html?` (${id})`:''}. Restore its original bytes and retry.`),classifyErrors?{code:'unavailable'}:{});total+=blob.size;if(html&&(!blob.size||blob.size>HTML_LIMITS.fileBytes||total>HTML_LIMITS.sourceBytes))throw new Error(`Image ${id} exceeds the HTML source limit. Keep your originals in an editable ZIP.`);if(await artifactSha256(blob)!==asset.hash)throw Object.assign(new Error('A selected image failed its checksum. Restore its original bytes.'),classifyErrors?{code:'invalid_input'}:{});bytes.set(id,new Uint8Array(await blob.arrayBuffer()));onProgress?.({stage,completed:bytes.size,total:selected.assets.length,unit:'assets',done:false});}
@@ -37,7 +37,7 @@ async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:A
 export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSignal,scope:ArtifactScope='stay',onProgress?:ArtifactOptions['onProgress']):Promise<{magazine:MagazineDocument;media:EmbeddedMedia[]}> {
   const doc=loadTrip(encodeTrip(session.doc));
   try{
-    const selected=selection(doc,scope);
+    const selected=selection(doc,scope,true);
     const bytes=await collectAssets(doc,scope,signal,onProgress,'collect',true,true),sizes=new Map<string,{width:number;height:number}>();
     let pixels=0;
     for(const [id,original] of bytes){
@@ -173,7 +173,7 @@ export async function createTripArtifact(session:TripSession,format:'html'|'pdf'
     signal?.throwIfAborted();
     // An explicitly shared caller cannot accidentally select the personal variant.
     const scope:ArtifactScope=options.includePrivate===false?(options.variant==='guide'?'guide':'stay'):options.variant??(options.includePrivate===true?'personal':'stay');
-    const inventory=artifactInventory(snapshot,scope);
+    const inventory=artifactInventory(snapshot,scope,format);
     let magazine:MagazineDocument|undefined;
     let embeddedMedia:EmbeddedMedia[]|undefined;
     let bytes:Uint8Array;
