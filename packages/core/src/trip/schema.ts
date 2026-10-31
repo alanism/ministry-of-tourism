@@ -66,6 +66,7 @@ export const tripMetaSchema = z.object({
   groupPreferences: groupPreferencesSchema.optional(),
   groupBallots: groupBallotsSchema.optional(),
   groupWorkspace: groupWorkspaceSchema.optional(),
+  groupVotingVersion: z.literal(1).optional(),
   memoryWorkflow:memoryWorkflowSchema.optional(),
   lineage: z.object({ guideBoardId: id, copiedAt: z.string().min(1) }).optional(),
   magazine: z.object({wornTeeAssetId:id,apparelAssetIds:z.array(id).min(1).max(3).refine(ids=>new Set(ids).size===ids.length)}).strict()

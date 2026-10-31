@@ -1,5 +1,6 @@
 // Trip document (MOT-10): its own Yjs doc, so Writer's Board boards stay untouched.
 import * as Y from 'yjs';
+import {votingSealSchema,VOTING_SEAL_PREFIX,votingSealKey} from './voting-contract.ts';
 import {validateLocalBallot} from './group-ballot.ts';
 import { SYSTEM_ORIGIN, type AgentMode } from '../doc/model.ts';
 import { assetSchema, presentationSchema, TRIP_SCHEMA_VERSION, tripCardSchema, tripMetaSchema, type Asset, type BoardKind, type Presentation, type TripCard, type TripMeta } from './schema.ts';
@@ -50,6 +51,7 @@ export interface CreateTripOptions {
   groupPreferences?: TripMeta['groupPreferences'];
   groupBallots?: TripMeta['groupBallots'];
   groupWorkspace?: TripMeta['groupWorkspace'];
+  groupVotingVersion?: TripMeta['groupVotingVersion'];
   memoryWorkflow?:TripMeta['memoryWorkflow'];
   newId?: () => string;
 }
@@ -79,6 +81,7 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     groupPreferences: options.groupPreferences,
     groupBallots: options.groupBallots,
     groupWorkspace: options.groupWorkspace,
+    groupVotingVersion: options.groupVotingVersion,
     memoryWorkflow:options.memoryWorkflow,
   });
   const parts = tripParts(doc);
@@ -94,6 +97,10 @@ export function readTripMeta(doc: Y.Doc): TripMeta {
   const meta=tripMetaSchema.parse(raw);
   for(const ballot of meta.groupBallots??[])validateLocalBallot(ballot,meta.groupPreferences);
   if(meta.groupWorkspace&&(!meta.groupPreferences||(meta.groupWorkspace.ledger&&meta.groupWorkspace.ledger.trip_id!==meta.groupPreferences.trip_id)))throw new Error('Workspace belongs to another group');
+  const seals=[...parts.clock].filter(([key])=>key.startsWith(VOTING_SEAL_PREFIX));
+  if((seals.length||meta.groupWorkspace?.voting?.length)&&meta.groupVotingVersion!==1)throw new Error('Managed voting capability marker is missing');
+  let votingTripId=meta.groupPreferences?.trip_id;
+  for(const [key,value] of seals){const seal=votingSealSchema.parse(value);votingTripId??=seal.configuration.trip_id;if(seal.configuration.trip_id!==votingTripId)throw new Error('Closed voting record belongs to another trip identity');if(key!==votingSealKey(seal.configuration.trip_id,seal.configuration.rounds[0]!))throw new Error('Closed voting identity does not match its snapshot');}
   return meta;
 }
 

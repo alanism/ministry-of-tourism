@@ -1,3 +1,4 @@
+import {assertUnmanagedVotingPlan} from './voting-lifecycle.ts';
 import type {Actor} from '../doc/model.ts';
 import {CommandError} from '../commands/define.ts';
 import {readAllCards,readCard,readTripMeta} from './model.ts';
@@ -19,6 +20,7 @@ export async function prepareGroupScheduleReview(session:TripSession,actor:Actor
  if(actor.kind!=='human')throw new CommandError('human_only','Only a person can prepare a plan from private group data');
  const meta=readTripMeta(session.doc),group=meta.groupPreferences,workspace=meta.groupWorkspace,revision=session.boardRev;
  if(!group||!workspace?.planning)throw new Error('Save the group planning facts and time slots first');if(!meta.timeZone)throw new Error('Choose the destination time zone first');
+ assertUnmanagedVotingPlan(session,workspace.planning);
  for(const card of readAllCards(session.parts))if(card.booking&&card.booking.status!=='not_booked'){
   const fixed=workspace.planning.commitments.find(c=>c.kind==='fixed_booking'&&(c.option_id===card.id||c.id===card.id));
   if(!fixed)throw new Error(`Add the protected time window for fixed booking ${card.title} before proposing a plan`);
@@ -42,6 +44,7 @@ export async function prepareGroupScheduleReview(session:TripSession,actor:Actor
 export type GroupScheduleReview=Awaited<ReturnType<typeof prepareGroupScheduleReview>>;
 export function applyGroupScheduleReview(session:TripSession,actor:Actor,review:GroupScheduleReview,selected:number[],allowTentative:boolean){
  if(session.boardRev!==review.revision)throw new CommandError('stale','The trip changed after this proposal; nothing applied. Prepare it again.');
+ assertUnmanagedVotingPlan(session,review.planning);
  if(!review.result.best)throw new Error('There is no feasible proposal to apply');
  const assignments=selected.map(i=>review.operationAssignments[i]);if(assignments.some(a=>!a))throw new Error('Select existing proposed changes');
  // Unselected planning activities keep their current board dates; recheck the selection against them too.

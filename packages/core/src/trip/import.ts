@@ -77,6 +77,7 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
   await validateStoredGroupResponses(source);
   if(meta.boardId!==manifest.boardId)fail('Package board identity does not match its manifest');
   const readable=files['trip.json'];
+  if(meta.groupVotingVersion&&!readable)fail('Managed voting package is missing its readable capability marker');
   if(readable){
     let raw:unknown;
     try { raw=JSON.parse(strFromU8(readable)); } catch { fail('Readable trip has unknown or unsupported schema fields'); }
@@ -88,6 +89,7 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
         ? z.object({meta:tripMetaSchema,cards:z.array(tripCardSchema),presentations:z.array(presentationSchema).optional(),agent_guidance:agentGuidanceSchema.optional()}).strict().safeParse(raw)
         : {success:false as const};
     if(!parsed.success)fail('Readable trip has unknown or unsupported schema fields');
+    if(parsed.data.meta.groupVotingVersion!==meta.groupVotingVersion)fail('Readable voting capability marker differs from its document');
     if(readableVersion!==binaryVersion || parsed.data.meta.boardId!==meta.boardId || parsed.data.meta.schemaVersion!==binaryVersion)fail('Readable trip version or board identity does not match its document');
   }
   const srcParts=tripParts(source);
@@ -102,10 +104,10 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
   // Imported metadata cannot grant tools (MOT-31): Autopilot never arrives switched on.
   const agentMode = meta.agentMode === 'autopilot' ? 'together' : meta.agentMode;
   if(meta.magazine?.apparelAssetIds.some(id=>!assets.has(id)||!readAsset(srcParts,id)?.apparel))fail('Magazine preference references missing apparel');
-  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,memoryWorkflow:meta.memoryWorkflow,newId: options.newId });
+  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,groupVotingVersion:meta.groupVotingVersion,memoryWorkflow:meta.memoryWorkflow,newId: options.newId });
   const dstParts = tripParts(fresh);
   fresh.transact(() => {
-    for(const [key,value] of srcParts.clock)if(key.startsWith('groupResponse:'))dstParts.clock.set(key,structuredClone(value));
+    for(const [key,value] of srcParts.clock)if(key.startsWith('groupResponse:')||key.startsWith('votingSeal:'))dstParts.clock.set(key,structuredClone(value));
     for (const card of readAllCards(srcParts)) writeCard(dstParts, card);
     for (const assetId of srcParts.assets.keys()) { const a = readAsset(srcParts, assetId); if (a) writeAsset(dstParts, a); }
     for(const p of readPresentations(srcParts))writePresentation(dstParts,{...p,boardId:readTripMeta(fresh).boardId});

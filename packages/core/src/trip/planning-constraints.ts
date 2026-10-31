@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {managedVotingRoundSchema} from './voting-contract.ts';
 import {responseLedgerSchema,groupRoundSchema} from './group-preferences.ts';
 
 const id=groupRoundSchema.shape.round_id,ids=z.array(id).min(1).max(100).refine(a=>new Set(a).size===a.length);
@@ -32,4 +33,4 @@ export function confirmedFact<T>(fact:PlanningEvidence<T>,asOf:string):fact is P
 
 export const groupPolicySchema=z.object({id:z.literal('mot-group-planning'),version:z.literal(1),criteria:z.union([z.tuple([z.literal('feasibility'),z.literal('top_two'),z.literal('first_choice'),z.literal('participating_points'),z.literal('travel')]),z.tuple([z.literal('feasibility'),z.literal('participating_points'),z.literal('top_two'),z.literal('first_choice'),z.literal('travel')])])}).strict();
 export const DEFAULT_GROUP_POLICY=groupPolicySchema.parse({id:'mot-group-planning',version:1,criteria:['feasibility','top_two','first_choice','participating_points','travel']});
-export const groupWorkspaceSchema=z.object({version:z.literal(1),policy:groupPolicySchema,planning:planningProblemSchema.optional(),ledger:responseLedgerSchema.optional()}).strict();
+export const groupWorkspaceSchema=z.object({version:z.literal(1),policy:groupPolicySchema,planning:planningProblemSchema.optional(),ledger:responseLedgerSchema.optional(),voting:z.array(managedVotingRoundSchema).max(100).refine(rounds=>new Set(rounds.map(d=>JSON.stringify([d.configuration.rounds[0]!.proposal_version,d.configuration.rounds[0]!.round_id]))).size===rounds.length,'Managed round identities must be unique').optional()}).strict();

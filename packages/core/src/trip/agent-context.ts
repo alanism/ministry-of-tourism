@@ -1,3 +1,4 @@
+import {assertUnmanagedVotingPlan} from './voting-lifecycle.ts';
 // Agent context (MOT-109): what an agent may know about the open trip before choosing a workflow.
 // Only non-private cards count; private cards and their facts never reach an agent.
 import {mergeResponseLedger} from './response-ledger.ts';
@@ -96,6 +97,7 @@ export async function routeTripRequestWithGroup(session:TripSession,request:Rout
  const base=routeTripRequest(session,request,extra);if(base.workflow==='small_edit'||base.workflow==='keepsake'||base.workflow==='trip_change')return base;
  const meta=readTripMeta(session.doc),group=meta.groupPreferences,workspace=meta.groupWorkspace,now=extra.now??new Date();
  if(!group)return base.workflow==='plan'?{...base,tentative:true,facts:{...base.facts,unknown:[...base.facts.unknown,{field:'planning facts',reason:'missing'}]}}:base;
+ for(const round of group.rounds.filter(r=>r.proposal_version===Math.max(...group.rounds.map(item=>item.proposal_version))))assertUnmanagedVotingPlan(session,round);
  const merged=await mergeResponseLedger(group,workspace?.ledger,[]),version=Math.max(...group.rounds.map(r=>r.proposal_version)),rounds=group.rounds.filter(r=>r.proposal_version===version).sort((a,b)=>a.round_id.localeCompare(b.round_id));
  const perRound=rounds.map(r=>merged.current.filter(reply=>reply.proposal_version===version&&reply.round_id===r.round_id));
  const summary={rounds:rounds.map(r=>({kind:r.kind,rank_limit:r.rank_limit})),rounds_with_replies:perRound.filter(r=>r.length>0).length,rounds_complete:perRound.filter(r=>r.length===group.households.length).length,pending_responses:perRound.reduce((n,r)=>n+group.households.length-r.length,0),partial_responses:perRound.reduce((n,replies,i)=>n+replies.filter(r=>r.rankings.length<rounds[i]!.rank_limit).length,0),conflicting_responses:merged.conflicts.length};

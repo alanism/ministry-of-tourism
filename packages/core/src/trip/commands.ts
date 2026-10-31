@@ -1,5 +1,6 @@
 // Trip commands (MOT-12): the only way to change a trip. Validate before writing.
 import { z } from 'zod';
+import {commitManagedDeclaration,commitVotingOpen,commitPreparedVotingClose,preparedVotingCloseSchema,assertVotingHousehold,assertLegacyVotingConfiguration} from './voting-lifecycle.ts';
 import {preparedGroupChangeSchema,commitPreparedGroupChange,validatePlanningGroup} from './group-workspace.ts';
 import {proposeGroupSchedule} from './schedule-proposal.ts';
 import {checkScheduleFeasibility} from './schedule-feasibility.ts';
@@ -159,8 +160,8 @@ export const tripMetaUpdate = defineTripCommand({
     ctx.parts.meta.set('city',input.city);ctx.parts.meta.set('timeZone',input.timeZone);
     for (const key of ['cityId','countryCode'] as const) if (input[key] === undefined) ctx.parts.meta.delete(key); else ctx.parts.meta.set(key,input[key]);
     if (input.dates) ctx.parts.meta.set('dates',input.dates);
-    const {groupPreferences,groupBallots,groupWorkspace,memoryWorkflow,...publicMeta}=readTripMeta(ctx.doc);
-    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{}),...(groupWorkspace?{groupWorkspace}:{}),...(memoryWorkflow?{memoryWorkflow}:{})};
+    const {groupPreferences,groupBallots,groupWorkspace,groupVotingVersion,memoryWorkflow,...publicMeta}=readTripMeta(ctx.doc);
+    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{}),...(groupWorkspace?{groupWorkspace}:{}),...(groupVotingVersion?{groupVotingVersion}:{}),...(memoryWorkflow?{memoryWorkflow}:{})};
   },
 });
 
@@ -228,7 +229,7 @@ export const tripBallotUpdate=defineTripCommand({
   name:'trip_ballot_update',title:'Save household shortlist',description:'Person-only local response. Rank, stamp and optional shared note stay independent; never books or shares anything.',access:'write',humanOnly:true,input:groupBallotSchema,
   run:(ctx,input)=>{
     const meta=readTripMeta(ctx.doc);
-    try{validateLocalBallot(input,meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+    try{assertVotingHousehold(ctx.doc,input);validateLocalBallot(input,meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
     const ballots=meta.groupBallots??[],index=ballots.findIndex(b=>ballotKey(b)===ballotKey(input));
     if(index<0)ballots.push(input);else ballots[index]=input;
     ctx.parts.meta.set('groupBallots',ballots);return structuredClone(input);
@@ -237,7 +238,7 @@ export const tripBallotUpdate=defineTripCommand({
 export const tripBallotRead=defineTripCommand({name:'trip_ballot_read',title:'Read local household responses',description:'Person-only local responses; no response is distinct from an empty shortlist.',access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupBallots??[]});
 export const tripBallotClear=defineTripCommand({name:'trip_ballot_clear',title:'Remove local household response',description:'Return a household and round to no response; Undo is available.',access:'write',humanOnly:true,input:groupBallotKeySchema,run:(ctx,input)=>{
   const meta=readTripMeta(ctx.doc);
-  try{validateLocalBallot({...input,rankings:[],stamps:[],shared_note:''},meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+  try{assertVotingHousehold(ctx.doc,input);validateLocalBallot({...input,rankings:[],stamps:[],shared_note:''},meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
   ctx.parts.meta.set('groupBallots',(meta.groupBallots??[]).filter(b=>ballotKey(b)!==ballotKey(input)));return structuredClone(input);
 }});
 
@@ -246,7 +247,7 @@ export const tripGroupConfigure = defineTripCommand({
   access:'write',humanOnly:true,input:groupPreferencesSchema,
   run:(ctx,input)=>{
     const meta=readTripMeta(ctx.doc);
-    try{validateGroupUpdate(meta.groupPreferences,input,meta.boardId);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid group declaration');}
+    try{assertLegacyVotingConfiguration(ctx.doc,input);validateGroupUpdate(meta.groupPreferences,input,meta.boardId);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid group declaration');}
     ctx.parts.meta.set('groupPreferences',input);return structuredClone(input);
   },
 });
@@ -255,4 +256,8 @@ export const tripGroupRead = defineTripCommand({
   access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupPreferences??null,
 });
 
-export const TRIP_COMMANDS: TripCommand[] = [tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate];
+export const tripVotingDeclare=defineTripCommand({name:'trip_voting_declare',title:'Declare a managed voting round',description:'Person-only explicit positional method, frozen roster and fresh proposal. Does not open voting.',access:'write',humanOnly:true,input:groupPreferencesSchema,run:(ctx,input)=>commitManagedDeclaration(ctx.doc,input)});
+export const tripVotingOpen=defineTripCommand({name:'trip_voting_open',title:'Open a declared voting round',description:'Person-only opening; responses delivered before opening remain uncounted.',access:'write',humanOnly:true,input:preferenceRoundSchema,run:(ctx,input)=>commitVotingOpen(ctx.doc,input)});
+export const tripVotingClose=defineTripCommand({name:'trip_voting_close',title:'Seal a confirmed voting result',description:'Person-only prepared close. A readable sealed result survives ordinary Undo; revising needs a fresh round.',access:'write',humanOnly:true,input:z.object({prepared:preparedVotingCloseSchema}).strict(),run:(ctx,input)=>commitPreparedVotingClose(ctx.doc,ctx.actor,input.prepared)});
+
+export const TRIP_COMMANDS: TripCommand[] = [tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate];

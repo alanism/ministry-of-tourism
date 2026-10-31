@@ -1,3 +1,4 @@
+import {assertUnmanagedVotingPlan} from './voting-lifecycle.ts';
 // MOT-109: explicitly shared MOT-107 ledger -> smallest workflow. Never reads private ledger storage.
 import { CommandError } from '../commands/define.ts';
 import { routeTripRequest } from './agent-context.ts';
@@ -18,6 +19,7 @@ export async function routeGroupRequest(session: TripSession, request: RouteRequ
   if (initial.workflow !== 'preferences' && initial.workflow !== 'plan') return { ...initial, boardId, revision };
   const group = readTripMeta(session.doc).groupPreferences;
   if (!group) throw new CommandError('unavailable', 'Declare the households and rounds before routing group preferences.');
+  for(const round of group.rounds.filter(r=>r.proposal_version===Math.max(...group.rounds.map(item=>item.proposal_version))))assertUnmanagedVotingPlan(session,round);
   const snapshot = structuredClone({ request, answers: extra.answers, inferred: extra.inferred, tools: extra.tools, now: extra.now });
   let merged: Awaited<ReturnType<typeof mergeResponseLedger>>;
   try { merged = await mergeResponseLedger(group, extra.ledger, []); }
