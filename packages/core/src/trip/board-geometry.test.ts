@@ -233,7 +233,7 @@ describe('compareBoardObjects', () => {
     type Placed = typeof before[number];
     expect(identityOrder(before)).toEqual(['asset:asset-z', 'card:card-a', 'asset:asset-a', 'card:card-b']);
     expect(identityOrder(moved)).toEqual(['asset:asset-z', 'card:card-a', 'asset:asset-a', 'card:card-b']);
-    expect(compareBoardObjects(moved[0], moved[1])).toBe(compareBoardObjects(before[0], before[1]));
+    expect(compareBoardObjects(moved[0]!, moved[1]!)).toBe(compareBoardObjects(before[0]!, before[1]!));
   });
 
   it.each([
