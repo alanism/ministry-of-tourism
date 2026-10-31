@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-31",
+  "reviewer": "Codex",
+  "sourceRevision": "53e58be39626ebcfdf26da93a2ec90b3936bbb5f",
+  "testedImplementation": "80ff1117a01044e4162f0baa7ff24c65c7ecb677",
+  "document": "docs/MOT131-G1-G6-OWNER-REVIEW.md",
+  "documentSha256": "eca882cc06b41a120085ba1fa53d17decd0e546e60489299896a92752628e8fa",
+  "recommendations": {
+    "G1": "A: existing card coordinates plus board-surface asset placements",
+    "G2": "Optional saved size and stack with proposed defaults/bounds",
+    "G3": "Finite 10000-square board and zero board rotation; revise tie-break to stable object identity",
+    "G4": "Narrow copy commands with complete graph authorization and no authority/privacy amplification",
+    "G5": "Five items, one decode, 8192-side/16777216-pixel bounds, existing package limits",
+    "G6": "Refusal with usable original-data recovery, prior-store selection, full v1/v2 package compatibility"
+  },
+  "allOwnerDecisions": "pending",
+  "astraCallMade": false,
+  "geometryImplementation": false,
+  "productionAndHarnessHoldsPreserved": true,
+  "boardSave": 199,
+  "boardUnchanged": true,
+  "checkFirst": {
+    "exitCode": 1,
+    "seconds": 57.679,
+    "scope": "Documentation-only review; existing default harness unchanged"
+  },
+  "checkFocusedRetry": {
+    "exitCode": 0,
+    "seconds": 7.982,
+    "scope": "Same test file, unchanged timeout/settings; narrow failure triage"
+  },
+  "checkFullRetry": {
+    "exitCode": 0,
+    "seconds": 36.458,
+    "scope": "Full unchanged default check repeated after narrow triage; original failure retained"
+  },
+  "sourceFileHashes": {
+    "packages/core/src/trip/schema.ts": "2285b61206d9d8ea8293fac350a5b589764a3e550e4e28cca2d91e2cec263996",
+    "packages/core/src/trip/commands.ts": "9567bcb865d9d7ad697f19562dd2083ad92c11b6238686c8d0948e31b9ccbcc5",
+    "packages/core/src/trip/session.ts": "0d15bee35831fc6c67ff82a4e634c6b4f5aab58c1ecd286f729bb542d03d3a3d",
+    "packages/core/src/trip/projections.ts": "584806878a4c4309ed2949f9b61043c763e97d8bcb55c4bdffd4458145508d13",
+    "packages/core/src/trip/persist.ts": "fd0a8859a06079c5f7262a44e520265a8c09e75f2cd6990444c910930ce8638f",
+    "packages/core/src/trip/package.ts": "2b1819ad176986f19b7bf8517339044131c9a0c9fb6124da13ea7de6c034f9c4",
+    "packages/core/src/trip/import.ts": "b2dd3dc55f6af5f9e5646f685d867966a516cf83388320e99d56e8f77ca097dc",
+    "apps/web/src/trip/trip-store.ts": "77d4bb6023d489bb4760a669cd0639502d77d186ce01a247beabe94c78ef365c",
+    "apps/web/src/trip/trip-assets.ts": "dd0664bf7a7f876f6b45d1afa7364dc2f89baaa0d6b43a5de13fb96c722b4814",
+    "apps/web/src/trip/BoardView.tsx": "f5b535f887034617d322c0847781964ceec34b8186e8931fb7020c7259112c7f",
+    "docs/MOT131-BOARD-GEOMETRY-PROPOSAL.md": "41b01d0b32f9003933b5a5bb53a400eca7c436066e0f86d78d2f8c723d34b559"
+  },
+  "localEvidence": "Design Sprints/MOT131-Owner-Decision-Review-2026-10-31/",
+  "pushOrDeploy": false,
+  "logSha256": {
+    "defaultCheck.log": "40bd67dd83368ea8491815fe1cbe33bfd8b578f5563f67f975141a90a3108f60",
+    "timeout-recheck.log": "5c6bceea7ec60e35d32a6c8a4358a10ae916d1da708fdcf50fc6e65c54a6ee4b",
+    "defaultCheck-repeat.log": "f549c4fd0a10a7ca606ebc89338f346ec003dd187559aae4a89d732d5575eba4"
+  }
+}
