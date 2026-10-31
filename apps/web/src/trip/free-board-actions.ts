@@ -74,6 +74,7 @@ export interface IngestDeps {
   randomId?: () => string;
   origin?: { x: number; y: number };
   baseStack?: number;
+  onCommitted?: () => void;
 }
 export type IngestSession = Pick<TripSession, 'executeAll'>;
 interface InFlightEntry { promise: Promise<{ persisted: boolean; count: number }>; signal?: AbortSignal; actorId: string; actorKind: Actor['kind'] }
@@ -110,6 +111,7 @@ export function ingestBoardImages(session: IngestSession, actor: Actor, files: r
       });
       session.executeAll(actor, ops);
       applied = true;
+      try { deps.onCommitted?.(); } catch { /* The document is already committed; a progress observer must not undo that fact. */ }
     }, signal);
     if (!applied) throw new Error('Those images were not added. Nothing changed.');
     return { persisted: result.persisted, count: prepared.length };

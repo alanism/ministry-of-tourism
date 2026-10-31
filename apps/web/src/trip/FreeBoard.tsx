@@ -46,9 +46,11 @@ export function FreeBoard(props: Props) {
   const clipboardRef = useRef<SameBoardClipboard | null>(null);
   const clipboardNonceRef = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const committedRef = useRef(false);
+  const [ingestCommitted, setIngestCommitted] = useState(false);
   const gestureRef = useRef<{ ref: BoardObjectRef; mode: 'move' | 'resize'; pointerId: number; startX: number; startY: number; startRect: BoardRect; current: BoardRect; snapshot: string } | null>(null);
   const openTriggerRef = useRef<HTMLElement | null>(null);
-  useEffect(() => { const c = new AbortController(); controllerRef.current = c; return () => { controllerRef.current?.abort(); generationRef.current += 1; busyRef.current = false; setBusy(false); gestureRef.current = null; clipboardRef.current = null; clipboardNonceRef.current = null; setPreview(null); setGestureLabel(null); }; }, [session, actor, view]);
+  useEffect(() => { const c = new AbortController(); controllerRef.current = c; return () => { controllerRef.current?.abort(); generationRef.current += 1; busyRef.current = false; setBusy(false); committedRef.current = false; setIngestCommitted(false); gestureRef.current = null; clipboardRef.current = null; clipboardNonceRef.current = null; setPreview(null); setGestureLabel(null); }; }, [session, actor, view]);
   const objects = useMemo<Obj[]>(() => {
     if (view !== 'free') return [];
     const out: Obj[] = [];
@@ -111,15 +113,15 @@ export function FreeBoard(props: Props) {
   const ingest = async (files: Iterable<File> | ArrayLike<File>) => {
     const list = Array.from(files as ArrayLike<File>); if (!list.length || busyRef.current) return;
     if (!controllerRef.current || controllerRef.current.signal.aborted) controllerRef.current = new AbortController();
-    busyRef.current = true; setBusy(true); const gen = ++generationRef.current; const signal = controllerRef.current.signal;
+    busyRef.current = true; setBusy(true); committedRef.current = false; setIngestCommitted(false); const gen = ++generationRef.current; const signal = controllerRef.current.signal;
     try {
-      const result = await ingestBoardImages(session, actor, list, signal, { origin: origin(), baseStack: objects.reduce((m, o) => Math.max(m, o.rect.stack), 0) + 1 });
+      const result = await ingestBoardImages(session, actor, list, signal, { origin: origin(), baseStack: objects.reduce((m, o) => Math.max(m, o.rect.stack), 0) + 1, onCommitted: () => { if (gen !== generationRef.current) return; committedRef.current = true; setIngestCommitted(true); refresh(); } });
       if (gen !== generationRef.current || signal?.aborted) return;
       refresh(); setError(null); notify(result.persisted ? 'Images added to the board' : 'Images are available in this tab only. Download a ZIP backup before closing.');
     } catch (e) { if (!signal?.aborted && gen === generationRef.current) fail(e, 'Those images were not added. Nothing changed. You can add text or choose image files instead.'); }
-    finally { if (gen === generationRef.current) { busyRef.current = false; setBusy(false); } }
+    finally { if (gen === generationRef.current) { busyRef.current = false; setBusy(false); committedRef.current = false; setIngestCommitted(false); } }
   };
-  const cancelIngest = () => { controllerRef.current?.abort(); generationRef.current += 1; busyRef.current = false; setBusy(false); controllerRef.current = new AbortController(); };
+  const cancelIngest = () => { if (committedRef.current) return; controllerRef.current?.abort(); generationRef.current += 1; busyRef.current = false; setBusy(false); committedRef.current = false; setIngestCommitted(false); controllerRef.current = new AbortController(); };
   const addText = (text: string) => {
     try { const input = textNoteInput(text, origin()); session.execute(actor, 'trip_card_create', input); setNoteText(''); setPasteText(''); setNoteOpen(false); setPasteOpen(false); refresh(); setError(null); notify('Private note added'); } catch (e) { fail(e); }
   };
@@ -189,7 +191,7 @@ export function FreeBoard(props: Props) {
         <button type="button" className="m-btn" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.05, +(z - 0.05).toFixed(2)))}>Zoom out</button>
         <span aria-live="polite">{Math.round(zoom * 100)}%</span>
         <button type="button" className="m-btn" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(1, +(z + 0.05).toFixed(2)))}>Zoom in</button>
-        {busy && <><span role="status">Adding images…</span><button type="button" className="m-btn" onClick={cancelIngest}>Cancel images</button></>}
+        {busy && (ingestCommitted ? <span role="status">Saving image bytes…</span> : <><span role="status">Adding images…</span><button type="button" className="m-btn" onClick={cancelIngest}>Cancel images</button></>)}
         <button type="button" className="m-btn" aria-label="Undo" onClick={() => { if (session.undo((actor as Actor).id)) { refresh(); notify('Undid the last change'); } }}>Undo</button>
         <button type="button" className="m-btn" aria-label="Redo" onClick={() => { if (session.redo((actor as Actor).id)) { refresh(); notify('Redid the change'); } }}>Redo</button>
         {props.onOpenDay && <button type="button" className="m-btn" onClick={props.onOpenDay}>Open day</button>}
