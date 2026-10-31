@@ -44,7 +44,7 @@ describe('trip browser persistence migration and commit receipts',()=>{
   it('upgrades a v1 board into a separate durable store and keeps the source bytes untouched',async()=>{
     const old=createTrip({title:'Legacy personal journal',city:'bangkok',timeZone:'Asia/Bangkok',boardId:'legacy'});old.getMap('tripMeta').set('schemaVersion',1);
     const original=encodeTrip(old);store(TRIP_PREFIX+'legacy').updates.push(original.slice());
-    const opened=await openTrip('legacy');expect(readTripMeta(opened.doc).schemaVersion).toBe(2);expect(readTripMeta(opened.doc).boardId).toBe('legacy');
+    const opened=await openTrip('legacy');expect(readTripMeta(opened.doc).schemaVersion).toBe(3);expect(readTripMeta(opened.doc).boardId).toBe('legacy');
     await opened.whenSaved();expect(fake.constructed).not.toContain(TRIP_PREFIX+'legacy');expect(store(TRIP_PREFIX+'legacy').updates).toEqual([original]);
     opened.doc.getMap('tripMeta').set('title','Edited migrated copy');await opened.whenSaved();opened.destroy();
     const reopened=await openTrip('legacy');expect(readTripMeta(reopened.doc).title).toBe('Edited migrated copy');expect(store(TRIP_PREFIX+'legacy').updates).toEqual([original]);reopened.destroy();old.destroy();

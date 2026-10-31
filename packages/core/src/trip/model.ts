@@ -123,6 +123,7 @@ export function writeCard(parts: TripParts, card: TripCard): void {
   setOrDel('source', valid.source); setOrDel('lineage', valid.lineage);
   setOrDel('sourceText', valid.sourceText); setOrDel('travelerNote', valid.travelerNote); setOrDel('currentFacts', valid.currentFacts);
   setOrDel('bookingAttention', valid.bookingAttention); setOrDel('booking', valid.booking);
+  setOrDel('boardWidth', valid.boardWidth); setOrDel('boardHeight', valid.boardHeight); setOrDel('boardStack', valid.boardStack);
 }
 
 export function readCard(parts: TripParts, id: string): TripCard | undefined {

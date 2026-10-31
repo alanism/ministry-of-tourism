@@ -2,7 +2,8 @@ import {TripGuidance} from './TripGuidance';
 import {tripPhase} from '@writers-board/core';
 // Trip shell, matched to the predicted builds: header pill nav, brief sidebar, lanes, Muse rail, review and keepsakes.
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { TripSession, boardProjection, createGuestCopy, importTripPackage, readAllCards, readTripMeta, tripParts, type Actor, type BoardKind, type FccCityContent } from '@writers-board/core';
+import { TripSession, boardProjection, createGuestCopy, encodeTrip, importTripPackage, readAllCards, readTripMeta, tripParts, type Actor, type BoardKind, type FccCityContent } from '@writers-board/core';
+import { TripRecovery, type TripRecoverySource } from './TripRecovery.tsx';
 import './trip.css';
 import './integration.css';
 import { FirstScreen } from './FirstScreen.tsx';
@@ -37,6 +38,7 @@ const YOU: Actor = { kind: 'human', id: 'traveler-1', name: 'You' };
 type Tab = 'board' | 'composition' | 'fcc' | 'today' | 'map' | 'keepsakes' | 'export';
 const TABS: { id: Tab; label: string }[] = [{ id: 'board', label: 'Board' },{id:'composition',label:'Composition'},{id:'fcc',label:'Explore FCC'}, { id: 'today', label: 'Today' }, { id: 'map', label: 'Map' }, { id: 'keepsakes', label: 'Keepsakes' }, {id:'export',label:'Export'}];
 const KIND_LABEL: Record<BoardKind, string> = { traveler: 'Trip', guest: 'Guest copy', host_guide: 'Host guide' };
+function downloadBytes(bytes: Uint8Array, name: string) { const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/zip' })); const a = document.createElement('a'); a.href = url; a.download = name; a.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); }
 
 function Saved({ status, exportedAt }: { status: SavedStatus; exportedAt: string | null }) {
   return <><p className={`mot-saved${status === 'saved' ? '' : ' unsaved'}`}><Icon name="device" />{status === 'error' ? 'In this tab only · download a ZIP backup' : status === 'saved' ? 'Saved on this device' : 'Saving…'}</p>{exportedAt && <small className="m-muted">Last export: {new Date(exportedAt).toLocaleString()}</small>}</>;
@@ -83,6 +85,7 @@ export function TripApp() {
   const [tick, setTick] = useState(0);
   const [toast, setToast] = useState<{ message: string; action?: { label: string; run: () => void } } | null>(null);
   const [lost, setLost] = useState(false);
+  const [recovery, setRecovery] = useState<TripRecoverySource | null>(null);
   const [panel, setPanel] = useState<'review' | 'guest' | 'art' | 'destination' | 'muse' | 'ballot' | null>(null);
   const [creating,setCreating]=useState<BoardKind|null>(null);
   const [destinations,setDestinations]=useState<DestinationRow[]>([]);
@@ -90,6 +93,7 @@ export function TripApp() {
   const [registryAttempt,setRegistryAttempt]=useState(0);
   const registryRef=useRef<DestinationRow[]>([]);
   const startingTrip=useRef(false);
+  const opRef=useRef(0);
   const [cityContent,setCityContent]=useState<FccCityContent>();
   const [fccState,setFccState]=useState<FccBrowserState>();
   const [museAvailable,setMuseAvailable]=useState(false);
@@ -112,22 +116,50 @@ export function TripApp() {
     toastTimer.current = window.setTimeout(() => setToast(null), action ? 6000 : 3200);
   };
 
-  const adopt = (trip: OpenTrip) => { setOpen(trip); setSession(new TripSession(trip.doc,{destinations:registryRef.current})); setPanel(null); setPending(null); refresh(); };
+  const adopt = (trip: OpenTrip) => { if (trip.status() === 'error' || hasEphemeralAssets(trip.doc)) { let boardId: string | undefined; try { boardId = readTripMeta(trip.doc).boardId; } catch { boardId = undefined; } const bytes = encodeTrip(trip.doc); trip.destroy(); setOpen(null); setSession(null); setRecovery({ bytes, boardId, context: 'Open board', error: 'This board could not be saved durably on this device, so it has not been adopted as a saved board.', backupOnly: true }); return false; } setOpen(trip); setSession(new TripSession(trip.doc,{destinations:registryRef.current})); setPanel(null); setPending(null); refresh(); return true; };
   const switchTo = async (id: string) => {
-    try { adopt(await openTrip(id)); setTab('board'); }
-    catch (e) { notify(e instanceof Error ? e.message : 'Could not open that board.'); }
+    const op = opRef.current + 1; opRef.current = op;
+    try {
+      const trip = await openTrip(id); if (op !== opRef.current) { trip.destroy(); return; }
+      if (!adopt(trip)) return; setTab('board');
+    } catch (e) {
+      if (op !== opRef.current) return;
+      const err = e as Error & { storeName?: string; original?: Uint8Array; bytes?: Uint8Array; originalUpdates?: Uint8Array[] };
+      setOpen(null); setSession(null);
+      setRecovery({ bytes: err.original ?? err.bytes, originalUpdates: err.originalUpdates, boardId: id, storeName: err.storeName, context: 'Open board', error: err instanceof Error ? err.message : 'Could not open that board.', autoInspect: Boolean(err.original ?? err.bytes ?? err.storeName) });
+    }
+  };
+  const onImport = async (file: File) => {
+    const op = opRef.current + 1; opRef.current = op;
+    const bytes = new Uint8Array(await file.arrayBuffer()); if (op !== opRef.current) return;
+    let importedDoc: Awaited<ReturnType<typeof importTripPackage>>['doc'] | undefined;
+    try {
+      const imported = await importTripPackage(bytes); importedDoc = imported.doc; if (op !== opRef.current) return;
+      await storeImportedAssets(imported.doc, imported.assets); if (op !== opRef.current) return;
+      const boardId = readTripMeta(imported.doc).boardId;
+      const trip = await openTrip(boardId, { from: imported.doc }); if (op !== opRef.current) { trip.destroy(); return; }
+      importedDoc.destroy(); importedDoc = undefined;
+      if (!adopt(trip)) { setRecovery({ bytes, fileName: file.name, fileType: file.type || 'application/zip', boardId, context: 'Import', error: 'The imported board could not be saved on this device, so it has not been adopted as a saved board.', backupOnly: true, isPackage: true }); return; }
+      setRecovery(null); setTab('board'); notify('Imported as a new board', { label: 'Download original ZIP', run: () => downloadBytes(bytes, file.name || 'original.zip') });
+    } catch (e) {
+      if (op !== opRef.current) return;
+      setOpen(null); setSession(null);
+      setRecovery({ bytes, fileName: file.name, fileType: file.type || 'application/zip', context: 'Import', error: e instanceof Error ? e.message : 'Import failed.', autoInspect: true, isPackage: true });
+    } finally { importedDoc?.destroy(); }
   };
   const start = async (details:NewTrip) => {
     if(startingTrip.current)return;
     startingTrip.current=true;
+    const op = opRef.current + 1; opRef.current = op;
     try {
-      const trip = await openTrip(crypto.randomUUID(), details);
+      const trip = await openTrip(crypto.randomUUID(), details); if (op !== opRef.current) { trip.destroy(); return; }
+      if (!adopt(trip)) return;
       recordOutcome('board_created');
-      adopt(trip);setCreating(null); setTab('board');
-    } catch (e) { notify(e instanceof Error ? e.message : 'Could not start the trip.'); }
+      setCreating(null); setTab('board');
+    } catch (e) { if (op === opRef.current) notify(e instanceof Error ? e.message : 'Could not start the trip.'); }
     finally { startingTrip.current=false; }
   };
-  const newBoard = () => { forgetLastBoard(); setOpen(null); setSession(null); };
+  const newBoard = () => { opRef.current += 1; forgetLastBoard(); setOpen(null); setSession(null); };
 
   useEffect(()=>{
     delete window.writersBoard;
@@ -136,17 +168,28 @@ export function TripApp() {
     return()=>{if(inherited)inherited.style.display=previousDisplay??'';};
   },[]);
   useEffect(()=>{
+    if(booting||recovery)return;
     const controller=new AbortController();let alive=true;setDestinationIndex(undefined);
     void loadDestinations({signal:controller.signal,bundled:bundledDestinations,offline:!navigator.onLine}).then(index=>{if(alive){registryRef.current.splice(0,registryRef.current.length,...index.cities);setDestinations(index.cities);setDestinationIndex(index);}});
     return()=>{alive=false;controller.abort();};
-  },[registryAttempt]);
+  },[registryAttempt,booting,recovery]);
   useEffect(()=>{if(!session||!open)return;const cleanup=installTripApi(session,{onChange:refresh,providers:()=>providers.current,whenSaved:async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are in this tab only. Download a package before closing.');},onDiagnostic:receipt=>diagnostics.record(receipt),exportState:currentTripOperation,exportArtifact:(format,signal)=>createTripArtifact(session,format,signal,{includePrivate:false})});const updated=()=>refresh();session.doc.on('update',updated);return()=>{cleanup();session.doc.off('update',updated);session.destroy();};},[session,open]);
 
+  useEffect(() => () => { opRef.current += 1; }, []);
   useEffect(() => {
+    const op = opRef.current + 1; opRef.current = op;
     const id = lastBoardId();
     if (!id) { setBooting(false); return; }
     // A board that was here but is gone (browser storage cleared or evicted) is said out loud, not skipped (MOT-15).
-    void openTrip(id).then(adopt, () => { forgetLastBoard(); setLost(true); }).finally(() => setBooting(false));
+    void openTrip(id).then((trip) => {
+      if (op !== opRef.current) { trip.destroy(); return; }
+      adopt(trip);
+    }, (e: unknown) => {
+      if (op !== opRef.current) return;
+      const err = e as Error & { storeName?: string; original?: Uint8Array; bytes?: Uint8Array; originalUpdates?: Uint8Array[] };
+      setRecovery({ bytes: err.original ?? err.bytes, originalUpdates: err.originalUpdates, boardId: id, storeName: err.storeName, context: 'Restore last board', error: err instanceof Error ? err.message : 'Could not open the last board.', autoInspect: Boolean(err.original ?? err.bytes ?? err.storeName) });
+    }).finally(() => { if (op === opRef.current) setBooting(false); });
+    return () => { if (opRef.current === op) opRef.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => () => { open?.destroy(); }, [open]);
@@ -162,8 +205,9 @@ export function TripApp() {
   useEffect(() => { shellRef.current?.scrollTo(0, 0);shellRef.current?.querySelector<HTMLElement>('.mot-nav button[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'}); }, [tab, open]);
 
   const destinationProps={registry:destinations,registryStatus:destinationIndex?.status??'loading' as const,registryUpdatedAt:destinationIndex?.retrievedAt,registryError:destinationIndex?.error,onRetryRegistry:registryAttempt<3?()=>setRegistryAttempt(attempt=>attempt+1):undefined};
+  if (recovery) return <TripRecovery source={recovery} onCancel={() => { opRef.current += 1; setRecovery(null); }} onImportFile={(file) => void onImport(file)} onRecovered={(trip) => { opRef.current += 1; if (adopt(trip)) { setRecovery(null); setTab('board'); } }} />;
   if (booting) return <main className="mot" />;
-  if (!open || !session) return <><FirstScreen onStart={(kind) => { setLost(false);setCreating(kind); }} boards={listBoards()} onOpen={(id) => void switchTo(id)}
+  if (!open || !session) return <><input ref={fileRef} type="file" accept=".zip,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void onImport(f); }} /><div className="mot" style={{ padding: '12px 16px 0', textAlign: 'right' }}><button type="button" className="m-btn small" onClick={() => fileRef.current?.click()}>Import ZIP</button></div><FirstScreen onStart={(kind) => { setLost(false);setCreating(kind); }} boards={listBoards()} onOpen={(id) => void switchTo(id)}
     notice={lost ? 'Your last board is no longer in this browser’s storage. It may have been cleared by the browser or by you. If you exported a ZIP backup, import it to get the board back.' : undefined} />{creating&&<FocusSheet label="Choose destination" onClose={()=>setCreating(null)}><DestinationPicker kind={creating} {...destinationProps} onClose={()=>setCreating(null)} onSave={details=>void start(details)} /></FocusSheet>}</>;
   const meta = readTripMeta(session.doc);
   const contentCity=meta.cityId??citySlug(meta.city),sourceState=fccState?.boardId===meta.boardId&&fccState.cityId===contentCity?fccState:undefined;
@@ -175,22 +219,16 @@ export function TripApp() {
   const host = meta.kind === 'host_guide';
   const boards = listBoards();
 
-  const onImport = async (file: File) => {
-    try {
-      const { doc, assets } = await importTripPackage(new Uint8Array(await file.arrayBuffer()));
-      await storeImportedAssets(doc, assets);
-      const trip = await openTrip(readTripMeta(doc).boardId, { from: doc });
-      doc.destroy();
-      adopt(trip); setTab('board'); notify('Imported as a new board');
-    } catch (e) { notify(e instanceof Error ? e.message : 'Import failed. Your current board is unchanged.'); }
-  };
+
   const guestCopy = async (copyTitle: string, cardIds: Set<string>) => {
+    const op = opRef.current + 1; opRef.current = op;
+    let guest: ReturnType<typeof createGuestCopy> | undefined;
     try {
-      const guest = createGuestCopy(session.doc, { title: copyTitle, cardIds });
-      const trip = await openTrip(readTripMeta(guest).boardId, { from: guest });
-      guest.destroy();
-      adopt(trip); notify('Guest copy created. Your master guide stays unchanged.');
-    } catch (e) { notify(e instanceof Error ? e.message : 'Could not create the guest copy.'); }
+      guest = createGuestCopy(session.doc, { title: copyTitle, cardIds });
+      const trip = await openTrip(readTripMeta(guest).boardId, { from: guest }); if (op !== opRef.current) { trip.destroy(); return; }
+      if (!adopt(trip)) return; notify('Guest copy created. Your master guide stays unchanged.');
+    } catch (e) { if (op === opRef.current) notify(e instanceof Error ? e.message : 'Could not create the guest copy.'); }
+    finally { guest?.destroy(); }
   };
   const addCard = () => {
     if (!newTitle.trim()) return;

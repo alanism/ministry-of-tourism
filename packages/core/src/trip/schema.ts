@@ -8,7 +8,7 @@ import { groupPreferencesSchema } from './group-preferences.ts';
 
 export const bookingSchema=z.object({status:z.enum(['confirmed','held','not_booked']),reference:z.string().max(200).optional()}).strict();
 export const memoryWorkflowSchema=z.object({version:z.literal(1),reactions:z.record(z.string().min(1).max(200),z.enum(['keep','maybe','skip'])).refine(r=>Object.keys(r).length<=500,'At most 500 memory reactions')}).strict();
-export const TRIP_SCHEMA_VERSION = 2;
+export const TRIP_SCHEMA_VERSION = 3;
 export const STAGES = ['plan', 'prepare', 'arrive', 'explore', 'remember'] as const;
 export type Stage = (typeof STAGES)[number];
 export const CARD_KINDS = ['place', 'note', 'stay_fact', 'policy', 'task', 'offer', 'photo', 'brief'] as const;
@@ -72,8 +72,11 @@ export const tripMetaSchema = z.object({
     .refine(value=>value.apparelAssetIds.includes(value.wornTeeAssetId),'The chosen tee must be cached').optional(),
 }).strict();
 export type TripMeta = z.infer<typeof tripMetaSchema>;
+export const legacyTripMetaSchemaV1 = tripMetaSchema.extend({ schemaVersion: z.literal(1) });
+export const legacyTripMetaSchemaV2 = tripMetaSchema.extend({ schemaVersion: z.literal(2) });
+export type LegacyTripMeta = z.infer<typeof legacyTripMetaSchemaV1> | z.infer<typeof legacyTripMetaSchemaV2>;
 
-export const tripCardSchema = z.object({
+const tripCardFieldsSchema = z.object({
   id,
   kind: z.enum(CARD_KINDS),
   title: z.string().max(500),
@@ -99,11 +102,21 @@ export const tripCardSchema = z.object({
   assetIds: z.array(id).max(100),
   x: z.number().finite(),
   y: z.number().finite(),
+  boardWidth: z.number().finite().min(400).max(5000).optional(),
+  boardHeight: z.number().finite().min(300).max(5000).optional(),
+  boardStack: z.number().int().min(-1000000).max(1000000).optional(),
   createdBy: z.string().min(1).max(200),
   updatedAt: z.string().min(1),
   lineage: z.object({ guideCardId: id, guideRev: z.number().int().nonnegative(), base: z.string().max(50000) }).optional(),
 }).strict();
+export const tripCardSchema = tripCardFieldsSchema.refine((card) => {
+  const width = card.boardWidth ?? 1200;
+  const height = card.boardHeight ?? 900;
+  return card.x >= 0 && card.y >= 0 && card.x + width <= 10000 && card.y + height <= 10000;
+}, 'Card geometry must fit within the 10000 board bounds');
+export const legacyTripCardSchema = tripCardFieldsSchema.omit({ boardWidth: true, boardHeight: true, boardStack: true });
 export type TripCard = z.infer<typeof tripCardSchema>;
+export type LegacyTripCard = z.infer<typeof legacyTripCardSchema>;
 
 export const assetSchema = z.object({
   id,
@@ -131,12 +144,26 @@ export const presentationFieldsSchema = z.object({
   x: z.number().min(0).max(1), y: z.number().min(0).max(1),
   width: z.number().positive().max(1), height: z.number().positive().max(1),
   crop: cropSchema, rotation: z.number().finite(), zIndex: z.number().int(), locked: z.boolean(), scope: z.enum(SCOPES),
+  surface: z.enum(['magazine', 'board']).optional(),
   magazineLayout:z.object({dx:z.number().finite().min(-2).max(2),dy:z.number().finite().min(-2).max(2),scaleX:z.number().positive().max(4),scaleY:z.number().positive().max(4),order:z.number().int().optional(),pageId:id.optional()}).strict().optional(),
   pattern:z.enum(PRESENTATION_PATTERNS).optional(),
   magazineRole:z.enum(MAGAZINE_ART_ROLES).optional(),
 }).strict();
-export const presentationSchema = presentationFieldsSchema.refine(p=>!!(p.cardId || p.assetId),'A presentation needs a card or asset');
+export const presentationSchema = presentationFieldsSchema.superRefine((p, ctx) => {
+  if (!p.cardId && !p.assetId) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'A presentation needs a card or asset' });
+  if (p.surface === 'board') {
+    if (p.cardId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['cardId'], message: 'Board presentations must not reference a card' });
+    if (!p.assetId) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['assetId'], message: 'Board presentations need an asset' });
+    if (p.rotation !== 0) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['rotation'], message: 'Board presentation rotation must be exactly 0' });
+    if (p.zIndex < -1000000 || p.zIndex > 1000000) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['zIndex'], message: 'Board presentation zIndex must be a bounded integer between -1000000 and 1000000' });
+    if (p.width * 10000 < 100 - 1e-9) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['width'], message: 'Board presentation width must be at least 100 board units' });
+    if (p.height * 10000 < 100 - 1e-9) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['height'], message: 'Board presentation height must be at least 100 board units' });
+    if (p.x + p.width > 1 + Number.EPSILON || p.y + p.height > 1 + Number.EPSILON) ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Board presentation rectangle must fit within the board' });
+  }
+});
+export const legacyPresentationSchema = presentationFieldsSchema.omit({ surface: true }).refine(p => !!(p.cardId || p.assetId), 'A presentation needs a card or asset');
 export type Presentation = z.infer<typeof presentationSchema>;
+export type LegacyPresentation = z.infer<typeof legacyPresentationSchema>;
 
 /** Synced fields snapshot used for guest-copy lineage base. Layout/status excluded. */
 export function syncedSnapshot(card: TripCard): string {

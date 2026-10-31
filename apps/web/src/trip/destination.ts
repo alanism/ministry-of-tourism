@@ -38,7 +38,7 @@ export function searchDestinations(rows: readonly DestinationRow[], query: strin
 }
 
 /** Return only trip metadata; cards, media and their source geography are never inputs or outputs. */
-export function destinationDetails({ city, countryCode: chosenCountry, destination, kind, current }: { city: string; countryCode: string; destination?: DestinationRow; kind?: BoardKind; current?: TripMeta }): NewTrip {
+export function destinationDetails({ city, countryCode: chosenCountry, destination, kind, current }: { city: string; countryCode: string; destination?: DestinationRow; kind?: BoardKind; current?: Pick<TripMeta, 'kind' | 'title' | 'dates' | 'party'> }): NewTrip {
   const typed = z.string().trim().min(1).max(120).parse(city);
   countryCode.parse(chosenCountry);
   if (destination) {

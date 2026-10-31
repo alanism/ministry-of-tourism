@@ -4,6 +4,7 @@ import { zipSync, strToU8 } from 'fflate';
 import * as Y from 'yjs';
 import { assertShareableAsset, createTrip, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, tripParts, writeAsset, writeCard, writePresentation } from './model.ts';
 import { encodeTrip } from './persist.ts';
+import { inspectLegacyTrip } from './trip-recovery.ts';
 import { stripImageMetadata } from './image-meta.ts';
 import { toBase64 } from '../doc/board-file.ts';
 
@@ -13,6 +14,34 @@ export interface PackageAsset { id: string; file: string; size: number; sha256: 
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', bytes as BufferSource);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/** Owner-private full backup at the validated document's original legacy version: native ZIP containing the exact original binary document, a readable legacy copy, and every referenced asset's available bytes. This is not a raw-document export. */
+export async function exportLegacyTripPackage(bytes: Uint8Array, assetBytes: Map<string, Uint8Array> = new Map()): Promise<Uint8Array> {
+  const inspected = inspectLegacyTrip(bytes);
+  const files: Record<string, Uint8Array> = {};
+  const assets: PackageAsset[] = [];
+  for (const asset of [...inspected.assets].sort((a, b) => a.id.localeCompare(b.id))) {
+    const original = assetBytes.get(asset.id);
+    if (!original) throw new Error(`Missing asset bytes for ${asset.id}; nothing was exported`);
+    if (original.length > TRIP_PACKAGE_LIMITS.fileBytes) throw new Error(`Asset ${asset.id} is too large for a portable package (10 MiB per file); nothing was exported`);
+    if (/[\\/]/.test(asset.id) || asset.id === '.' || asset.id === '..') throw new Error(`Unsafe asset path for ${asset.id}; nothing was exported`);
+    if (/(?:html|javascript|svg|xml)/i.test(asset.mime)) throw new Error(`Active MIME type for asset ${asset.id}; nothing was exported`);
+    const sha256 = await sha256Hex(original);
+    if (sha256 !== asset.hash) throw new Error(`Asset ${asset.id} bytes do not match its recorded hash; nothing was exported`);
+    const file = `assets/${asset.id}`;
+    assets.push({ id: asset.id, file, size: original.length, sha256, mime: asset.mime });
+    files[file] = original;
+  }
+  const manifest = { format: TRIP_PACKAGE_FORMAT, version: inspected.version, boardId: inspected.meta.boardId, created: new Date().toISOString(), assets };
+  files['manifest.json'] = strToU8(JSON.stringify(manifest, null, 2));
+  files['document.b64'] = strToU8(toBase64(bytes.slice()));
+  files['trip.json'] = strToU8(JSON.stringify({ meta: inspected.meta, cards: inspected.cards, presentations: inspected.presentations }, null, 2));
+  const values = Object.values(files);
+  if (values.some(data => data.length > TRIP_PACKAGE_LIMITS.fileBytes) || values.reduce((size, data) => size + data.length, 0) > TRIP_PACKAGE_LIMITS.totalBytes) throw new Error('This package exceeds its portable import limit (10 MiB per file, 50 MiB total); nothing was exported');
+  const zip = zipSync(files, { level: 6 });
+  if (zip.length > TRIP_PACKAGE_LIMITS.totalBytes) throw new Error('This package is too large to reopen (50 MiB total); nothing was exported');
+  return zip;
 }
 
 /**

@@ -76,7 +76,7 @@ describe('production integration state contracts',()=>{
     const s=make();s.parts.meta.set('schemaVersion',1);const original=persistence.encodeTrip(s.doc);
     const migrate=(persistence as unknown as {loadTripWithMigration:(b:Uint8Array)=>{doc:typeof s.doc;original:Uint8Array|null;migrated:boolean}}).loadTripWithMigration;
     const migrated=migrate(original);expect(migrated.migrated).toBe(true);expect(migrated.original).toEqual(original);
-    expect(model.readTripMeta(migrated.doc).schemaVersion).toBe(2);expect(persistence.encodeTrip(s.doc)).toEqual(original);
+    expect(model.readTripMeta(migrated.doc).schemaVersion).toBe(3);expect(persistence.encodeTrip(s.doc)).toEqual(original);
     s.parts.meta.set('schemaVersion',999);expect(()=>persistence.loadTrip(persistence.encodeTrip(s.doc))).toThrow(/Unsupported/);
   });
   it('round-trips art, source, crop, rotation, lock and credits with a new board identity',async()=>{

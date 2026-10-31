@@ -31,7 +31,7 @@ export function reusableArt(session: TripSession, options: { includePrivate?: bo
   const seen = new Map<string, ReusableArt>();
   const order = { guide: 0, stay: 1, private: 2 } as const;
   for (const p of readPresentations(session.parts)) {
-    if (!p.assetId) continue;
+    if (!p.assetId || p.surface === 'board') continue;
     const scope = presentationScope(session.parts, p);
     if (scope === 'private' && !options.includePrivate) continue;
     const asset = readAsset(session.parts, p.assetId);
@@ -68,7 +68,7 @@ export function reviewKeepsakePages(session: TripSession, input: { cardIds: read
     if (card.day && meta.dates && (card.day < meta.dates.start || card.day > meta.dates.end)) problems.push({ kind: 'wrong_detail', ids: [card.id], detail: `${card.title || 'A memory'} is dated ${card.day}, outside the trip (${meta.dates.start} to ${meta.dates.end}).` });
     for (const id of card.assetIds) { const asset = readAsset(session.parts, id); if (asset && (asset.rightsStatus === 'unknown' || asset.rightsStatus === 'restricted') && !asset.credit?.trim()) problems.push({ kind: 'needs_credit', ids: [card.id, id], detail: `${card.title || 'A memory'} uses art without its credit; add it before sharing.` }); }
   }
-  const art = readPresentations(session.parts).filter(p => (!p.cardId || wanted.has(p.cardId)) && (input.includePrivate || presentationScope(session.parts, p) !== 'private'));
+  const art = readPresentations(session.parts).filter(p => p.surface !== 'board' && (!p.cardId || wanted.has(p.cardId)) && (input.includePrivate || presentationScope(session.parts, p) !== 'private'));
   for (const p of art) if (p.assetId && !input.hasBytes(p.assetId)) problems.push({ kind: 'missing_image', ids: [p.id, p.assetId], detail: 'A placed artwork is missing its image in this browser.' });
   const front = art.filter(p => p.magazineRole !== 'backdrop' && !p.locked);
   for (let i = 0; i < front.length; i++) for (let j = i + 1; j < front.length; j++) {

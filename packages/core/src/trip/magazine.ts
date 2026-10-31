@@ -35,7 +35,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const parts=tripParts(doc),meta=readTripMeta(doc),personal=options.includePrivate===true||options.variant==='personal';
   const visible=(scope:string)=>personal||(scope!=='private'&&(options.variant!=='guide'||scope==='guide'));
   const cards=readAllCards(parts).filter(c=>visible(c.scope)).map(c=>c.provenance==='fcc'||c.source?.provider==='fcc'?{...c,title:recoverFccTitle(c.title)}:c),visibleIds=new Set(cards.map(c=>c.id));
-  const layers=[...doc.getMap<Presentation>('tripPresentations').values()].filter(p=>p.boardId===meta.boardId&&visible(p.scope)&&(!p.cardId||visibleIds.has(p.cardId))).sort((a,b)=>a.zIndex-b.zIndex||a.id.localeCompare(b.id));
+  const layers=[...doc.getMap<Presentation>('tripPresentations').values()].filter(p=>p.boardId===meta.boardId&&p.surface!=='board'&&visible(p.scope)&&(!p.cardId||visibleIds.has(p.cardId))).sort((a,b)=>a.zIndex-b.zIndex||a.id.localeCompare(b.id));
   const selected=new Set([...cards.flatMap(c=>c.assetIds),...layers.flatMap(p=>p.assetId?[p.assetId]:[])]);
   const allOwned=new Set([...readAllCards(parts).flatMap(c=>c.assetIds),...[...doc.getMap<Presentation>('tripPresentations').values()].flatMap(p=>p.assetId?[p.assetId]:[])]);
   const pages:MagazinePage[]=[],spreads:MagazineSpread[]=[],creditAppendix:string[]=[],pictureDpi=new Map<string,MagazinePictureDpi>();
@@ -45,8 +45,10 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     return {title:meta.title,boardId:meta.boardId,revision:Number(parts.clock.get('boardRev')??0),pages,spreads,unusedAssetIds:[],warnings,pictureDpi:detail,cityId:meta.cityId,cityName:meta.city};
   };
   const sourceData=(raw:unknown):Record<string,unknown>=>raw&&typeof raw==='object'?raw as Record<string,unknown>:{};
+  const boardOnly=new Set([...doc.getMap<Presentation>('tripPresentations').values()].filter(p=>p.surface==='board'&&p.assetId).map(p=>p.assetId!));
+  for(const id of selected)boardOnly.delete(id);
   const rawRefs=(options.artwork??[]).map(sourceData);
-  const apparel=meta.cityId?selectCityApparel(meta.cityId,rawRefs):[];
+  const apparel=meta.cityId?selectCityApparel(meta.cityId,rawRefs.filter(r=>!(typeof r.assetId==='string'&&boardOnly.has(r.assetId)))):[];
   const candidates:Candidate[]=[];
   function add(assetId:string,raw:Record<string,unknown>,layer?:Presentation){
     const existing=candidates.find(a=>a.assetId===assetId);if(existing)return;
@@ -71,7 +73,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   for(const layer of layers)if(layer.assetId)add(layer.assetId,rawRefs.find(r=>r.assetId===layer.assetId)??{},layer);
   for(const id of selected)add(id,rawRefs.find(r=>r.assetId===id)??{});
   for(const raw of rawRefs){
-    if(typeof raw.assetId!=='string'||(allOwned.has(raw.assetId)&&!selected.has(raw.assetId)))continue;
+    if(typeof raw.assetId!=='string'||boardOnly.has(raw.assetId)||(allOwned.has(raw.assetId)&&!selected.has(raw.assetId)))continue;
     if(!['original-art','map','sticker','photo','apparel-mockup'].includes(String(raw.kind)))continue;
     if(raw.kind==='apparel-mockup'&&!apparel.some(a=>a.assetId===raw.assetId))continue;
     const source=sourceData(raw.source);

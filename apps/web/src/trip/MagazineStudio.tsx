@@ -26,10 +26,10 @@ export function MagazineStudio({session,tick,onExport}:{session:TripSession;tick
   useEffect(()=>()=>teeController.current?.abort(),[session]);
   useEffect(()=>{const abort=new AbortController();setMagazine(undefined);setError('');void prepareMagazine(session,abort.signal,includePrivate).then(result=>{if(!abort.signal.aborted)setMagazine(result);},cause=>{if(!abort.signal.aborted)setError(cause instanceof Error?cause.message:'Preview unavailable.');});return()=>abort.abort();},[session,tick,includePrivate]);
   const visibleCards=new Set(readAllCards(session.parts).filter(card=>includePrivate||card.scope!=='private').map(card=>card.id));
-  const specimens=readPresentations(session.parts).filter(layer=>(includePrivate||layer.scope!=='private')&&(!layer.cardId||visibleCards.has(layer.cardId))&&(layer.magazineRole==='specimen'||layer.pattern==='food-culture')&&layer.assetId&&!layer.locked).sort((a,b)=>a.zIndex-b.zIndex||a.id.localeCompare(b.id));
+  const specimens=readPresentations(session.parts).filter(layer=>layer.surface!=='board'&&(includePrivate||layer.scope!=='private')&&(!layer.cardId||visibleCards.has(layer.cardId))&&(layer.magazineRole==='specimen'||layer.pattern==='food-culture')&&layer.assetId&&!layer.locked).sort((a,b)=>a.zIndex-b.zIndex||a.id.localeCompare(b.id));
   const swapSpecimen=()=>{
     if(specimens.length<2)return;
-    try{session.executeAll({kind:'human',id:'traveler-1',name:'You'},[{command:'trip_presentation_update',input:{id:specimens[0]!.id,zIndex:Math.max(...readPresentations(session.parts).map(layer=>layer.zIndex))+1}}]);}
+    try{session.executeAll({kind:'human',id:'traveler-1',name:'You'},[{command:'trip_presentation_update',input:{id:specimens[0]!.id,zIndex:Math.max(...readPresentations(session.parts).filter(layer=>layer.surface!=='board').map(layer=>layer.zIndex))+1}}]);}
     catch(cause){setError(cause instanceof Error?cause.message:'The artwork could not be changed.');}
   };
   const spreads=magazine?.spreads??[];

@@ -22,7 +22,7 @@ export function MemoryChoice({session,actor,tick,saved,notify,refresh,whenSaved}
   const token=++run.current,revision=session.boardRev,abort=new AbortController();controller.current?.abort();controller.current=abort;setBusy(preview?'page':'check');setFailure('');setHtml('');setReceipt(null);
   const doc=loadTrip(encodeTrip(session.doc));
   try{
-   const cards=readAllCards(session.parts).filter(c=>chosen.includes(c.id)),placements=readPresentations(session.parts).filter(p=>presentationScope(session.parts,p)!=='private'&&(!p.cardId||chosen.includes(p.cardId)));
+   const cards=readAllCards(session.parts).filter(c=>chosen.includes(c.id)),placements=readPresentations(session.parts).filter(p=>p.surface!=='board'&&presentationScope(session.parts,p)!=='private'&&(!p.cardId||chosen.includes(p.cardId)));
    const ids=new Set([...cards.flatMap(c=>c.assetIds),...placements.flatMap(p=>p.assetId?[p.assetId]:[])]),media=new Map<string,string>();let bytes=0;
    for(const id of ids){
     abort.signal.throwIfAborted();const asset=readAsset(session.parts,id),blob=asset?await getTripBlob(asset.hash):null;if(!asset||!blob)continue;

@@ -30,6 +30,7 @@ export * from './trip/session.ts';
 export * from './trip/projections.ts';
 export * from './trip/lineage.ts';
 export * from './trip/persist.ts';
+export * from './trip/trip-recovery.ts';
 export * from './trip/package.ts';
 export * from './trip/import.ts';
 export * from './trip/proposals.ts';

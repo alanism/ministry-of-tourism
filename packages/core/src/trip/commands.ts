@@ -48,7 +48,7 @@ export const tripCardCreate = defineTripCommand({
     location: opt(z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), source: z.enum(['catalog', 'traveler']) })),
     booking:opt(bookingSchema), scope: opt(z.enum(SCOPES)), provenance: z.enum(PROVENANCES).default('traveler'),
     source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)),
-    assetIds: z.array(id).max(100).default([]), x: z.number().finite().default(0), y: z.number().finite().default(0),
+    assetIds: z.array(id).max(100).default([]), x: z.number().finite().default(0), y: z.number().finite().default(0), boardWidth: opt(z.number().finite().min(400).max(5000)), boardHeight: opt(z.number().finite().min(300).max(5000)), boardStack: opt(z.number().int().min(-1000000).max(1000000)),
   }).strict(),
   run: (ctx, input) => {
     if (input.status !== undefined && input.kind !== 'task') throw new CommandError('invalid_input', 'status is only for kind task');
@@ -79,10 +79,10 @@ export const tripCardUpdate = defineTripCommand({
 export const tripCardMove = defineTripCommand({
   name: 'trip_card_move', title: 'Move a trip card', description: 'Moves a card between stages and/or to x,y.',
   access: 'write',
-  input: z.object({ id, stage: opt(z.enum(STAGES)), x: opt(z.number().finite()), y: opt(z.number().finite()) }).strict(),
+  input: z.object({ id, stage: opt(z.enum(STAGES)), x: opt(z.number().finite()), y: opt(z.number().finite()), boardWidth: opt(z.number().finite().min(400).max(5000)), boardHeight: opt(z.number().finite().min(300).max(5000)), boardStack: opt(z.number().int().min(-1000000).max(1000000)) }).strict(),
   run: (ctx, input) => {
     const card = find(ctx.parts, input.id);
-    writeCard(ctx.parts, { ...card, stage: input.stage ?? card.stage, x: input.x ?? card.x, y: input.y ?? card.y, updatedAt: now() });
+    writeCard(ctx.parts, { ...card, stage: input.stage ?? card.stage, x: input.x ?? card.x, y: input.y ?? card.y, boardWidth: input.boardWidth ?? card.boardWidth, boardHeight: input.boardHeight ?? card.boardHeight, boardStack: input.boardStack ?? card.boardStack, updatedAt: now() });
     return { id: input.id };
   },
 });
@@ -126,7 +126,7 @@ export const tripLineageSync = defineTripCommand({
   input: z.object({ id, card: tripCardSchema }).strict(),
   run: (ctx, input) => {
     const existing = find(ctx.parts, input.id);
-    writeCard(ctx.parts, { ...input.card, id: existing.id, x: existing.x, y: existing.y, status: existing.status, travelerNote: existing.travelerNote, scope: 'guide', lineage: input.card.lineage, updatedAt: now() });
+    writeCard(ctx.parts, { ...input.card, id: existing.id, x: existing.x, y: existing.y, boardWidth: existing.boardWidth, boardHeight: existing.boardHeight, boardStack: existing.boardStack, status: existing.status, travelerNote: existing.travelerNote, scope: 'guide', lineage: input.card.lineage, updatedAt: now() });
     return { id: input.id };
   },
 });
