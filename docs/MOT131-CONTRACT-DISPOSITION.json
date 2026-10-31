@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-31",
+  "owner": "Alan",
+  "ownerDecisions": "G1-G6 approved as recommended",
+  "reviewer": "gpt-6-astra",
+  "reviewAgent": "/root/astra_contract_review",
+  "reviewRound1": "changes required: recovery workflow unspecified",
+  "reviewRound2": "APPROVE CONTRACT; P1 resolved",
+  "reviewedInputSha256": {
+    "docs/MOT131-BOARD-GEOMETRY-PROPOSAL.md": "defda00e0c235259a815dda66157a9c18c6735d4c083002603ab1e5af75ee1c3",
+    "docs/MOT131-G1-G6-OWNER-REVIEW.md": "e89e5501d5fcb5c641af2d865f1f6523d9ce1e6612c7ee833d6d8fc45c794876"
+  },
+  "harnessCheck": {
+    "exitCode": 0,
+    "seconds": 39.498,
+    "scope": "Documentation-only; unchanged harness"
+  },
+  "tests": 902,
+  "testFiles": 162,
+  "typecheckProjects": 4,
+  "runtimeChanges": false,
+  "implementationStarted": false,
+  "remainingHolds": "All existing implementation evidence, production/deployment, device/performance, privacy, PDF, MOT-130 and harness requirements retained",
+  "localOnly": true
+}

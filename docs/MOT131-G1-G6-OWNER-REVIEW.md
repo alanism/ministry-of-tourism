@@ -1,6 +1,6 @@
 # MOT-131: G1–G6 owner decision review
 
-31 October 2026. **Recommendations only; all six owner decisions and the requested Astra review remain pending.** This Codex review supplements the Muse Wonder proposal, rather than silently revising its pinned examples. It is not an Astra review or implementation authorization. Source inspected: `53e58be39626ebcfdf26da93a2ec90b3936bbb5f` (tested implementation `80ff1117a01044e4162f0baa7ff24c65c7ecb677`).
+31 October 2026. **Owner approved G1–G6 as recommended on 31 October 2026; requested Astra review remains pending.** This Codex review supplements the Muse Wonder proposal, rather than silently revising its pinned examples. It is not an Astra review or implementation authorization. Source inspected: `53e58be39626ebcfdf26da93a2ec90b3936bbb5f` (tested implementation `80ff1117a01044e4162f0baa7ff24c65c7ecb677`).
 
 Primary proposal: [MOT131-BOARD-GEOMETRY-PROPOSAL.md](MOT131-BOARD-GEOMETRY-PROPOSAL.md). The owner is being asked to approve the following concrete package, or identify decisions to revise. Production, device, privacy, harness and PDF holds stay intact. No code or existing test is changed by this review.
 
@@ -67,12 +67,12 @@ Two concrete compatibility requirements are missing from the first draft:
 
 | Decision | Owner disposition | Requested Astra disposition |
 |---|---|---|
-| G1 | Pending | Pending |
-| G2 | Pending | Pending |
-| G3, including stable stacking revision | Pending | Pending |
-| G4, including graph authorization | Pending | Pending |
-| G5 | Pending | Pending |
-| G6, including recovery and compatibility | Pending | Pending |
+| G1 | Approved by Alan, 2026-10-31 | Pending |
+| G2 | Approved by Alan, 2026-10-31 | Pending |
+| G3, including stable stacking revision | Approved by Alan, 2026-10-31 | Pending |
+| G4, including graph authorization | Approved by Alan, 2026-10-31 | Pending |
+| G5 | Approved by Alan, 2026-10-31 | Pending |
+| G6, including recovery and compatibility | Approved by Alan, 2026-10-31 | Pending |
 
 If the owner approves this package, record that actual approval and reconcile the original proposal to it. Do not call it Astra approval or clear MOT-131's independent review/build hold implicitly. Muse Wonder implementation remains downstream of the required dispositions. Required implementation evidence includes red/green tests for these invariants, unchanged harness checks, semantic Undo/Redo/reload, native round trips and the existing browser/device/privacy gates. This memo adds no test-budget relaxation, deployment authorization or production acceptance.
 
@@ -81,3 +81,11 @@ Current source anchors: `schema.ts:76–138`, `projections.ts:14–19`, `command
 ## Local verification of this review checkpoint
 
 Documentation only. The unchanged default check first reported 901/902 passing with one 5-second timeout in `response-ledger-cli.test.ts`; the original failure is retained. That unchanged file then passed all 7 tests, and a full unchanged repeat passed 902 tests in 162 files plus all four TypeScript projects in 36.458 seconds. No worker, timeout, test or production code was changed. These checks preserve the existing implementation; they do not execute or approve the proposed geometry. Logs and source hashes are in `Design Sprints/MOT131-Owner-Decision-Review-2026-10-31/`. No board disposition was changed.
+
+## Recorded owner disposition
+
+Alan explicitly approved G1–G6 as recommended in this chat on 31 October 2026 and requested Astra review before Muse Wonder implementation. The recommendations above are now owner decisions. Conditional requests for owner choice in the original review are historical. No production, harness, device or independent-review hold was waived.
+
+## G6 recovery specification after Astra review
+
+The normative six-step recovery workflow is now specified in MOT131-BOARD-GEOMETRY-PROPOSAL.md §16: original retention; version-aware read-only inspection; honest original/legacy backup; manual coordinate draft with preview and explicit acceptance; separate validated durable/reopened v3 copy; required failure-path evidence. It elaborates the approved explicit repair requirement without automatic layout or new authority. Astra re-review is pending; the original P1 report is retained.

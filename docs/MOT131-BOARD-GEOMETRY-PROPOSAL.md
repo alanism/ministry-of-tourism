@@ -1,6 +1,6 @@
 # MOT-131 — Main-board geometry and reversible interaction proposal
 
-**Status: PROPOSED, NOT APPROVED.** This document is a contract proposal for the actual owner and Astra. It is not implementation, approval, production acceptance, independent review, or evidence that tests have run. MOT-131 remains contract-only. Existing holds, harnesses and limits are unchanged. Material labelled **PROPOSED** is not valid current schema-v2 input and must be rejected by a current client unless a later approved implementation adopts it.
+**Status: OWNER APPROVED WITH REVISIONS; ASTRA REVIEW PENDING.** Alan approved G1–G6 as recommended on 31 October 2026. The decision review in MOT131-G1-G6-OWNER-REVIEW.md is authoritative for the revisions incorporated here. This is not implementation, independent review, production acceptance, or proof of proposed behaviour. MOT-131 remains contract-only. Existing holds, harnesses and limits are unchanged. Material labelled **PROPOSED** is not valid current schema-v2 input and must be rejected by a current client unless a later approved implementation adopts it.
 
 This proposal preserves MOT-123, MOT-130, MOT-132 and MOT-136. Membership, privacy authority and actor authority remain governed by MOT-130. The minimal downstream implementation, if later approved, belongs to MOT-120/MOT-122, with dependencies MOT-133/MOT-134; MOT-131 does not absorb that work.
 
@@ -51,7 +51,7 @@ Every card and image would receive a board presentation, while card `x/y` became
 
 A separate canvas document would duplicate identity, privacy, media, Undo, export, synchronization and migration rules. It is rejected unless a later concrete invariant cannot be met by A or B.
 
-**Recommendation, pending G1: Alternative A.** It keeps card `x/y` as the single card-position authority, adds no card-linked board presentation competing with it, and confines the new placement concept to asset-only objects.
+**Owner decision G1: Alternative A.** It keeps card `x/y` as the single card-position authority, adds no card-linked board presentation competing with it, and confines the new placement concept to asset-only objects.
 
 ## 4. Recommended geometry contract under A
 
@@ -114,10 +114,10 @@ For board-surface asset presentations, the existing integer `zIndex` is interpre
 **GLOBAL PROPOSED STACKING RULE:** collect cards and board-surface asset placements; derive each object's board rectangle; sort ascending by:
 
 ```text
-(globalStack, boardY, boardX, objectId)
+(globalStack, stableObjectKey)
 ```
 
-where `globalStack` is card `boardStack` or asset-presentation `zIndex`. Later objects paint above earlier objects. Because the stack values share one domain, a card can be below one image and above another. “Bring forward” sets the object's stack to the current maximum plus one; “send backward” sets it to the current minimum minus one, subject to the proposed bounds. Ties are always broken by position and ID, so paint order is deterministic.
+where `globalStack` is card `boardStack` or asset-presentation `zIndex`. Later objects paint above earlier objects. Because the stack values share one domain, a card can be below one image and above another. “Bring to front” sets the object's stack to the current maximum plus one; “Send to back” sets it to the current minimum minus one, subject to the proposed bounds. Ties use a stable key containing record kind and ID, compared deterministically without locale-dependent ordering. Position never breaks paint-order ties; dragging cannot change layering. Lane ordering remains unchanged.
 
 G3 recommendation: board cards and board-only image placements start with rotation fixed at zero; existing magazine rotation is untouched. An owner may instead approve bounded board rotation with explicit corner/extent tests. No implementation may choose that fork silently or borrow `magazineLayout`. For every committed board rectangle require its right/bottom edges within the extent, not merely x/y within range. Board-image minimum width/height is proposed as 100 units (normalized 0.01); maximum is the 10000-unit extent. Reject rather than clamp an out-of-bounds new gesture. Stack overflow also fails with a visible explanation; no silent renumbering of unrelated objects.
 
@@ -324,7 +324,7 @@ The principal risks are legacy coordinates outside the proposed extent, overlap 
 
 ## 12. Decisions required
 
-All G1–G6 remain **pending actual owner/Astra disposition**.
+Alan approved all G1–G6 recommendations, including the G3 stable-stacking revision, G4 graph authorization and G6 recovery/store/package compatibility requirements. Astra disposition remains pending. The owner decision memo below controls over historical proposal wording such as “proposed” or “pending”; those labels mean not yet implemented, not missing owner approval.
 
 - **G1:** choose A, B or C. Recommendation: A.
 - **G2:** approve or reject proposed optional card `boardWidth`, `boardHeight` and `boardStack`, including the stated pending defaults and limits. Readable expansion does not depend on approving saved card size.
@@ -335,9 +335,89 @@ All G1–G6 remain **pending actual owner/Astra disposition**.
 
 ## 13. Downstream boundary
 
-If the owner/Astra later approve this contract, the minimal implementation belongs to MOT-120/MOT-122 and their MOT-133/MOT-134 dependencies, using the existing code paths in `packages/core/src/trip/schema.ts`, `packages/core/src/trip/persist.ts`, `packages/core/src/trip/commands.ts`, `packages/core/src/trip/session.ts`, `packages/core/src/trip/package.ts`, `apps/web/src/trip/BoardView.tsx` and `apps/web/src/trip/trip-assets.ts`. MOT-131 authorizes none of that work and changes no existing harness limit.
+After the remaining Astra review is resolved, the minimal implementation belongs to MOT-120/MOT-122 and their MOT-133/MOT-134 dependencies, using the existing code paths in `packages/core/src/trip/schema.ts`, `packages/core/src/trip/persist.ts`, `packages/core/src/trip/commands.ts`, `packages/core/src/trip/session.ts`, `packages/core/src/trip/package.ts`, `apps/web/src/trip/BoardView.tsx` and `apps/web/src/trip/trip-assets.ts`. MOT-131 authorizes none of that work and changes no existing harness limit.
 ## 14. Council lenses and evidence boundaries
 
 The local council notes are drafting lenses, not endorsements or independent review: Hashimoto — compose the existing session/commands; Carmack — explicit coordinate transforms and single authority; Schaad — interruption, scrolling, focus and honest persistence feedback; Ryo Lu — reuse clear content/placement primitives; Andy Allen — reversible arrangement without custom physics or a new engine. The council-systems-architecture skill was applied proportionately: keep local data stationary and bound decoding; no distributed or plugin architecture was introduced.
 
 Source locations: `C:/Users/alani/OneDrive/Documents/Aria-EdTech/Learning_Coach_Heroes/Engineering_Council/` and the adjacent `Design_Council/`. The exact five inspected persona files, relevant code, Foundation PRD/ledger and board-catalog reference are hash-bound in `Design Sprints/MOT121-131-Wonder-Next-2026-10-31/input-hashes.json`. Current-code anchors include schema.ts:9/11/39/100/129; session.ts:35/54/99; projections.ts:14; package.ts:23; persist.ts:12; and BoardView.tsx's existing editor/drag callers. No council name implies that person reviewed this proposal.
+
+## 15. Authoritative owner-approved revisions — 31 October 2026
+
+## G1 — Where geometry lives: approve A
+
+Keep card `x/y` as the sole saved card position. Reuse presentations for asset-only board placements, with an explicit board surface. Keep legacy presentations on the magazine surface. Do not add card-linked board placements or another canvas document.
+
+This reuses commands, identity, privacy, media and Undo. Its cost is two record shapes; the implementation must derive one common rectangle for rendering/hit testing and explicitly route every reader/exporter by surface. Existing agent art restrictions remain in force: this does not authorize agents to create standalone board art.
+
+**Owner choice:** A (recommended), B (one presentation per object with a larger migration), or C (separate canvas; not recommended without a demonstrated unmet invariant).
+
+## G2 — Card footprint: approve optional saved size and stack
+
+Approve `boardWidth`, `boardHeight` and `boardStack`. Keep the proposed defaults **1200 × 900** board units, minimum **400 × 300**, maximum **5000 × 5000**, and default stack **0** within **−1,000,000..1,000,000**.
+
+Resizing changes the visible footprint, never truncates stored text or rewrites content. Opening a readable card view is local view state and does not resize the saved card. Those units are not screen pixels: fitting the whole board into a phone is an overview, not a claim that every card is readable there. Ordinary viewing and expanded reading must retain readable text and keyboard access; desktop/phone evidence remains required later.
+
+**Owner choice:** resizable saved footprints (recommended), or fixed footprints with the same readable expansion. The limits are proposed contract values, not measured usability results.
+
+## G3 — Space and layers: approve with stable stacking
+
+Keep a **10,000 × 10,000** finite board, top-left origin, normalized asset coordinates mapped into that space, and local zoom/scroll. Keep cards and board images unrotated for this implementation; magazine rotation is unchanged. Keep image minimum dimensions of **100 × 100** units and require complete rectangles to fit the board. Preserve image/crop aspect when resizing; do not inherit the magazine's page-aspect conversion into the square board coordinate system. Reject an invalid new placement visibly without changing data.
+
+**Revise the draft's tie-break rule.** Sort free-board paint order by `(globalStack, stableObjectKey)`, where the stable key includes the record kind and ID, compared deterministically without locale-dependent ordering. Do not use `x/y` as paint-order tie breakers. With the draft rule, dragging one of two equal-stack objects can unexpectedly put it above or below its neighbour.
+
+Keep lane ordering separately unchanged as `(stage grouping, y, x, id)`. A free-board move may affect that existing derived ordering, but never changes stage/day/time/scope. Only explicit layer actions change stack. Label max-plus-one/min-minus-one operations **Bring to front / Send to back**; those are not one-layer steps. Overflow rejects without renumbering unrelated objects. Existing overlapping cards remain individually reachable through the lane view; migration does not silently auto-arrange them.
+
+**Owner choice:** finite board, zero board rotation and stable layering (recommended), or revisit size/rotation before implementation.
+
+## G4 — Duplicate/paste: approve with explicit graph authorization
+
+Use narrow commands that preflight the complete operation, generate/remap IDs internally and commit one Undo step. Preserve permitted content, source evidence, credit, rights, crop and references. A copied card is a new object: do not copy booking status/reference, booking-attention authority, votes, ballots, group responses or live lineage authority. Same-board assets may be shared; cross-board records receive remapped IDs and may deduplicate bytes by hash. Privacy never widens.
+
+**Required clarification:** enforce the existing actor/media/source/scope rules on the resolved source graph and destination before any write. The current session guards inspect particular command names and top-level `id/cardId/scope/currentFacts` fields. A new `sourceCardId` or nested `cards[]` command cannot rely on those generic checks catching everything. Do not let a new command bypass a restriction that the equivalent existing operations enforce. External clipboard claims never prove ownership or verified facts; MOT-130 still owns remote authority.
+
+Leaving a board, cancelling or changing the initiating actor/context invalidates that pending operation even if the original board is selected again. Duplicate completion callbacks must not create additional objects. There is no durable exactly-once promise across reload.
+
+**Owner choice:** approve these copy semantics (recommended), or name fields/behaviours that should differ. Any wider agent/privacy authority remains a separate held decision.
+
+## G5 — Media work: approve bounded, all-or-nothing document insertion
+
+Keep **5 items per gesture**, **1 image decode at a time**, maximum **8192 pixels on either side** and **16,777,216 pixels total**, checked from bounded headers before full decode. Preserve existing **10 MiB/file and 50 MiB/package** limits. The gesture cannot promise that an already populated trip fits the package budget.
+
+PNG/JPEG/WebP/GIF/AVIF require a supported bounded header parser and validation; unsupported formats fail visibly with file/text fallback. Never execute clipboard HTML or fetch pasted URLs automatically. One invalid item aborts the whole document insertion; cancel/late completion releases transient media and creates no objects. Show separately whether the document is saved, image bytes are durable on this device, or bytes are only available in this tab.
+
+At the pixel ceiling one RGBA buffer is **64 MiB**, before decoder overhead. These are bounded proposed limits, not proof of mobile safety or measured peak-memory acceptance. Keep the existing physical-device/performance gates.
+
+**Owner choice:** approve these initial limits (recommended), or choose smaller limits before implementation. No existing harness cap is increased.
+
+## G6 — Migration: approve only with recovery and store/version compatibility
+
+Keep an explicit v2→v3 trip migration, unknown-version rejection before writes, legacy presentations interpreted as magazine, explicit surface routing, and preservation of private content/source evidence/media references. Filtered packages still do not promise Yjs or Undo history.
+
+Retain refusal for out-of-extent coordinates/footprints: do not silently clamp, reorder or discard anything. **Refusal must leave a usable recovery path**, not only an error: retain untouched original data and provide access to an original backup plus a compatible read-only legacy inspection/export path. Any layout repair must show a preview and require the person's explicit acceptance. A repair workflow must be specified and checked before migration is considered ready; this review does not invent one as already implemented.
+
+Two concrete compatibility requirements are missing from the first draft:
+
+1. **Select the correct saved store.** `trip-store.ts:54–63` currently checks `:v${TRIP_SCHEMA_VERSION}` and then the unversioned store. A v3 bump alone can skip newer data in `:v2`. Discover and validate the applicable prior-version store before migration; never silently revert to an older snapshot when a newer store is present but invalid or unreadable. Preserve originals until the migrated copy is durably saved and reopened. Test unversioned + newer v2, v2-only, missing marker, failed/corrupt v3 and interrupted migration.
+2. **Migrate both native representations.** `import.ts:65–76` loads the binary document, but its readable-JSON compatibility currently only rewrites a v1 schema marker to v2. A schema bump alone will not support v1/v2 readable packages. Define and test the whole supported import chain and both surface routes. Recommend keeping outer package version **2** only while its envelope stays unchanged; trip schema v3 supplies the rejection boundary. An envelope change requires a separate explicit version decision. This is a recommendation, not proof that round trips pass yet.
+
+**Owner choice:** refusal with original-data recovery, correct store selection and tested package compatibility (recommended), or redesign bounds/migration before implementation. Approving an unexplained error that strands an old trip is not recommended.
+
+
+Alan’s exact instruction: “Approve G1–G6 as recommended. Record my approval on MOT-131, then have Astra review the revised contract before Muse Wonder implements it. Keep everything local and preserve the harness and production holds.”
+
+The approved revisions above supersede conflicting draft alternatives. All six owner choices are approved; Astra review is pending. Existing holds remain. Opus D1 agrees on position-independent stacking; its automatic duplicate offset reversal (D2) and partial-success paste (D3) are alternatives not adopted by this approval. Rejection without silent relocation and all-or-nothing document insertion remain authoritative. Other prototype-only additions, including multi-select, do not become approved scope through this decision.
+
+## 16. Normative refusal recovery workflow — Astra P1 correction
+
+This specifies the recovery required by owner-approved G6. It adds no automatic placement or wider repair authority. It is a contract obligation, not current behaviour.
+
+1. Discover and identify the selected original store/package before migration. Preserve its bytes and identity without attaching a writer to it. Distinguish absent storage from present-but-invalid or unreadable storage; the latter enters recovery and must not silently select an older snapshot. A corrupt newer candidate may be exposed for backup alongside older candidates clearly labelled as older, without automatically adopting one.
+2. On a geometry-only refusal of an otherwise valid supported v1/v2 document, open a local, read-only legacy inspector using version-appropriate validation. Show the original cards, stages, coordinates and source/private content under the same local owner access; show offending IDs and violated bounds. Do not route the original through v3 readers or change its schema marker merely to display it. Unknown/future or corrupt documents get an error and original-byte backup, not guessed interpretation or layout repair.
+3. Make the original imported package downloadable unchanged. For a stored trip, expose the untouched legacy document snapshot and available original referenced media, plus a compatible legacy native export when it satisfies the existing package limits. Explicitly report missing media and over-budget exports. A raw document backup is not advertised as a complete media package; do not increase 10 MiB/file or 50 MiB/package limits to make recovery appear successful. The untouched source store remains retained.
+4. Provide a separate in-memory repair draft for geometry-only failures. The person supplies replacement x/y for the offending cards; the UI previews old and proposed rectangles and lists exactly which coordinates will change. All retained content, IDs, stage/day/time, scope, provenance, assets and legacy magazine records remain unchanged. No automatic clamp, reordering or offset flip. Defaults apply as approved. Explicit acceptance authorizes only that displayed coordinate repair; cancel/navigation/stale source invalidates the draft without writes.
+5. Revalidate the complete accepted draft before writing a separate v3 copy. Do not overwrite the original or merge an interrupted/corrupt v3 candidate into the repair. Publish the copy as usable only after durable save and successful reopen/validation; failure leaves the original and recovery route available. A retry must not silently bless an existing failed candidate. Normal migration retains the original too, at least until the same durable-save/reopen condition is met.
+6. Require evidence for refusal → original backup → legacy inspection/export → preview → cancel/accept → durable reopen, including missing media, over-budget backup, failed save and interrupted retry. This evidence is downstream implementation work, not something this documentation review can claim.
+
+
+Manual coordinate replacement is the minimal explicit repair path. Automatic arrangement, silent older-store fallback, transformed original backups or different repair authority are not authorized. Read-only recovery can expose private content only to its existing authorized local owner; it adds no agent or remote access. All original package/harness limits and production/device gates remain unchanged.
