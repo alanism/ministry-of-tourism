@@ -1,6 +1,28 @@
 # Local release candidate — 31 October 2026
 
-## Current local checkpoint: MOT-120 free-board interactions
+## Current local checkpoint: MOT-120 R21 corrections — 1 November 2026
+
+Tested code `896b0c813eec720f53c3db139db0b9777e56efb8` corrects EXIF-oriented
+JPEG dimensions, the image insertion/save cancellation boundary, and decoder
+resource exclusion across cancellation and retry. Actual Muse Wonder authored
+the patch. Actual Astra independently re-reviewed this exact commit and issued
+**APPROVE FIXES** for R21-1, R21-2 and R21-3; no new actionable regression found.
+This is acceptance of those corrections only, not full MOT-120 acceptance.
+
+All 1,166 tests in 174 files, four TypeScript projects and the web build pass.
+The 24 new tests are additive; all 191 pre-existing harness file blobs remain
+unchanged. Existing desktop/mobile browser scripts and new native JPEG, delayed
+storage, cancellation/retry checks pass. Astra additionally checked all eight
+EXIF orientations in both TIFF byte orders, working Undo/Redo during saving,
+native decoder rejection and queue recovery. Original bytes remain intact.
+
+MOT-120 stays In progress. Cross-board clipboard, direct catalog insertion and
+all broader definition/privacy/human/device/performance/production/PDF holds
+remain. No push or deployment. Evidence and independent disposition:
+`Design Sprints/MOT120-R21-Wonder-Fixes-2026-11-01/ASTRA-REREVIEW.md` and
+`RESULTS.md`. Extension rules remain in the free-board coding reference below.
+
+## Historical local checkpoint: MOT-120 free-board interactions
 
 Tested code `35f642fd2f43b907855a45366d88a488c475e177` adds the main free board,
 optional lanes, local gesture previews, movement/resizing/layers, readable card
