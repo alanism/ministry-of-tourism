@@ -45,3 +45,5 @@ MOT-120 remains **In progress**. This slice delivers schema/migration/recovery; 
 MOT-131 owner/Astra G1–G6 contract approval is preserved, not represented as acceptance of this implementation. Existing broader task-definition, MOT-130 privacy, production/provider, coverage, release and PDF holds remain unchanged. No PDF generation, deployment, push, FCC repository edit or production setup change.
 
 Local evidence: `Design Sprints/MOT120-Wonder-G6-2026-10-31/`. Repository mirror: `docs/evidence/mot120-g6/` (selected receipts, results, logs and screenshots). All source work and integration stay local.
+
+Canonical candidate recheck at `4112749`: all 1,109 tests and four TypeScript projects pass (33.29s Vitest). The evidence hash manifest hashes Git blob bytes so Windows CRLF conversion does not create false mismatches. Raw local output hashes are retained separately in the planning evidence directory.

@@ -1,0 +1,21 @@
+
+> check
+> vitest run && npm run typecheck
+
+
+ RUN  v5.0.5 C:/Users/alani/dev/mot-local-release-20261031
+
+
+ Test Files  169 passed (169)
+      Tests  1109 passed (1109)
+   Start at  14:42:45
+   Duration  33.29s (import 59%, tests 37%, transform 3%, worker 1%)
+
+     Import  335 modules were evaluated 916 times · 72.84s total, 59% of tracked time
+             ~3.75s faster with isolate: false — shared modules are evaluated once per worker instead of once per file
+             learn more: https://vitest.dev/guide/improving-performance#test-isolation
+
+
+> typecheck
+> tsc -p packages/core --noEmit && tsc -p packages/bridge --noEmit && tsc -p packages/mot-server --noEmit && tsc -p apps/web --noEmit
+
