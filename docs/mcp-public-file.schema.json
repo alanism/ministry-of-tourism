@@ -402,7 +402,8 @@
                     "lat",
                     "lng",
                     "source"
-                  ]
+                  ],
+                  "additionalProperties": false
                 },
                 "provenance": {
                   "default": "traveler",
@@ -1711,6 +1712,382 @@
         },
         {
           "$ref": "#/$defs/proposalArtifact"
+        }
+      ]
+    },
+    "capabilitiesResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "document": {
+          "const": "capabilities"
+        },
+        "status": {
+          "const": "available"
+        },
+        "capabilitiesVersion": {
+          "const": "mot.public-file/1"
+        },
+        "guideVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "catalogSnapshot": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200
+        },
+        "protocolRevision": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 40
+        },
+        "routes": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "publicDiscovery": {
+              "enum": [
+                "available",
+                "unavailable"
+              ]
+            },
+            "localProposalFiles": {
+              "enum": [
+                "available",
+                "unavailable"
+              ]
+            },
+            "privateTripAccess": {
+              "const": "deferred"
+            },
+            "agentApply": {
+              "const": "unavailable"
+            }
+          },
+          "required": [
+            "publicDiscovery",
+            "localProposalFiles",
+            "privateTripAccess",
+            "agentApply"
+          ]
+        },
+        "tools": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "enum": [
+                  "mot_get_capabilities",
+                  "fcc_search_catalog",
+                  "fcc_get_city",
+                  "fcc_get_item",
+                  "fcc_get_asset"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "available",
+                  "unavailable"
+                ]
+              },
+              "inputSchemaRef": {
+                "type": "string",
+                "pattern": "^urn:mot:public-file:1#/\\$defs/[A-Za-z][A-Za-z0-9]*$",
+                "maxLength": 200
+              },
+              "outputSchemaRef": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^urn:mot:public-file:1#/\\$defs/[A-Za-z][A-Za-z0-9]*$",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "status",
+              "inputSchemaRef",
+              "outputSchemaRef"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "const": "available"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "outputSchemaRef": {
+                      "type": "string",
+                      "pattern": "^urn:mot:public-file:1#/\\$defs/[A-Za-z][A-Za-z0-9]*$",
+                      "maxLength": 200
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "queryChars": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 512
+            },
+            "pageSize": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "searchResultBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 262144
+            },
+            "itemResultBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 524288
+            },
+            "excerptBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16384
+            },
+            "exchangeBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 524288
+            },
+            "proposalOps": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "jsonDepth": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16
+            },
+            "guideBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 131072
+            },
+            "schemaBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 524288
+            },
+            "responseBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 524288
+            }
+          },
+          "required": [
+            "queryChars",
+            "pageSize",
+            "searchResultBytes",
+            "itemResultBytes",
+            "excerptBytes",
+            "exchangeBytes",
+            "proposalOps",
+            "jsonDepth",
+            "guideBytes",
+            "schemaBytes",
+            "responseBytes"
+          ]
+        }
+      },
+      "required": [
+        "contractVersion",
+        "document",
+        "status",
+        "capabilitiesVersion",
+        "guideVersion",
+        "catalogSnapshot",
+        "protocolRevision",
+        "routes",
+        "tools",
+        "limits"
+      ]
+    },
+    "guideResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "document": {
+          "const": "guide"
+        },
+        "status": {
+          "const": "available"
+        },
+        "resource": {
+          "const": "mot://guide/current"
+        },
+        "guideId": {
+          "const": "mot-trip-best-practices"
+        },
+        "guideVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "mediaType": {
+          "const": "text/markdown"
+        },
+        "complete": {
+          "const": true
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 131072
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "contractVersion",
+        "document",
+        "status",
+        "resource",
+        "guideId",
+        "guideVersion",
+        "mediaType",
+        "complete",
+        "text",
+        "sha256"
+      ]
+    },
+    "proposalContractResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "document": {
+          "const": "proposal-contract"
+        },
+        "status": {
+          "const": "available"
+        },
+        "resource": {
+          "const": "mot://contracts/proposal/1"
+        },
+        "schemaId": {
+          "const": "urn:mot:public-file:1"
+        },
+        "mediaType": {
+          "const": "application/schema+json"
+        },
+        "complete": {
+          "const": true
+        },
+        "schemaJson": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 524288
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "contractVersion",
+        "document",
+        "status",
+        "resource",
+        "schemaId",
+        "mediaType",
+        "complete",
+        "schemaJson",
+        "sha256"
+      ]
+    },
+    "documentUnavailableResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "document": {
+          "enum": [
+            "guide",
+            "proposal-contract"
+          ]
+        },
+        "status": {
+          "const": "unavailable"
+        },
+        "reason": {
+          "enum": [
+            "not-implemented",
+            "not-published",
+            "temporarily-unavailable"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "contractVersion",
+        "document",
+        "status",
+        "reason",
+        "message"
+      ]
+    },
+    "publicInfoResponse": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/capabilitiesResponse"
+        },
+        {
+          "$ref": "#/$defs/guideResponse"
+        },
+        {
+          "$ref": "#/$defs/proposalContractResponse"
+        },
+        {
+          "$ref": "#/$defs/documentUnavailableResponse"
         }
       ]
     }

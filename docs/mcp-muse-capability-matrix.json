@@ -96,8 +96,41 @@
     "npmObserved": "11.9.0"
   },
   "review": {
-    "independentContractReview": "PENDING",
+    "independentContractReview": {
+      "initialCommit": "9ebccc4b0fb6f51ec81e0560af917139e203a6d4",
+      "round1Disposition": "REQUEST CHANGES",
+      "findings": [
+        "AS138-001",
+        "AS138-002",
+        "AS138-003"
+      ],
+      "finalDispositionSource": "External review receipt pinned to the exact corrected commit; not inferred from this file."
+    },
     "ownerContractDisposition": "PENDING",
     "clientCompatibilityClaimAllowed": false
+  },
+  "proposalIdentity": {
+    "key": [
+      "boardId",
+      "proposal.id"
+    ],
+    "boundFields": [
+      "contextRequestId",
+      "canonicalEnvelopeSha256"
+    ],
+    "canonicalPayload": "RFC8785(full proposalArtifact envelope)",
+    "reservation": "durable-before-apply",
+    "legacyCollision": "reject-and-reissue",
+    "retainedStates": [
+      "reserved",
+      "partly-applied",
+      "applied",
+      "rejected",
+      "cancelled",
+      "expired",
+      "undone"
+    ],
+    "undoGate": "matching-local-identity-receipt-only",
+    "scope": "Proposed importer obligation, not installed identity storage or authority."
   }
 }

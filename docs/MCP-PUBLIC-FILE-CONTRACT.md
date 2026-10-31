@@ -2,14 +2,18 @@
 
 Contract `mot.public-file/1` · MOT-138 · 1 November 2026, Asia/Bangkok
 
-**Status: prepared for review; runtime compatibility is not accepted.**
+**Status: contract scope; runtime compatibility is not accepted.**
 The target is Meta's Muse personal agent and Connector Platform, identified by
 Alan at <https://platform.muse.ai/docs>. Muse operates in its own **cloud computer**;
 the web/mobile interface is a way to communicate with that agent. A local Muse
 Code installation is not required for the proposed connector.
 
-No independent contract review has run. Owner contract disposition, actual
-Muse-to-MoT calls and exact JSON-file delivery remain pending. `NOT EXECUTED`
+No independent contract review had run at the original `9ebccc4` authoring
+snapshot. Actual Astra round1 requested AS138-001–003; the corrections below
+address those findings. The current independent disposition must come from a
+review receipt pinned to this exact corrected commit, not from this statement.
+Owner contract disposition, actual Muse-to-MoT calls and exact JSON-file delivery
+remain pending. `NOT EXECUTED`
 means no cloud-agent observation exists, not that Muse lacks the capability.
 The schema and examples below are proposed contracts, not installed tools,
 issued grants or an implemented file importer.
@@ -147,7 +151,7 @@ synthetic data, not FCC inventory, valid locally issued requests or Muse output.
 
 | Proposed tool | Input definition | Result / permissions |
 | --- | --- | --- |
-| `mot_get_capabilities` | `capabilityRequest`; optional `document` = capabilities, guide or proposal-contract | Actual versions/routes/limits/unavailable flags; bounded guide/schema fallback when resources are unavailable. **Read**; no trip state. |
+| `mot_get_capabilities` | `capabilityRequest`; optional `document` = capabilities, guide or proposal-contract | `publicInfoResponse` selects the named capabilities/document/unavailable result below; `failure` for domain failures. **Read**; no trip state. |
 | `fcc_search_catalog` | `catalogSearch` | `catalogPage` of normalized `catalogItem` records and snapshot-bound cursor/coverage. **Read**. |
 | `fcc_get_city` | `cityRequest` | A bounded published city record and coverage/source references, or explicit unavailable. **Read**. |
 | `fcc_get_item` | `itemRequest` | Bounded normalized record/excerpt with explicit continuation and provenance. **Read**. |
@@ -159,6 +163,35 @@ They are resolver IDs, never user-supplied network destinations. The schema
 bundle is a bounded field-level contract; runtime response types for city/asset
 specializations must be reconciled with the exact catalogue records in MOT-139.
 Do not claim those specializations or resource support are implemented here.
+
+`mot_get_capabilities` has the following versioned result mapping (AS138-002):
+
+| Request selection | Complete result / unavailable result |
+| --- | --- |
+| Omitted `document`, or `capabilities` | `capabilitiesResponse`: explicit versions, catalogue snapshot (or null), observed protocol (or null), route statuses, per-tool availability and named input/output validators, and actual declared limits. Metadata being readable does not mean every route is available. |
+| `guide` / `mot://guide/current` | `guideResponse`: guide ID/version, `text/markdown`, complete UTF-8 text and its SHA-256; or `documentUnavailableResponse` with document, reason and safe message. |
+| `proposal-contract` / `mot://contracts/proposal/1` | `proposalContractResponse`: schema ID, `application/schema+json`, complete `schemaJson` text and its SHA-256; or `documentUnavailableResponse`. Parse the text as JSON data, never as executable instructions. |
+| Invalid selection, unsupported version, oversized complete result, retrieval/limit failure | Existing `failure` result with the actual safe code. An oversized document is a limit failure, never a truncated success. |
+
+All alternatives are discriminated by `document` and `status`, require
+`contractVersion:1`, reject unknown fields and have bounded content. SHA-256
+binds the unescaped UTF-8 bytes of `text` or `schemaJson`; it does not hash the
+outer JSON encoding. Resources and tool fallback return the same document bytes
+and validators. The complete encoded response must fit `limits.responseBytes`
+(at most512 KiB), as well as the relevant guide/schema UTF-8 byte cap; string
+length checks alone are insufficient. Guide text is capped at128 KiB, schema
+text at512 KiB, with outer-envelope overhead accounted before success. A result
+that cannot fit fails explicitly; no pagination is introduced for these small
+maintained documents.
+
+Tool names must be unique and correspond to actual installed tools. An
+available tool must reference existing reviewed input/output definitions in
+the advertised schema version; reject dangling validator references. Current
+city/asset response specializations remain MOT-139 work and cannot be advertised
+available until reconciled. The fixtures advertise every route/tool unavailable
+and an unobserved protocol as null; their available document bodies are labelled
+synthetic examples, not runtime observations. Private-trip access is fixed to
+deferred and agent Apply to unavailable in this version.
 
 Retain six item types: city, place, article, art, sticker and shirt. A normalized
 item binds stable identity, source version, catalogue snapshot, origin,
@@ -224,13 +257,28 @@ votes, proxy household approvals or permission changes are introduced.
 
 ## 7. Human Apply, idempotency and durability
 
-Bind `(local contextRequestId, boardId, proposal.id)` to the canonical payload
-SHA-256 at first validated import. Same identity/different bytes is
-`IDEMPOTENCY_CONFLICT`, including before/after partial approval. The same body
-can be retried without repeating accepted operation indices. Rejected or
-cancelled immutable identities remain rejected; a changed proposal needs a new
-identity and review. Never rely on the current ID-only native applied ledger
-for this new exchange boundary.
+Reserve **`(boardId, proposal.id)` board-wide**, matching the existing native
+ledger and `proposal:<id>` Undo namespace (AS138-001). Bind that ID immutably to
+the locally issued `contextRequestId` and SHA-256 of the **entire proposalArtifact
+envelope**, canonicalized with the same RFC8785 rules as the context digest.
+Reserve and durably journal it before any native Apply; an uncertain reservation
+must not reach Apply. A different context or different canonical envelope under
+that ID fails `IDEMPOTENCY_CONFLICT` before native Apply or Undo, including across
+partial/full approval, rejection, cancellation, expiry and Undo. Retain the
+reservation through those states; expiry/rejection/Undo cannot free an ID for
+another context. The same context and canonical envelope can retry harmlessly;
+whitespace or key-order changes preserving canonical bytes are equivalent.
+
+Reconcile existing native proposal/applied/Undo identities before reserving.
+If an ID already exists in the full/partial native ledger, a known pending
+proposal or active Undo/proposal identity and lacks a matching trusted local
+reservation, refuse and reissue with a fresh ID; do not infer Already applied
+or adopt legacy work. Missing/corrupt local identity evidence fails closed.
+Any proposal-specific Undo request must resolve the same local identity receipt,
+not merely an untrusted external ID. Selected operation indices and native
+receipts belong to that reserved identity; a second context cannot inherit them.
+A separate ID-mapping engine is unnecessary. This is an importer/journal
+obligation for MOT-141, not a change to the native engine in this contract task.
 
 The MoT human UI reviews the exact payload/selection and invokes existing
 `applyProposal`; there is no remote Apply, raw execute or Undo-as-user endpoint.

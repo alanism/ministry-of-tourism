@@ -23,7 +23,8 @@ then use this task:
 > context digest and maximum expiry to prepare one `mot.proposal` version1 file.
 > Propose only a new note titled `Synthetic assistant file probe`, with body
 > `This proposal is a fixture. It has not been applied.` and stage `plan`.
-> Use a new proposal identity and status `proposed`; do not claim approval,
+> Use a fresh proposal identity and status `proposed`; IDs are reserved board-wide
+> at local import, so another context cannot reuse an earlier ID. Do not claim approval,
 > persistence or that you read or changed any MoT trip.
 >
 > Save UTF-8 JSON as `synthetic-result.mot.proposal.json` in your cloud workspace
