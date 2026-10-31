@@ -7,7 +7,8 @@ import { TripRecovery, type TripRecoverySource } from './TripRecovery.tsx';
 import './trip.css';
 import './integration.css';
 import { FirstScreen } from './FirstScreen.tsx';
-import { BoardView, MapView, TodayView } from './BoardView.tsx';
+import { MapView, TodayView } from './BoardView.tsx';
+import { FreeBoard } from './FreeBoard.tsx';
 import { ProposalReview, ghostCards, type PendingReview, type Ghost } from './ProposalReview.tsx';
 import { Keepsakes,MemoryChoice } from './Keepsakes.tsx';
 
@@ -336,7 +337,7 @@ export function TripApp() {
         <div className={`mot-work view-${tab}`}>
           {sidebar}
           <div className="mot-main">
-            {tab === 'board' && <BoardView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
+            {tab === 'board' && <FreeBoard key={session.boardId} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
             {tab === 'today' && <div className="mot-board"><TodayView whenSaved={whenSaved} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} /></div>}
 
             {tab === 'map' && <div className="mot-board"><MapView session={session} tick={tick} onBack={() => setTab('board')} /></div>}
