@@ -2,7 +2,8 @@
 
 Approved geometry remains `MOT131-BOARD-GEOMETRY-PROPOSAL.md` sections 15–16.
 This local interaction slice follows code `35f642fd2f43b907855a45366d88a488c475e177`,
-with R21 corrections at `896b0c813eec720f53c3db139db0b9777e56efb8`.
+with R21 corrections at `896b0c813eec720f53c3db139db0b9777e56efb8` and direct
+catalog insertion at `b11909964b26e7ec02efdfe726af797349867339`.
 It does not clear the broader task-definition, independent implementation,
 privacy, physical-device, performance, production or PDF holds.
 
@@ -51,13 +52,31 @@ privacy, physical-device, performance, production or PDF holds.
   tab-only feedback; never use broad compensating Undo as cancellation.
 - Use existing MoT color tokens. Keep the mechanical harness, dependency files,
   existing assertions, timeouts and test settings unchanged.
+- **Add FCC art** on FreeBoard opens the existing picker with its destination
+  registry. `board-artwork.ts` snapshots the selected identity, source and crop,
+  actor and placement origin before asynchronous work. Fetch only the selected
+  original with credentials omitted, no redirects and a bounded streamed body.
+  Reuse `prepareBoardImages` for header/pixel/byte limits and shared decode slots.
+  Validate original dimensions, MIME and supplied original digest before writes.
+- Keep the source sheet intact; crop is presentation data. Use cropped pixel
+  aspect in square board units, never magazine page proportions. Commit one
+  private `surface: board` presentation through executeAll and staged blob storage.
+  Preserve credit, rights, original source date/version and origin city. Unknown
+  or restricted rights retain the existing product policy; this grants no license.
+- Each deliberate Add is distinct; concurrent flights cannot overwrite each
+  other's identity or cleanup. A precommit close aborts. After commit, show saving
+  progress and honest durable/tab-only completion. Closing then reopening must
+  not let the old picker dismiss the new one. Leaving the initiating context
+  suppresses stale UI feedback and aborts precommit work. Existing Composition
+  insertion stays separate; no new agent authority, places or bookings are created.
 
 ## Remaining work and acceptance
 
-Cross-board clipboard graphs and a direct FCC-catalog-to-board insertion path
-remain unimplemented. Use native package exchange for cross-board data, and
-local image upload/drop/paste for new board photos or transparent PNG stickers.
-The existing catalog/Composition flow remains intact. This is not full MOT-120
+Cross-board clipboard graphs remain unimplemented. Use native package exchange
+for cross-board data. Direct catalog insertion, local image upload/drop/paste
+support board photos and transparent PNG stickers. The existing catalog/Composition
+flow remains intact. Direct catalog insertion awaits independent review; R22
+approved only the earlier R21 corrections. This is not full MOT-120
 completion. Astra requested changes in R21 and approved the three corrections
 at `896b0c8` on 1 November 2026; broader acceptance remains open. Emulated Chromium touch is not
 physical iPhone/iPad or Safari acceptance. The 50-object exercise is functional
@@ -78,6 +97,14 @@ pass. Actual Astra independently checked all eight orientations in both TIFF
 byte orders, queue failure recovery and saving-phase Undo/Redo, approving only
 these fixes. Evidence: `Design Sprints/MOT120-R21-Wonder-Fixes-2026-11-01/`.
 
+Direct catalog insertion adds 15 tests: 1,181 tests in 175 files, four TypeScript
+projects and build pass. Existing harness blobs remain unchanged. Deterministic
+local catalog fixtures prove selected bytes/crop/credit, unchanged destination,
+private geometry, Undo/Redo, native ZIP, reload, cancellation, keyboard/touch,
+committed saving and quota recovery. Supplier availability, comprehensive catalog
+coverage, physical-device performance and independent review remain held.
+Evidence: `Design Sprints/MOT120-Wonder-Catalog-2026-11-01/`.
+
 ## Empirical agent failures to retain
 
 Actual Muse Wonder authored the implementation in ten recorded calls. Rejected
@@ -93,3 +120,9 @@ the harness to make an agent draft pass.
 The R21 correction draft had a new-test variable typo and missed conflicting
 same-IFD orientation tags and truncated/exact-bound JPEG segments. New failing
 regressions preceded Wonder's corrections. Re-test these patterns by 2027-05-01.
+
+The catalog slice initially used unsupported caller-supplied presentation IDs
+(an erroneous orchestration brief), non-FCC test URLs, and an incompatible
+optional callback type. The real command/schema/tests/typecheck rejected them;
+Wonder corrected the drafts without changing existing contracts. Re-test by
+2027-05-01. Use exact command schemas and valid fixture provenance in future briefs.

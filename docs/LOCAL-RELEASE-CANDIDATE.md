@@ -1,6 +1,29 @@
 # Local release candidate — 31 October 2026
 
-## Current local checkpoint: MOT-120 R21 corrections — 1 November 2026
+## Current local checkpoint: MOT-120 direct catalog insertion — 1 November 2026
+
+Tested code `b11909964b26e7ec02efdfe726af797349867339` adds **Add FCC art** to
+the free board, reusing the existing catalog picker. Selected originals create
+private board presentations with source credit, rights, crop and original bytes
+intact. Geometry uses the approved square board coordinates. Existing header
+art insertion into Composition remains unchanged. Actual Muse Wonder authored
+this slice in three recorded calls; independent review of this slice is pending.
+
+All 1,181 tests in 175 files, four TypeScript projects and the web build pass.
+Fifteen new tests are additive; all pre-existing harness files are unchanged.
+Local Chromium checks cover pointer/keyboard/mobile touch, focus return,
+Undo/Redo/reload/native ZIP, close/reopen and leave/return during download/decode,
+hash rejection, committed saving and quota recovery. Existing free-board/R21
+browser checks pass. A deliberate wrong-surface mutation was caught and restored.
+Catalog/media URLs were fulfilled from deterministic local fixtures, not live
+supplier requests; this does not establish production catalog coverage or rights.
+
+MOT-120 remains In progress: cross-board clipboard and broader independent,
+human/device/performance acceptance remain open. The harness, G6 recovery,
+owner/Astra geometry contract, privacy, production and PDF holds are preserved.
+No push or deployment. Evidence: `Design Sprints/MOT120-Wonder-Catalog-2026-11-01/`.
+
+## Historical local checkpoint: MOT-120 R21 corrections — 1 November 2026
 
 Tested code `896b0c813eec720f53c3db139db0b9777e56efb8` corrects EXIF-oriented
 JPEG dimensions, the image insertion/save cancellation boundary, and decoder
