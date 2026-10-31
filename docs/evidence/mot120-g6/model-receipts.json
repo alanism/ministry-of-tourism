@@ -1,0 +1,306 @@
+[
+  {
+    "phase": "core-corrections",
+    "id": "chatcmpl-01a190d5-ac4e-7551-ae00-d143dd0c6c2a",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 10791,
+      "prompt_tokens": 22678,
+      "total_tokens": 33469,
+      "completion_tokens_details": {
+        "reasoning_tokens": 4536
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 52.25,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "core-implementation",
+    "id": "chatcmpl-01a190d0-6753-7527-b636-01b63ae05032",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 20461,
+      "prompt_tokens": 30416,
+      "total_tokens": 50877,
+      "completion_tokens_details": {
+        "reasoning_tokens": 12522
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 119.87,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "core-tests",
+    "id": "chatcmpl-01a190cb-4394-77a1-9e5f-933d5b0f1959",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 12539,
+      "prompt_tokens": 12309,
+      "total_tokens": 24848,
+      "completion_tokens_details": {
+        "reasoning_tokens": 4703
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 68.18,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "core-tests-repair",
+    "id": "chatcmpl-01a190cd-8597-7325-bd0f-321a6df7f30d",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 15449,
+      "prompt_tokens": 10543,
+      "total_tokens": 25992,
+      "completion_tokens_details": {
+        "reasoning_tokens": 4852
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 70.52,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "discovery-fix",
+    "id": "chatcmpl-01a190c8-b2bd-733a-bf33-9cec4bfefac7",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 970,
+      "prompt_tokens": 4911,
+      "total_tokens": 5881,
+      "completion_tokens_details": {
+        "reasoning_tokens": 828
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 7.15,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "discovery-tests",
+    "id": "chatcmpl-01a190c7-df1f-7011-89bc-74e9be98653b",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 5756,
+      "prompt_tokens": 4221,
+      "total_tokens": 9977,
+      "completion_tokens_details": {
+        "reasoning_tokens": 2778
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 28.33,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "durable-write",
+    "id": "chatcmpl-01a190e4-9e8e-775a-9e44-7390db5800a9",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 7082,
+      "prompt_tokens": 9896,
+      "total_tokens": 16978,
+      "completion_tokens_details": {
+        "reasoning_tokens": 5077
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 38.04,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "plan",
+    "id": "chatcmpl-01a190c6-9aa1-776f-8658-616c9dbc2254",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 3500,
+      "prompt_tokens": 26111,
+      "total_tokens": 29611,
+      "completion_tokens_details": {
+        "reasoning_tokens": 1186
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 31.88,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "source-fence",
+    "id": "chatcmpl-01a190e0-ffd9-7518-91da-e771e47ff3fd",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 8629,
+      "prompt_tokens": 8483,
+      "total_tokens": 17112,
+      "completion_tokens_details": {
+        "reasoning_tokens": 4690
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 57.92,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "surface",
+    "id": "chatcmpl-01a190db-89c2-73f3-a206-af2bd512af0c",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 10650,
+      "prompt_tokens": 30292,
+      "total_tokens": 40942,
+      "completion_tokens_details": {
+        "reasoning_tokens": 7882
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 68.27,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "ui-corrections",
+    "id": "chatcmpl-01a190dc-532f-72eb-987b-f2e466b22cfa",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 13358,
+      "prompt_tokens": 12208,
+      "total_tokens": 25566,
+      "completion_tokens_details": {
+        "reasoning_tokens": 5681
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 69.36,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "ui-implementation",
+    "id": "chatcmpl-01a190da-1a60-7454-948c-bcbff1c8dd78",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 12389,
+      "prompt_tokens": 14362,
+      "total_tokens": 26751,
+      "completion_tokens_details": {
+        "reasoning_tokens": 6393
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 70.02,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "web-corrections",
+    "id": "chatcmpl-01a190da-bb25-76dc-a32e-025989f9daf4",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 11656,
+      "prompt_tokens": 9267,
+      "total_tokens": 20923,
+      "completion_tokens_details": {
+        "reasoning_tokens": 2865
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 49.15,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "web-implementation",
+    "id": "chatcmpl-01a190d8-93d9-7063-a64d-689a98d26179",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 17436,
+      "prompt_tokens": 15120,
+      "total_tokens": 32556,
+      "completion_tokens_details": {
+        "reasoning_tokens": 7839
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 101.62,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "web-plan",
+    "id": "chatcmpl-01a190cf-f750-7369-9916-02154c9eacf6",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 5928,
+      "prompt_tokens": 14111,
+      "total_tokens": 20039,
+      "completion_tokens_details": {
+        "reasoning_tokens": 2447
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 53.06,
+    "finishReason": "stop"
+  },
+  {
+    "phase": "web-tests",
+    "id": "chatcmpl-01a190d6-665f-7787-9a68-a873740160c6",
+    "model": "muse-wonder-1.0",
+    "requestedModel": "muse-wonder-1.0",
+    "usage": {
+      "completion_tokens": 16013,
+      "prompt_tokens": 7025,
+      "total_tokens": 23038,
+      "completion_tokens_details": {
+        "reasoning_tokens": 6595
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "seconds": 89.98,
+    "finishReason": "stop"
+  }
+]

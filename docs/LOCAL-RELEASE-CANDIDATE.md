@@ -1,6 +1,12 @@
 # Local release candidate — 31 October 2026
 
-## Latest integration: requested WP6 revision 0355bb6
+## Current local checkpoint: MOT-120 G6
+
+Tested code `de02965b2672068553af606e39e00a9ffac6b9f1` adds approved schema-3 migration and explicit local recovery to the prior geometry foundation (`3caf1cb`). All 1,109 tests, four TypeScript projects and web build pass. Seven recovery scenarios plus native source-race, save-abort/retry and cancellation checks pass in isolated Chromium contexts. Only the two explicitly approved existing version assertions changed; all other harness settings and assertions remain intact.
+
+See [MOT-120 G6 evidence](MOT120-G6-MIGRATION-RECOVERY.md). MOT-120 remains In progress for free-board interactions and broader acceptance. Existing production, independent definition/privacy, physical-device and PDF holds remain. No push or deployment. Earlier checkpoints below are historical, not assertions about the current schema.
+
+## Historical WP6 checkpoint: requested revision 0355bb6
 
 The current local code checkpoint is
 `169ddc9f3881b5a9939180678dc6921cb8a9979a`, merging exactly

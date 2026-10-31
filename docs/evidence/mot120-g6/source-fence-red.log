@@ -1,0 +1,24 @@
+{"order":["source-write","pointer"]}
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'source-write',
+    'pointer',
+-   'source-write'
+  ]
+
+    at file:///C:/Users/alani/OneDrive/Documents/Vibe%20Code/Ministry%20of%20Tourism/Design%20Sprints/MOT120-Wonder-G6-2026-10-31/browser-source-fence-actual.mjs:18:139 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: [ 'source-write', 'pointer' ],
+  expected: [ 'pointer', 'source-write' ],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

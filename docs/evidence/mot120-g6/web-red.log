@@ -1,0 +1,429 @@
+
+ RUN  v5.0.5 C:/Users/alani/dev/mot120-wonder-g6-20261031
+
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts (19 tests | 18 failed) 82ms
+   ❯ G6 browser storage migration and recovery (19)
+     × exports the recovery API used by these tests 10ms
+     × reports a missing database as absent without durably creating it 1ms
+     × rejects present-but-empty and malformed databases instead of treating them as absent 1ms
+     × returns decodable bytes for a present valid store without attaching a writer or changing it 27ms
+     × lists exact candidate names with useful labels and respects board-id boundaries 1ms
+     × reads a missing accepted pointer as null without creating the pointer database 0ms
+     × lets a bad v3 block valid older stores and supplied init, without attaching a writer 15ms
+     × prefers valid v2 over unversioned, migrates it into v3, and keeps the v2 source untouched 5ms
+     × rejects a stored document whose board identity does not match the requested board 3ms
+     × does not silently adopt an unaccepted repair candidate when opening normally 2ms
+     × lets a corrupt accepted-pointer target block otherwise valid older stores 1ms
+     × lets a missing accepted-pointer target block init and older stores 2ms
+     × durably repairs over a bad v3, publishes a pointer, reopens the repair, and retains the bad original 1ms
+     × refuses repair when the named actual source changed after its bytes were read 1ms
+     × does not publish a pointer after a quota-failed save and uses a fresh candidate on retry 1ms
+     × writes nothing and publishes no pointer when repair is aborted before writing 1ms
+     × validates the repaired document schema and board identity before creating a candidate 1ms
+     × uses the current v3 store for a genuinely new trip 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > exports the recovery API used by these tests
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:590:45
+    588| describe('G6 browser storage migration and recovery', () => {
+    589|   it('exports the recovery API used by these tests', () => {
+    590|     expect(typeof tripStore.probeTripStore).toBe('function');
+       |                                             ^
+    591|     expect(typeof tripStore.listStoredCandidates).toBe('function');
+    592|     expect(typeof tripStore.readAcceptedPointer).toBe('function');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > reports a missing database as absent without durably creating it
+AssertionError: probeTripStore should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ probeTripStore apps/web/src/trip/g6-store-recovery.test.ts:493:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:598:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > rejects present-but-empty and malformed databases instead of treating them as absent
+AssertionError: probeTripStore should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ probeTripStore apps/web/src/trip/g6-store-recovery.test.ts:493:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:605:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > returns decodable bytes for a present valid store without attaching a writer or changing it
+AssertionError: probeTripStore should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ probeTripStore apps/web/src/trip/g6-store-recovery.test.ts:493:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:618:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > lists exact candidate names with useful labels and respects board-id boundaries
+AssertionError: listStoredCandidates should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ listStoredCandidates apps/web/src/trip/g6-store-recovery.test.ts:499:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:640:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > reads a missing accepted pointer as null without creating the pointer database
+AssertionError: readAcceptedPointer should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ readAcceptedPointer apps/web/src/trip/g6-store-recovery.test.ts:503:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:652:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > lets a bad v3 block valid older stores and supplied init, without attaching a writer
+AssertionError: promise resolved "{ doc: Doc{ …(20) }, …(6) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "destroy": [Function destroy],
++   "doc": {
++     "tripApplied": {},
++     "tripAssets": {},
++     "tripCards": {},
++     "tripClock": {
++       "boardRev": 0,
++     },
++     "tripMeta": {
++       "agentMode": "together",
++       "boardId": "bad-v3-blocks",
++       "city": "bangkok",
++       "kind": "traveler",
++       "schemaVersion": 2,
++       "timeZone": "Asia/Bangkok",
++       "title": "Valid older store",
++     },
++     "tripPresentations": {},
++     "tripRevs": {},
++   },
++   "lastExportedAt": [Function lastExportedAt],
++   "markExported": [Function markExported],
++   "persistence": IndexeddbPersistence {
++     "_db": Promise {},
++     "db": {
++       "_emit": [Function _emit],
++       "addEventListener": [Function addEventListener],
++       "close": [Function close],
++       "createObjectStore": [Function createObjectStore],
++       "deleteObjectStore": [Function deleteObjectStore],
++       "name": "mot-trip:bad-v3-blocks:v2",
++       "objectStoreNames": {
++         "contains": [Function contains],
++         "item": [Function item],
++         "length": 2,
++         Symbol(Symbol.iterator): [Function [Symbol.iterator]],
++       },
++       "removeEventListener": [Function removeEventListener],
++       "transaction": [Function transaction],
++       "version": 1,
++     },
++     "doc": {
++       "tripApplied": {},
++       "tripAssets": {},
++       "tripCards": {},
++       "tripClock": {
++         "boardRev": 0,
++       },
++       "tripMeta": {
++         "agentMode": "together",
++         "boardId": "bad-v3-blocks",
++         "city": "bangkok",
++         "kind": "traveler",
++         "schemaVersion": 2,
++         "timeZone": "Asia/Bangkok",
++         "title": "Valid older store",
++       },
++       "tripPresentations": {},
++       "tripRevs": {},
++     },
++     "name": "mot-trip:bad-v3-blocks:v2",
++     "update": [Function anonymous],
++     "whenSynced": Promise {},
++   },
++   "status": [Function status],
++   "whenSaved": [Function whenSaved],
+  }
+
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:667:6
+    665|     await expect(
+    666|       tripStore.openTrip(boardId, { title: 'Replacement', city: 'Unlis…
+    667|     ).rejects.toThrow(/schemaVersion|schema version|missing.*version|i…
+       |      ^
+    668|     expect(fake.constructed).toEqual([]);
+    669|     expect(updatesOf(v3Name(boardId))).toEqual([bad]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > prefers valid v2 over unversioned, migrates it into v3, and keeps the v2 source untouched
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      3
+    ],
+    "path": [
+      "schemaVersion"
+    ],
+    "message": "Invalid input: expected 3"
+  }
+]
+ ❯ Module.readTripMeta packages/core/src/trip/model.ts:94:29
+
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:682:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > rejects a stored document whose board identity does not match the requested board
+AssertionError: expected [Function] to throw error matching /identity|board|match/i but got 'Trip not found in this browser.'
+
+- Expected:
+/identity|board|match/i
+
++ Received:
+"Trip not found in this browser."
+
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:713:48
+    711|     seedUpdates(v3Name(requested), [foreign]);
+    712|
+    713|     await expect(tripStore.openTrip(requested)).rejects.toThrow(/ident…
+       |                                                ^
+    714|     expect(fake.constructed).toEqual([]);
+    715|     expect(updatesOf(v3Name(requested))).toEqual([foreign]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > does not silently adopt an unaccepted repair candidate when opening normally
+AssertionError: expected [Function] to throw error matching /repair|recovery|explicit|select|choo…/i but got 'Trip not found in this browser.'
+
+- Expected:
+/repair|recovery|explicit|select|choose/i
+
++ Received:
+"Trip not found in this browser."
+
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:723:46
+    721|     seedUpdates(repairName(boardId), [candidate]);
+    722|
+    723|     await expect(tripStore.openTrip(boardId)).rejects.toThrow(/repair|…
+       |                                              ^
+    724|     expect(fake.constructed).toEqual([]);
+    725|     expect(updatesOf(repairName(boardId))).toEqual([candidate]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > lets a corrupt accepted-pointer target block otherwise valid older stores
+AssertionError: probeTripStore should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ probeTripStore apps/web/src/trip/g6-store-recovery.test.ts:493:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:732:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > lets a missing accepted-pointer target block init and older stores
+AssertionError: persistRepairedTrip should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ persistRepairedTrip apps/web/src/trip/g6-store-recovery.test.ts:516:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:754:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > durably repairs over a bad v3, publishes a pointer, reopens the repair, and retains the bad original
+AssertionError: persistRepairedTrip should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ persistRepairedTrip apps/web/src/trip/g6-store-recovery.test.ts:516:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:775:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > refuses repair when the named actual source changed after its bytes were read
+AssertionError: probeTripStore should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ probeTripStore apps/web/src/trip/g6-store-recovery.test.ts:493:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:798:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > does not publish a pointer after a quota-failed save and uses a fresh candidate on retry
+AssertionError: persistRepairedTrip should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ persistRepairedTrip apps/web/src/trip/g6-store-recovery.test.ts:516:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:820:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > writes nothing and publishes no pointer when repair is aborted before writing
+AssertionError: persistRepairedTrip should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ persistRepairedTrip apps/web/src/trip/g6-store-recovery.test.ts:516:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:840:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > validates the repaired document schema and board identity before creating a candidate
+AssertionError: persistRepairedTrip should be exported by trip-store: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ requireFunction apps/web/src/trip/g6-store-recovery.test.ts:488:65
+    486| function requireFunction<K extends string>(name: K): (...args: never[]…
+    487|   const candidate = (tripStore as unknown as Record<string, unknown>)[…
+    488|   expect(candidate, `${name} should be exported by trip-store`).toBeTy…
+       |                                                                 ^
+    489|   return candidate as (...args: never[]) => unknown;
+    490| }
+ ❯ persistRepairedTrip apps/web/src/trip/g6-store-recovery.test.ts:516:10
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:853:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/18]⎯
+
+ FAIL  apps/web/src/trip/g6-store-recovery.test.ts > G6 browser storage migration and recovery > uses the current v3 store for a genuinely new trip
+AssertionError: expected [ 'mot-trip:fresh-board' ] to deeply equal [ 'mot-trip:fresh-board:v3' ]
+
+- Expected
++ Received
+
+  [
+-   "mot-trip:fresh-board:v3",
++   "mot-trip:fresh-board",
+  ]
+
+ ❯ apps/web/src/trip/g6-store-recovery.test.ts:876:30
+    874|       timeZone: null,
+    875|     });
+    876|     expect(fake.constructed).toEqual([v3Name(boardId)]);
+       |                              ^
+    877|     expect(readTripMeta(opened.doc).schemaVersion).toBe(TRIP_SCHEMA_VE…
+    878|     await opened.whenSaved();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/18]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  18 failed | 1 passed (19)
+   Start at  14:23:04
+   Duration  1.44s (import 48%, transform 44%, tests 7%, worker 1%)
+

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "backup-cancel-accept-reopen",
+    "pass": true
+  },
+  {
+    "name": "phone",
+    "pass": true
+  },
+  {
+    "name": "stale-source",
+    "pass": true
+  },
+  {
+    "name": "missing-media",
+    "pass": true
+  },
+  {
+    "name": "import-exact-backup",
+    "pass": true
+  },
+  {
+    "name": "invalid-zip-backup-only",
+    "pass": true
+  },
+  {
+    "name": "missing-accepted-copy",
+    "pass": true
+  }
+]

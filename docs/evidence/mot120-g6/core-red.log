@@ -1,0 +1,375 @@
+
+ RUN  v5.0.5 C:/Users/alani/dev/mot120-wonder-g6-20261031
+
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts (32 tests | 11 failed) 88ms
+   ❯ G6 schema 3 foundation using existing APIs (32)
+     × makes schema 3 current while the native outer package remains version 2 with unchanged limits 10ms
+     × accepts a valid current schema 3 document through loadTrip 38ms
+     × keeps TripCard board fields optional, preserves explicit values through write/read/roundtrip, and does not invent defaults 2ms
+     × does not put board geometry on TripMeta and rejects board or unknown fields there 1ms
+     × treats absent presentation surface as magazine and allows magazine rotation 15 unchanged 3ms
+     × validates board presentation: valid board asset at rotation 0 0ms
+     × validates board presentation: board rectangle exactly fitting the boa… 0ms
+     × preserves explicit card geometry and both presentation surfaces through revision and native export/import 5ms
+     × migrates in-bounds legacy v1 changing only the schema version and preserving original bytes 16ms
+     × migrates in-bounds legacy v2 changing only the schema version and preserving original bytes 3ms
+     × refuses legacy migration when a raw-mutated legacy card is outside the 10000 board 2ms
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts (24 tests | 12 failed) 166ms
+   ❯ G6 legacy inspection (6)
+     × inspects in-bounds v1 preserving private/source/credit/rights as detached plain data 43ms
+     × inspects in-bounds v2 preserving private/source/credit/rights as detached plain data 3ms
+     × reports only negative/default-footprint-overflow cards as issues, using 1200x900 and no invented coordinates 3ms
+     × rejects corrupt and unknown/missing versions in the inspector; loadTrip rejects only non-current unknown/missing versions 7ms
+     × strictly rejects v3-only and unknown fields in legacy meta, cards, and presentations 2ms
+     × rejects incomplete card, asset, presentation, and board references 2ms
+   ❯ G6 migration through loadTripWithMigration (3)
+     × migrates in-bounds v1 in a detached copy, retains original bytes, and changes no card or meta data except version 2ms
+     × migrates in-bounds v2 in a detached copy, retains original bytes, and changes no card or meta data except version 2ms
+     × refuses out-of-bounds legacy geometry with a recoverable error carrying untouched original bytes 8ms
+   ❯ G6 explicit legacy repair (11)
+     × accepts x1200 y900 and x5000 y4000 repairs, changes only approved x/y, preserves all private metadata, and leaves source bytes untouched 2ms
+   ❯ G6 native v1/v2 package regression (4)
+     × imports a full old v1 package whose binary and readable copies contain only old fields 23ms
+     × imports a full old v2 package whose binary and readable copies contain only old fields 9ms
+
+ Test Files  2 failed (2)
+      Tests  23 failed | 33 passed (56)
+   Start at  14:13:38
+   Duration  1.18s (import 43%, transform 40%, tests 16%, worker 1%)
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 23 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 legacy inspection > inspects in-bounds v1 preserving private/source/credit/rights as detached plain data
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 legacy inspection > inspects in-bounds v2 preserving private/source/credit/rights as detached plain data
+Error: G6 inspector not implemented
+ ❯ inspectLegacyTrip packages/core/src/trip/trip-recovery.ts:1:66
+      1| export function inspectLegacyTrip(_bytes:Uint8Array):any { throw new E…
+       |                                                                  ^
+      2| export function repairLegacyTrip(_bytes:Uint8Array,_repairs:unknown):a…
+      3|
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:110:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 legacy inspection > reports only negative/default-footprint-overflow cards as issues, using 1200x900 and no invented coordinates
+Error: G6 inspector not implemented
+ ❯ inspectLegacyTrip packages/core/src/trip/trip-recovery.ts:1:66
+      1| export function inspectLegacyTrip(_bytes:Uint8Array):any { throw new E…
+       |                                                                  ^
+      2| export function repairLegacyTrip(_bytes:Uint8Array,_repairs:unknown):a…
+      3|
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:136:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 legacy inspection > rejects corrupt and unknown/missing versions in the inspector; loadTrip rejects only non-current unknown/missing versions
+AssertionError: expected [Function] to throw error matching /version|unsupported|legacy/i but got 'G6 inspector not implemented'
+
+- Expected:
+/version|unsupported|legacy/i
+
++ Received:
+"G6 inspector not implemented"
+
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:153:46
+    151|     for (const version of [0, 3, 4, 999]) {
+    152|       const bytes = legacyBytes(2, [card('card-1', 0, 0)], { mutateDoc…
+    153|       expect(() => inspectLegacyTrip(bytes)).toThrow(/version|unsuppor…
+       |                                              ^
+    154|     }
+    155|     for (const version of [0, 4, 999]) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 legacy inspection > strictly rejects v3-only and unknown fields in legacy meta, cards, and presentations
+AssertionError: expected [Function] to throw error matching /unknown|unsupported|legacy|boardWidth/i but got 'G6 inspector not implemented'
+
+- Expected:
+/unknown|unsupported|legacy|boardWidth/i
+
++ Received:
+"G6 inspector not implemented"
+
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:166:48
+    164|   it('strictly rejects v3-only and unknown fields in legacy meta, card…
+    165|     const metaBoard = legacyBytes(2, [card('card-1', 0, 0)], { mutateD…
+    166|     expect(() => inspectLegacyTrip(metaBoard)).toThrow(/unknown|unsupp…
+       |                                                ^
+    167|     const cardBoard = legacyBytes(2, [card('card-1', 0, 0)], { mutateD…
+    168|     expect(() => inspectLegacyTrip(cardBoard)).toThrow(/unknown|unsupp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 legacy inspection > rejects incomplete card, asset, presentation, and board references
+AssertionError: expected [Function] to throw error matching /missing|reference|asset/i but got 'G6 inspector not implemented'
+
+- Expected:
+/missing|reference|asset/i
+
++ Received:
+"G6 inspector not implemented"
+
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:179:51
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 migration through loadTripWithMigration > migrates in-bounds v1 in a detached copy, retains original bytes, and changes no card or meta data except version
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 migration through loadTripWithMigration > migrates in-bounds v2 in a detached copy, retains original bytes, and changes no card or meta data except version
+Error: G6 inspector not implemented
+ ❯ inspectLegacyTrip packages/core/src/trip/trip-recovery.ts:1:66
+      1| export function inspectLegacyTrip(_bytes:Uint8Array):any { throw new E…
+       |                                                                  ^
+      2| export function repairLegacyTrip(_bytes:Uint8Array,_repairs:unknown):a…
+      3|
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:193:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 migration through loadTripWithMigration > refuses out-of-bounds legacy geometry with a recoverable error carrying untouched original bytes
+Error: Expected function to throw
+ ❯ thrown packages/core/src/trip/g6-migration-recovery.test.ts:67:9
+     65| function thrown(fn: () => unknown): Error & { original?: Uint8Array } {
+     66|   try { fn(); } catch (error) { return error as Error & { original?: U…
+     67|   throw new Error('Expected function to throw');
+       |         ^
+     68| }
+     69|
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:213:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 explicit legacy repair > accepts x1200 y900 and x5000 y4000 repairs, changes only approved x/y, preserves all private metadata, and leaves source bytes untouched
+Error: G6 inspector not implemented
+ ❯ inspectLegacyTrip packages/core/src/trip/trip-recovery.ts:1:66
+      1| export function inspectLegacyTrip(_bytes:Uint8Array):any { throw new E…
+       |                                                                  ^
+      2| export function repairLegacyTrip(_bytes:Uint8Array,_repairs:unknown):a…
+      3|
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:245:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/23]⎯
+
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 native v1/v2 package regression > imports a full old v1 package whose binary and readable copies contain only old fields
+ FAIL  packages/core/src/trip/g6-migration-recovery.test.ts > G6 native v1/v2 package regression > imports a full old v2 package whose binary and readable copies contain only old fields
+Error: G6 inspector not implemented
+ ❯ inspectLegacyTrip packages/core/src/trip/trip-recovery.ts:1:66
+      1| export function inspectLegacyTrip(_bytes:Uint8Array):any { throw new E…
+       |                                                                  ^
+      2| export function repairLegacyTrip(_bytes:Uint8Array,_repairs:unknown):a…
+      3|
+ ❯ packages/core/src/trip/g6-migration-recovery.test.ts:283:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > makes schema 3 current while the native outer package remains version 2 with unchanged limits
+AssertionError: expected 2 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 2
+
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:61:33
+     59| describe('G6 schema 3 foundation using existing APIs', () => {
+     60|   it('makes schema 3 current while the native outer package remains ve…
+     61|     expect(TRIP_SCHEMA_VERSION).toBe(3);
+       |                                 ^
+     62|     expect(TRIP_PACKAGE_VERSION).toBe(2);
+     63|     expect(TRIP_PACKAGE_LIMITS).toEqual({ fileBytes: 10 * 1024 * 1024,…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > accepts a valid current schema 3 document through loadTrip
+AssertionError: expected { schemaVersion: 2, …(6) } to match object { schemaVersion: 3, …(1) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "boardId": "board-v3",
+-   "schemaVersion": 3,
++   "schemaVersion": 2,
+  }
+
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:70:34
+     68|     writeCard(tripParts(doc), card('card-1', 1200, 900));
+     69|     const loaded = loadTrip(encodeTrip(doc));
+     70|     expect(readTripMeta(loaded)).toMatchObject({ schemaVersion: 3, boa…
+       |                                  ^
+     71|     expect(readAllCards(tripParts(loaded))[0]).toMatchObject({ id: 'ca…
+     72|     loaded.destroy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > keeps TripCard board fields optional, preserves explicit values through write/read/roundtrip, and does not invent defaults
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "boardWidth",
+      "boardHeight",
+      "boardStack"
+    ],
+    "path": [],
+    "message": "Unrecognized keys: \"boardWidth\", \"boardHeight\", \"boardStack\""
+  }
+]
+ ❯ writeCard packages/core/src/trip/model.ts:108:32
+    106|
+    107| export function writeCard(parts: TripParts, card: TripCard): void {
+    108|   const valid = tripCardSchema.parse(card);
+       |                                ^
+    109|   let map = parts.cards.get(valid.id);
+    110|   if (!map) { map = new Y.Map<unknown>(); parts.cards.set(valid.id, ma…
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:102:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > does not put board geometry on TripMeta and rejects board or unknown fields there
+AssertionError: expected { schemaVersion: 2, …(6) } to match object { Object (schemaVersion, boardId) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "boardId": "board-1",
+-   "schemaVersion": 3,
++   "schemaVersion": 2,
+  }
+
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:123:20
+    121|   it('does not put board geometry on TripMeta and rejects board or unk…
+    122|     const parsed = tripMetaSchema.parse(baseMeta);
+    123|     expect(parsed).toMatchObject({ schemaVersion: 3, boardId: 'board-1…
+       |                    ^
+    124|     expect(parsed).not.toHaveProperty('boardWidth');
+    125|     expect(parsed).not.toHaveProperty('boardHeight');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > treats absent presentation surface as magazine and allows magazine rotation 15 unchanged
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "surface"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"surface\""
+  }
+]
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:140:31
+    138|     expect(presentationSchema.parse(magazine)).toEqual(magazine);
+    139|     expect(presentationSchema.parse(magazine).surface).toBeUndefined();
+    140|     expect(presentationSchema.parse({ ...magazine, surface: 'magazine'…
+       |                               ^
+    141|   });
+    142|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > validates board presentation: valid board asset at rotation 0
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > validates board presentation: board rectangle exactly fitting the boa…
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "surface"
+    ],
+    "path": [],
+    "message": "Unrecognized key: \"surface\""
+  }
+]
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:159:42
+    157|       crop: [0, 0, 1, 1], rotation: 0, zIndex: 2, locked: true, scope:…
+    158|     } as unknown as Presentation;
+    159|     if (valid) expect(presentationSchema.parse(board)).toMatchObject({…
+       |                                          ^
+    160|     else expect(() => presentationSchema.parse(board)).toThrow();
+    161|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > preserves explicit card geometry and both presentation surfaces through revision and native export/import
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "boardWidth",
+      "boardHeight",
+      "boardStack"
+    ],
+    "path": [],
+    "message": "Unrecognized keys: \"boardWidth\", \"boardHeight\", \"boardStack\""
+  }
+]
+ ❯ writeCard packages/core/src/trip/model.ts:108:32
+    106|
+    107| export function writeCard(parts: TripParts, card: TripCard): void {
+    108|   const valid = tripCardSchema.parse(card);
+       |                                ^
+    109|   let map = parts.cards.get(valid.id);
+    110|   if (!map) { map = new Y.Map<unknown>(); parts.cards.set(valid.id, ma…
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:169:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > migrates in-bounds legacy v1 changing only the schema version and preserving original bytes
+AssertionError: expected { schemaVersion: 2, …(6) } to match object { schemaVersion: 3, …(1) }
+(5 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "boardId": "board-v1",
+-   "schemaVersion": 3,
++   "schemaVersion": 2,
+  }
+
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:202:40
+    200|     expect(migrated.original).toEqual(before);
+    201|     expect(bytes).toEqual(before);
+    202|     expect(readTripMeta(migrated.doc)).toMatchObject({ schemaVersion: …
+       |                                        ^
+    203|     expect(readTripMeta(migrated.doc)).not.toHaveProperty('boardWidth'…
+    204|     const cards = readAllCards(tripParts(migrated.doc));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > migrates in-bounds legacy v2 changing only the schema version and preserving original bytes
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:199:31
+    197|     const before = bytes.slice();
+    198|     const migrated = loadTripWithMigration(bytes);
+    199|     expect(migrated.migrated).toBe(true);
+       |                               ^
+    200|     expect(migrated.original).toEqual(before);
+    201|     expect(bytes).toEqual(before);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/23]⎯
+
+ FAIL  packages/core/src/trip/g6-schema-migration.test.ts > G6 schema 3 foundation using existing APIs > refuses legacy migration when a raw-mutated legacy card is outside the 10000 board
+AssertionError: expected undefined to be an instance of Error
+ ❯ packages/core/src/trip/g6-schema-migration.test.ts:225:20
+    223|     let caught: unknown;
+    224|     try { loadTripWithMigration(bytes); } catch (error) { caught = err…
+    225|     expect(caught).toBeInstanceOf(Error);
+       |                    ^
+    226|     expect((caught as Error).message).toMatch(/geometry|bounds|recover…
+    227|     expect((caught as Error & { original?: Uint8Array }).original).toE…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/23]⎯
+
