@@ -495,7 +495,7 @@ export async function auditFccCoverage({ fccRoot, motPublicRoot } = {}) {
       for (const section of Object.keys(city.sections).sort()) for (const e of arr(city.sections[section], 'magazine entries', LIMITS.items)) {
         if (!isObj(e)) throw new Error(`malformed magazine entry in section ${section}`);
         if (!e.src && !e.id) { addRow({ cityId: str(city.slug) ?? null, sourceId: `${section}-entry`, kind: 'original-art', category: normCategory(section), provenance: ['magazine art-registry'], _unresolved: true, reason: 'magazine entry has no src or id; retained as unresolved' }); continue; }
-        addRow({ cityId: str(city.slug) ?? null, sourceId: String(e.id ?? e.src), kind: 'original-art', category: normCategory(e.category ?? section), originalUrl: resolveUrl(e.responsive?.original ?? e.src, `${ORIGIN}/output/magazine-articles/`), credit: pickCredit(e), rightsStatus: pickRights(e) ?? 'unknown', provenance: ['magazine art-registry'] });
+        addRow({ cityId: str(city.slug) ?? null, sourceId: String(e.id ?? e.src), kind: 'original-art', category: e.category != null ? normCategory(e.category) : (e.type === 'hotel' || e.type === 'restaurant' ? normCategory(e.type) : normCategory(section)), originalUrl: resolveUrl(e.responsive?.original ?? e.src, `${ORIGIN}/output/magazine-articles/`), credit: pickCredit(e), rightsStatus: pickRights(e) ?? 'unknown', provenance: ['magazine art-registry'] });
       }
     }
   }
