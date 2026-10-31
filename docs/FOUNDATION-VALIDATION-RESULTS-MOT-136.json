@@ -1,11 +1,11 @@
 {
-  "protocolRevision": "F136-v1",
+  "protocolRevision": "F136-v1.1",
   "decisionCard": "MOT-136",
   "executionCard": "MOT-129",
   "ownerSelectedDefault": "human-visual-trip-first",
   "ownerSelectedBackup": "reviewed-own-muse-plan-first",
   "ownerProtocolDisposition": "approved",
-  "requestedAstraDisposition": "request_changes",
+  "requestedAstraDisposition": "in-re-review",
   "productValidation": "pending",
   "releaseApproval": false,
   "observations": [],
@@ -55,5 +55,13 @@
   "requestedAstraModel": "gpt-6-astra",
   "requestedAstraOpenFindings": [
     "AS136-01"
-  ]
+  ],
+  "ownerClarificationDisposition": {
+    "status": "approved",
+    "date": "2026-10-31",
+    "effortRule": "wrongTurns + repairSteps; equal weight; B improves only for a strictly lower total; ties do not count",
+    "overlapRule": "each observed action counted once; a failed corrective action that is a wrong turn counts only as a wrong turn",
+    "preferenceConflictRule": "retain A when A meets thresholds and qualified preference, even if B has lower effort without its required preference support",
+    "source": "Latest explicit owner answers: Lower combined total; Retain A. Supersedes earlier general instruction to use both recommendations."
+  }
 }
