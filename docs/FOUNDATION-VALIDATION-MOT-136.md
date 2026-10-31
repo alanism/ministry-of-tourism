@@ -1,8 +1,8 @@
 # F136-v1: Foundation validation protocol
 
-31 October 2026 · Proposed for owner disposition before observations
+31 October 2026 · Owner approved before observations; requested Astra review tracked separately
 
-Purpose: falsify the product bet in [MOT-136's decision record](FOUNDATION-DECISION-MOT-136.md). This protocol has not been executed against users or app variants. Its planning thresholds are proposed decision rules, not measured product performance, statistical guarantees or changes to the engineering harness.
+Purpose: falsify the product bet in [MOT-136's decision record](FOUNDATION-DECISION-MOT-136.md). This protocol has not been executed against users or app variants. Its planning thresholds are owner-approved decision rules, not measured product performance, statistical guarantees or changes to the engineering harness.
 
 ## Ownership, prerequisites and evidence
 
@@ -28,7 +28,7 @@ Record the exact defect and affected scope. Stop a study path that exposes unsaf
 
 ## T1: comparable first use and collection
 
-**Proposed sample:** six consenting adults unfamiliar with this build. Seek a mix of people familiar/unfamiliar with using their own Muse; record actual experience and limitations. These are small qualitative diagnostic sessions, not population inference. Participant recruitment and any new prototypes are outside MOT-136's execution authority. An owner-only walkthrough can find defects but cannot fill six participant records or establish comparative preference.
+**Owner-approved sample design:** six consenting adults unfamiliar with this build. Seek a mix of people familiar/unfamiliar with using their own Muse; record actual experience and limitations. These are small qualitative diagnostic sessions, not population inference. Participant recruitment and any new prototypes are outside MOT-136's execution authority. An owner-only walkthrough can find defects but cannot fill six participant records or establish comparative preference.
 
 Compare A and B in the same supported environment with matched inputs. Three participants use A then B; three use B then A. Alternate destination fixtures independently of that order. Record deviations; do not pool incomparable runs as if matched. Preserve manual fallback in both variants; identify what the participant actually used.
 
@@ -41,7 +41,7 @@ Each participant starts from a fresh trip and, without UI coaching:
 
 Moderator may read the same neutral task wording and clarify the scenario. Pointing to a control, completing a step, editing a file or supplying a rescue prompt counts as assistance. Record assisted and unassisted outcomes separately. Allow supported assistive technology; document access needs and any unmatched conditions.
 
-**Proposed operational measures:** first purposeful action within 60 seconds; all four task groups completed within eight minutes; wrong turns, repair steps, assistance, data/control misunderstandings and the participant's explanation/preference. These are study cutoffs, not an app-speed budget or a claim that holiday enjoyment should be rushed.
+**Owner-approved operational measures:** first purposeful action within 60 seconds; all four task groups completed within eight minutes; wrong turns, repair steps, assistance, data/control misunderstandings and the participant's explanation/preference. These are study cutoffs, not an app-speed budget or a claim that holiday enjoyment should be rushed.
 
 A purposeful action advances the requested trip task; merely opening a menu does not qualify. A wrong turn requires backtracking from an action that did not advance it. A repair is extra work to correct an error or recover state. Normal supported handoff steps are recorded as effort, not mislabeled errors. Record first-action and completion outcomes separately. T2/T4 comprehension thresholds apply to each candidate being recommended, not a pooled score across variants.
 
@@ -77,7 +77,7 @@ These production gates are independent of T1's comparative study. Preserve exist
 
 ## Predeclared decision rules
 
-The owner approves these rules before observation. They determine the recommendation presented for a later owner decision; they do not automatically change the live app.
+The owner approved these rules on 31 October 2026, before any participant observation. They determine the recommendation presented for a later owner decision; they do not automatically change the live app.
 
 Apply the rows in order: correctness failure, missing prerequisites, B-backup recommendation, A-retention, then inconclusive/revise. Preference is one first-choice answer per participant; ties/undecided answers count for neither candidate.
 
@@ -89,7 +89,7 @@ Apply the rows in order: correctness failure, missing prerequisites, B-backup re
 | A has at least 5/6 unassisted first purposeful actions within 60 seconds and 5/6 T1 completions within eight minutes, T2/T4 comprehension each at least 5/6, at least 4/6 participants prefer A for a qualified job/control/effort reason, all applicable correctness gates pass, and the backup rule is not met | Retain A as the supported direction for this tested cohort/build. Report uncertainty; no population/product-market-fit claim. |
 | Neither direction meets its rule, or preference/repair evidence conflicts | Revise the first useful state or hypothesis and repeat under a new protocol/build binding. Do not rescue the hypothesis with a post-hoc score or silently lower a threshold. |
 
-Participant attrition, prior exposure, access differences, protocol deviations and missing environments stay visible in the denominator. Six is the proposed completed paired sample; fewer records are incomplete evidence for these cutoffs. Revisions occur prospectively, not by rewriting an observed result into a pass.
+Participant attrition, prior exposure, access differences, protocol deviations and missing environments stay visible in the denominator. Six is the owner-approved completed paired sample; fewer records are incomplete evidence for these cutoffs. Revisions occur prospectively, not by rewriting an observed result into a pass.
 
 ## Required run receipt and handoff
 

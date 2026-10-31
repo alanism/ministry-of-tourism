@@ -4,16 +4,56 @@
   "executionCard": "MOT-129",
   "ownerSelectedDefault": "human-visual-trip-first",
   "ownerSelectedBackup": "reviewed-own-muse-plan-first",
-  "ownerProtocolDisposition": "pending",
-  "requestedAstraDisposition": "pending",
+  "ownerProtocolDisposition": "approved",
+  "requestedAstraDisposition": "request_changes",
   "productValidation": "pending",
   "releaseApproval": false,
   "observations": [],
   "tests": [
-    {"id": "T1", "scope": "comparable first use and collection", "status": "pending", "receipt": null},
-    {"id": "T2", "scope": "predict inclusion and preserve collection", "status": "pending", "receipt": null},
-    {"id": "T3", "scope": "actual external-Muse round-trip", "status": "pending", "receipt": null},
-    {"id": "T4", "scope": "source-bound publication and cold native restore", "status": "pending", "receipt": null},
-    {"id": "T5", "scope": "host/shared/offline and physical devices", "status": "pending", "receipt": null}
+    {
+      "id": "T1",
+      "scope": "comparable first use and collection",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T2",
+      "scope": "predict inclusion and preserve collection",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T3",
+      "scope": "actual external-Muse round-trip",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T4",
+      "scope": "source-bound publication and cold native restore",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T5",
+      "scope": "host/shared/offline and physical devices",
+      "status": "pending",
+      "receipt": null
+    }
+  ],
+  "ownerDispositionDate": "2026-10-31",
+  "ownerDecisionIdsApproved": [
+    "D136-01",
+    "D136-02",
+    "D136-03",
+    "D136-04",
+    "D136-05",
+    "D136-06",
+    "D136-07"
+  ],
+  "ownerApprovalSource": "Explicit owner response: Approve packet and delegate Astra review",
+  "requestedAstraModel": "gpt-6-astra",
+  "requestedAstraOpenFindings": [
+    "AS136-01"
   ]
 }
