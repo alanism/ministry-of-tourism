@@ -1,4 +1,5 @@
 import type {Artwork} from './catalog';
+import {imageBitmapDimensions} from './image-decode';
 
 /** Preview cancellation settles immediately; an uninterruptible decoder still releases its late bitmap. */
 export async function loadArtworkPreview(artwork:Artwork,signal:AbortSignal){
@@ -11,9 +12,8 @@ export async function loadArtworkPreview(artwork:Artwork,signal:AbortSignal){
    if(signal.aborted){void response.body?.cancel().catch(()=>{});signal.throwIfAborted();}
    if(!response.ok)throw Error('Preview unavailable ('+response.status+').');
    const blob=await response.blob();signal.throwIfAborted();
-   const pixels=await createImageBitmap(blob);
-   try{signal.throwIfAborted();return{blob,width:pixels.width,height:pixels.height};}
-   finally{pixels.close();}
+   const {width,height}=await imageBitmapDimensions(blob,signal);
+   return{blob,width,height};
   })();
   return await Promise.race([work,cancelled]);
  }finally{signal.removeEventListener('abort',abort);}

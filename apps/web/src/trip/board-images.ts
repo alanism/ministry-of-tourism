@@ -2,6 +2,7 @@
 // A format without a safe bounded full-frame header parser is rejected before decode, with a visible fallback:
 // GIF (its logical screen may not bound frame decode), extended VP8X WebP (its canvas may not bound an
 // encoded subframe), and AVIF/HEIF. PNG, JPEG, and simple single-frame VP8/VP8L WebP are supported.
+import { imageBitmapDimensions } from '../artwork/image-decode';
 
 export interface PreparedBoardImage { blob: Blob; width: number; height: number; name: string; }
 
@@ -99,21 +100,10 @@ function parseJpeg(b: Uint8Array, name: string): Header {
   if (!terminated && b.length === BOARD_IMAGE_HEADER_BYTES) fail(name, `JPEG header exceeds the ${BOARD_IMAGE_HEADER_BYTES / 1024} KiB safety bound. ${FALLBACK}`);
   return { mime: 'image/jpeg', width: frame.width, height: frame.height, orientation };
 }
-let decoderSlotTail: Promise<void> = Promise.resolve();
 async function decodeBoardImage(file: File, expectedWidth: number, expectedHeight: number, signal?: AbortSignal): Promise<{ width: number; height: number }> {
-  const prior = decoderSlotTail;
-  let release!: () => void;
-  decoderSlotTail = new Promise<void>((resolve) => { release = resolve; });
-  await prior;
-  try {
-    signal?.throwIfAborted();
-    const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    try {
-      signal?.throwIfAborted();
-      if (bitmap.width !== expectedWidth || bitmap.height !== expectedHeight) fail(file.name, 'Decoded size does not match its header; the whole gesture was cancelled.');
-      return { width: bitmap.width, height: bitmap.height };
-    } finally { bitmap.close(); }
-  } finally { release(); }
+  const dimensions = await imageBitmapDimensions(file, signal);
+  if (dimensions.width !== expectedWidth || dimensions.height !== expectedHeight) fail(file.name, 'Decoded size does not match its header; the whole gesture was cancelled.');
+  return dimensions;
 }
 
 function parseWebp(b: Uint8Array, name: string, fileSize: number): Header {
