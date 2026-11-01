@@ -74,3 +74,29 @@ remains: MOT-138 contract approval is not actual Muse cloud/file execution.
 No shared consumer extraction, MCP endpoint, private-trip access, source
 publication, app UI, deployment or release gate is implemented by this change.
 Private-trip MOT-143–145 remains deferred. No self-Verified claim is made.
+
+## Actual review and verification disposition
+
+Independent `gpt-6-astra` approved corrective source commit
+`a0a74a79c45f3b920ec7ba512ed74c6e9223cb4a`; its exact patch is integrated in
+isolated candidate `deda79052366da8b1d4ba3185e45b75ce7427822`. All four findings
+are closed within this audit scope: control-bearing locator refusal, complete
+source metadata/units, source-controlled category accounting and derivative-only
+representation association. The first REQUEST CHANGES and separate APPROVE
+reports are retained as `ASTRA-IMPLEMENTATION-REVIEW.md` and
+`ASTRA-IMPLEMENTATION-REREVIEW.md` in the evidence folder above.
+
+Astra independently passed 66 controls (53 unchanged originals plus 13 new),
+recomputed every shop record and confirmed the unchanged original asset report.
+The repeated v2 report is 30,253,506 bytes with SHA-256
+`3a15dd70fcba3c2bc9cbe352b5296f7ccfb190c09612b58c73e7e5a07cb21a27`.
+The isolated candidate passes `npm run check`: 1,246 tests / 188 files / four
+TypeScript projects in 41.840 seconds; the web build passes in 6.242 seconds.
+All 200 pre-existing test/config/rule Git blobs remain unchanged. App/package
+runtime source, canonical 7d3865e candidate and production were not changed.
+This final documentation record adds no code after the reviewed/tested patch.
+
+Kanban save 243 records R33–R35 and the scoped implementation; the original
+acceptance definitions and broad source-authority blocker remain. Actual review
+is satisfied for the bounded audit; source decisions and full coverage remain
+unresolved. All other 76 task objects and all 52 completed cards are preserved.
