@@ -111,6 +111,26 @@ test('wrong-city IDs do not associate; empty cities remain visible; category cou
   assert.equal(out.cities.find(c=>c.id==='beta').productRecords,0);
 });
 
+test('source categories named like Object properties remain numeric and visible',()=>{
+  const data=fixture();data.PRODUCTS=['__proto__','constructor','toString'].map((category,index)=>({
+    ...data.PRODUCTS[0],id:'alpha-'+index,number:index+1,category,
+  }));
+  const out=reconcileShopProducts(parse(data),baseline());
+  assert.deepEqual(Object.keys(out.summary.declaredCategoryCounts).sort(),['__proto__','constructor','toString']);
+  assert.ok(Object.values(out.summary.declaredCategoryCounts).every(value=>value===1));
+  assert.equal(Object.values(out.summary.declaredCategoryCounts).reduce((a,b)=>a+b,0),3);
+});
+
+test('exact derivative locators remain related evidence within their source city only',()=>{
+  for(const city of ['alpha','beta']){
+    const old=baseline();old.rows[0].cityId=city;
+    old.rows[0].derivativeUrl=ORIGIN+'/shop/assets/art/alpha.webp';
+    const out=reconcileShopProducts(parse(),old);
+    assert.deepEqual(out.products[0].relatedRepresentationRows,city==='alpha'?['legacy-alpha']:[]);
+    assert.equal(out.products[0].status,'unresolved');
+  }
+});
+
 async function world(){
   const root=await mkdtemp(join(tmpdir(),'mot121-shop-'));const paths=[];const dirs=new Set([root]);
   const put=async(rel,value)=>{const file=join(root,rel);await mkdir(dirname(file),{recursive:true});

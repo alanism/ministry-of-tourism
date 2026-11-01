@@ -89,21 +89,21 @@ export function reconcileShopProducts(inventory,assetAudit){
   const byIdentity=new Map();const byUrl=new Map();const add=(map,key,id)=>{if(!map.has(key))map.set(key,new Set());map.get(key).add(id);};
   for(const row of assetAudit.rows){
     if(row.kind==='apparel-mockup'&&row.category==='apparel')for(const id of [row.sourceId,...(row.aliasSourceIds??[])])if(id)add(byIdentity,row.cityId+'\0'+id,row.id);
-    for(const url of [row.originalUrl,...(row.originalAliases??[]),...(row.renditionUrls??[])])if(url)add(byUrl,row.cityId+'\0'+url,row.id);
+    for(const url of [row.originalUrl,row.derivativeUrl,...(row.originalAliases??[]),...(row.renditionUrls??[])])if(url)add(byUrl,row.cityId+'\0'+url,row.id);
   }
   const products=inventory.products.map(product=>({...product,status:'unresolved',
     reason:'Product-to-asset identity and operation eligibility require authoritative mapping/product verification',
     candidateAssetRows:[...(byIdentity.get(product.cityId+'\0'+product.sourceProduct.id)??[])].sort(),
     relatedRepresentationRows:[...new Set(product.representations.flatMap(rep=>[...(byUrl.get(product.cityId+'\0'+rep.url)??[])]))].sort()}));
-  const count=new Map();const categories={};
-  for(const p of products){count.set(p.cityId,(count.get(p.cityId)??0)+1);categories[p.sourceProduct.category]=(categories[p.sourceProduct.category]??0)+1;}
+  const count=new Map();const categories=new Map();
+  for(const p of products){count.set(p.cityId,(count.get(p.cityId)??0)+1);const category=p.sourceProduct.category;categories.set(category,(categories.get(category)??0)+1);}
   const cities=inventory.cities.map(city=>({...city,productRecords:count.get(city.id)??0}));
   return {...inventory,products,cities,scanComplete:true,ok:false,
     summary:{cities:cities.length,productRecords:products.length,unresolvedProductRecords:products.length,
       candidateAssociationProducts:products.filter(p=>p.candidateAssetRows.length>0).length,
       relatedRepresentationProducts:products.filter(p=>p.relatedRepresentationRows.length>0).length,
       citiesWithoutProducts:cities.filter(c=>c.productRecords===0).map(c=>c.id),
-      declaredCategoryCounts:Object.fromEntries(Object.entries(categories).sort(([a],[b])=>a<b?-1:a>b?1:0))},
+      declaredCategoryCounts:Object.fromEntries([...categories].sort(([a],[b])=>a<b?-1:a>b?1:0))},
     limitations:['Product records and asset rows are different units; counts are not unique designs.',
       'Complete metadata scan is not complete coverage. IDs/locators give candidates, never byte/rights/commerce proof.',
       'No network or image/print bytes read; source price/country/line/print metadata is preserved without current commerce or country-code claims.',
