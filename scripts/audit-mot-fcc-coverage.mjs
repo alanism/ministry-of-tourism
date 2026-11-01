@@ -6,6 +6,7 @@ import { createHash } from 'node:crypto';
 import { lstat, open, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readShopSource, reconcileShopProducts } from './mot121-shop-inventory.mjs';
 
 const ORIGIN = 'https://foreignclubberscorespondence.web.app';
 const CITY_PAGES = `${ORIGIN}/output/prototypes/city-pages/`;
@@ -173,12 +174,13 @@ class Reader {
   list() { return [...this.inputs.values()].sort((a, b) => byStr(a.path, b.path)); }
 }
 
-export async function auditFccCoverage({ fccRoot, motPublicRoot } = {}) {
+export async function auditFccCoverage({ fccRoot, motPublicRoot, shopSource, shopReceipt } = {}) {
   if (!fccRoot || !motPublicRoot) throw new Error('missing required input roots: fccRoot and motPublicRoot are required');
   let fccReal; let motReal;
   try { fccReal = await realpath(fccRoot); } catch { throw new Error('missing FCC root: root does not exist'); }
   try { motReal = await realpath(motPublicRoot); } catch { throw new Error('missing MoT root: root does not exist'); }
   const reader = new Reader(fccReal, motReal);
+  const shopInventory = await readShopSource(shopSource, shopReceipt);
   const issues = []; const limitations = [];
   const issue = (code, message) => issues.push({ code, message: safeText(message) });
 
@@ -823,11 +825,14 @@ export async function auditFccCoverage({ fccRoot, motPublicRoot } = {}) {
   }
   const categorySummary = [...catMap.values()].sort((a, b) => byStr(a.cityId ?? '', b.cityId ?? '') || byStr(a.category, b.category));
   const ok = summary.matched === summary.sourceRows && summary.extra === 0 && summary.duplicates === 0 && dedupIssues.length === 0;
-  return { version: 1, ok, offline: true, summary, rows, issues: dedupIssues, inputs: reader.list(), cities, categorySummary, limitations: [...new Set(limitations)].sort(byStr), versions: { registryReleaseVersion: str(registry.releaseVersion) ?? null, optimizedContentVersion: str(optimized.contentVersion) ?? null, snapshotDate: str(optimized.snapshotDate) ?? null } };
+  const assetAudit = { version: 1, ok, offline: true, summary, rows, issues: dedupIssues, inputs: reader.list(), cities, categorySummary, limitations: [...new Set(limitations)].sort(byStr), versions: { registryReleaseVersion: str(registry.releaseVersion) ?? null, optimizedContentVersion: str(optimized.contentVersion) ?? null, snapshotDate: str(optimized.snapshotDate) ?? null } };
+  if (!shopInventory) return assetAudit;
+  const shopAudit = reconcileShopProducts(shopInventory, assetAudit);
+  return { version: 2, ok: assetAudit.ok && shopAudit.ok, offline: true, assetAudit, shopAudit };
 }
 
 async function cli(argv) {
-  const allowed = new Set(['fcc-root', 'mot-public', 'output']);
+  const allowed = new Set(['fcc-root', 'mot-public', 'output', 'shop-source', 'shop-receipt']);
   const args = {};
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i];
@@ -844,7 +849,12 @@ async function cli(argv) {
   const outParent = await realpath(dirname(resolve(output))).catch(() => { throw new Error('invalid output: parent directory does not exist'); });
   const outFile = join(outParent, basename(output));
   if (inside(fccReal, outFile) || inside(motReal, outFile)) throw new Error('invalid output: report path must be outside both input roots');
-  const report = await auditFccCoverage({ fccRoot, motPublicRoot });
+  const canonical = (path) => process.platform === 'win32' ? path.toLowerCase() : path;
+  const outputTarget = await realpath(outFile).catch(() => outFile);
+  for (const input of [args['shop-source'], args['shop-receipt']].filter(Boolean)) {
+    if (canonical(await realpath(input)) === canonical(outputTarget)) throw new Error('invalid output: report must not overwrite shop inputs');
+  }
+  const report = await auditFccCoverage({ fccRoot, motPublicRoot, shopSource: args['shop-source'], shopReceipt: args['shop-receipt'] });
   const tmp = join(outParent, `.${basename(output)}.tmp-${process.pid}`);
   let owned = false;
   try {
@@ -852,7 +862,7 @@ async function cli(argv) {
     owned = true; // only ever remove/rename a temp file this process created
     await rename(tmp, outFile);
   } catch (e) { if (owned) await rm(tmp, { force: true }).catch(() => {}); throw e; }
-  process.stdout.write(`${JSON.stringify({ ok: report.ok, ...report.summary })}\n`);
+  process.stdout.write(`${JSON.stringify({ ok: report.ok, ...(report.version === 2 ? { assetSummary: report.assetAudit.summary, shopSummary: report.shopAudit.summary } : report.summary) })}\n`);
   return report.ok ? 0 : 2;
 }
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
