@@ -12,7 +12,7 @@ function clock(now:number){if(!Number.isSafeInteger(now)||now<0||now>Number.MAX_
 export function createRoomInvite(state:RoomAdmissionState,actor:string,inviteDigest:string,invitedRole:GuestRole,now:number):RoomAdmissionState{
  owner(state,actor);digest.parse(inviteDigest);role.parse(invitedRole);clock(now);
  if(own(state.invites,inviteDigest))throw Error('Invite identity already used');
- if(Object.values(state.invites).filter(i=>!i.revoked&&i.expiresAt>now).length>=16)throw Error('Outstanding invite limit reached');
+ if(Object.entries(state.invites).filter(([key,i])=>!i.revoked&&i.expiresAt>now&&(!i.used||state.claims[key]?.state==='pending')).length>=16)throw Error('Outstanding invite limit reached');
  return{...state,invites:{...state.invites,[inviteDigest]:{role:invitedRole,expiresAt:now+86400000,used:false,revoked:false}}};
 }
 /** An authenticated claim consumes the invite; it grants no membership/content read. */
@@ -47,4 +47,10 @@ export const roomInviteResultSchema=z.object({inviteId:hash,inviteSecret:hash,ex
 export const roomPendingClaimResultSchema=z.object({state:z.literal('pending')}).strict();
 export const roomApprovalResultSchema=z.object({approved:z.literal(true)}).strict();
 export const roomRevocationResultSchema=z.object({revoked:z.literal(true)}).strict();
-export const roomAdmissionSnapshotSchema=z.object({roomId:wireId,members:z.array(z.object({uid:wireId,role:z.enum(['owner','editor','viewer','respondent']),epoch:z.number().int().nonnegative(),active:z.boolean()}).strict()).max(16),claims:z.array(z.object({inviteId:hash,uid:wireId,role:z.enum(['editor','viewer','respondent']),state:z.literal('pending')}).strict()).max(16)}).strict();
+export const roomAdmissionSnapshotSchema=z.object({roomId:wireId,members:z.array(z.object({uid:wireId,role:z.enum(['owner','editor','viewer','respondent']),epoch:z.number().int().nonnegative(),active:z.boolean()}).strict()).max(16),invites:z.array(z.object({inviteId:hash,role:z.enum(['editor','viewer','respondent']),expiresAt:z.number().int().nonnegative(),used:z.boolean(),revoked:z.boolean()}).strict()).max(16),claims:z.array(z.object({inviteId:hash,uid:wireId,role:z.enum(['editor','viewer','respondent']),state:z.literal('pending')}).strict()).max(16)}).strict();
+
+export function revokeRoomInvite(state:RoomAdmissionState,actor:string,inviteDigest:string):RoomAdmissionState{
+ owner(state,actor);digest.parse(inviteDigest);const invite=own(state.invites,inviteDigest);if(!invite||invite.revoked)return state;
+ return{...state,invites:{...state.invites,[inviteDigest]:{...invite,revoked:true}}};
+}
+export const roomRevokeInviteRequestSchema=z.object({...common,inviteId:hash}).strict();

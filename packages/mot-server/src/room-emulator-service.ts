@@ -13,7 +13,7 @@ export function createRoomEmulatorService(){
   const unavailable=()=>json({error:{code:'unavailable',message:'Room operation unavailable',recoverableDraft:true}},403);
   async function handle(request:Request):Promise<Response>{
     const url=new URL(request.url);if(!['127.0.0.1','localhost','[::1]'].includes(url.hostname))return unavailable();
-    const match=/^\/rooms(?:\/([A-Za-z0-9][A-Za-z0-9._:-]{0,199})(\/(?:operations|admission|invites|claims|approve|revoke))?)?$/.exec(url.pathname);if(!match||url.search)return unavailable();
+    const match=/^\/rooms(?:\/([A-Za-z0-9][A-Za-z0-9._:-]{0,199})(\/(?:operations|admission|invites|claims|approve|revoke|revoke-invite))?)?$/.exec(url.pathname);if(!match||url.search)return unavailable();
     let uid:string;
     try{const bearer=/^Bearer ([^\s]{1,8192})$/.exec(request.headers.get('authorization')??'');if(!bearer)return unavailable();const token=await auth.verifyIdToken(bearer[1]!,true);if(token.firebase.sign_in_provider==='anonymous'||token.email_verified!==true)return unavailable();uid=token.uid;}catch{return unavailable();}
     try{
