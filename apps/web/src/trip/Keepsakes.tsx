@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { POSTCARD, itineraryHtml, memorabiliaHtml, pngWithPrintInfo, readAllCards, readAsset, readCard, readTripMeta, tripParts, type Actor, type TripSession } from '@writers-board/core';
 import { Icon, type IconName } from './ui';
-import { coverAssetId, useAssetUrl } from './trip-assets';
+import { coverAssetId, useAssetMedia, useAssetUrl } from './trip-assets';
 import { cityLabel } from './sample';
 import type { SavedStatus } from './trip-store';
 import { recordOutcome } from './metrics';
@@ -83,7 +83,7 @@ export function Keepsakes({ session, actor, tick, saved, refresh, whenSaved, onE
   }, [session, tick]);
   const current = photos.find((p) => p.card.id === meta.keepsakeSelection?.cardId) ?? photos.find(p=>p.card.kind==='photo') ?? photos[0];
   const template:Template = meta.keepsakeSelection?.format??'postcard';
-  const url = useAssetUrl(session, current?.assetId);
+  const media = useAssetMedia(session, current?.assetId),url=media.url;
   const draft=current?.card.keepsakes?.[template],editKey=JSON.stringify([meta.boardId,current?.card.id,template]);
   const [rejected,setRejected]=useState<{key:string;text:string;error:string}|null>(null);
   const note=rejected?.key===editKey?rejected.text:draft?.caption??'';
@@ -176,12 +176,12 @@ export function Keepsakes({ session, actor, tick, saved, refresh, whenSaved, onE
         <h2 className="m-label">Preview</h2>
         {/* The keepsake develops when its photo or template changes, then is postmarked across the preview's edge (Satori changes 4 and 6). */}
         <div className={`mot-postcard-wrap${template === 'memory' ? ' memory' : ''}`}>
-          <figure className={`mot-postcard${template === 'memory' ? ' memory' : ''}`} style={{ margin: 0 }} aria-busy={!!url && !ready}>
-            {ready && rendered ? <img key={previewKey} className="reveal" src={rendered.image} alt={`${heading}. ${note}`} /> : <div className="mot-preview-empty">{url ? 'Preparing your keepsake…' : 'Choose a photo to begin.'}</div>}
+          <figure className={`mot-postcard${template === 'memory' ? ' memory' : ''}`} style={{ margin: 0 }} aria-busy={media.status==='loading'||!!url && !ready}>
+            {ready && rendered ? <img key={previewKey} className="reveal" src={rendered.image} alt={`${heading}. ${note}`} /> : <div className="mot-preview-empty">{media.status==='loading'?'Loading the selected photo…':media.status==='missing'?'Selected photo unavailable.':url ? 'Preparing your keepsake…' : 'Choose a photo to begin.'}</div>}
           </figure>
           {ready && <span key={previewKey} className="mot-postmark" aria-hidden="true"><b>{cityLabel(meta.city)}</b><span>300 dpi</span></span>}
         </div>
-        <p className="mot-preview-status" role="status">{previewError ? 'Preview needs a shorter note.' : !ready && url ? 'Updating preview…' : lowResolution ? 'Digital keepsake · this photo is too small for a sharp print.' : 'Preview matches your download. Original photo unchanged.'}</p>
+        <p className="mot-preview-status" role="status">{media.status==='none'?'Choose a photo to begin.':media.status==='loading'?'Loading the selected photo…':media.status==='missing'?'The selected photo bytes are unavailable in this browser. Import a ZIP backup containing the photo, or choose another photo. Your caption stays editable.':previewError ? 'Preview could not be prepared; review the note or restore the photo.' : !ready ? 'Updating preview…' : lowResolution ? 'Digital keepsake · this photo is too small for a sharp print.' : 'Preview matches your download. Original photo unchanged.'}</p>
       </div>
 
       <div className="m-panel mot-studio-download" style={{ display: 'flex', flexDirection: 'column' }}>

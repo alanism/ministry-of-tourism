@@ -37,3 +37,6 @@ it('keeps downloadable package recovery separate from failed browser retention',
  const artifact={filename:'Trip.mot.zip',byteCount:42,sha256:'a'.repeat(64),kept:false} as ExportArtifact;
  const html=renderToStaticMarkup(createElement(MemoryPackageReceipt,{artifact}));expect(html).toContain('Download started');expect(html).toContain('Not kept in this browser');expect(html).toContain('Download this package again');expect(html).not.toContain('Downloaded');
 });
+it('does not claim the preview matches a download before photo bytes have loaded',()=>{
+ const session=fixture(),html=render(session);expect(html).not.toContain('Preview matches your download');expect(html).toContain('Loading the selected photo');session.destroy();
+});

@@ -162,19 +162,25 @@ export async function storeImportedAssets(doc: Y.Doc, assets: Map<string, Uint8A
   return stored;
 }
 
-/** An object URL for a card photo, or null while loading or when this browser lacks the bytes. */
-export function useAssetUrl(session: TripSession, assetId: string | undefined): string | null {
+export interface AssetMedia { url: string | null; status: 'none' | 'loading' | 'missing' | 'ready' }
+/** Media state is bound to its session and exact asset, including while effects are pending. */
+export function useAssetMedia(session: TripSession, assetId: string | undefined): AssetMedia {
   const hash = assetId ? readAsset(session.parts, assetId)?.hash : undefined;
-  const [loaded, setLoaded] = useState<{hash:string;url:string}|null>(null);
+  const [loaded, setLoaded] = useState<{session:TripSession;assetId:string;hash:string;url:string|null}|null>(null);
   useEffect(() => {
     let live = true;
     setLoaded(null);
     let created:string|undefined;
-    if (hash) void getTripBlob(hash).then(blob => { if(live&&blob){created=URL.createObjectURL(blob);setLoaded({hash,url:created});} }).catch(()=>{if(live)setLoaded(null);});
+    if (hash&&assetId) void getTripBlob(hash).then(blob => { if(live){created=blob?URL.createObjectURL(blob):undefined;setLoaded({session,assetId,hash,url:created??null});} }).catch(()=>{if(live)setLoaded({session,assetId,hash,url:null});});
     return () => { live = false;if(created)URL.revokeObjectURL(created); };
-  }, [hash]);
-  return loaded&&loaded.hash===hash?loaded.url:null;
+  }, [session,assetId,hash]);
+  if(!assetId)return{url:null,status:'none'};
+  if(!hash)return{url:null,status:'missing'};
+  if(!loaded||loaded.session!==session||loaded.assetId!==assetId||loaded.hash!==hash)return{url:null,status:'loading'};
+  return{url:loaded.url,status:loaded.url?'ready':'missing'};
 }
+/** An object URL for a card photo, or null while loading or when this browser lacks the bytes. */
+export function useAssetUrl(session: TripSession, assetId: string | undefined): string | null { return useAssetMedia(session,assetId).url; }
 
 /** Opens the file picker and attaches the chosen photo. */
 export function pickPhoto(onFile: (file: File) => void): void {
