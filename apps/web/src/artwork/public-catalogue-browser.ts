@@ -26,6 +26,7 @@ export class PublicCatalogueReader{
   })(),cancelled]);}finally{clearTimeout(timer);signal.removeEventListener('abort',stop);abort.signal.removeEventListener('abort',rejectAbort);}
  }
  private parse(bytes:Uint8Array){return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)) as unknown;}
+ async manifest(signal:AbortSignal){return catalogueManifestSchema.parse(this.parse(await this.bytes('/fcc-catalogue/manifest.json',MANIFEST_BYTES,signal)));}
  private async verified(file:{url:string;bytes:number;sha256:string},limit:number,signal:AbortSignal){
   const bytes=await this.bytes(file.url,Math.min(file.bytes,limit),signal);signal.throwIfAborted();
   if(bytes.byteLength!==file.bytes)throw new Error('Catalogue byte size does not match its snapshot.');
@@ -35,7 +36,7 @@ export class PublicCatalogueReader{
   signal.throwIfAborted();const previous=this.snapshot;
   if(previous&&!forceRefresh&&Date.now()-previous.loadedAt>=0&&Date.now()-previous.loadedAt<TTL)return{...previous,status:'cached'};
   try{
-   const manifest=catalogueManifestSchema.parse(this.parse(await this.bytes('/fcc-catalogue/manifest.json',MANIFEST_BYTES,signal)));
+   const manifest=await this.manifest(signal);
    const index=validateCatalogueIndex(await this.verified(manifest.index,CATALOGUE_LIMITS.indexBytes,signal));
    if(index.snapshotId!==manifest.snapshotId)throw new Error('Catalogue index belongs to another snapshot.');
    const known=new Set(manifest.shards.map(s=>s.url));if(index.items.some(i=>!known.has(i.detail)))throw new Error('Catalogue detail is missing from the manifest.');

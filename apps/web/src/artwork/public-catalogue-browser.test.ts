@@ -15,6 +15,9 @@ async function fixture(){
  return{index,bodies,fetcher,reader:new PublicCatalogueReader(fetcher as typeof fetch)};
 }
 afterEach(()=>vi.useRealTimers());
+it('can bind a metadata-only context to the pinned manifest without fetching the complete index',async()=>{
+ const {reader,fetcher}=await fixture();expect((await reader.manifest(new AbortController().signal)).snapshotId).toBe('snapshot-1');expect(fetcher).toHaveBeenCalledTimes(1);
+});
 it('searches complete pinned metadata before any detail/image request and caches verified detail',async()=>{
  const {reader,fetcher}=await fixture(),signal=new AbortController().signal;
  const first=await reader.load(signal);expect(first.status).toBe('ready');expect(fetcher).toHaveBeenCalledTimes(2);
