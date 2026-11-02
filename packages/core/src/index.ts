@@ -72,6 +72,8 @@ export * from './trip/trip-adaptation.ts';
 
 export * from './trip/group-routing.ts';
 export * from './trip/magazine-markdown.ts';
+export { magazineSelectionSummary } from './trip/magazine-content.ts';
+export * from './trip/managed-plan-review.ts';
 
 export * from './trip/voting-contract.ts';
 export * from './trip/voting-lifecycle.ts';

@@ -1,4 +1,4 @@
-import {magazineReadingHtml,type MagazineDocument} from '@writers-board/core';
+import {magazineReadingHtml,magazineSelectionSummary,type MagazineDocument} from '@writers-board/core';
 import {PLEX_CSS} from '../../../../packages/core/src/trip/fonts/plex';
 import plexLicense from '../../../../packages/core/src/trip/fonts/OFL.txt?raw';
 import {readableMagazineSvg} from './magazine-reading';
@@ -64,6 +64,7 @@ export function checkedMagazineSvg(source:string,prefix:string):string{
 
 /** Script-free, selectable canonical pages plus the accepted precomputed narrow reading layout. */
 export async function standaloneMagazineHtml(magazine:MagazineDocument,signal?:AbortSignal,onPage?:(completed:number,total:number)=>void):Promise<Uint8Array>{
+  if(magazine.selection?.unresolved?.length)throw new Error('Some selected items are unresolved. Open Composition and review inclusion details before exporting HTML. Your editable ZIP still keeps every saved item.');
   const cssHash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(PLEX_CSS)))].map(byte=>byte.toString(16).padStart(2,'0')).join('');
   if(cssHash!==fontCoverage.cssSha256)throw new Error('Embedded fonts changed. Refresh the glyph and license audit before HTML export.');
   checkGlyphs(magazine.title,'IBM Plex Serif','600');
@@ -94,6 +95,7 @@ body{margin:0;background:#FAF7F2;color:#000000;font:16px 'IBM Plex Sans',sans-se
   for(const item of magazine.reading??[]){readingBound+=(item.title.length+item.body.length+(item.note?.length??0)+item.id.length)*6+1024;}
   if(size+readingBound>HTML_LIMITS.outputBytes)throw new Error('The complete reading text and inclusion manifest exceed the HTML output limit. Keep the full trip in an editable ZIP.');
   append('<section id="trip-reading"><h2>Complete trip text</h2>');
+  if(magazine.selection)append(`<section aria-label="Included and unresolved material"><h3>What this copy includes</h3>${magazineSelectionSummary(magazine.selection).map(line=>`<p>${escape(line)}</p>`).join('')}</section>`);
   for(const item of magazine.reading??[]){signal?.throwIfAborted();append(`<article id="reading-${encodeURIComponent(item.id)}"><h3>${escape(item.title)}</h3><p>${item.source?'Source material':'Your trip'}${item.day?' · '+escape(item.day)+(item.time?' · '+escape(item.time):' · day only'):''}</p>${magazineReadingHtml(item.body)+(item.note?'<h4>Your note</h4>'+magazineReadingHtml(item.note):'')}</article>`);}
   if(magazine.selection?.assets.length)append(`<section><h3>Saved pictures</h3><ul>${magazine.selection.assets.map(asset=>`<li>${escape(asset.caption??asset.id)}${asset.representedBy?' · same image as '+escape(magazine.selection!.assets.find(other=>other.id===asset.representedBy)?.caption??asset.representedBy):''}${asset.credit?' · '+escape(asset.credit):''}</li>`).join('')}</ul></section>`);
   append(`</section></main><footer>${manifest?`<details><summary>Included material · revision ${magazine.selection!.revision}</summary><pre>${escape(manifest)}</pre></details>`:''}<details><summary>Embedded font license · IBM Plex</summary><pre>${escape(plexLicense)}</pre></details></footer></body></html>`);

@@ -132,7 +132,7 @@ export function writeCard(parts: TripParts, card: TripCard): void {
   setOrDel('address', valid.address); setOrDel('mapUrl', valid.mapUrl);
   setOrDel('source', valid.source); setOrDel('lineage', valid.lineage);
   setOrDel('sourceText', valid.sourceText); setOrDel('travelerNote', valid.travelerNote); setOrDel('currentFacts', valid.currentFacts);
-  setOrDel('keepsakes', valid.keepsakes);
+  if (JSON.stringify(map.get('keepsakes')) !== JSON.stringify(valid.keepsakes)) setOrDel('keepsakes', valid.keepsakes);
   setOrDel('bookingAttention', valid.bookingAttention); setOrDel('booking', valid.booking);
   setOrDel('boardWidth', valid.boardWidth); setOrDel('boardHeight', valid.boardHeight); setOrDel('boardStack', valid.boardStack);
 }

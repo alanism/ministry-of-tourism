@@ -3,6 +3,17 @@ import * as core from '../index.ts';
 
 const actor = { kind: 'human' as const, id: 'traveler', name: 'Traveler' };
 const photo = { id: 'original', mime: 'image/png', hash: 'a'.repeat(64), role: 'original' as const };
+it('keeps actor Undo of captions independent from another person’s title edit', () => {
+  const { session: s, id } = setup();
+  s.execute(actor, 'trip_keepsake_caption', { cardId: id, format: 'postcard', caption: 'My caption' });
+  s.execute({ ...actor, id: 'another-person' }, 'trip_card_update', { id, title: 'Their title' });
+  s.undo(actor.id);
+  expect(core.readCard(s.parts, id)?.keepsakes).toBeUndefined();
+  expect(core.readCard(s.parts, id)?.title).toBe('Their title');
+  s.redo(actor.id);
+  expect(core.readCard(s.parts, id)?.keepsakes?.postcard?.caption).toBe('My caption');
+  expect(core.readCard(s.parts, id)?.title).toBe('Their title');
+});
 function setup() {
   const session = new core.TripSession(core.createTrip({ title: 'Review regressions', city: 'Aspen', timeZone: null }));
   const { id } = session.execute<{ id: string }>(actor, 'trip_card_create', { kind: 'photo', title: 'Guest item', scope: 'guide' });
