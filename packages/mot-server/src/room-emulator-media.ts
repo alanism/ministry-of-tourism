@@ -38,6 +38,7 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
  function ownStage(p:RoomMediaPrincipal,stage:Stage){if(stage.uid!==p.uid||stage.roomId!==p.roomId||stage.membershipEpoch!==p.membershipEpoch||stage.sessionId!==p.sessionId)throw Error('Room media unavailable');}
  function live(stage:Stage,now:number){if(stage.expiresAt<=now||stage.createdAt>now||stage.phase==='discarded'||stage.phase==='committed')throw Error('Upload staging expired or unavailable');}
  async function cardPolicy(tx:Transaction,ref:DocumentReference,p:RoomMediaPrincipal,c:Context,input:RoomMediaReserve){
+  if(integer.parse(c.meta.receiptCount)>=20000)throw Error('Room receipt capacity reached; recover locally');
   const cardDoc=await tx.get(ref.collection('cards').doc(input.cardId));if(!cardDoc.exists)throw Error('Room media unavailable');const card=roomSnapshotSchema.shape.cards.element.parse(cardDoc.data());
   if(card.version!==input.baseVersion)throw Error('Stale media card version');
   const owner=c.member.role==='owner'&&c.meta.ownerUid===p.uid,editor=c.member.role==='editor';
