@@ -43,15 +43,15 @@ export function attemptRoomWrite(previous:RoomWriteBucket|undefined,now:number):
  if(previous&&(!integer(previous.creditMs)||previous.creditMs>10000))throw Error('Invalid write burst state');
  const credit=Math.min(10000,(previous?.creditMs??10000)+(previous?now-previous.updatedAt:0));
  const allowed=attempts.length<60&&credit>=1000;
- const nextAttempts=attempts.length<60?[...attempts,now]:attempts;
+ const nextAttempts=[...attempts,now].slice(-60);
  const state={attempts:nextAttempts,creditMs:allowed?credit-1000:credit,updatedAt:now};
  const rollingWait=nextAttempts.length>=60?Math.max(0,nextAttempts[0]!+minute-now):0;
  return{allowed,state,retryAfterMs:allowed?0:Math.max(rollingWait,Math.max(0,1000-credit))};
 }
 function attemptWindow(previous:RoomAttemptWindow|undefined,now:number){
  const attempts=recent(previous,now,10),allowed=attempts.length<10;
- const state={attempts:allowed?[...attempts,now]:attempts,updatedAt:now};
- return{allowed,state,retryAfterMs:allowed?0:Math.max(0,attempts[0]!+minute-now)};
+ const state={attempts:[...attempts,now].slice(-10),updatedAt:now};
+ return{allowed,state,retryAfterMs:allowed?0:Math.max(0,state.attempts[0]!+minute-now)};
 }
 /** Account and trusted network bucket are separate authority keys; do not derive the network key from caller headers. */
 export function attemptRoomRedemption(account:RoomAttemptWindow|undefined,network:RoomAttemptWindow|undefined,now:number){
