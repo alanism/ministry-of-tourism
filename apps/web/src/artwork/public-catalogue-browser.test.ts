@@ -38,6 +38,10 @@ it('rejects unknown detail locators without making an arbitrary request',async()
  const {reader,bodies,fetcher}=await fixture(),manifest=JSON.parse(bodies.get('/fcc-catalogue/manifest.json')!);manifest.index.url='https://private.invalid/secret';bodies.set('/fcc-catalogue/manifest.json',JSON.stringify(manifest));
  await expect(reader.load(new AbortController().signal)).rejects.toThrow();expect(fetcher).toHaveBeenCalledTimes(1);
 });
+it('refuses details when another consumer has a different visible snapshot, before fetching an image or shard',async()=>{
+ const {reader,fetcher}=await fixture(),signal=new AbortController().signal;await reader.load(signal);
+ await expect(reader.detail('tokyo:art',signal,'older-visible-snapshot')).rejects.toThrow(/snapshot|changed/i);expect(fetcher).toHaveBeenCalledTimes(2);
+});
 it('cancels immediately even if the network adapter ignores AbortSignal',async()=>{
  const reader=new PublicCatalogueReader((()=>new Promise(()=>{})) as typeof fetch),controller=new AbortController();const result=reader.load(controller.signal);controller.abort();
  await expect(result).rejects.toThrow();

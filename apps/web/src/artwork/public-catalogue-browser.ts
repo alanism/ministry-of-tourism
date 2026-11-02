@@ -44,8 +44,9 @@ export class PublicCatalogueReader{
    this.snapshot={manifest,index,status:'ready',loadedAt:Date.now()};return this.snapshot;
   }catch(error){signal.throwIfAborted();if(previous)return{...previous,status:'stale',reason:'Could not refresh. Showing the last verified catalogue from this session.'};throw error;}
  }
- async detail(id:string,signal:AbortSignal){
+ async detail(id:string,signal:AbortSignal,expectedSnapshot?:string){
   signal.throwIfAborted();const snapshot=this.snapshot;if(!snapshot)throw new Error('Load the catalogue before selecting an item.');
+  if(expectedSnapshot&&snapshot.index.snapshotId!==expectedSnapshot)throw new Error('The catalogue snapshot changed. Refresh and select the item again.');
   const summary=readCatalogueItem(snapshot.index,id).item;if(!summary)throw new Error('This catalogue identity is unavailable.');
   const file=snapshot.manifest.shards.find(s=>s.url===summary.detail);if(!file)throw new Error('The selected item has no declared detail file.');
   const key=snapshot.index.snapshotId+':'+file.url;let raw=this.details.get(key);
