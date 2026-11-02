@@ -9,5 +9,6 @@ export const roomMediaStageResultSchema=z.object({stageId:hex,assetId:id,expires
 export const roomMediaUploadResultSchema=z.object({stageId:hex,asset:roomSharedMediaSchema}).strict();
 export const roomMediaReceiptSchema=z.object({operationId:id,uid:id,kind:z.literal('media'),cardId:id,assetId:id,version:integer,requestDigest:hex,beforeDigest:hex,afterDigest:hex,acceptedAt:integer}).strict();
 export const roomMediaCommitResultSchema=z.object({receipt:roomMediaReceiptSchema,replayed:z.boolean(),asset:roomSharedMediaSchema}).strict();
+export const roomMediaDiscardResultSchema=z.object({discarded:z.literal(true)}).strict();
 export type RoomMediaReserve=z.infer<typeof roomMediaReserveSchema>;
 export type RoomMediaCommit=z.infer<typeof roomMediaCommitSchema>;
