@@ -1,3 +1,4 @@
+import {reconcileRoomAccounting,roomAccountingFields} from './room-emulator-snapshot.ts';
 import {roomAdmissionRoute} from './room-emulator-admission.ts';
 import {parseFileJson} from '../../core/src/trip/file-exchange-json.ts';
 import {initializeApp,deleteApp} from 'firebase-admin/app';
@@ -30,7 +31,7 @@ export function createRoomEmulatorService(){
         const cardRef=ref.collection('cards').doc(op.cardId),receiptRef=ref.collection('receipts').doc(op.operationId);
         const [room,card,prior]=await Promise.all([tx.get(ref),tx.get(cardRef),tx.get(receiptRef)]);const meta=room.data();if(!meta)throw Error('unavailable');const receipts:RoomCardState['receipts']={};if(prior.exists)receipts[op.operationId]=prior.data() as RoomCardState['receipts'][string];if(op.undoOf){const undo=await tx.get(ref.collection('receipts').doc(op.undoOf));if(undo.exists)receipts[op.undoOf]=undo.data() as RoomCardState['receipts'][string];}
         const state={...meta,cards:card.exists?{[op.cardId]:card.data()}: {},receipts} as RoomCardState;
-        const accepted=await applyRoomCardOperation(state,uid,op,now);if(!accepted.replayed){tx.set(cardRef,accepted.state.cards[op.cardId]!);tx.create(receiptRef,accepted.receipt);tx.update(ref,{receiptCount:accepted.state.receiptCount});}return roomOperationResultSchema.parse({receipt:accepted.receipt,replayed:accepted.replayed});
+        const accepted=await applyRoomCardOperation(state,uid,op,now);const accounting=accepted.replayed?null:await reconcileRoomAccounting(tx,ref,meta,{id:op.cardId,record:accepted.state.cards[op.cardId]!});if(!accepted.replayed){tx.set(cardRef,accepted.state.cards[op.cardId]!);tx.create(receiptRef,accepted.receipt);tx.update(ref,{receiptCount:accepted.state.receiptCount,...roomAccountingFields(accounting!)});}return roomOperationResultSchema.parse({receipt:accepted.receipt,replayed:accepted.replayed});
       });return json(result);
     }catch(error){const message=error instanceof Error?error.message:'';if(/Stale|conflict|Undo/.test(message))return json({error:{code:'conflict',message:'Room content changed; retain draft and review current version',recoverableDraft:true}},409);if(/capacity|limit|64KiB/.test(message))return json({error:{code:'limit',message:'Room limit reached; retain draft and recover locally',recoverableDraft:true}},413);return unavailable();}
   }
