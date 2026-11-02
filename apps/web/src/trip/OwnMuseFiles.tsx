@@ -85,7 +85,7 @@ export function OwnMuseFiles(props:OwnMuseFilesProps){
  const reissue=()=>{setReview(null);setIssued(null);setChosen([]);setReceipt(null);setError('');setNotice('Review the current trip and issue a fresh context. Existing proposal reservations remain in the journal.');};
  const download=(bytes:Uint8Array,name:string,mime?:string)=>{if(current.current.active){downloadFileBytes(bytes,name,mime);setNotice('Download started. Share the file with your own Muse explicitly.');}};
  if(!active)return null;
- return <FocusSheet label="Use your own Muse with files" onClose={close}><div className="mot-own-files">
+ return <FocusSheet label="Use your own Muse with files" onClose={close}><div className="m-panel mot-own-files">
   <header><div><h2>Use your own Muse with files</h2><p className="m-muted">Use the Muse account and file tools you already have. Nothing is uploaded automatically.</p></div><button type="button" className="m-icon-btn" aria-label="Close file exchange" onClick={close}>×</button></header>
   <p role="status">{initialization}{busy?` · ${busy}…`:''}</p>
   <section aria-label="Context to share"><h3>1. Choose the exact context</h3><p>Trip: <strong>{meta.title}</strong> · city {meta.cityId??'not registered'} · timezone {meta.timeZone??'unknown'}.</p><p className="m-muted">The file includes this trip title, city, timezone, selected card IDs, titles and bodies, board/revision/token bindings, your request and a maximum 24-hour expiry. Private and unselected cards, captions, booking/access fields, history, household records and image bytes are excluded. Read the exact text before sharing; remove any sensitive information from shared card text.</p>
