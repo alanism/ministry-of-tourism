@@ -34,3 +34,8 @@ it('does not let an older claim completion clear a newly received invitation',()
  window.location.href='http://127.0.0.1:5199/#room=first-room&room-invite='+'a'.repeat(64)+'&expires=1900000000000';const first=render().find(node=>node.props.configuration!==undefined)!;
  window.location.href='http://127.0.0.1:5199/#room=second-room&room-invite='+'b'.repeat(64)+'&expires=1900000000000';state.events.get('hashchange')!();(first.props.onInviteConsumed as (invite:unknown)=>void)(first.props.initialInvite);expect((render().find(node=>node.type===first.type)!.props.initialInvite as {roomId:string}|undefined)?.roomId).toBe('second-room');
 });
+it('inherits the existing MoT theme without adding a second workspace layout box',()=>{
+ (render().find(node=>typeof node.props.onOpenSharedRoom==='function')!.props.onOpenSharedRoom as ()=>void)();state.cursor=0;
+ function themed(value:unknown,inside=false):boolean{if(Array.isArray(value))return value.some(child=>themed(child,inside));if(!isValidElement(value))return false;const node=value as ReactElement<Record<string,unknown>>,host=String(node.props.className??'').split(' ').includes('mot');if(host)expect((node.props.style as {display:string}).display).toBe('contents');if(node.props.configuration!==undefined)return inside;return themed(node.props.children,inside||host);}
+ expect(themed(TripApp())).toBe(true);
+});
