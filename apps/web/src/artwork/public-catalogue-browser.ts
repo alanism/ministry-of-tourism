@@ -25,7 +25,7 @@ export class PublicCatalogueReader{
    const output=new Uint8Array(size);let offset=0;for(const part of chunks){output.set(part,offset);offset+=part.length;}return output;
   })(),cancelled]);}finally{clearTimeout(timer);signal.removeEventListener('abort',stop);abort.signal.removeEventListener('abort',rejectAbort);}
  }
- private parse(bytes:Uint8Array){return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)) as unknown;}
+ private parse(bytes:Uint8Array){try{return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)) as unknown;}catch{throw new Error('Catalogue data is unavailable or invalid. Retry when connected.');}}
  async manifest(signal:AbortSignal){return catalogueManifestSchema.parse(this.parse(await this.bytes('/fcc-catalogue/manifest.json',MANIFEST_BYTES,signal)));}
  private async verified(file:{url:string;bytes:number;sha256:string},limit:number,signal:AbortSignal){
   const bytes=await this.bytes(file.url,Math.min(file.bytes,limit),signal);signal.throwIfAborted();
