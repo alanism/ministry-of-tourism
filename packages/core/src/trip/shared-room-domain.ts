@@ -1,3 +1,4 @@
+import {canonicalFileJson} from './file-exchange-json.ts';
 import {z} from 'zod';
 import {tripCardSchema} from './schema.ts';
 import {sha256Hex} from './sha256.ts';
@@ -24,7 +25,7 @@ export interface RoomCardRecord {version:number;authorUid:string;updatedAt:numbe
 export interface RoomReceipt {operationId:string;uid:string;kind:'edit'|'undo';cardId:string;version:number;requestDigest:string;beforeDigest:string;afterDigest:string;acceptedAt:number;}
 export interface RoomCardState {id:string;schemaMajor:number;ownerUid:string;closed:boolean;receiptCount:number;members:Record<string,RoomMember>;cards:Record<string,RoomCardRecord>;receipts:Record<string,RoomReceipt>;}
 export const roomCardOperationSchema=z.object({roomId:id,schemaMajor:z.literal(1),capability:z.literal('room-cards/1'),operationId:id,membershipEpoch:revision,kind:z.enum(['edit','undo']),cardId:id,baseVersion:revision,payload:sharedRoomCardSchema,undoOf:id.optional()}).strict();
-const canonical=(v:unknown):string=>v===null||typeof v!=='object'?JSON.stringify(v):Array.isArray(v)?'['+v.map(canonical).join(',')+']':'{'+Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0).map(([k,x])=>JSON.stringify(k)+':'+canonical(x)).join(',')+'}';
+const canonical=canonicalFileJson;
 const digest=(value:unknown)=>sha256Hex(new TextEncoder().encode(canonical(value)));
 /** Caller must discard this result if its atomic server transaction retries/fails. No IO or entropy here. */
 export async function applyRoomCardOperation(state:RoomCardState,uid:string,raw:unknown,now:number){

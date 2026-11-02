@@ -22,6 +22,8 @@ const preflight=await fetch(service.url+'/rooms/'+roomId+'/operations',{method:'
 
 const initial=await call(editor,'GET');assert.equal(initial.status,200);assert.equal((await initial.json()).principal.uid,editor.localId);
 const operation={roomId,schemaMajor:1,capability:'room-cards/1',operationId:'edit',membershipEpoch:1,kind:'edit',cardId:'card',baseVersion:1,payload:{...card,body:'Accepted'}};
+const duplicateWire=JSON.stringify({...operation,operationId:'wire-duplicate'}).replace('"operationId":"wire-duplicate"','"operationId":"wire-duplicate","operationId":"wire-duplicate"');
+const duplicate=await fetch(service.url+'/rooms/'+roomId+'/operations',{method:'POST',headers:{Authorization:'Bearer '+editor.idToken,'content-type':'application/json'},body:duplicateWire});assert.equal(duplicate.status,403);
 const a=await call(editor,'POST',operation);assert.equal(a.status,200);const receipt=await a.json();assert.equal(receipt.receipt.uid,editor.localId);
 const replay=await call(editor,'POST',operation);assert.equal((await replay.json()).replayed,true);
 const stale=await call(owner,'POST',{...operation,operationId:'race'});assert.equal(stale.status,409);

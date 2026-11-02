@@ -1,3 +1,4 @@
+import {parseFileJson} from '../../core/src/trip/file-exchange-json.ts';
 import {initializeApp,deleteApp} from 'firebase-admin/app';
 import {getAuth} from 'firebase-admin/auth';
 import {getFirestore} from 'firebase-admin/firestore';
@@ -21,7 +22,7 @@ export function createRoomEmulatorService(){
       }
       if(request.method!=='POST'||!match[2])return unavailable();
       if(Number(request.headers.get('content-length')??0)>65536)return json({error:{code:'limit',message:'Room intent exceeds64KiB; retain local draft',recoverableDraft:true}},413);
-      const reader=request.body?.getReader();if(!reader)return unavailable();const chunks:Uint8Array[]=[];let size=0;while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>65536){await reader.cancel();return json({error:{code:'limit',message:'Room intent exceeds64KiB; retain local draft',recoverableDraft:true}},413);}chunks.push(part.value);}const bytes=new Uint8Array(size);let at=0;for(const chunk of chunks){bytes.set(chunk,at);at+=chunk.length;}const op=roomCardOperationSchema.parse(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes)));if(op.roomId!==roomId)return unavailable();
+      const reader=request.body?.getReader();if(!reader)return unavailable();const chunks:Uint8Array[]=[];let size=0;while(true){const part=await reader.read();if(part.done)break;size+=part.value.length;if(size>65536){await reader.cancel();return json({error:{code:'limit',message:'Room intent exceeds64KiB; retain local draft',recoverableDraft:true}},413);}chunks.push(part.value);}const bytes=new Uint8Array(size);let at=0;for(const chunk of chunks){bytes.set(chunk,at);at+=chunk.length;}const op=roomCardOperationSchema.parse(parseFileJson(bytes));if(op.roomId!==roomId)return unavailable();
       const now=Date.now();
       const result=await db.runTransaction(async tx=>{
         const cardRef=ref.collection('cards').doc(op.cardId),receiptRef=ref.collection('receipts').doc(op.operationId);
