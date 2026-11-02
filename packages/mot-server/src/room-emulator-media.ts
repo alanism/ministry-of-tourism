@@ -6,8 +6,8 @@ import {sha256Hex} from '../../core/src/trip/sha256.ts';
 import {sanitizeRoomMediaUpload,roomSharedMediaSchema,type RoomMediaContext,type RoomSharedMedia} from '../../core/src/trip/shared-room-media.ts';
 import {roomMediaReserveSchema,roomMediaCommitSchema,roomMediaStageResultSchema,roomMediaUploadResultSchema,roomMediaReceiptSchema,roomMediaCommitResultSchema,type RoomMediaReserve} from '../../core/src/trip/shared-room-media-wire.ts';
 import {roomSnapshotSchema,type RoomMember,type RoomCardRecord} from '../../core/src/trip/shared-room-domain.ts';
-import {roomAccountingFields} from './room-emulator-snapshot.ts';
-import type {measureRoomSnapshot} from '../../core/src/trip/shared-room-limits.ts';
+import {roomAccountingFields,roomPublicMetadata} from './room-emulator-snapshot.ts';
+import {measureRoomSnapshot} from '../../core/src/trip/shared-room-limits.ts';
 import type {createRoomEmulatorByteStore} from './room-emulator-storage.ts';
 
 const id=z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/),hex=z.string().regex(/^[a-f0-9]{64}$/),integer=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),MiB=1024*1024;
@@ -53,6 +53,13 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
   const docs=await tx.get(ref.collection('mediaStages').where('uid','==',p.uid).where('expiresAt','>',now).where('phase','in',['reserved','uploading','uploaded']).limit(3));
   const stages=docs.docs.map(d=>stageSchema.parse(d.data())),bytes=stages.reduce((n,s)=>n+Math.max(s.input.sourceBytes,s.asset?.bytes??0),0);return{stages,bytes};
  }
+ async function uploadSnapshot(tx:Transaction,ref:DocumentReference,meta:Record<string,unknown>,input:RoomMediaReserve){
+  const[cardDocs,presentations]=await Promise.all([tx.get(ref.collection('cards').limit(501)),tx.get(ref.collection('presentations').limit(1))]);if(cardDocs.size>500||presentations.size)throw Error('Unsupported room snapshot projection');
+  const cards=cardDocs.docs.map(d=>roomSnapshotSchema.shape.cards.element.parse(d.data())).map(c=>c.payload.id===input.cardId&&input.replaceAssetId?{...c,payload:{...c.payload,assetIds:c.payload.assetIds.filter(a=>a!==input.replaceAssetId)}}:c);
+  const ids=[...new Set(cards.flatMap(c=>c.payload.assetIds))];if(ids.length>200)throw Error('Room media capacity reached');const docs=ids.length?await tx.getAll(...ids.map(a=>ref.collection('media').doc(a))):[];
+  const assets=docs.map(d=>{if(!d.exists)throw Error('Room media unavailable');const asset=roomSharedMediaSchema.parse(d.get('payload'));if(asset.id!==d.id)throw Error('Room media identity mismatch');return asset;});
+  return measureRoomSnapshot({metadata:roomPublicMetadata(meta),cards,presentations:[],assets},assets.map(a=>({assetId:a.id,hash:a.hash,bytes:a.bytes})));
+ }
  function stageResult(stage:Stage){return roomMediaStageResultSchema.parse({stageId:stage.id,assetId:stage.input.assetId,expiresAt:stage.expiresAt,uploaded:stage.phase==='uploaded'});}
  async function reserve(rawPrincipal:RoomMediaPrincipal,raw:unknown){
   const p=principalSchema.parse(rawPrincipal),input=roomMediaReserveSchema.parse(wire(raw));bound(p,input);const requestDigest=await digest(input),ref=refFor(p),stageId=randomBytes(32).toString('hex');
@@ -68,12 +75,12 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
   const acquired=await o.db.runTransaction(async tx=>{const now=Date.now(),c=await current(tx,ref,p),doc=await tx.get(sref);if(!doc.exists)throw Error('Room media unavailable');const stage=stageSchema.parse(doc.data());ownStage(p,stage);live(stage,now);const{publication}=await cardPolicy(tx,ref,p,c,stage.input),usage=await pending(tx,ref,p,now);
    if(stage.phase==='uploaded'){if(stage.publicationDigest!==await digest(publication))throw Error('Media publication policy conflict');if(!stage.asset||bytes.length!==stage.input.sourceBytes||await sha256Hex(bytes)!==stage.input.sourceHash)throw Error('Uploaded media identity conflict');return{stage,c,publication,usage,replayed:true};}
    if(stage.phase!=='reserved'||usage.stages.some(s=>s.phase==='uploading'))throw Error('One room upload at a time limit');
-   tx.update(sref,{phase:'uploading',uploadToken:token});tx.update(ref,{mediaAdmissionEpoch:Number(c.meta.mediaAdmissionEpoch??0)+1});return{stage,c,publication,usage,replayed:false};
+   const snapshot=await uploadSnapshot(tx,ref,c.meta,stage.input);tx.update(sref,{phase:'uploading',uploadToken:token});tx.update(ref,{mediaAdmissionEpoch:Number(c.meta.mediaAdmissionEpoch??0)+1});return{stage,c,publication,usage,snapshot,replayed:false};
   });
   if(acquired.replayed)return roomMediaUploadResultSchema.parse({stageId,asset:acquired.stage.asset});
   const {stage,c,publication,usage}=acquired;
   try{
-   const clean=await sanitizeRoomMediaUpload({roomId:p.roomId,uid:p.uid,ownerUid:String(c.meta.ownerUid),closed:false,member:c.member,membershipEpoch:p.membershipEpoch,now:Date.now(),stage:{id:stageId,roomId:p.roomId,uid:p.uid,membershipEpoch:p.membershipEpoch,assetId:stage.input.assetId,createdAt:stage.createdAt,expiresAt:stage.expiresAt,sourceHash:stage.input.sourceHash,sourceBytes:stage.input.sourceBytes},publication,usage:{referencedObjects:Number(c.meta.snapshotMediaObjects??0),snapshotBytes:Number(c.meta.snapshotBytes??0),stagedObjects:usage.stages.length,stagedBytes:usage.bytes,activeUploads:1}},bytes,stage.input.caption);
+   const clean=await sanitizeRoomMediaUpload({roomId:p.roomId,uid:p.uid,ownerUid:String(c.meta.ownerUid),closed:false,member:c.member,membershipEpoch:p.membershipEpoch,now:Date.now(),stage:{id:stageId,roomId:p.roomId,uid:p.uid,membershipEpoch:p.membershipEpoch,assetId:stage.input.assetId,createdAt:stage.createdAt,expiresAt:stage.expiresAt,sourceHash:stage.input.sourceHash,sourceBytes:stage.input.sourceBytes},publication,usage:{referencedObjects:acquired.snapshot!.mediaCount,snapshotBytes:acquired.snapshot!.totalBytes,stagedObjects:usage.stages.length,stagedBytes:usage.bytes,activeUploads:1}},bytes,stage.input.caption);
    await o.store.putStage(p.roomId,p.uid,stageId,clean.bytes,clean.asset.hash);
    await o.db.runTransaction(async tx=>{const now=Date.now(),fresh=await current(tx,ref,p),doc=await tx.get(sref),s=stageSchema.parse(doc.data());ownStage(p,s);live(s,now);if(s.phase!=='uploading'||s.uploadToken!==token)throw Error('Upload context changed');const policy=await cardPolicy(tx,ref,p,fresh,s.input);if(canonicalFileJson(policy.publication)!==canonicalFileJson(publication))throw Error('Media publication policy conflict');const u=await pending(tx,ref,p,now);if(u.stages.length>2||u.bytes-Math.max(s.input.sourceBytes,s.asset?.bytes??0)+Math.max(s.input.sourceBytes,clean.asset.bytes)>20*MiB)throw Error('Room staging capacity reached');tx.update(sref,{phase:'uploaded',asset:clean.asset,publicationDigest:await digest(publication),uploadToken:FieldValue.delete()});tx.update(ref,{mediaAdmissionEpoch:Number(fresh.meta.mediaAdmissionEpoch??0)+1});});
    return roomMediaUploadResultSchema.parse({stageId,asset:clean.asset});
@@ -81,7 +88,7 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
  }
  async function commit(rawPrincipal:RoomMediaPrincipal,raw:unknown){
   const p=principalSchema.parse(rawPrincipal),input=roomMediaCommitSchema.parse(wire(raw));bound(p,input);const ref=refFor(p),sref=stageRef(ref,input.stageId),rref=ref.collection('receipts').doc(input.operationId),requestDigest=await digest(input);
-  async function inspect(tx:Transaction){const now=Date.now(),c=await current(tx,ref,p),prior=await tx.get(rref);if(prior.exists){const receipt=roomMediaReceiptSchema.parse(prior.data());if(receipt.uid!==p.uid||receipt.requestDigest!==requestDigest)throw Error('Media operation identity conflict');const assetDoc=await tx.get(ref.collection('media').doc(receipt.assetId));if(!assetDoc.exists)throw Error('Room media unavailable');return{replay:roomMediaCommitResultSchema.parse({receipt,replayed:true,asset:assetDoc.get('payload')})};}
+  async function inspect(tx:Transaction){const now=Date.now(),c=await current(tx,ref,p),prior=await tx.get(rref);if(prior.exists){const receipt=roomMediaReceiptSchema.parse(prior.data());if(receipt.uid!==p.uid||receipt.requestDigest!==requestDigest)throw Error('Media operation identity conflict');const asset=await readable(tx,ref,p,receipt.assetId);return{replay:roomMediaCommitResultSchema.parse({receipt,replayed:true,asset})};}
    const doc=await tx.get(sref);if(!doc.exists)throw Error('Room media unavailable');const stage=stageSchema.parse(doc.data());ownStage(p,stage);live(stage,now);if(stage.phase!=='uploaded'||!stage.asset)throw Error('Upload not ready');if(input.baseVersion!==stage.input.baseVersion)throw Error('Media commit version conflict');const{card,publication}=await cardPolicy(tx,ref,p,c,stage.input);if(stage.publicationDigest!==await digest(publication))throw Error('Media publication policy conflict');return{stage,c,card,now};}
   const prepared=await o.db.runTransaction(inspect);if(prepared.replay)return prepared.replay;const stage=prepared.stage!,asset=stage.asset!;
   const clean=await o.store.readStage(p.roomId,p.uid,stage.id,asset.bytes,asset.hash);await o.store.putAsset(p.roomId,asset.id,clean,asset.hash);
