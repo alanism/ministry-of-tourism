@@ -43,7 +43,7 @@ function Photo({ session, assetId }: { session: TripSession; assetId: string | u
 /** How a card arrived on this render: moved from another lane, or new (an applied suggestion lands stamped). */
 type Landing = 'moved' | 'new';
 
-export function TripCardView({ card, session, actor, kind, refresh, notify, autoEdit = false, isNext = false, landing,updatedSources }: { card: RevCard; kind: BoardKind; autoEdit?: boolean; isNext?: boolean; landing?: Landing } & Omit<ViewProps, 'tick'>) {
+export function TripCardView({ card, session, actor, kind, refresh, notify, autoEdit = false, isNext = false, landing,updatedSources,whenSaved }: { card: RevCard; kind: BoardKind; autoEdit?: boolean; isNext?: boolean; landing?: Landing } & Omit<ViewProps, 'tick'>) {
   const [editing, setEditing] = useState(autoEdit);
   const ref = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -52,25 +52,48 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
     ref.current?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: still ? 'auto' : 'smooth' });
   }, [landing]);
   const [dragging, setDragging] = useState(false);
-  const [draft, setDraft] = useState({ title: card.title, body: card.body, travelerNote:card.travelerNote??'',day: card.day ?? '', time: card.time ?? '', scope: card.scope });
+  const cardDraft=()=>({ title: card.title, body: card.body, travelerNote:card.travelerNote??'',day: card.day ?? '', time: card.time ?? '', scope: card.scope,address:card.address??'',mapUrl:card.mapUrl??'',lat:card.location?.lat.toString()??'',lng:card.location?.lng.toString()??'' });
+  const [draft, setDraft] = useState(cardDraft);
   const names = stageNames(kind);
   const run = (name: string, input: Record<string, unknown>, message: string) => {
     try { session.execute(actor, name, input); if (name === 'trip_task_set_status' && input.status === 'done') recordOutcome('task_completed'); refresh(); notify(message);return true; }
     catch (e) { notify(e instanceof Error ? e.message : 'That did not work. Nothing changed.');return false; }
   };
-  const edit = () => { setDraft({ title: card.title, body: card.body, travelerNote:card.travelerNote??'',day: card.day ?? '', time: card.time ?? '', scope: card.scope }); setEditing(true); };
+  const edit = () => { setDraft(cardDraft()); setEditing(true); };
   const save = () => {
-    if(run('trip_card_update',cardEditInput(card,draft),'Card updated'))setEditing(false);
+    const lat=draft.lat.trim(),lng=draft.lng.trim();
+    if(!!lat!==!!lng){notify('Enter both latitude and longitude, or clear both to remove the pin. Nothing changed.');return;}
+    if(lat&&(!Number.isFinite(Number(lat))||!Number.isFinite(Number(lng))||Number(lat)<-90||Number(lat)>90||Number(lng)<-180||Number(lng)>180)){notify('Use latitude −90 to 90 and longitude −180 to 180. Nothing changed.');return;}
+    if(draft.mapUrl&&!sourceHref(draft.mapUrl)){notify('Use a complete http or https map link without account credentials. Nothing changed.');return;}
+    const location=lat?{lat:Number(lat),lng:Number(lng),source:'traveler'}:null;
+    const input={...cardEditInput(card,draft),address:draft.address||null,mapUrl:draft.mapUrl||null,...(lat===(card.location?.lat.toString()??'')&&lng===(card.location?.lng.toString()??'')?{}:{location})};
+    if(run('trip_card_update',input,'Card updated')){
+      setEditing(false);
+      if(whenSaved)void whenSaved().catch(error=>notify(`${error instanceof Error?error.message:'Storage did not complete.'} Your changes are in this tab; download a personal ZIP backup from Export before closing.`));
+    }
   };
-  const addPhoto = () => pickPhoto((file) => {
-    void attachPhoto(session, actor, card.id, file).then(() => { refresh(); notify('Photo added'); }, (e: unknown) => notify(e instanceof Error ? e.message : 'Could not add that photo.'));
-  });
+  const photoOperation=useRef<AbortController|null>(null);
+  useLayoutEffect(()=>()=>{photoOperation.current?.abort();},[session,actor.id,actor.kind,card.id,card.scope]);
+  const choosePhoto = (operation:'add'|'replace') => {
+    photoOperation.current?.abort();
+    const controller=new AbortController();photoOperation.current=controller;
+    const revision=session.boardRev,scope=card.scope,expectedAssetId=coverAssetId(card);
+    pickPhoto((file) => {
+      if(controller.signal.aborted)return;
+      void attachPhoto(session, actor, card.id, file,{operation,expectedAssetId,scope,revision,signal:controller.signal}).then(async() => {
+        if(controller.signal.aborted)return;
+        refresh();
+        try{if(!whenSaved)throw new Error('Device storage status is unavailable.');await whenSaved();if(!controller.signal.aborted)notify(operation==='replace'?'Photo replaced and saved on this device':'Photo added and saved on this device');}
+        catch(error){if(!controller.signal.aborted)notify(`Photo is in this tab. ${error instanceof Error?error.message:'Storage did not complete.'} Download a personal ZIP backup from Export before closing.`);}
+      }, (e: unknown) => {if(!controller.signal.aborted)notify(e instanceof Error ? e.message : 'Could not use that photo.');});
+    });
+  };
   const lanes = kind === 'host_guide' ? HOST_LANES.map((l) => l.stage) : [...STAGES];
   const menu: MenuEntry[] = [
     { label: 'Edit', onSelect: edit },
     ...(sourceHref(card.source?.canonicalUrl??card.source?.url)?[{label:'Open source',onSelect:()=>{window.open(sourceHref(card.source?.canonicalUrl??card.source?.url),'_blank','noopener,noreferrer');}}]:[]),
     ...(card.kind === 'task' ? [{ label: card.status === 'done' ? 'Mark as open' : 'Mark as done', onSelect: () => run('trip_task_set_status', { id: card.id, status: card.status === 'done' ? 'open' : 'done' }, card.status === 'done' ? 'Reopened' : 'Done') }] : []),
-    { label: card.assetIds.length ? 'Replace photo' : 'Add photo', onSelect: addPhoto },
+    { label: card.assetIds.length ? 'Replace photo' : 'Add photo', onSelect: () => choosePhoto(card.assetIds.length?'replace':'add') },
     { heading: 'Move to' },
     ...lanes.filter((s) => s !== card.stage).map((s) => ({ label: names[s], onSelect: () => run('trip_card_move', { id: card.id, stage: s }, `Moved to ${names[s]}`) })),
     'divider',
@@ -98,6 +121,13 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
           <label>Day<input type="date" value={draft.day} onChange={(e) => setDraft({ ...draft, day: e.target.value })} /></label>
           <label>Time<input type="time" value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} /></label>
         </div>
+        <fieldset className="m-edit-scope">
+          <legend>Location</legend>
+          <label>Address<input className="m-field" value={draft.address} onChange={e=>setDraft({...draft,address:e.target.value})}/></label>
+          <label>Map link<input className="m-field" type="url" value={draft.mapUrl} onChange={e=>setDraft({...draft,mapUrl:e.target.value})}/></label>
+          <p className="m-muted t-1">No lookup is needed. A saved address or link does not supply coordinates; enter both to place a manual pin.</p>
+          <div className="m-edit-grid"><label>Latitude<input inputMode="decimal" value={draft.lat} onChange={e=>setDraft({...draft,lat:e.target.value})}/></label><label>Longitude<input inputMode="decimal" value={draft.lng} onChange={e=>setDraft({...draft,lng:e.target.value})}/></label></div>
+        </fieldset>
         <fieldset className="m-edit-scope">
           <legend>Who can see it</legend>
           <div className="m-seg">
@@ -212,7 +242,7 @@ function NextUp({ card, session, onOpenDay }: { card: RevCard; session: TripSess
   );
 }
 
-export function BoardView({ session, actor, tick, refresh, notify, header, top, onOpenDay, ghosts = [], onReview,updatedSources }: ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void }) {
+export function BoardView({ session, actor, tick, refresh, notify, header, top, onOpenDay, ghosts = [], onReview,updatedSources,whenSaved }: ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void }) {
   void tick;
   const meta = readTripMeta(session.doc);
   const kind = meta.kind;
@@ -251,7 +281,7 @@ export function BoardView({ session, actor, tick, refresh, notify, header, top, 
               {kind === 'host_guide' && <button type="button" className="mot-add-row" onClick={() => addHere(stage)}><Icon name="plus" /> Add a card</button>}
               <div className="mot-lane-cards">
                 {waiting.map((g) => <GhostCard key={`ghost-${g.index}`} ghost={g} session={session} onReview={onReview} />)}
-                {cards.map((c) => <TripCardView key={c.id} card={c} kind={kind} autoEdit={c.id === fresh} isNext={c.id === next?.id} landing={landed.get(c.id)} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} />)}
+                {cards.map((c) => <TripCardView key={c.id} card={c} kind={kind} autoEdit={c.id === fresh} isNext={c.id === next?.id} landing={landed.get(c.id)} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} whenSaved={whenSaved} />)}
                 {cards.length + waiting.length === 0 && <p className="mot-lane-empty">Drop a card here.</p>}
               </div>
             </section>
@@ -293,7 +323,7 @@ export function TodayView({ session, actor, tick, refresh, notify,updatedSources
           {shown.map((c) => (
             <div key={c.id} className="mot-slot">
               <time>{c.time ?? 'Any time'}</time>
-              <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} />
+              <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} whenSaved={whenSaved} />
             </div>
           ))}
         </div>
@@ -312,7 +342,7 @@ export function TodayView({ session, actor, tick, refresh, notify,updatedSources
                 {cards.map((c) => (
                   <div key={c.id} className="mot-slot">
                     <time>{c.time ?? 'Any time'}</time>
-                    <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} />
+                    <TripCardView card={c} kind={meta.kind} session={session} actor={actor} refresh={refresh} notify={notify} updatedSources={updatedSources} whenSaved={whenSaved} />
                   </div>
                 ))}
               </div>
@@ -327,9 +357,12 @@ export function TodayView({ session, actor, tick, refresh, notify,updatedSources
 
 const weekdayOf = (day: string) => new Date(`${day}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' });
 
-export function MapView({ session, tick, onBack }: { session: TripSession; tick: number; onBack: () => void }) {
+export function MapView({ session, actor, tick, refresh, notify, whenSaved, onBack }: ViewProps & { onBack: () => void }) {
   void tick;
-  const { pins, attribution } = mapPins(session.doc);
+  const cards=Object.values(boardProjection(session.doc)).flat().filter(card=>card.scope!=='private'),included=new Set(cards.map(card=>card.id));
+  const map=mapPins(session.doc),pins=map.pins.filter(pin=>included.has(pin.cardId)),attribution=map.attribution,missing=cards.filter(card=>!card.location);
+  const [editingId,setEditingId]=useState<string|null>(null),editingCard=cards.find(card=>card.id===editingId);
+  const locationLink=(card:RevCard)=>{const mapUrl=card.mapUrl,href=sourceHref(mapUrl);return href?<a href={href} target="_blank" rel="noopener noreferrer">Open saved map link</a>:null;};
   // The grid break for Map: its pin sits over the panel's edge.
   return (
     <div className="mot-edge-wrap">
@@ -338,8 +371,8 @@ export function MapView({ session, tick, onBack }: { session: TripSession; tick:
       <p className="m-eyebrow">Map</p>
       {pins.length === 0 ? (
         <div className="mot-empty" style={{ padding: '14px 0 0' }}>
-          <h2>No verified places yet</h2>
-          <p className="m-muted">A trip package with checked coordinates will bring your places into this view. Keep planning on the board while maps and routes are unavailable.</p>
+          <h2>No saved coordinates yet</h2>
+          <p className="m-muted">Add a manual pin to an item below. Map tiles, lookup and routes are unavailable; saved coordinates remain usable here.</p>
           <button type="button" className="m-btn" onClick={onBack}>Back to board <Icon name="arrowRight" /></button>
         </div>
       ) : (
@@ -347,11 +380,13 @@ export function MapView({ session, tick, onBack }: { session: TripSession; tick:
           {pins.map((p) => (
             <div key={p.cardId} className="mot-slot">
               <time><Icon name="pin" /></time>
-              <article className="m-card"><h3 className="m-card-title">{p.title}</h3><p className="m-card-body">{p.lat.toFixed(4)}, {p.lng.toFixed(4)} · traced to {p.trace}</p></article>
+              <article className="m-card"><h3 className="m-card-title">{p.title}</h3><p className="m-card-body">{p.lat.toFixed(4)}, {p.lng.toFixed(4)} · {cards.find(card=>card.id===p.cardId)?.location?.source==='traveler'?'Manual pin':'Catalog coordinates'} · traced to {p.trace}</p>{locationLink(cards.find(card=>card.id===p.cardId)!)}<button type="button" className="m-btn small" aria-label={`Edit location for ${p.title}`} onClick={()=>setEditingId(p.cardId)}>Edit location</button></article>
             </div>
           ))}
         </div>
       )}
+      {!!missing.length&&<section aria-label="Needs a location"><h2 className="t-3">Needs a location</h2><p className="m-muted">These items have no coordinates yet. An address or saved map link remains useful without a pin.</p><ul>{missing.map(card=><li key={card.id}><strong>{card.title||'Untitled'}</strong>{card.address&&<p>{card.address}</p>}{locationLink(card)}<button type="button" className="m-btn small" aria-label={`Edit location for ${card.title||'Untitled'}`} onClick={()=>setEditingId(card.id)}>Edit location</button></li>)}</ul></section>}
+      {editingCard&&<section aria-label={`Location for ${editingCard.title}`}><button type="button" className="m-btn small" onClick={()=>setEditingId(null)}>Close location editor</button><TripCardView key={editingCard.id} card={editingCard} session={session} actor={actor} kind={readTripMeta(session.doc).kind} refresh={refresh} notify={notify} whenSaved={whenSaved} autoEdit /></section>}
       <p className="m-muted t-1" style={{ marginTop: 24 }}>{attribution}</p>
     </section>
     </div>
