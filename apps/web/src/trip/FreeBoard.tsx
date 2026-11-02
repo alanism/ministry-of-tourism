@@ -13,6 +13,7 @@ const ArtworkPicker = lazy(() => import('../artwork/ArtworkPicker'));
 import './free-board.css';
 import type { Ghost } from './ProposalReview';
 type Props = ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void; destinations?: readonly ArtDestination[] };
+export function GhostReviewButton({ghost,onReview}:{ghost:Ghost;onReview?:(index:number)=>void}){return <button type="button" className="m-btn small" onClick={()=>{if(ghost.review)ghost.review();else onReview?.(ghost.index);}}>Review suggestion: {ghost.title}</button>;}
 interface Obj { ref: BoardObjectRef; rect: BoardRect; card?: RevCard; presentation?: Presentation }
 const CARD_LIMITS = { minWidth: 400, minHeight: 300, maxWidth: 5000, maxHeight: 5000 };
 const ASSET_LIMITS = { minWidth: 100, minHeight: 100, maxWidth: 10000, maxHeight: 10000 };
@@ -204,7 +205,7 @@ export function FreeBoard(props: Props) {
   return (
     <section className="m-free-board" aria-label="Free board" onKeyDown={onKeyDown} onCopy={onCopy}>
       {header}
-      {(top || ghosts.length > 0) && <div className="mot-top">{top}{ghosts.length > 0 && <div className="m-free-ghosts" aria-label="Suggestions waiting">{ghosts.map((g) => <button key={g.index} type="button" className="m-btn small" onClick={() => onReview?.(g.index)}>Review suggestion: {g.title}</button>)}</div>}</div>}
+      {(top || ghosts.length > 0) && <div className="mot-top">{top}{ghosts.length > 0 && <div className="m-free-ghosts" aria-label="Suggestions waiting">{ghosts.map((g) => <GhostReviewButton key={g.index} ghost={g} onReview={onReview}/>)}</div>}</div>}
       <div className="m-free-toolbar" role="toolbar" aria-label="Free board tools">
         <button type="button" className="m-btn ink" aria-pressed="true">Free board</button>
         <button type="button" className="m-btn" onClick={() => setView('lanes')}>Lanes</button>

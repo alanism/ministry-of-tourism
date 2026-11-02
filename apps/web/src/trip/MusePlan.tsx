@@ -7,10 +7,10 @@ import './muse-plan.css';
 type Result=Awaited<ReturnType<typeof requestMuseProposal>>;
 interface Props {
  session:TripSession;actor:Actor;content?:FccCityContent;onAvailability:(available:boolean)=>void;onState:(label:string)=>void;onGhosts:(ghosts:Ghost[])=>void;
- refresh:()=>void;onClose:()=>void;notify:(message:string,action?:{label:string;run:()=>void})=>void;
+ refresh:()=>void;onClose:()=>void;notify:(message:string,action?:{label:string;run:()=>void})=>void;onOwnFiles?:()=>void;
 }
 const date=(value?:string)=>value?new Date(value).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',timeZone:'UTC'}):'date not supplied';
-export function MusePlan({session,actor,content,onAvailability,onState,onGhosts,refresh,onClose,notify}:Props){
+export function MusePlan({session,actor,content,onAvailability,onState,onGhosts,refresh,onClose,notify,onOwnFiles}:Props){
  const meta=readTripMeta(session.doc),cityId=meta.cityId??citySlug(meta.city),cards=readAllCards(session.parts);
  const [runtime,setRuntime]=useState<{available:boolean;checking?:boolean;reason?:string;modelId?:string;adapter?:string}>({available:false,checking:true});
  const [issue,setIssue]=useState<FccCityContent>(),[issueState,setIssueState]=useState('Loading this city’s FCC issue…'),[attempt,setAttempt]=useState(0);
@@ -64,6 +64,7 @@ export function MusePlan({session,actor,content,onAvailability,onState,onGhosts,
  return <aside className="m-panel mot-muse-plan" role="dialog" aria-label="Ask Muse" onKeyDown={event=>{if(event.key==='Escape'){event.stopPropagation();onClose();}}}>
   <header><div><h2 ref={heading} tabIndex={-1}>{result?'Review suggestions':'Ask Muse'}</h2><p className="mot-muse-meta">{label}{runtime.available&&runtime.modelId?` · ${runtime.modelId}`:''}</p></div><button type="button" className="m-icon-btn" aria-label="Close Ask Muse" onClick={onClose}>×</button></header>
   <div className="mot-muse-body">
+   {onOwnFiles&&<div className="mot-muse-notice"><button type="button" className="m-btn" onClick={onOwnFiles}>Use your own Muse with files</button><p className="mot-muse-meta">Download selected context, share it yourself and bring back a proposal for local review. No hosted connection is required.</p></div>}
    {error&&<div ref={errorMessage} tabIndex={-1} role="alert" className="mot-muse-notice"><h3>{failure?.code==='timeout'?'Muse took too long':failure?.code==='rate_limited'?'Paused · limit reached':failure?.code==='cancelled'?'Stopped':'The request could not finish'}</h3><p className="mot-muse-warning">{error}</p>{failure&&<><button type="button" className="m-btn mot-muse-copy" onClick={()=>void copyDiagnostic()}>Copy diagnostic receipt</button><p className="mot-muse-meta" role="status">{copyStatus}</p><details><summary>Diagnostic receipt</summary><p className="mot-muse-meta">Request ID, board ID, revision, timing and error class only. No prompt, card text or provider error body.</p><pre className="mot-muse-receipt">{museDiagnosticText(failure)}</pre></details></>}</div>}
    {runtime.checking?<div className="mot-muse-notice" role="status"><strong>Checking the connection…</strong><p>Your board remains available while the server reports its status.</p></div>:!runtime.available&&<div className="mot-muse-notice" role="status"><strong>Muse off · manual-only</strong><p>{runtime.reason??'Not connected on this server.'}</p><p>Board, FCC, art and export remain available.</p></div>}
    {busy?<div role="status"><h3>{test?'Test adapter working':'Working'} · {elapsed}s</h3><ol className="mot-muse-steps">{[['Send the request','sending'],['Waiting for the answer','waiting'],['Check against your board','validating'],['Ready to review','ready']].map(([title,key])=><li key={key} aria-current={phase===key?'step':undefined}>{title}{phase===key?' · now':''}</li>)}</ol><p className="m-muted">These are the steps the app can observe. Your board stays editable. Stop prevents a late answer from being added.</p></div>:result?<>

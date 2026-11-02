@@ -33,6 +33,7 @@ import { MusePlan } from './MusePlan';
 
 const ArtworkPicker=lazy(()=>import('../artwork/ArtworkPicker'));
 const GroupPreferences=lazy(()=>import('./GroupPreferences').then(module=>({default:module.GroupPreferences})));
+const OwnMuseFiles=lazy(()=>import('./OwnMuseFiles').then(module=>({default:module.OwnMuseFiles})));
 const bundledDestinations:unknown=JSON.parse(bundledDestinationText).cities;
 
 const YOU: Actor = { kind: 'human', id: 'traveler-1', name: 'You' };
@@ -44,6 +45,7 @@ function downloadBytes(bytes: Uint8Array, name: string) { const url = URL.create
 function Saved({ status, exportedAt }: { status: SavedStatus; exportedAt: string | null }) {
   return <><p className={`mot-saved${status === 'saved' ? '' : ' unsaved'}`}><Icon name="device" />{status === 'error' ? 'In this tab only · download a ZIP backup' : status === 'saved' ? 'Saved on this device' : 'Saving…'}</p>{exportedAt && <small className="m-muted">Last export: {new Date(exportedAt).toLocaleString()}</small>}</>;
 }
+export function DevelopmentSampleReviewButton({onReview}:{onReview:()=>void}){if(!import.meta.env.DEV)return null;return <button type="button" className="m-btn small" onClick={()=>{if(import.meta.env.DEV)onReview();}}><Icon name="sparkle"/>Review development samples</button>;}
 
 function BriefPanel({ session, refresh, notify }: { session: TripSession; refresh: () => void; notify: (m: string) => void }) {
   const card = readAllCards(tripParts(session.doc)).find((c) => c.kind === 'brief');
@@ -87,7 +89,8 @@ export function TripApp() {
   const [toast, setToast] = useState<{ message: string; action?: { label: string; run: () => void } } | null>(null);
   const [lost, setLost] = useState(false);
   const [recovery, setRecovery] = useState<TripRecoverySource | null>(null);
-  const [panel, setPanel] = useState<'review' | 'guest' | 'art' | 'destination' | 'muse' | 'ballot' | 'shirts' | null>(null);
+  const [panel, setPanel] = useState<'review' | 'guest' | 'art' | 'destination' | 'muse' | 'ballot' | 'shirts' | 'own-files' | null>(null);
+  const [filesSession,setFilesSession]=useState<TripSession|null>(null);
   const [creating,setCreating]=useState<BoardKind|null>(null);
   const [destinations,setDestinations]=useState<DestinationRow[]>([]);
   const [destinationIndex,setDestinationIndex]=useState<Awaited<ReturnType<typeof loadDestinations>>>();
@@ -103,6 +106,8 @@ export function TripApp() {
   const providers=useRef({fcc:false,muse:false});
 
   const [pending, setPending] = useState<PendingReview | null>(null);
+  const pendingNativeId=useRef<string|undefined>(undefined);pendingNativeId.current=pending?.suggestion.proposal.id;
+  useEffect(()=>{if(filesSession&&filesSession!==session)setFilesSession(null);},[session,filesSession]);
   const [focusOp, setFocusOp] = useState<number | undefined>(undefined);
   const [museOpen, setMuseOpen] = useState(true);
   const [newTitle, setNewTitle] = useState('');
@@ -238,7 +243,8 @@ export function TripApp() {
     setNewTitle(''); refresh(); notify('Card added');
   };
 
-  const review = (op?: number) => { setFocusOp(op); setPanel('review'); };
+  const review = (op?: number) => { if(!import.meta.env.DEV)return;setFocusOp(op); setPanel('review'); };
+  const ownFiles=()=>{setFilesSession(session);setPanel('own-files');};
   const undo = () => { const ok = session.undo(YOU.id); refresh(); notify(ok ? 'Undone' : 'Nothing to undo'); };
   const boardItems: MenuEntry[] = [
     { heading: 'Boards on this device' },
@@ -246,6 +252,7 @@ export function TripApp() {
     'divider',
     { label: 'Start a new board', onSelect: newBoard },
     { label: 'Import ZIP', onSelect: () => fileRef.current?.click() },
+    { label: 'Use your own Muse with files', onSelect: ownFiles },
     { label: 'Group preferences', onSelect: () => setPanel('ballot') },
     { label: 'Undo', onSelect: undo },
   ];
@@ -276,7 +283,7 @@ export function TripApp() {
       <div className="mot-trip-meta"><p className="sub">{tripSubtitle(meta) || cityLabel(meta.city)}</p><Saved status={saved} exportedAt={open.lastExportedAt()} /></div>
       <div className="mot-phone-actions">
         <button type="button" className="m-btn small" aria-expanded={briefOpen} aria-controls="mot-brief-body" onClick={() => setBriefOpen(!briefOpen)}>Trip brief <Icon name={briefOpen ? 'chevronUp' : 'chevronDown'} /></button>
-        <button type="button" className="m-btn small" aria-label="Review sample changes" onClick={() => review()}><Icon name="sparkle" />Review samples</button>
+        <DevelopmentSampleReviewButton onReview={()=>review()}/>
       </div>
       <div id="mot-brief-body" className={`mot-brief-body${briefOpen ? ' is-open' : ''}`}><hr className="m-rule" /><BriefPanel key={meta.boardId} session={session} refresh={refresh} notify={notify} /></div>
       <div className="mot-side-actions">
@@ -297,7 +304,7 @@ export function TripApp() {
         <button type="button" className="m-icon-btn" aria-label="Collapse Muse" onClick={() => setMuseOpen(false)}><Icon name="chevronDown" /></button>
       </div>
       <p className="mot-rail-note m-muted">{ghostCount ? `${ghostCount} ${ghostCount === 1 ? 'suggestion waits' : 'suggestions wait'} on your board, dashed.` : 'Your board stays in your hands.'}</p>
-      <button type="button" className="m-btn small" onClick={() => review()}>Review sample changes</button>
+      <DevelopmentSampleReviewButton onReview={()=>review()}/>
     </aside>
   ) : (
     <aside className="m-panel mot-rail collapsed" aria-label="Muse">
@@ -346,11 +353,12 @@ export function TripApp() {
       )}
       <div className="mot-guidance-wrap"><TripGuidance phase={tripPhase(meta)}/></div>
       {panel==='ballot'&&<FocusSheet label="Group preferences" onClose={()=>setPanel(null)}><Suspense fallback={<p role="status">Opening group preferences…</p>}><GroupPreferences key={meta.boardId} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} whenSaved={async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are still in this tab. Download a personal ZIP backup.');}} onClose={()=>setPanel(null)} /></Suspense></FocusSheet>}
-      {panel === 'review' && <FocusSheet label="Review changes" onClose={() => setPanel(null)}><ProposalReview key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={() => setPanel(null)} pending={pending} focus={focusOp} onPending={setPending} /></FocusSheet>}
+      {import.meta.env.DEV&&panel === 'review' && <FocusSheet label="Development sample changes" onClose={() => setPanel(null)}><ProposalReview key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={() => setPanel(null)} pending={pending} focus={focusOp} onPending={setPending} /></FocusSheet>}
       {panel === 'guest' && host && <FocusSheet label="Create a guest copy" onClose={() => setPanel(null)}><GuestCopyPanel key={meta.boardId} session={session} onCreate={(t, ids) => void guestCopy(t, ids)} onClose={() => setPanel(null)} /></FocusSheet>}
       {panel==='destination'&&<FocusSheet label="Change destination" onClose={()=>setPanel(null)}><DestinationPicker current={meta} kind={meta.kind} {...destinationProps} preservedCards={Object.values(boardProjection(session.doc)).flat().map(card=>({id:card.id,title:card.title,sourceCity:destinations.find(row=>row.id===card.source?.cityId)?.name??card.source?.cityId}))} onClose={()=>setPanel(null)} onSave={details=>{try{session.execute(YOU,'trip_meta_update',{city:details.city,cityId:details.cityId,countryCode:details.countryCode,timeZone:details.timeZone,dates:details.dates});setPanel(null);refresh();notify('Destination changed. Existing cards keep their sources; refresh FCC content when ready.');}catch(error){notify(error instanceof Error?error.message:'Destination could not be changed.');}}} /></FocusSheet>}
       {(panel==='art'||panel==='shirts')&&<Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker initialCollection={panel==='shirts'?'shirt':undefined} trip={{destination:meta,destinations,insertionTarget:'magazine'}} onClose={()=>setPanel(null)} onUpload={async(file,signal)=>{await placeTripUpload(session,YOU,file,signal);refresh();setTab('composition');notify('Photo added to your trip.',{label:'Undo',run:undo});}} onInsert={async(artwork,signal)=>{await placeTripArtwork(session,YOU,artwork,signal);refresh();setTab('composition');notify('Artwork added to your trip.',{label:'Undo',run:undo});}} /></Suspense>}
-      {panel==='muse'&&<MusePlan key={meta.boardId} session={session} actor={YOU} content={scopedContent} onAvailability={setMuseAvailable} onState={setMuseLabel} onGhosts={setMuseGhosts} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} />}
+      {panel==='muse'&&<MusePlan key={meta.boardId} session={session} actor={YOU} content={scopedContent} onAvailability={setMuseAvailable} onState={setMuseLabel} onGhosts={setMuseGhosts} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} onOwnFiles={ownFiles} />}
+      {filesSession===session&&<Suspense fallback={panel==='own-files'?<p role="status">Opening local file exchange…</p>:null}><OwnMuseFiles key={`${meta.boardId}:${session.doc.clientID}`} session={session} open={open} actor={YOU} tick={tick} active={panel==='own-files'} onClose={()=>setPanel(null)} onExport={()=>{setPanel(null);setTab('export');}} refresh={refresh} whenSaved={whenSaved} hasPendingNativeProposalId={id=>pendingNativeId.current===id}/></Suspense>}
 
       {toast && panel!=='art' && <Toast message={toast.message} action={toast.action} onClose={() => setToast(null)} />}
       <div className="mot-foot">
