@@ -6,6 +6,7 @@ import {sha256Hex} from '../../core/src/trip/sha256.ts';
 import {sanitizeRoomMediaUpload,roomSharedMediaSchema,type RoomMediaContext,type RoomSharedMedia} from '../../core/src/trip/shared-room-media.ts';
 import {roomMediaReserveSchema,roomMediaCommitSchema,roomMediaStageResultSchema,roomMediaUploadResultSchema,roomMediaReceiptSchema,roomMediaCommitResultSchema,type RoomMediaReserve} from '../../core/src/trip/shared-room-media-wire.ts';
 import {roomSnapshotSchema,type RoomMember,type RoomCardRecord} from '../../core/src/trip/shared-room-domain.ts';
+import {validateRoomMediaInverse,roomMediaUndoAdditionSchema,roomMediaUndoReceiptSchema,roomMediaUndoResultSchema} from '../../core/src/trip/shared-room-media-undo.ts';
 import {roomAccountingFields,roomPublicMetadata} from './room-emulator-snapshot.ts';
 import {measureRoomSnapshot} from '../../core/src/trip/shared-room-limits.ts';
 import type {createRoomEmulatorByteStore} from './room-emulator-storage.ts';
@@ -23,7 +24,7 @@ export interface RoomMediaAdapterOptions {
  /** Fresh server policy, never caller scope/privateAncestor/personalOnly flags. */
  publication(tx:Transaction,ref:DocumentReference,uid:string,cardId:string,assetId:string,input:RoomMediaReserve):Promise<RoomMediaContext['publication']>;
  /** Read authoritative public records and include both candidates before any transaction writes. */
- accounting(tx:Transaction,ref:DocumentReference,meta:Record<string,unknown>,change:{card:{id:string;record:RoomCardRecord};asset:RoomSharedMedia;replaceAssetId?:string}):Promise<ReturnType<typeof measureRoomSnapshot>>;
+ accounting(tx:Transaction,ref:DocumentReference,meta:Record<string,unknown>,change:{card:{id:string;record:RoomCardRecord};asset?:RoomSharedMedia;replaceAssetId?:string}):Promise<ReturnType<typeof measureRoomSnapshot>>;
 }
 const digest=(v:unknown)=>sha256Hex(new TextEncoder().encode(canonicalFileJson(v)));
 function wire(raw:unknown){const bytes=new TextEncoder().encode(JSON.stringify(raw));if(bytes.length>65536)throw Error('Room intent limit');return parseFileJson(bytes);}
@@ -44,12 +45,26 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
   const owner=c.member.role==='owner'&&c.meta.ownerUid===p.uid,editor=c.member.role==='editor';
   if(!owner&&!editor||editor&&!input.replaceAssetId||input.replaceAssetId&&!card.payload.assetIds.includes(input.replaceAssetId))throw Error('Room media publication unavailable');
   if(card.payload.assetIds.includes(input.assetId))throw Error('Media identity conflict');
+  let target:ReturnType<typeof roomMediaReceiptSchema.parse>|undefined;
+  if(input.undoOf){
+   const prior=await tx.get(ref.collection('receipts').doc(input.undoOf));if(!prior.exists)throw Error('Media Undo unavailable');target=roomMediaReceiptSchema.parse(prior.data());
+   if(target.uid!==p.uid||target.cardId!==input.cardId||target.undoOf!==undefined||!target.previousAssetDigest||input.replaceAssetId!==target.assetId)throw Error('Media Undo unavailable for this initiator');
+   if(target.version!==card.version||await digest(card.payload)!==target.afterDigest)throw Error('Stale media Undo target');
+  }
   // Citation metadata needs a source-bound byte admission path; never strip it into the photo branch.
   if(input.source!==undefined||input.citationBinding!==undefined)throw Error('Source-bound media publication unsupported; retain local original');
   const publication=await o.publication(tx,ref,p.uid,input.cardId,input.assetId,input);
   if(publication.roomId!==p.roomId||publication.assetId!==input.assetId||publication.scope!=='shared'||publication.personalOnly!==false||publication.privateAncestor!==false)throw Error('Room media publication unavailable');
-  return{card,publication};
+  return{card,publication,target};
  }
+ async function retirement(tx:Transaction,ref:DocumentReference,cardId:string,assetId:string){
+  const rows=await tx.get(ref.collection('cards').limit(501));if(rows.size>500)throw Error('Room object capacity');
+  const retained=rows.docs.some(d=>d.id!==cardId&&roomSnapshotSchema.shape.cards.element.parse(d.data()).payload.assetIds.includes(assetId));
+  const old=await tx.get(ref.collection('media').doc(assetId));if(!old.exists||old.get('withdrawn'))throw Error('Room media unavailable');const asset=roomSharedMediaSchema.parse(old.get('payload'));if(asset.id!==assetId)throw Error('Room media identity mismatch');
+  const version=integer.parse(old.get('version')??0);if(version===Number.MAX_SAFE_INTEGER)throw Error('Media version capacity');
+  return{asset,retired:retained?undefined:{ref:old.ref,asset,version:version+1}};
+ }
+ function retire(tx:Transaction,ref:DocumentReference,removed:{ref:DocumentReference;asset:RoomSharedMedia;version:number}|undefined,now:number){if(!removed)return;tx.set(removed.ref,{id:removed.asset.id,withdrawn:true,version:removed.version,hash:removed.asset.hash,bytes:removed.asset.bytes,withdrawnAt:now});tx.set(ref.collection('mediaCleanup').doc(removed.asset.id),{roomId:ref.id,assetId:removed.asset.id,hash:removed.asset.hash,requestedAt:now,deadlineAt:now+86400000});}
  async function pending(tx:Transaction,ref:DocumentReference,p:RoomMediaPrincipal,now:number){
   const docs=await tx.get(ref.collection('mediaStages').where('uid','==',p.uid).where('expiresAt','>',now).where('phase','in',['reserved','uploading','uploaded']).limit(3));
   const stages=docs.docs.map(d=>stageSchema.parse(d.data())),bytes=stages.reduce((n,s)=>n+Math.max(s.input.sourceBytes,s.asset?.bytes??0),0);return{stages,bytes};
@@ -96,16 +111,17 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
  async function commit(rawPrincipal:RoomMediaPrincipal,raw:unknown){
   const p=principalSchema.parse(rawPrincipal),input=roomMediaCommitSchema.parse(wire(raw));bound(p,input);const ref=refFor(p),sref=stageRef(ref,input.stageId),rref=ref.collection('receipts').doc(input.operationId),requestDigest=await digest(input);
   async function inspect(tx:Transaction){const now=Date.now(),c=await current(tx,ref,p),prior=await tx.get(rref);if(prior.exists){const receipt=roomMediaReceiptSchema.parse(prior.data());if(receipt.uid!==p.uid||receipt.requestDigest!==requestDigest)throw Error('Media operation identity conflict');const asset=await readable(tx,ref,p,receipt.assetId);return{replay:roomMediaCommitResultSchema.parse({receipt,replayed:true,asset})};}
-   const doc=await tx.get(sref);if(!doc.exists)throw Error('Room media unavailable');const stage=stageSchema.parse(doc.data());ownStage(p,stage);live(stage,now);if(stage.phase!=='uploaded'||!stage.asset)throw Error('Upload not ready');if(input.baseVersion!==stage.input.baseVersion)throw Error('Media commit version conflict');const{card,publication}=await cardPolicy(tx,ref,p,c,stage.input);if(stage.publicationDigest!==await digest(publication))throw Error('Media publication policy conflict');return{stage,c,card,now};}
+   const doc=await tx.get(sref);if(!doc.exists)throw Error('Room media unavailable');const stage=stageSchema.parse(doc.data());ownStage(p,stage);live(stage,now);if(stage.phase!=='uploaded'||!stage.asset)throw Error('Upload not ready');if(input.baseVersion!==stage.input.baseVersion)throw Error('Media commit version conflict');if(!!stage.input.undoOf!==(input.undoBeforeCard!==undefined))throw Error('Media inverse context unavailable');const{card,publication,target}=await cardPolicy(tx,ref,p,c,stage.input);if(stage.publicationDigest!==await digest(publication))throw Error('Media publication policy conflict');return{stage,c,card,target,now};}
   const prepared=await o.db.runTransaction(inspect);if(prepared.replay)return prepared.replay;const stage=prepared.stage!,asset=stage.asset!;
   const clean=await o.store.readStage(p.roomId,p.uid,stage.id,asset.bytes,asset.hash);try{await o.store.putAsset(p.roomId,asset.id,clean,asset.hash);
   const result=await o.db.runTransaction(async tx=>{const fresh=await inspect(tx);if(fresh.replay)return fresh.replay;const{stage:s,c,card,now}=fresh;if(!s||!c||!card||now===undefined||canonicalFileJson(s.asset)!==canonicalFileJson(asset))throw Error('Upload context changed');const existing=await tx.get(ref.collection('media').doc(asset.id));if(existing.exists)throw Error('Media identity conflict');const count=integer.parse(c.meta.receiptCount);if(count>=20000||card.version===Number.MAX_SAFE_INTEGER)throw Error('Room receipt capacity reached');
-   const assetIds=s.input.replaceAssetId?card.payload.assetIds.map(old=>old===s.input.replaceAssetId?asset.id:old):[...card.payload.assetIds,asset.id],record=roomSnapshotSchema.shape.cards.element.parse({version:card.version+1,authorUid:p.uid,updatedAt:now,payload:{...card.payload,assetIds}}),measurement=await o.accounting(tx,ref,c.meta,{card:{id:s.input.cardId,record},asset,...(s.input.replaceAssetId?{replaceAssetId:s.input.replaceAssetId}:{})});
-   const receipt=roomMediaReceiptSchema.parse({operationId:input.operationId,uid:p.uid,kind:'media',cardId:s.input.cardId,assetId:asset.id,version:record.version,requestDigest,beforeDigest:await digest(card.payload),afterDigest:await digest(record.payload),acceptedAt:now});
-   let retired: {ref:DocumentReference;asset:RoomSharedMedia;version:number}|undefined;
-   if(s.input.replaceAssetId){const rows=await tx.get(ref.collection('cards').limit(501));if(rows.size>500)throw Error('Room object capacity');const retained=rows.docs.some(d=>d.id!==s.input.cardId&&roomSnapshotSchema.shape.cards.element.parse(d.data()).payload.assetIds.includes(s.input.replaceAssetId!));if(!retained){const old=await tx.get(ref.collection('media').doc(s.input.replaceAssetId)),oldAsset=roomSharedMediaSchema.parse(old.get('payload'));if(oldAsset.id!==s.input.replaceAssetId)throw Error('Room media identity mismatch');retired={ref:old.ref,asset:oldAsset,version:integer.parse(old.get('version')??0)+1};}}
+   const assetIds=s.input.replaceAssetId?card.payload.assetIds.map(old=>old===s.input.replaceAssetId?asset.id:old):[...card.payload.assetIds,asset.id];
+   const payload=s.input.undoOf?await validateRoomMediaInverse(p.uid,card,fresh.target,input.undoBeforeCard,asset):{...card.payload,assetIds};
+   const record=roomSnapshotSchema.shape.cards.element.parse({version:card.version+1,authorUid:p.uid,updatedAt:now,payload}),measurement=await o.accounting(tx,ref,c.meta,{card:{id:s.input.cardId,record},asset,...(s.input.replaceAssetId?{replaceAssetId:s.input.replaceAssetId}:{})});
+   const old=s.input.replaceAssetId?await retirement(tx,ref,s.input.cardId,s.input.replaceAssetId):undefined;
+   const receipt=roomMediaReceiptSchema.parse({operationId:input.operationId,uid:p.uid,kind:'media',cardId:s.input.cardId,assetId:asset.id,version:record.version,requestDigest,beforeDigest:await digest(card.payload),afterDigest:await digest(record.payload),...(s.input.undoOf?{undoOf:s.input.undoOf}:old?{previousAssetDigest:await digest(old.asset)}:{}),acceptedAt:now});
    const committedAt=Date.now();live(s,committedAt);tx.create(ref.collection('media').doc(asset.id),{payload:asset,version:1,authorUid:p.uid,updatedAt:now});tx.set(ref.collection('cards').doc(s.input.cardId),record);tx.create(rref,receipt);tx.update(sref,{phase:'committed'});tx.update(ref,{receiptCount:count+1,...roomAccountingFields(measurement)});
-   if(retired){tx.set(retired.ref,{id:retired.asset.id,withdrawn:true,version:retired.version,hash:retired.asset.hash,bytes:retired.asset.bytes,withdrawnAt:committedAt});tx.set(ref.collection('mediaCleanup').doc(retired.asset.id),{roomId:p.roomId,assetId:retired.asset.id,hash:retired.asset.hash,requestedAt:committedAt,deadlineAt:committedAt+86400000});}return roomMediaCommitResultSchema.parse({receipt,replayed:false,asset});});
+   retire(tx,ref,old?.retired,committedAt);return roomMediaCommitResultSchema.parse({receipt,replayed:false,asset});});
   await o.store.discardStage(p.roomId,p.uid,stage.id).catch(()=>{});return result;
   }catch(error){
    // Only the permanent closed-room fence permits deletion after an uncertain write.
@@ -113,8 +129,21 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
    await ref.get().then(doc=>doc.get('closed')===true?o.store.discardAsset(p.roomId,asset.id,asset.hash):undefined).catch(()=>{});throw error;
   }
  }
+ async function undoAddition(rawPrincipal:RoomMediaPrincipal,raw:unknown){
+  const p=principalSchema.parse(rawPrincipal),input=roomMediaUndoAdditionSchema.parse(wire(raw));bound(p,input);const ref=refFor(p),rref=ref.collection('receipts').doc(input.operationId),requestDigest=await digest(input);
+  return o.db.runTransaction(async tx=>{
+   const c=await current(tx,ref,p);if(!['owner','editor'].includes(c.member.role)||c.member.role==='owner'&&c.meta.ownerUid!==p.uid)throw Error('Media Undo unavailable');const prior=await tx.get(rref);
+   if(prior.exists){const receipt=roomMediaUndoReceiptSchema.parse(prior.data());if(receipt.uid!==p.uid||receipt.requestDigest!==requestDigest)throw Error('Media operation identity conflict');return roomMediaUndoResultSchema.parse({receipt,replayed:true});}
+   const count=integer.parse(c.meta.receiptCount);if(count>=20000)throw Error('Room receipt capacity reached');
+   const[cardDoc,targetDoc]=await Promise.all([tx.get(ref.collection('cards').doc(input.cardId)),tx.get(ref.collection('receipts').doc(input.undoOf))]);if(!cardDoc.exists||!targetDoc.exists)throw Error('Media Undo unavailable');const card=roomSnapshotSchema.shape.cards.element.parse(cardDoc.data()),target=roomMediaReceiptSchema.parse(targetDoc.data());if(card.version!==input.baseVersion)throw Error('Stale media Undo target');if(card.version===Number.MAX_SAFE_INTEGER)throw Error('Room version capacity');
+   const payload=await validateRoomMediaInverse(p.uid,card,target,input.beforeCard),record=roomSnapshotSchema.shape.cards.element.parse({version:card.version+1,authorUid:p.uid,updatedAt:Date.now(),payload});
+   const measurement=await o.accounting(tx,ref,c.meta,{card:{id:input.cardId,record},replaceAssetId:target.assetId}),old=await retirement(tx,ref,input.cardId,target.assetId),now=Date.now();
+   const receipt=roomMediaUndoReceiptSchema.parse({operationId:input.operationId,uid:p.uid,kind:'media-undo',cardId:input.cardId,undoOf:input.undoOf,version:record.version,requestDigest,beforeDigest:await digest(card.payload),afterDigest:await digest(record.payload),acceptedAt:now});
+   tx.set(cardDoc.ref,record);tx.create(rref,receipt);tx.update(ref,{receiptCount:count+1,...roomAccountingFields(measurement)});retire(tx,ref,old.retired,now);return roomMediaUndoResultSchema.parse({receipt,replayed:false});
+  });
+ }
  async function readable(tx:Transaction,ref:DocumentReference,p:RoomMediaPrincipal,assetId:string){await current(tx,ref,p);const[doc,cards]=await Promise.all([tx.get(ref.collection('media').doc(assetId)),tx.get(ref.collection('cards').limit(501))]);if(!doc.exists||cards.size>500||!cards.docs.some(d=>roomSnapshotSchema.shape.cards.element.parse(d.data()).payload.assetIds.includes(assetId)))throw Error('Room media unavailable');const asset=roomSharedMediaSchema.parse(doc.get('payload'));if(asset.id!==assetId)throw Error('Room media identity mismatch');return asset;}
  async function read(rawPrincipal:RoomMediaPrincipal,assetId:string){const p=principalSchema.parse(rawPrincipal),ref=refFor(p);id.parse(assetId);const asset=await o.db.runTransaction(tx=>readable(tx,ref,p,assetId)),bytes=await o.store.readAsset(p.roomId,asset.id,asset.bytes,asset.hash),fresh=await o.db.runTransaction(tx=>readable(tx,ref,p,assetId));if(canonicalFileJson(fresh)!==canonicalFileJson(asset))throw Error('Room media changed during read');return{asset,bytes};}
  async function discard(rawPrincipal:RoomMediaPrincipal,stageId:string){const p=principalSchema.parse(rawPrincipal),ref=refFor(p),sref=stageRef(ref,stageId);await o.db.runTransaction(async tx=>{await current(tx,ref,p);const doc=await tx.get(sref);if(!doc.exists)throw Error('Room media unavailable');const stage=stageSchema.parse(doc.data());ownStage(p,stage);if(stage.phase==='committed')throw Error('Published media requires withdrawal');tx.update(sref,{phase:'discarded',uploadToken:FieldValue.delete()});});await o.store.discardStage(p.roomId,p.uid,stageId);return{discarded:true as const};}
- return{reserve,upload,commit,read,discard};
+ return{reserve,upload,commit,read,discard,undoAddition};
 }
