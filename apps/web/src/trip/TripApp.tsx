@@ -30,10 +30,12 @@ import type { NewTrip } from './trip-store';
 import { FccBrowser,SourceFreshness,citySlug,type FccBrowserState } from './FccBrowser';
 
 import { MusePlan } from './MusePlan';
+import {consumeSharedRoomInvite,type SharedRoomInvite} from './shared-room-invite';
 
 const ArtworkPicker=lazy(()=>import('../artwork/ArtworkPicker'));
 const GroupPreferences=lazy(()=>import('./GroupPreferences').then(module=>({default:module.GroupPreferences})));
 const OwnMuseFiles=lazy(()=>import('./OwnMuseFiles').then(module=>({default:module.OwnMuseFiles})));
+const SharedRoomDevelopmentPanel=lazy(()=>import('./shared-room-panel').then(module=>({default:module.SharedRoomDevelopmentPanel})));
 const bundledDestinations:unknown=JSON.parse(bundledDestinationText).cities;
 
 const YOU: Actor = { kind: 'human', id: 'traveler-1', name: 'You' };
@@ -80,6 +82,14 @@ function BriefPanel({ session, refresh, notify }: { session: TripSession; refres
 }
 
 export function TripApp() {
+  const [room,setRoom]=useState<{active:boolean;mounted:boolean;invite?:SharedRoomInvite}>(()=>{
+    const invite=!import.meta.env.DEV||typeof window==='undefined'?undefined:consumeSharedRoomInvite(window.location.href,clean=>window.history.replaceState(null,'',clean));
+    return{active:import.meta.env.DEV&&!!invite,mounted:import.meta.env.DEV&&!!invite,...(import.meta.env.DEV&&invite?{invite}:{})};
+  });
+  return <><TripWorkspace onOpenSharedRoom={()=>{if(import.meta.env.DEV)setRoom(current=>({...current,active:true,mounted:true}));}}/>{import.meta.env.DEV&&room.mounted&&<Suspense fallback={room.active?<p role="status">Opening local shared room…</p>:null}><SharedRoomDevelopmentPanel active={room.active} onClose={()=>setRoom(current=>({...current,active:false}))} initialInvite={room.invite} onInviteConsumed={()=>setRoom(current=>({...current,invite:undefined}))} configuration={{authBaseUrl:'http://127.0.0.1:9099',serviceBaseUrl:'http://127.0.0.1:48125',projectId:'demo-mot-rooms'}}/></Suspense>}</>;
+}
+
+function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:()=>void}) {
   const [open, setOpen] = useState<OpenTrip | null>(null);
   const [session, setSession] = useState<TripSession | null>(null);
   const [booting, setBooting] = useState(true);
@@ -253,6 +263,7 @@ export function TripApp() {
     { label: 'Start a new board', onSelect: newBoard },
     { label: 'Import ZIP', onSelect: () => fileRef.current?.click() },
     { label: 'Use your own Muse with files', onSelect: ownFiles },
+    ...(import.meta.env.DEV?[{label:'Shared room · local test',onSelect:onOpenSharedRoom}]:[]),
     { label: 'Group preferences', onSelect: () => setPanel('ballot') },
     { label: 'Undo', onSelect: undo },
   ];
