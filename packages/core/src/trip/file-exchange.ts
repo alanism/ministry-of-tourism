@@ -6,7 +6,7 @@ import { assertAgentMediaAccess } from './commands.ts';
 import { readAsset, readCard, readTripMeta } from './model.ts';
 import { encodeTrip, loadTrip } from './persist.ts';
 import { applyProposal, prevalidateProposal, undoProposal, type Proposal } from './proposals.ts';
-import { sha256Hex } from './package.ts';
+import { sha256Hex } from './sha256.ts';
 import { TripSession } from './session.ts';
 import { canonicalFileJson, FILE_BYTES, parseFileJson } from './file-exchange-json.ts';
 import type { ContextRequest, ProposalEnvelope, FileContextRecord, FileProposalRecord, FileExchangeStore, FileExchangeOptions, IssueContextInput, FileReview, FileReceipt } from './file-exchange-types.ts';
