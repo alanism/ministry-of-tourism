@@ -1,3 +1,5 @@
+import {canonicalFileJson} from './file-exchange-json.ts';
+import {sha256Hex} from './sha256.ts';
 import {z} from 'zod';
 import {sharedRoomCardSchema,type RoomMember} from './shared-room-domain.ts';
 const uid=z.string().min(1).max(200),digest=z.string().regex(/^[a-f0-9]{64}$/),role=z.enum(['editor','viewer','respondent']);
@@ -35,22 +37,30 @@ export function revokeRoomMember(state:RoomAdmissionState,actor:string,subject:s
  return{...state,members:{...state.members,[subject]:{...member,active:false,epoch:member.epoch+1}}};
 }
 
-const wireId=z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/),hash=z.string().regex(/^[a-f0-9]{64}$/),common={schemaMajor:z.literal(1),capability:z.literal('room-admission/1')};
+const wireId=z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/),hash=z.string().regex(/^[a-f0-9]{64}$/),common={schemaMajor:z.literal(1),capability:z.literal('room-admission/1'),operationId:hash,baseVersion:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)};
 export const roomCreateRequestSchema=z.object({...common,roomId:wireId,title:z.string().trim().min(1).max(500),cards:z.array(sharedRoomCardSchema).max(500)}).strict().refine(x=>new Set(x.cards.map(c=>c.id)).size===x.cards.length,'Duplicate cards');
-export const roomInviteRequestSchema=z.object({...common,role:z.enum(['editor','viewer','respondent'])}).strict();
-export const roomClaimRequestSchema=z.object({...common,inviteSecret:hash}).strict();
-export const roomApproveRequestSchema=z.object({...common,inviteId:hash,confirmedSubject:wireId}).strict();
+export const roomInviteRequestSchema=z.object({...common,role:z.enum(['editor','viewer','respondent']),inviteDigest:hash,expiresAt:z.number().int().positive().max(Number.MAX_SAFE_INTEGER)}).strict();
+export const roomClaimRequestSchema=z.object({...common,inviteSecret:hash,expiresAt:z.number().int().positive().max(Number.MAX_SAFE_INTEGER)}).strict();
+export const roomApproveRequestSchema=z.object({...common,inviteId:hash,confirmedSubject:wireId,expiresAt:z.number().int().positive().max(Number.MAX_SAFE_INTEGER)}).strict();
 export const roomRevokeRequestSchema=z.object({...common,uid:wireId}).strict();
 
-export const roomCreateResultSchema=z.object({roomId:wireId,created:z.literal(true)}).strict();
-export const roomInviteResultSchema=z.object({inviteId:hash,inviteSecret:hash,expiresAt:z.number().int().nonnegative()}).strict();
-export const roomPendingClaimResultSchema=z.object({state:z.literal('pending')}).strict();
-export const roomApprovalResultSchema=z.object({approved:z.literal(true)}).strict();
-export const roomRevocationResultSchema=z.object({revoked:z.literal(true)}).strict();
-export const roomAdmissionSnapshotSchema=z.object({roomId:wireId,members:z.array(z.object({uid:wireId,role:z.enum(['owner','editor','viewer','respondent']),epoch:z.number().int().nonnegative(),active:z.boolean()}).strict()).max(16),invites:z.array(z.object({inviteId:hash,role:z.enum(['editor','viewer','respondent']),expiresAt:z.number().int().nonnegative(),used:z.boolean(),revoked:z.boolean()}).strict()).max(16),claims:z.array(z.object({inviteId:hash,uid:wireId,role:z.enum(['editor','viewer','respondent']),state:z.literal('pending')}).strict()).max(16)}).strict();
-
+export const roomAdminKindSchema=z.enum(['create','invite','claim','approve','revoke','revoke-invite']);
+export const roomAdminReceiptSchema=z.object({operationId:hash,uid:wireId,kind:roomAdminKindSchema,requestDigest:hash,version:z.number().int().nonnegative(),acceptedAt:z.number().int().nonnegative()}).strict();
+const resultFields={receipt:roomAdminReceiptSchema,replayed:z.boolean()};
+export const roomCreateResultSchema=z.object({roomId:wireId,created:z.literal(true),...resultFields}).strict();
+export const roomInviteResultSchema=z.object({inviteId:hash,expiresAt:z.number().int().nonnegative(),...resultFields}).strict();
+export const roomPendingClaimResultSchema=z.object({state:z.literal('pending'),...resultFields}).strict();
+export const roomApprovalResultSchema=z.object({approved:z.literal(true),...resultFields}).strict();
+export const roomRevocationResultSchema=z.object({revoked:z.literal(true),...resultFields}).strict();
+export const roomAdmissionSnapshotSchema=z.object({roomId:wireId,serverTime:z.number().int().nonnegative(),members:z.array(z.object({uid:wireId,role:z.enum(['owner','editor','viewer','respondent']),epoch:z.number().int().nonnegative(),active:z.boolean()}).strict()).max(16),invites:z.array(z.object({inviteId:hash,version:z.number().int().positive(),role:z.enum(['editor','viewer','respondent']),expiresAt:z.number().int().nonnegative(),used:z.boolean(),revoked:z.boolean()}).strict()).max(16),claims:z.array(z.object({inviteId:hash,uid:wireId,role:z.enum(['editor','viewer','respondent']),state:z.literal('pending'),version:z.number().int().positive(),expiresAt:z.number().int().nonnegative()}).strict()).max(16)}).strict();
+export type RoomAdminReceipt=z.infer<typeof roomAdminReceiptSchema>;
+/** Identity is not authority: the server recomputes using its verified UID and strict intent. */
+export async function roomAdminOperationId(subject:string,roomId:string,kind:z.infer<typeof roomAdminKindSchema>,intent:Record<string,unknown>){
+ uid.parse(subject);wireId.parse(roomId);roomAdminKindSchema.parse(kind);if(Object.hasOwn(intent,'operationId'))throw Error('Hash admission intent before adding operation identity');
+ return sha256Hex(new TextEncoder().encode(canonicalFileJson({uid:subject,roomId,kind,intent})));
+}
 export function revokeRoomInvite(state:RoomAdmissionState,actor:string,inviteDigest:string):RoomAdmissionState{
  owner(state,actor);digest.parse(inviteDigest);const invite=own(state.invites,inviteDigest);if(!invite||invite.revoked)return state;
  return{...state,invites:{...state.invites,[inviteDigest]:{...invite,revoked:true}}};
 }
-export const roomRevokeInviteRequestSchema=z.object({...common,inviteId:hash}).strict();
+export const roomRevokeInviteRequestSchema=z.object({...common,inviteId:hash,expiresAt:z.number().int().positive().max(Number.MAX_SAFE_INTEGER)}).strict();
