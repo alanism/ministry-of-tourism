@@ -18,6 +18,17 @@ afterEach(()=>vi.useRealTimers());
 it('can bind a metadata-only context to the pinned manifest without fetching the complete index',async()=>{
  const {reader,fetcher}=await fixture();expect((await reader.manifest(new AbortController().signal)).snapshotId).toBe('snapshot-1');expect(fetcher).toHaveBeenCalledTimes(1);
 });
+it('keeps approved personal-only image insertion unavailable in a host-guide detail',async()=>{
+ const {reader,bodies}=await fixture();
+ const index=JSON.parse(bodies.get('/fcc-catalogue/index.json')!),row=index.items.find((i:{id:string})=>i.id==='tokyo:art');row.personalOnly=true;row.eligibility.insert={allowed:true,reason:'Approved for personal insertion only'};
+ const detail=JSON.parse(bodies.get(row.detail)!);detail.items[0]={...detail.items[0],personalOnly:true,eligibility:row.eligibility};
+ bodies.set('/fcc-catalogue/index.json',JSON.stringify(index));bodies.set(row.detail,JSON.stringify(detail));
+ const manifest=JSON.parse(bodies.get('/fcc-catalogue/manifest.json')!);
+ for(const file of [manifest.index,...manifest.shards]){const bytes=encoder.encode(bodies.get(file.url)!);file.bytes=bytes.length;file.sha256=await sha256Hex(bytes);}
+ bodies.set('/fcc-catalogue/manifest.json',JSON.stringify(manifest));const signal=new AbortController().signal;await reader.load(signal);
+ expect((await reader.detail('tokyo:art',signal,'snapshot-1','host-guide')).item.eligibility.insert.allowed).toBe(false);
+ expect((await reader.detail('tokyo:art',signal,'snapshot-1','personal-trip')).item.eligibility.insert.allowed).toBe(true);
+});
 it('searches complete pinned metadata before any detail/image request and caches verified detail',async()=>{
  const {reader,fetcher}=await fixture(),signal=new AbortController().signal;
  const first=await reader.load(signal);expect(first.status).toBe('ready');expect(fetcher).toHaveBeenCalledTimes(2);

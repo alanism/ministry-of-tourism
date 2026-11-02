@@ -14,8 +14,8 @@ export function createPublicCatalogue(rawIndex: unknown, details: ReadonlyMap<st
     if (value.snapshot !== undefined && value.snapshot !== index.snapshotId) throw new PublicCatalogueError('SNAPSHOT_CHANGED');
     return value;
   };
-  const item = (id: string) => {
-    const result = readCatalogueItem(index, id);
+  const item = (id: string, purpose: CatalogueQuery['purpose'] = 'personal-trip') => {
+    const result = readCatalogueItem(index, id, purpose);
     if (!result.item) throw new PublicCatalogueError('CATALOG_UNAVAILABLE');
     return result.item;
   };
@@ -44,7 +44,7 @@ export function createPublicCatalogue(rawIndex: unknown, details: ReadonlyMap<st
       return toPublicCatalogueItem(item(value.itemId as string), index.snapshotId);
     },
     async asset(args, signal) {
-      const value = input('assetRequest', args, signal), row = item(value.assetId as string);
+      const value = input('assetRequest', args, signal), row = item(value.assetId as string, value.purpose as CatalogueQuery['purpose']);
       if (!row.eligibility.preview.allowed) throw new PublicCatalogueError('NOT_ELIGIBLE');
       let detail;
       try {

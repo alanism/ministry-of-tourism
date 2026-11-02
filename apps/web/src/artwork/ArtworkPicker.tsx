@@ -11,7 +11,7 @@ import ArtworkThumbnail from './ArtworkThumbnail';
 import TripArtworkBrowser from './TripArtworkBrowser';
 import {decorativeArtwork} from './art-preview';
 const PublicCatalogueBrowser=lazy(()=>import('./PublicCatalogueBrowser'));
-interface TripArtContext {destination:{cityId?:string;city:string;countryCode?:string};destinations:readonly ArtDestination[];insertionTarget?:'board'|'magazine';}
+interface TripArtContext {destination:{cityId?:string;city:string;countryCode?:string;kind?:'host_guide'|'guest'|'traveler'};destinations:readonly ArtDestination[];insertionTarget?:'board'|'magazine';}
 const normalizedCity=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 
 const PAGE_SIZE = 12;
@@ -166,7 +166,7 @@ export default function ArtworkPicker({onInsert,onUpload,onClose,trip,initialCol
       {busy && <p className="artwork-notice" role="status">{committed?'Saving image bytes…':`Adding ${busy}…`}</p>}
       {error && <p className="dialog-error" role="alert">{error}</p>}
       {onUpload&&<input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" hidden onChange={event=>{const file=event.target.files?.[0];event.target.value='';if(file)void pick(file);}}/>}
-      {fullCollection&&trip?<Suspense fallback={<p role="status">Opening the full FCC collection…</p>}><PublicCatalogueBrowser cityId={trip.destination.cityId} destination={trip.insertionTarget} initialType={initialCollection} busy={!!busy} onPick={artwork=>void pick(artwork)}/></Suspense>:!registry.data ? <LoadState error={registry.error} retry={registry.retry} /> : <>
+      {fullCollection&&trip?<Suspense fallback={<p role="status">Opening the full FCC collection…</p>}><PublicCatalogueBrowser purpose={trip.destination.kind==='host_guide'?'host-guide':'personal-trip'} cityId={trip.destination.cityId} destination={trip.insertionTarget} initialType={initialCollection} busy={!!busy} onPick={artwork=>void pick(artwork)}/></Suspense>:!registry.data ? <LoadState error={registry.error} retry={registry.retry} /> : <>
         {registry.cachedAt&&<p className="artwork-count">Saved style list · {new Date(registry.cachedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</p>}
         <label className="field artwork-style"><span>Style</span><select value={pack?.id} disabled={!!busy} onChange={event => { setStyleId(event.target.value); setError(''); }}>
           {registry.data.styles.map(value => <option key={value.id} value={value.id}>{value.label}</option>)}

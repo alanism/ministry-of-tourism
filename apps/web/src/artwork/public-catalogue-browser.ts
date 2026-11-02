@@ -1,4 +1,4 @@
-import {CATALOGUE_LIMITS,catalogueManifestSchema,readCatalogueItem,sha256Hex,validateCatalogueDetail,validateCatalogueIndex,type CatalogueIndex} from '@writers-board/core';
+import {CATALOGUE_LIMITS,catalogueItemForPurpose,catalogueManifestSchema,readCatalogueItem,sha256Hex,validateCatalogueDetail,validateCatalogueIndex,type CatalogueIndex} from '@writers-board/core';
 import type {z} from 'zod';
 type Manifest=z.infer<typeof catalogueManifestSchema>;
 export type CatalogueSnapshot={index:CatalogueIndex;manifest:Manifest;status:'ready'|'cached'|'stale';loadedAt:number;reason?:string};
@@ -44,7 +44,7 @@ export class PublicCatalogueReader{
    this.snapshot={manifest,index,status:'ready',loadedAt:Date.now()};return this.snapshot;
   }catch(error){signal.throwIfAborted();if(previous)return{...previous,status:'stale',reason:'Could not refresh. Showing the last verified catalogue from this session.'};throw error;}
  }
- async detail(id:string,signal:AbortSignal,expectedSnapshot?:string){
+ async detail(id:string,signal:AbortSignal,expectedSnapshot?:string,purpose:'personal-trip'|'host-guide'='personal-trip'){
   signal.throwIfAborted();const snapshot=this.snapshot;if(!snapshot)throw new Error('Load the catalogue before selecting an item.');
   if(expectedSnapshot&&snapshot.index.snapshotId!==expectedSnapshot)throw new Error('The catalogue snapshot changed. Refresh and select the item again.');
   const summary=readCatalogueItem(snapshot.index,id).item;if(!summary)throw new Error('This catalogue identity is unavailable.');
@@ -54,7 +54,7 @@ export class PublicCatalogueReader{
   signal.throwIfAborted();if(this.snapshot?.index.snapshotId!==snapshot.index.snapshotId)throw new Error('Catalogue changed. Select the item again.');
   const item=validateCatalogueDetail(raw,snapshot.index,id);
   this.details.delete(key);this.details.set(key,raw);while(this.details.size>DETAIL_CACHE)this.details.delete(this.details.keys().next().value!);
-  return{item,snapshotId:snapshot.index.snapshotId};
+  return{item:catalogueItemForPurpose(item,purpose),snapshotId:snapshot.index.snapshotId};
  }
 }
 export const publicCatalogueReader=new PublicCatalogueReader();
