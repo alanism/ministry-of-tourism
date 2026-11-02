@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import type {RoomMember} from './shared-room-domain.ts';
+import {sharedRoomCardSchema,type RoomMember} from './shared-room-domain.ts';
 const uid=z.string().min(1).max(200),digest=z.string().regex(/^[a-f0-9]{64}$/),role=z.enum(['editor','viewer','respondent']);
 type GuestRole=z.infer<typeof role>;
 interface Invite {role:GuestRole;expiresAt:number;used:boolean;revoked:boolean;}
@@ -34,3 +34,17 @@ export function revokeRoomMember(state:RoomAdmissionState,actor:string,subject:s
  if(!member.active)return state;if(member.epoch===Number.MAX_SAFE_INTEGER)throw Error('Membership epoch capacity reached');
  return{...state,members:{...state.members,[subject]:{...member,active:false,epoch:member.epoch+1}}};
 }
+
+const wireId=z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/),hash=z.string().regex(/^[a-f0-9]{64}$/),common={schemaMajor:z.literal(1),capability:z.literal('room-admission/1')};
+export const roomCreateRequestSchema=z.object({...common,roomId:wireId,title:z.string().trim().min(1).max(500),cards:z.array(sharedRoomCardSchema).max(500)}).strict().refine(x=>new Set(x.cards.map(c=>c.id)).size===x.cards.length,'Duplicate cards');
+export const roomInviteRequestSchema=z.object({...common,role:z.enum(['editor','viewer','respondent'])}).strict();
+export const roomClaimRequestSchema=z.object({...common,inviteSecret:hash}).strict();
+export const roomApproveRequestSchema=z.object({...common,inviteId:hash,confirmedSubject:wireId}).strict();
+export const roomRevokeRequestSchema=z.object({...common,uid:wireId}).strict();
+
+export const roomCreateResultSchema=z.object({roomId:wireId,created:z.literal(true)}).strict();
+export const roomInviteResultSchema=z.object({inviteId:hash,inviteSecret:hash,expiresAt:z.number().int().nonnegative()}).strict();
+export const roomPendingClaimResultSchema=z.object({state:z.literal('pending')}).strict();
+export const roomApprovalResultSchema=z.object({approved:z.literal(true)}).strict();
+export const roomRevocationResultSchema=z.object({revoked:z.literal(true)}).strict();
+export const roomAdmissionSnapshotSchema=z.object({roomId:wireId,members:z.array(z.object({uid:wireId,role:z.enum(['owner','editor','viewer','respondent']),epoch:z.number().int().nonnegative(),active:z.boolean()}).strict()).max(16),claims:z.array(z.object({inviteId:hash,uid:wireId,role:z.enum(['editor','viewer','respondent']),state:z.literal('pending')}).strict()).max(16)}).strict();

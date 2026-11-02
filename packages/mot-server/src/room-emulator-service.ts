@@ -1,3 +1,4 @@
+import {roomAdmissionRoute} from './room-emulator-admission.ts';
 import {parseFileJson} from '../../core/src/trip/file-exchange-json.ts';
 import {initializeApp,deleteApp} from 'firebase-admin/app';
 import {getAuth} from 'firebase-admin/auth';
@@ -12,11 +13,12 @@ export function createRoomEmulatorService(){
   const unavailable=()=>json({error:{code:'unavailable',message:'Room operation unavailable',recoverableDraft:true}},403);
   async function handle(request:Request):Promise<Response>{
     const url=new URL(request.url);if(!['127.0.0.1','localhost','[::1]'].includes(url.hostname))return unavailable();
-    const match=/^\/rooms\/([A-Za-z0-9][A-Za-z0-9._:-]{0,199})(\/operations)?$/.exec(url.pathname);if(!match||url.search)return unavailable();
+    const match=/^\/rooms(?:\/([A-Za-z0-9][A-Za-z0-9._:-]{0,199})(\/(?:operations|admission|invites|claims|approve|revoke))?)?$/.exec(url.pathname);if(!match||url.search)return unavailable();
     let uid:string;
     try{const bearer=/^Bearer ([^\s]{1,8192})$/.exec(request.headers.get('authorization')??'');if(!bearer)return unavailable();const token=await auth.verifyIdToken(bearer[1]!,true);if(token.firebase.sign_in_provider==='anonymous'||token.email_verified!==true)return unavailable();uid=token.uid;}catch{return unavailable();}
-    const roomId=match[1]!,ref=db.doc('rooms/'+roomId);
     try{
+      const admission=await roomAdmissionRoute(request,uid,db);if(admission!==null)return json(admission);
+      const roomId=match[1]!,ref=db.doc('rooms/'+roomId);
       if(request.method==='GET'&&!match[2]){
         const snapshot=await db.runTransaction(async tx=>{const room=await tx.get(ref);const meta=room.data();const member=meta?.members?.[uid];if(!meta||meta.closed||!member?.active)throw Error('unavailable');const cards=await tx.get(ref.collection('cards').limit(501));if(cards.size>500)throw Error('unavailable');return roomSnapshotSchema.parse({serviceMode:'local-emulator',schemaMajor:1,capabilities:['room-cards/1'],roomId,principal:{uid,role:member.role,membershipEpoch:member.epoch,householdId:null,householdEpoch:null},cards:cards.docs.map(d=>d.data()),sync:'accepted'});});return json(snapshot);
       }
