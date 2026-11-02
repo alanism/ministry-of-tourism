@@ -91,7 +91,7 @@ export function Keepsakes({ session, actor, tick, saved, refresh, whenSaved, onE
   const saveRun=useRef(0);
   useEffect(()=>()=>{saveRun.current++;},[session]);
   const [busy, setBusy] = useState(false);
-  const persist=()=>{const run=++saveRun.current;refresh();void whenSaved().then(()=>{if(run===saveRun.current)setSaveFailure('');},error=>{if(run===saveRun.current)setSaveFailure(`${error instanceof Error?error.message:'Storage did not complete.'} Keep this tab open; retry saving or download a personal ZIP backup from Export.`);});};
+  const persist=()=>{const run=++saveRun.current;refresh();void whenSaved().then(()=>{if(run===saveRun.current)setSaveFailure('');},error=>{if(run===saveRun.current)setSaveFailure(`${error instanceof Error?error.message:'Storage did not complete.'} Keep this tab open; check save status or download a personal ZIP backup below.`);});};
   const select=(cardId:string,format:Template)=>{try{session.execute(actor,'trip_keepsake_select',{cardId,format});persist();}catch(error){notify(error instanceof Error?error.message:'Could not select that photo.');}};
   const writeCaption=(caption:string)=>{
     if(!current)return;
@@ -204,7 +204,7 @@ export function Keepsakes({ session, actor, tick, saved, refresh, whenSaved, onE
           <span className="ok" style={saved === 'saved' ? undefined : { background: 'var(--m-red)' }}><Icon name={saved === 'saved' ? 'check' : 'close'} /></span>
           <span><strong>{saved === 'saved' ? 'Saved on this device' : saved === 'error' ? 'Not saved: storage error' : 'Saving…'}</strong></span>
         </div>
-        {(saved==='error'||saveFailure)&&<div role="alert"><p>{saveFailure||'Your editable work is in this tab. Download a personal ZIP backup from Export before closing.'}</p><button type="button" className="m-btn small" onClick={()=>{void whenSaved().then(()=>{setSaveFailure('');notify('Saved on this device');},error=>setSaveFailure(error instanceof Error?error.message:'Storage did not complete. Keep this tab open and download a personal ZIP backup.'));}}>Retry saving</button></div>}
+        {(saved==='error'||saveFailure)&&<div role="alert"><p>{saveFailure||'Your editable work is in this tab. Check save status or download a personal ZIP backup before closing.'}</p><p>For a personal backup in Export, choose Include private content, then Export package.</p><button type="button" className="m-btn small" onClick={()=>{void whenSaved().then(()=>{setSaveFailure('');notify('Saved on this device');},error=>setSaveFailure(`${error instanceof Error?error.message:'Storage did not complete.'} Your edits remain in this tab. Checking status does not save these edits; download a personal ZIP backup before closing.`));}}>Check save status</button><button type="button" className="m-btn small" onClick={onExport}>Download personal backup</button></div>}
       </div>
     </section>
   );

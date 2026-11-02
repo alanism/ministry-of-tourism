@@ -26,7 +26,7 @@ it('keeps authored empty distinct from untouched, with an optional suggestion on
 it('shows durable photo review and usable recovery for board storage failure without leaking private drafts',()=>{
  const session=fixture();session.execute(actor,'trip_keepsake_caption',{cardId:'one',format:'postcard',caption:'PRIVATE_CANARY'});session.execute(actor,'trip_keepsake_select',{cardId:'one',format:'postcard'});session.execute(actor,'trip_card_update',{id:'one',scope:'private'});
  session.execute(actor,'trip_keepsake_caption',{cardId:'two',format:'postcard',caption:'Public caption'});session.execute(actor,'trip_asset_replace',{cardId:'two',expectedAssetId:'shared',asset:{id:'new',hash:'b'.repeat(64),mime:'image/png',role:'original'}});
- const html=render(session,'error');expect(html).not.toContain('PRIVATE_CANARY');expect(html).not.toContain('Use one');expect(html).toContain('Photo changed; review this caption');expect(html).toContain('Retry saving');expect(html).toContain('personal ZIP backup');session.destroy();
+ const html=render(session,'error');expect(html).not.toContain('PRIVATE_CANARY');expect(html).not.toContain('Use one');expect(html).toContain('Photo changed; review this caption');expect(html).toContain('Check save status');expect(html).toContain('personal ZIP backup');session.destroy();
 });
 it('labels tentative and unreviewed memories and bounds page selection to the displayed shortlist',()=>{
  const session=fixture();session.execute(actor,'trip_memory_react',{cardId:'two',reaction:'maybe'});
@@ -39,4 +39,7 @@ it('keeps downloadable package recovery separate from failed browser retention',
 });
 it('does not claim the preview matches a download before photo bytes have loaded',()=>{
  const session=fixture(),html=render(session);expect(html).not.toContain('Preview matches your download');expect(html).toContain('Loading the selected photo');session.destroy();
+});
+it('offers status checking and a direct personal-backup route without claiming a failed save can be retried',()=>{
+ const session=fixture(),html=render(session,'error');expect(html).not.toMatch(/retry saving/i);expect(html).toContain('Check save status');expect(html).toContain('Download personal backup');expect(html).toContain('Include private content');session.destroy();
 });
