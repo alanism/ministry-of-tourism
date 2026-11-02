@@ -13,7 +13,7 @@ const proxy=createServer(async(request,response)=>{
   const headers=new Headers();for(const[key,value]of Object.entries(request.headers))if(value!==undefined&&!['host','connection','content-length'].includes(key))headers.set(key,Array.isArray(value)?value.join(','):value);
   const body=Buffer.concat(chunks),result=await fetch(inner.url+(request.url??'/'),{method:request.method,headers,redirect:'manual',...(!['GET','HEAD'].includes(request.method??'GET')?{body}:{} )}),bytes=new Uint8Array(await result.arrayBuffer());
   if(control.dropNextAcceptedCardAck&&request.method==='POST'&&/\/operations$/.test(request.url??'')&&result.status===200){
-   await writeFile(controlFile,JSON.stringify({...control,dropNextAcceptedCardAck:false})+'\n');let operationId;try{operationId=JSON.parse(body.toString('utf8')).operationId;}catch{}
+   await writeFile(controlFile,JSON.stringify({...control,offline:control.offlineAfterAcceptedAckDrop===true,dropNextAcceptedCardAck:false})+'\n');let operationId;try{operationId=JSON.parse(body.toString('utf8')).operationId;}catch{}
    console.log(JSON.stringify({proofFault:'accepted-card-ack-dropped',operationId,upstreamStatus:200}));response.destroy();return;
   }
   response.writeHead(result.status,Object.fromEntries([...result.headers].filter(([key])=>!['connection','transfer-encoding','content-encoding','content-length'].includes(key))));response.end(bytes);
