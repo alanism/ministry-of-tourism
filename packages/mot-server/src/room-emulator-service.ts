@@ -1,6 +1,7 @@
 import {roomSessionRoute} from './room-emulator-sessions.ts';
 import {authorizeRoom} from './room-emulator-authority.ts';
-import {reconcileRoomAccounting,roomAccountingFields,readRoomPublicSnapshot,mediaRoomAccounting} from './room-emulator-snapshot.ts';
+import {reconcileRoomAccounting,roomAccountingFields,readRoomPublicSnapshot,mediaRoomAccounting,votingRoomAccounting} from './room-emulator-snapshot.ts';
+import {createRoomVotingAdapter} from './room-emulator-voting.ts';
 import {createRoomEmulatorByteStore} from './room-emulator-storage.ts';
 import {createRoomMediaAdapter} from './room-emulator-media.ts';
 import {createRoomTransferAdapter} from './room-emulator-transfer.ts';
@@ -20,6 +21,7 @@ export function createRoomEmulatorService(){
   const app=initializeApp({projectId:'demo-mot-rooms'},'mot-rooms-'+crypto.randomUUID()),db=getFirestore(app),auth=getAuth(app);
   const store=createRoomEmulatorByteStore(app),media=createRoomMediaAdapter({db,store,authorize:authorizeRoom,accounting:mediaRoomAccounting,publication:async(_tx,_ref,_uid,_cardId,assetId,input)=>({roomId:input.roomId,assetId,scope:'shared',personalOnly:false,privateAncestor:false,...(input.credit!==undefined?{credit:input.credit}:{}),...(input.rightsStatus!==undefined?{rightsStatus:input.rightsStatus}:{})})});
   const transfer=createRoomTransferAdapter({db,authorize:authorizeRoom,audit:prepareRoomAudit}),lifecycle=createRoomLifecycleAdapter({db,store,authorize:authorizeRoom,readSnapshot:readRoomPublicSnapshot,audit:prepareRoomAudit});
+  const voting=createRoomVotingAdapter({db,authorize:authorizeRoom,audit:prepareRoomAudit,accounting:votingRoomAccounting});
   const maintenance=createRoomMaintenance({db,store,lifecycleCleanup:roomId=>lifecycle.cleanupPending(roomId)}),ready=maintenance.tick();
   const json=(value:unknown,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json','cache-control':'no-store','referrer-policy':'no-referrer'}});
   const unavailable=()=>json({error:{code:'unavailable',message:'Room operation unavailable',recoverableDraft:true}},403);
@@ -31,7 +33,7 @@ export function createRoomEmulatorService(){
     try{
       await ready;
       const action=match[2]??'';
-      if(request.method==='POST'&&!['/revoke','/revoke-invite','/sessions/revoke','/lifecycle/withdraw','/lifecycle/close','/transfers/cancel'].includes(action)&&!action.endsWith('/discard'))await admitRoomAttempt(db,uid,match[1]??'create',transport?.networkAddress??'unknown',action==='/claims');
+      if(request.method==='POST'&&!['/revoke','/revoke-invite','/sessions/revoke','/lifecycle/withdraw','/lifecycle/close','/transfers/cancel','/voting/assign','/voting/invalidate'].includes(action)&&!action.endsWith('/discard'))await admitRoomAttempt(db,uid,match[1]??'create',transport?.networkAddress??'unknown',action==='/claims');
       const session=await roomSessionRoute(request,uid,db);if(session!==null)return json(session);
       const sessionId=request.headers.get('x-room-session')??'',membershipEpoch=Number(request.headers.get('x-room-membership-epoch'));
       const principal={uid,roomId:match[1]??'',sessionId,membershipEpoch};
@@ -45,12 +47,15 @@ export function createRoomEmulatorService(){
       if(request.method==='POST'&&action==='/lifecycle/withdraw')return json(await lifecycle.withdraw(principal,await readJson(request)));
       if(request.method==='GET'&&action==='/transfers')return json(await transfer.list({...principal,authenticatedAt}));
       if(request.method==='POST'&&/^\/transfers\/(offer|accept|cancel)$/.test(action)){const kind=action.split('/')[2] as 'offer'|'accept'|'cancel';return json(await transfer[kind]({...principal,authenticatedAt},await readJson(request)));}
+      if(request.method==='GET'&&action==='/voting')return json(await voting.view(principal));
+      if(request.method==='POST'&&/^\/voting\/(declare|assign|open|close|respond|invalidate)$/.test(action)){const kind=action.split('/')[2] as 'declare'|'assign'|'open'|'close'|'respond'|'invalidate';return json(await voting[kind](principal,await readJson(request)));}
       if(request.method==='POST'&&action==='/media/stages')return json(await media.reserve(principal,await readJson(request)));
+      if(request.method==='POST'&&action==='/media/undo-addition')return json(await media.undoAddition(principal,await readJson(request)));
       const stage=/^\/media\/stages\/([a-f0-9]{64})\/(bytes|commit|discard)$/.exec(action);
       if(request.method==='POST'&&stage){if(stage[2]==='bytes'){if(request.headers.get('content-type')!=='image/png')return unavailable();return json(await media.upload(principal,stage[1]!,()=>readBytes(request,10*1024*1024)));}if(stage[2]==='discard'){const raw=await readJson(request);if(!raw||typeof raw!=='object'||Object.keys(raw).length!==0)return unavailable();return json(await media.discard(principal,stage[1]!));}const raw=await readJson(request);if(!raw||typeof raw!=='object'||(raw as {stageId?:unknown}).stageId!==stage[1])return unavailable();return json(await media.commit(principal,raw));}
       const asset=/^\/media\/([A-Za-z0-9][A-Za-z0-9._:-]{0,199})$/.exec(action);if(request.method==='GET'&&asset){const result=await media.read(principal,asset[1]!);return new Response(result.bytes as BodyInit,{headers:{'content-type':'image/png','cache-control':'private,no-store','referrer-policy':'no-referrer'}});}
       if(request.method==='GET'&&!match[2]){
-        const snapshot=await db.runTransaction(async tx=>{const{meta,member}=await authorizeRoom(tx,ref,principal),{snapshot}=await readRoomPublicSnapshot(tx,ref,meta);return roomSnapshotSchema.parse({serviceMode:'local-emulator',schemaMajor:1,capabilities:['room-cards/1','room-admission/1','room-media/1','room-sessions/1','room-transfer/1','room-export/1','room-lifecycle/1'],roomId,principal:{uid,role:member.role,membershipEpoch:member.epoch,householdId:null,householdEpoch:null},cards:snapshot.cards,assets:snapshot.assets,sync:'accepted'});});return json(snapshot);
+        const snapshot=await db.runTransaction(async tx=>{const{meta,member}=await authorizeRoom(tx,ref,principal),{snapshot}=await readRoomPublicSnapshot(tx,ref,meta);return roomSnapshotSchema.parse({serviceMode:'local-emulator',schemaMajor:1,capabilities:['room-cards/1','room-admission/1','room-media/1','room-sessions/1','room-transfer/1','room-export/1','room-lifecycle/1','room-votes/1','room-media-undo/1'],roomId,principal:{uid,role:member.role,membershipEpoch:member.epoch,householdId:null,householdEpoch:null},cards:snapshot.cards,assets:snapshot.assets,sync:'accepted'});});return json(snapshot);
       }
       if(request.method!=='POST'||action!=='/operations')return unavailable();
       if(Number(request.headers.get('content-length')??0)>65536)return json({error:{code:'limit',message:'Room intent exceeds64KiB; retain local draft',recoverableDraft:true}},413);
