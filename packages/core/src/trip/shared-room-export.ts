@@ -21,7 +21,14 @@ export async function exportRoomPublicPackage(rawContext:unknown,rawSnapshot:unk
  const referenced=new Set(snapshot.cards.flatMap(card=>card.payload.assetIds)),assets=new Map(snapshot.assets.map(asset=>[asset.id,asset]));
  if(assets.size!==snapshot.assets.length||assets.size!==referenced.size||assetBytes.size!==referenced.size)throw Error('Room export media closure mismatch');
  const bytes=new Map<string,Uint8Array>();
- for(const assetId of referenced){const asset=assets.get(assetId),data=assetBytes.get(assetId);if(!asset||!data||data.length!==asset.bytes||await sha256Hex(data)!==asset.hash)throw Error('Room export media identity mismatch');bytes.set(assetId,data.slice());}
+ for(const assetId of referenced){
+  const asset=assets.get(assetId),data=assetBytes.get(assetId);if(!asset||!data||data.length!==asset.bytes||await sha256Hex(data)!==asset.hash)throw Error('Room export media identity mismatch');
+  // This is a consistency fence over previously sanitized service bytes, not a second upload decoder.
+  if(data.length<45||![137,80,78,71,13,10,26,10].every((byte,index)=>data[index]===byte))throw Error('Room export requires sanitized PNG bytes');
+  const view=new DataView(data.buffer,data.byteOffset,data.byteLength);if(view.getUint32(16)!==asset.width||view.getUint32(20)!==asset.height||asset.width*asset.height>16777216)throw Error('Room export media dimensions differ');
+  let at=8;while(at+12<=data.length){const end=at+view.getUint32(at)+12,type=String.fromCharCode(...data.subarray(at+4,at+8));if(end>data.length||!['IHDR','IDAT','IEND'].includes(type))throw Error('Room export media is not the sanitized variant');at=end;}if(at!==data.length)throw Error('Incomplete room export media');
+  bytes.set(assetId,data.slice());
+ }
  measureRoomSnapshot(snapshot,snapshot.assets.map(asset=>({assetId:asset.id,hash:asset.hash,bytes:asset.bytes})));
  const meta=snapshot.metadata,doc=createTrip({title:meta.title,city:meta.city??'Unspecified destination',timeZone:meta.timeZone??null,cityId:meta.cityId,countryCode:meta.countryCode,dates:meta.dates,kind:meta.kind});
  try{

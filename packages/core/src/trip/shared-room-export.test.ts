@@ -31,3 +31,8 @@ it('preserves only approved public source citations and rejects private source a
  const restored=await importTripPackage(await exportRoomPublicPackage(f.context,snapshot,f.assetBytes));try{expect(readAllCards(tripParts(restored.doc))[0]!.source).toEqual(source);expect(readAsset(tripParts(restored.doc),'image')!.source).toEqual(source);}finally{restored.doc.destroy();}
  await expect(exportRoomPublicPackage(f.context,{...snapshot,assets:[{...snapshot.assets[0],source:{...source,contentHash:'PRIVATE-HASH'}}]},f.assetBytes)).rejects.toThrow();
 });
+it('rejects inconsistent media dimensions and non-sanitized metadata despite an otherwise matching recorded hash',async()=>{
+ const f=await fixture();await expect(exportRoomPublicPackage(f.context,{...f.snapshot,assets:[{...f.snapshot.assets[0],width:2}]},f.assetBytes)).rejects.toThrow();
+ const bytes=f.assetBytes.get('image')!,withMetadata=new Uint8Array([...bytes.subarray(0,33),...chunk('tEXt',new TextEncoder().encode('PRIVATE-METADATA-CANARY')),...bytes.subarray(33)]),asset={...f.snapshot.assets[0]!,bytes:withMetadata.length,hash:await sha256Hex(withMetadata)};
+ await expect(exportRoomPublicPackage(f.context,{...f.snapshot,assets:[asset]},new Map([['image',withMetadata]]))).rejects.toThrow();
+});
