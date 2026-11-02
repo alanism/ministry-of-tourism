@@ -5,6 +5,7 @@ vi.mock('react',async original=>({...await original<typeof import('react')>(),us
 import{SharedRoomTransferPanel,type SharedRoomTransferPanelProps}from'./shared-room-transfer-panel';
 import{createSharedRoomClient,SharedRoomRequestError}from'./shared-room-client';
 import type{RoomSnapshot}from'../../../../packages/core/src/trip/shared-room-domain';
+import*as wire from'../../../../packages/core/src/trip/shared-room-transfer-wire';
 const now=1700000000000,session={id:'a'.repeat(64),roomId:'room',uid:'owner',membershipEpoch:1,active:true,createdAt:now};
 const offered={schemaMajor:1 as const,offerId:'b'.repeat(64),roomId:'room',ownerUid:'owner',ownerEpoch:1,ownerAuthenticatedAt:now,recipientUid:'recipient',recipientEpoch:1,recipientRole:'viewer' as const,formerOwnerRole:'editor' as const};
 function nodes(v:unknown):ReactElement<Record<string,unknown>>[]{if(Array.isArray(v))return v.flatMap(nodes);if(!isValidElement(v))return[];const e=v as ReactElement<Record<string,unknown>>;return[e,...nodes(e.props.children)];}
@@ -47,4 +48,7 @@ it('cancels only an explicitly confirmed current offer without creating another 
 });
 it('keeps transfer unavailable when the actual feed advertises only card support',async()=>{
  const{props:initial,client,transfers}=fixture(),props={...initial,room:{...initial.room!,capabilities:['room-cards/1'] as RoomSnapshot['capabilities']}};const offer=vi.spyOn(client,'offerTransfer'),accept=vi.spyOn(client,'acceptTransfer');render(props);expect(node(props,'Check ownership transfer').props.disabled).toBe(true);click(props,'Check ownership transfer');await Promise.resolve();expect(transfers).not.toHaveBeenCalled();expect(offer).not.toHaveBeenCalled();expect(accept).not.toHaveBeenCalled();expect(node(props,'Confirm transfer offer')).toBeUndefined();
+});
+it('does not dispatch a transfer when advertised capability disappears during intent hashing',async()=>{
+ const{props:initial,client}=fixture('recipient','viewer');let props=initial,release!:(hash:string)=>void;const accept=vi.spyOn(client,'acceptTransfer');await refresh(props);vi.spyOn(wire,'roomTransferOperationId').mockImplementation(()=>new Promise(r=>{release=r;}));change(props,'Confirm received transfer',true);click(props,'Accept this ownership transfer');props={...props,room:{...props.room!,capabilities:['room-cards/1']}};render(props);release('e'.repeat(64));await Promise.resolve();await Promise.resolve();expect(accept).not.toHaveBeenCalled();
 });
