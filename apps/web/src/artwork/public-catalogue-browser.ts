@@ -8,7 +8,7 @@ export class PublicCatalogueReader{
  private snapshot?:CatalogueSnapshot;
  private details=new Map<string,unknown>();
  private fetcher:typeof fetch;
- constructor(fetcher:typeof fetch=fetch){this.fetcher=fetcher;}
+ constructor(fetcher:typeof fetch=(...args)=>fetch(...args)){this.fetcher=fetcher;}
  private async bytes(url:string,maxBytes:number,signal:AbortSignal):Promise<Uint8Array>{
   signal.throwIfAborted();const abort=new AbortController(),stop=()=>abort.abort(signal.reason),timer=setTimeout(()=>abort.abort(new Error('Catalogue timed out. Retry when connected.')),20000);signal.addEventListener('abort',stop,{once:true});
   let rejectAbort!:()=>void;const cancelled=new Promise<never>((_,reject)=>{rejectAbort=()=>reject(abort.signal.reason??new DOMException('Cancelled','AbortError'));abort.signal.addEventListener('abort',rejectAbort,{once:true});});
