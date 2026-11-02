@@ -1,0 +1,5 @@
+.shared-room-panel{height:100%;overflow:auto;padding:24px;overflow-wrap:anywhere;font:15px/1.5 var(--m-sans)}
+.shared-room-panel header{display:flex;justify-content:space-between;gap:16px}.shared-room-panel h2,.shared-room-panel h3{margin-top:0}.shared-room-panel section{margin-top:24px;padding-top:20px;border-top:1px solid var(--m-line)}
+.shared-room-panel label{display:block;margin:12px 0}.shared-room-panel button{margin:4px 8px 4px 0;min-height:40px}.shared-room-panel article{margin:16px 0;padding:12px;border:1px solid var(--m-line);border-radius:8px}.shared-room-panel pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;font:12px/1.5 var(--m-mono)}
+.shared-room-panel [role=alert]{padding:12px;background:var(--m-wash)}
+@media(max-width:540px){.shared-room-panel{padding:14px}.shared-room-panel header{align-items:flex-start}}
