@@ -4,3 +4,4 @@
 .shared-room-panel [role=alert]{padding:12px;background:var(--m-wash)}
 @media(max-width:540px){.shared-room-panel{padding:14px}.shared-room-panel header{align-items:flex-start}}
 .shared-room-media-image{margin:12px 0}.shared-room-media-image img{display:block;max-width:100%;height:auto;max-height:480px;object-fit:contain}.shared-room-media-image figcaption{white-space:pre-wrap}
+.shared-room-exact-text{white-space:pre-wrap}
