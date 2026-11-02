@@ -10,7 +10,7 @@ export async function startRoomEmulatorHttp(options:{port:number;appOrigin:strin
   outgoing.setHeader('cache-control','no-store');outgoing.setHeader('referrer-policy','no-referrer');
   const requestOrigin=incoming.headers.origin;if(requestOrigin&&requestOrigin!==options.appOrigin){outgoing.writeHead(403);outgoing.end();incoming.resume();return;}
   if(requestOrigin){outgoing.setHeader('access-control-allow-origin',options.appOrigin);outgoing.setHeader('vary','Origin');}
-  if(incoming.method==='OPTIONS'){outgoing.setHeader('access-control-allow-methods','GET, POST');outgoing.setHeader('access-control-allow-headers','authorization, content-type');outgoing.writeHead(204);outgoing.end();return;}
+  if(incoming.method==='OPTIONS'){outgoing.setHeader('access-control-allow-methods','GET, POST');outgoing.setHeader('access-control-allow-headers','authorization, content-type, x-room-session, x-room-membership-epoch');outgoing.writeHead(204);outgoing.end();return;}
   try{
    const binary=/^\/rooms\/[A-Za-z0-9][A-Za-z0-9._:-]{0,199}\/media\/stages\/[A-Za-z0-9][A-Za-z0-9._:-]{0,199}\/bytes$/.test(incoming.url??'')&&incoming.headers['content-type']==='image/png';
    const declared=Number(incoming.headers['content-length']??0),limit=binary?10*1024*1024:65536;
