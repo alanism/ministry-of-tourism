@@ -1,0 +1,15 @@
+import type {App} from 'firebase-admin/app';
+import {getStorage} from 'firebase-admin/storage';
+import {sha256Hex} from '../../core/src/trip/sha256.ts';
+const limit=10*1024*1024;
+const identifier=(v:string)=>{if(!/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/.test(v))throw Error('Invalid scoped storage identifier');return v;};
+/** Private service-only byte transport. Central service checks current authorization before/after IO. */
+export function createRoomEmulatorByteStore(app:App){
+ if(app.options.projectId!=='demo-mot-rooms'||process.env.FIREBASE_STORAGE_EMULATOR_HOST!=='127.0.0.1:9199'||(process.env.STORAGE_EMULATOR_HOST&&process.env.STORAGE_EMULATOR_HOST!=='http://127.0.0.1:9199'))throw Error('Explicit demo-project loopback Storage emulator required');
+ const bucket=getStorage(app).bucket('demo-mot-rooms.appspot.com');
+ const stage=(room:string,uid:string,id:string)=>`rooms/${identifier(room)}/staging/${identifier(uid)}/${identifier(id)}.png`;
+ const asset=(room:string,id:string,hash:string)=>{if(!/^[a-f0-9]{64}$/.test(hash))throw Error('Invalid asset digest');return`rooms/${identifier(room)}/assets/${identifier(id)}/${hash}.png`;};
+ async function put(path:string,bytes:Uint8Array,hash:string){if(bytes.length<1||bytes.length>limit||await sha256Hex(bytes)!==hash)throw Error('Storage byte identity/limit mismatch');const file=bucket.file(path);try{await file.save(Buffer.from(bytes),{resumable:false,metadata:{contentType:'image/png',cacheControl:'private,no-store'},preconditionOpts:{ifGenerationMatch:0}});}catch(e){if((e as {code?:number}).code!==412)throw e;const existing=await read(path,bytes.length,hash);if(existing.length!==bytes.length)throw Error('Storage identity conflict');}}
+ async function read(path:string,expected:number,hash:string){if(!Number.isSafeInteger(expected)||expected<1||expected>limit||!/^[a-f0-9]{64}$/.test(hash))throw Error('Invalid bounded media descriptor');const[metadata]=await bucket.file(path).getMetadata();if(Number(metadata.size)!==expected||metadata.contentType!=='image/png'||!metadata.generation)throw Error('Stored media descriptor mismatch');const stream=bucket.file(path,{generation:metadata.generation}).createReadStream();const chunks:Buffer[]=[];let n=0;for await(const part of stream){const bytes=Buffer.from(part);n+=bytes.length;if(n>expected){stream.destroy();throw Error('Stored media exceeds declared bytes');}chunks.push(bytes);}const result=new Uint8Array(Buffer.concat(chunks));if(n!==expected||await sha256Hex(result)!==hash)throw Error('Stored media hash mismatch');return result;}
+ return{putStage:(room:string,uid:string,id:string,bytes:Uint8Array,hash:string)=>put(stage(room,uid,id),bytes,hash),readStage:(room:string,uid:string,id:string,bytes:number,hash:string)=>read(stage(room,uid,id),bytes,hash),discardStage:async(room:string,uid:string,id:string)=>{await bucket.file(stage(room,uid,id)).delete({ignoreNotFound:true});},putAsset:(room:string,id:string,bytes:Uint8Array,hash:string)=>put(asset(room,id,hash),bytes,hash),readAsset:(room:string,id:string,bytes:number,hash:string)=>read(asset(room,id,hash),bytes,hash)};
+}
