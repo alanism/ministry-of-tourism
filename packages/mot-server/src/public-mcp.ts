@@ -74,6 +74,7 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
       limits[key] = Math.min(value, DEFAULTS[key]);
     }
   }
+  if (limits.maxResponseBytes < 256) throw new Error('Public response limit must be at least 256 bytes for safe errors');
   if (!options.allowedHosts.length) throw new Error('Public hosts must be explicit');
   const available = (name: keyof typeof PUBLIC_TOOL_DEFINITIONS) => name === 'mot_get_capabilities' ||
     (options.catalogue.snapshotId !== null && !!publicDefinition(PUBLIC_TOOL_DEFINITIONS[name][1]));
@@ -126,17 +127,46 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
   async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
     const started = Date.now();
     let requestBytes = 0, responseBytes = 0, operation = 'unknown', counted = false, finalized = false;
+    let rpcId: string | number | undefined;
     let timer: ReturnType<typeof setTimeout> | undefined, mcp: Server | undefined, transport: StreamableHTTPServerTransport | undefined;
     const controller = new AbortController();
     res.setHeader('cache-control', 'no-store'); res.setHeader('x-content-type-options', 'nosniff');
-    const originalWrite = res.write.bind(res), originalEnd = res.end.bind(res);
+    // The SDK's Node adapter prepares headers before yielding its JSON body. Defer that
+    // commit until the first bounded body chunk, so an oversized result can be refused safely.
+    const originalWriteHead = res.writeHead.bind(res), originalWrite = res.write.bind(res), originalEnd = res.end.bind(res);
+    let headArgs: unknown[] = [200];
+    res.writeHead = ((...args: unknown[]) => { headArgs = args; res.statusCode = args[0] as number; return res; }) as typeof res.writeHead;
+    res.flushHeaders = () => {};
+    const commitHeaders = () => { if (!res.headersSent) Reflect.apply(originalWriteHead, res, headArgs); };
+    const boundedWireError = () => {
+      // The SDK wraps/escapes tool text and echoes IDs. Bound those final wire bytes too.
+      if (res.headersSent) { res.destroy(); return null; }
+      let bounded = rpcId === undefined ? '' : JSON.stringify({ jsonrpc: '2.0', id: rpcId, error: { code: -32603, message: 'Response too large.' } });
+      const protocolErrorFits = bounded && bytes(bounded) <= limits.maxResponseBytes;
+      if (!protocolErrorFits) bounded = JSON.stringify(failure('LIMIT_EXCEEDED', 'Response too large.'));
+      res.shouldKeepAlive = false;
+      res.removeHeader('content-length');
+      res.writeHead(protocolErrorFits ? 200 : 413, { 'content-type': 'application/json; charset=utf-8' });
+      return bounded;
+    };
     res.write = ((chunk: string | Uint8Array, ...args: unknown[]) => {
-      responseBytes += typeof chunk === 'string' ? bytes(chunk) : chunk.byteLength;
+      let length = typeof chunk === 'string' ? bytes(chunk) : chunk.byteLength;
+      if (responseBytes + length > limits.maxResponseBytes) {
+        const bounded = boundedWireError(); if (bounded === null) return false;
+        chunk = bounded; length = bytes(bounded);
+      }
+      responseBytes += length;
+      commitHeaders();
       return Reflect.apply(originalWrite, res, [chunk, ...args]);
     }) as typeof res.write;
     res.end = ((chunk?: string | Uint8Array | (() => void), ...args: unknown[]) => {
-      if (typeof chunk === 'string') responseBytes += bytes(chunk);
-      else if (chunk instanceof Uint8Array) responseBytes += chunk.byteLength;
+      let length = typeof chunk === 'string' ? bytes(chunk) : chunk instanceof Uint8Array ? chunk.byteLength : 0;
+      if (responseBytes + length > limits.maxResponseBytes) {
+        const bounded = boundedWireError(); if (bounded === null) return res;
+        chunk = bounded; length = bytes(bounded);
+      }
+      responseBytes += length;
+      commitHeaders();
       return Reflect.apply(originalEnd, res, [chunk, ...args]);
     }) as typeof res.end;
     const finish = () => {
@@ -181,7 +211,8 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
       try { parsed = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks))); }
       catch { sendFailure(400, 'INVALID_INPUT', 'Invalid JSON or encoding.'); return; }
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed) || !validJson(parsed)) { sendFailure(400, 'INVALID_INPUT', 'Invalid input.'); return; }
-      const message = parsed as { method?: unknown; params?: { name?: unknown } };
+      const message = parsed as { id?: unknown; method?: unknown; params?: { name?: unknown } };
+      if (typeof message.id === 'string' || typeof message.id === 'number') rpcId = message.id;
       const method = message.method;
       operation = method === 'tools/call' && typeof message.params?.name === 'string' && isTool(message.params.name) ? message.params.name :
         typeof method === 'string' && ['initialize', 'notifications/initialized', 'notifications/cancelled', 'ping', 'tools/list'].includes(method) ? method : 'unknown';
