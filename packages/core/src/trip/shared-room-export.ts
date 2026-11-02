@@ -12,10 +12,11 @@ const contextSchema=z.object({roomId:id,uid:id,ownerUid:id,member,schemaMajor:z.
 const metadataSchema=z.object({id,title:tripMetaSchema.shape.title,schemaMajor:z.literal(1),city:tripMetaSchema.shape.city.optional(),cityId:tripMetaSchema.shape.cityId,countryCode:tripMetaSchema.shape.countryCode,timeZone:tripMetaSchema.shape.timeZone.optional(),dates:tripMetaSchema.shape.dates,kind:tripMetaSchema.shape.kind.optional()}).strict();
 const cardSchema=sharedRoomCardSchema.safeExtend({source:roomPublicCitationSchema.optional()});
 const assetSchema=roomSharedMediaSchema.extend({source:roomPublicCitationSchema.optional()});
-const snapshotSchema=z.object({metadata:metadataSchema,cards:z.array(z.object({version:integer,authorUid:id,updatedAt:integer,payload:cardSchema}).strict()).max(500),presentations:z.array(z.never()).max(0),assets:z.array(assetSchema).max(200)}).strict();
+export const roomPublicExportSnapshotSchema=z.object({metadata:metadataSchema,cards:z.array(z.object({version:integer,authorUid:id,updatedAt:integer,payload:cardSchema}).strict()).max(500),presentations:z.array(z.never()).max(0),assets:z.array(assetSchema).max(200)}).strict();
+export type RoomPublicExportSnapshot=z.infer<typeof roomPublicExportSnapshotSchema>;
 /** Fresh current-owner authorized snapshot only; adapter rechecks authority around byte IO. Downloads grant no room authority. */
 export async function exportRoomPublicPackage(rawContext:unknown,rawSnapshot:unknown,assetBytes:ReadonlyMap<string,Uint8Array>):Promise<Uint8Array>{
- const context=contextSchema.parse(rawContext),snapshot=snapshotSchema.parse(rawSnapshot);
+ const context=contextSchema.parse(rawContext),snapshot=roomPublicExportSnapshotSchema.parse(rawSnapshot);
  if(context.closed||context.uid!==context.ownerUid||!context.member.active||context.member.role!=='owner'||snapshot.metadata.id!==context.roomId)throw Error('Room export unavailable');
  const ids=snapshot.cards.map(card=>card.payload.id);if(new Set(ids).size!==ids.length)throw Error('Duplicate shared card identity');
  const referenced=new Set(snapshot.cards.flatMap(card=>card.payload.assetIds)),assets=new Map(snapshot.assets.map(asset=>[asset.id,asset]));

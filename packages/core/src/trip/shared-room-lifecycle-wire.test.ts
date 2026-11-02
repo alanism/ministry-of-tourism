@@ -1,0 +1,7 @@
+import {expect,it} from 'vitest';
+import {roomCloseRequestSchema,roomWithdrawRequestSchema,roomLifecycleOperationId} from './shared-room-lifecycle-wire';
+const base={roomId:'room',schemaMajor:1,capability:'room-lifecycle/1',operationId:'a'.repeat(64),membershipEpoch:1,sessionId:'b'.repeat(64),baseVersion:1};
+it('requires explicit exact-room closure and a versioned single-card withdrawal with no arbitrary payload',()=>{
+ expect(roomCloseRequestSchema.parse({...base,snapshotDigest:'c'.repeat(64),confirmed:true})).toMatchObject({confirmed:true});for(const patch of [{snapshotDigest:undefined},{confirmed:false},{rawDocument:'PRIVATE'}])expect(()=>roomCloseRequestSchema.parse({...base,snapshotDigest:'c'.repeat(64),confirmed:true,...patch})).toThrow();expect(roomWithdrawRequestSchema.parse({...base,cardId:'card'})).toMatchObject({cardId:'card'});expect(()=>roomWithdrawRequestSchema.parse({...base,cardId:'card',payload:{}})).toThrow();
+});
+it('binds a security operation to verified UID, room, kind and immutable current intent',async()=>{const{operationId:_,...intent}={...base,cardId:'card'};const digest=await roomLifecycleOperationId('owner','withdraw',intent);expect(digest).toMatch(/^[a-f0-9]{64}$/);expect(await roomLifecycleOperationId('other','withdraw',intent)).not.toBe(digest);expect(await roomLifecycleOperationId('owner','withdraw',{...intent,baseVersion:2})).not.toBe(digest);});
