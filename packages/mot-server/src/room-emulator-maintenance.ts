@@ -1,4 +1,4 @@
-import type {Firestore,DocumentReference} from 'firebase-admin/firestore';
+import {FieldPath,type Firestore,type DocumentReference,type Query,type QueryDocumentSnapshot} from 'firebase-admin/firestore';
 import {z} from 'zod';
 import {roomSharedMediaSchema} from '../../core/src/trip/shared-room-media.ts';
 import type {createRoomEmulatorByteStore} from './room-emulator-storage.ts';
@@ -7,14 +7,19 @@ interface Options{db:Firestore;store:ReturnType<typeof createRoomEmulatorByteSto
 /** Internal bounded worker only. Never a client endpoint or an ordinary-content expiration policy. */
 export function createRoomMaintenance(o:Options){
  if(process.env.FIRESTORE_EMULATOR_HOST!=='127.0.0.1:8080'||process.env.FIREBASE_STORAGE_EMULATOR_HOST!=='127.0.0.1:9199')throw Error('Explicit loopback emulators required');
- let stopped=false,running:Promise<{expiredStages:number;orphanTargets:number;roomJobs:number;errors:number}>|undefined;
+ let stopped=false,running:Promise<{expiredStages:number;orphanTargets:number;roomJobs:number;errors:number}>|undefined,turn=0;
+ const cursors=new Map<string,QueryDocumentSnapshot>();
+ async function batch(name:string,limit:number,group=true,expiry?:{field:string;before:number}){
+  let query:Query=group?o.db.collectionGroup(name):o.db.collection(name);if(expiry)query=query.where(expiry.field,'<=',expiry.before).orderBy(expiry.field);query=query.orderBy(FieldPath.documentId()).limit(limit);
+  const cursor=cursors.get(name);let result=await(cursor?query.startAfter(cursor):query).get();if(result.empty&&cursor){cursors.delete(name);result=await query.get();}return result.docs;
+ }
  function roomFor(ref:DocumentReference,roomId:string,collection:string){id.parse(roomId);if(ref.parent.id!==collection||ref.parent.parent?.path!=='rooms/'+roomId)throw Error('Cleanup path outside room');return o.db.doc('rooms/'+roomId);}
  async function expiredStage(ref:DocumentReference){
   return o.db.runTransaction(async tx=>{const doc=await tx.get(ref);if(!doc.exists)return;const stage=doc.data()!,roomId=id.parse(stage.roomId),roomRef=roomFor(ref,roomId,'mediaStages'),room=await tx.get(roomRef),now=Date.now();if(room.get('id')!==roomId||room.get('schemaMajor')!==1||integer.parse(stage.expiresAt)>now)return;
    const uid=id.parse(stage.uid),stageId=hex.parse(stage.id);if(stageId!==ref.id)throw Error('Staging identity mismatch');
    const deadlineAt=integer.parse(stage.expiresAt)+day;tx.set(roomRef.collection('stageCleanup').doc(stageId),{roomId,uid,stageId,deadlineAt});
    if(stage.asset){const asset=roomSharedMediaSchema.parse(stage.asset);if(asset.id!==stage.input?.assetId)throw Error('Orphan asset identity mismatch');tx.set(roomRef.collection('mediaOrphanCleanup').doc(asset.id+'-'+asset.hash),{roomId,assetId:asset.id,hash:asset.hash,bytes:asset.bytes,requestedAt:now,deadlineAt});}
-   tx.delete(ref);return true;
+   tx.delete(ref);return{roomId,uid,stageId};
   });
  }
  async function orphan(ref:DocumentReference){
@@ -32,11 +37,19 @@ export function createRoomMaintenance(o:Options){
  }
  async function run(){
   const summary={expiredStages:0,orphanTargets:0,roomJobs:0,errors:0},started=Date.now(),within=()=>!stopped&&Date.now()-started<5000;
-  const stages=await o.db.collectionGroup('mediaStages').where('expiresAt','<=',Date.now()).limit(50).get();for(const stage of stages.docs){if(!within())break;try{if(await expiredStage(stage.ref))summary.expiredStages++;}catch{summary.errors++;}}
-  const stageJobs=await o.db.collectionGroup('stageCleanup').limit(50).get();for(const doc of stageJobs.docs){if(!within())break;try{const job=doc.data(),roomId=id.parse(job.roomId);roomFor(doc.ref,roomId,'stageCleanup');await o.store.discardStage(roomId,id.parse(job.uid),hex.parse(job.stageId));if(Date.now()>=integer.parse(job.deadlineAt))await doc.ref.delete();}catch{summary.errors++;}}
-  const orphans=await o.db.collectionGroup('mediaOrphanCleanup').limit(50).get();for(const job of orphans.docs){if(!within())break;try{if(await orphan(job.ref))summary.orphanTargets++;}catch{summary.errors++;}}
-  const mediaJobs=await o.db.collectionGroup('mediaCleanup').limit(50).get(),roomJobs=await o.db.collection('roomCleanup').limit(20).get(),rooms=new Set<string>();for(const job of mediaJobs.docs){try{const roomId=id.parse(job.get('roomId'));roomFor(job.ref,roomId,'mediaCleanup');rooms.add(roomId);}catch{summary.errors++;}}for(const job of roomJobs.docs){try{const roomId=id.parse(job.get('roomId'));if(job.id!==roomId)throw Error('Cleanup identity mismatch');rooms.add(roomId);}catch{summary.errors++;}}
-  for(const roomId of rooms){if(!within())break;try{const queue=o.db.doc('roomCleanup/'+roomId),before=await queue.get();await o.lifecycleCleanup(roomId);if(before.exists&&Date.now()<integer.parse(before.get('deadlineAt')))await queue.set(before.data()!);summary.roomJobs++;}catch{summary.errors++;}}
+  async function process(name:string,docs:QueryDocumentSnapshot[],action:(doc:QueryDocumentSnapshot)=>Promise<void>){for(const doc of docs){if(!within())break;try{await action(doc);}catch{summary.errors++;}finally{cursors.set(name,doc);}}}
+  async function roomJob(doc:QueryDocumentSnapshot,collection:string){const roomId=id.parse(doc.get('roomId'));if(collection==='roomCleanup'){if(doc.id!==roomId)throw Error('Cleanup identity mismatch');}else roomFor(doc.ref,roomId,collection);const queue=o.db.doc('roomCleanup/'+roomId),before=await queue.get();await o.lifecycleCleanup(roomId);if(before.exists&&Date.now()<integer.parse(before.get('deadlineAt')))await queue.set(before.data()!);summary.roomJobs++;}
+  async function expireRecords(name:string,field:string,before:number){await process(name,await batch(name,50,true,{field,before}),async doc=>{const room=doc.ref.parent.parent;if(!room||room.parent.id!=='rooms')throw Error('Expiry path outside rooms');id.parse(room.id);const value=integer.parse(doc.get(field));if(value<=before)await doc.ref.delete();});}
+  const queues=[
+   async()=>process('mediaStages',await batch('mediaStages',50,true,{field:'expiresAt',before:Date.now()}),async doc=>{const expired=await expiredStage(doc.ref);if(expired){summary.expiredStages++;await o.store.discardStage(expired.roomId,expired.uid,expired.stageId);}}),
+   async()=>process('stageCleanup',await batch('stageCleanup',50),async doc=>{const job=doc.data(),roomId=id.parse(job.roomId);roomFor(doc.ref,roomId,'stageCleanup');await o.store.discardStage(roomId,id.parse(job.uid),hex.parse(job.stageId));if(Date.now()>=integer.parse(job.deadlineAt))await doc.ref.delete();}),
+   async()=>process('mediaOrphanCleanup',await batch('mediaOrphanCleanup',50),async doc=>{if(await orphan(doc.ref))summary.orphanTargets++;}),
+   async()=>process('mediaCleanup',await batch('mediaCleanup',50),doc=>roomJob(doc,'mediaCleanup')),
+   async()=>process('roomCleanup',await batch('roomCleanup',20,false),doc=>roomJob(doc,'roomCleanup')),
+   async()=>expireRecords('securityAudit','at',Date.now()-30*day),
+   async()=>expireRecords('invites','expiresAt',Date.now()),
+   async()=>expireRecords('claims','expiresAt',Date.now())
+  ];const first=turn++%queues.length;for(let index=0;index<queues.length&&within();index++)await queues[(first+index)%queues.length]!();
   return summary;
  }
  function tick(){if(stopped)return Promise.resolve({expiredStages:0,orphanTargets:0,roomJobs:0,errors:0});if(!running)running=run().finally(()=>{running=undefined;});return running;}
