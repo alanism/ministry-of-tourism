@@ -4,7 +4,7 @@ import {readAllCards,readCard,readTripMeta} from './model.ts';
 import {localDateFor} from './schema.ts';
 import type {TripSession} from './session.ts';
 import {applyProposal,type Proposal} from './proposals.ts';
-import {scheduleAssignmentsSchema,type ScheduleAssignment} from './planning-constraints.ts';
+import {confirmedFact,scheduleAssignmentsSchema,type PlanningProblem,type ScheduleAssignment} from './planning-constraints.ts';
 import {checkScheduleFeasibility,type DeniedAttendance} from './schedule-feasibility.ts';
 import {tripLocalInstant} from './group-plan-review.ts';
 import type {VotingRoundKey} from './voting-contract.ts';
@@ -18,6 +18,9 @@ const receipts=new WeakMap<ManagedScheduleReview,Receipt>();
 const stale=()=>new CommandError('stale','This manual review is cancelled or the trip changed. Prepare a fresh review.');
 function current(session:TripSession,key:VotingRoundKey){const meta=readTripMeta(session.doc),group=meta.groupPreferences,planning=meta.groupWorkspace?.planning,round=group?.rounds.find(r=>r.round_id===key.round_id&&r.proposal_version===key.proposal_version);if(!group||!round||round.kind!=='city_venue'||votingRoundState(session,key)!=='open'||key.proposal_version!==Math.max(...group.rounds.map(r=>r.proposal_version)))throw new Error('Manual planning requires the latest open activity round; draft, closed, destination and historical results remain unavailable');if(!planning||planning.trip_id!==group.trip_id||planning.round_id!==key.round_id||planning.proposal_version!==key.proposal_version||!meta.timeZone)throw new Error('Save planning facts for this exact round and choose a destination time zone first');return{meta,group,planning,round};}
 function checkReceipt(r:Receipt,session:TripSession,actor:Actor){if(!r.valid||r.session!==session||actor.kind!=='human'||stable(actor)!==r.actor||session.boardRev!==r.revision||fingerprint(session)!==r.fingerprint)throw stale();current(session,r.value.round);}
+function requireConfirmedAttendance(planning:PlanningProblem,assignments:ScheduleAssignment[]){
+ for(const assignment of assignments){const slot=planning.slots.find(s=>s.slot_id===assignment.slot_id);if(!slot)throw new Error('Choose a declared time slot');for(const id of assignment.household_ids){const attendance=planning.households.find(h=>h.household_id===id)?.attendance;if(!attendance||!confirmedFact(attendance,planning.as_of)||attendance.value!==true||attendance.valid_until&&Date.parse(attendance.valid_until)<Date.parse(slot.end))throw new Error(`Confirm current true attendance for household ${id} through the selected time block before planning. Tentative acknowledgment cannot substitute for attendance.`);}}
+}
 /** A person supplies assignments. No ranking is turned into consent or an automatic itinerary. */
 export async function prepareManagedScheduleReview(session:TripSession,actor:Actor,key:VotingRoundKey,input:ScheduleAssignment[],options:{signal?:AbortSignal}={}){
  if(actor.kind!=='human')throw new CommandError('human_only','Only a person can prepare manual group changes');
@@ -28,7 +31,7 @@ export async function prepareManagedScheduleReview(session:TripSession,actor:Act
  try{
   unchanged();const view=await getVotingRoundView(session,key);unchanged();if(!view.tally)throw new Error('The current provisional result is unavailable');
   const denied=view.tally.options.flatMap(o=>o.stamps.denied.map(household_id=>({household_id,option_id:o.option_id})));
-  const planning={...state.planning,as_of:new Date().toISOString()};
+  const planning={...state.planning,as_of:new Date().toISOString()};requireConfirmedAttendance(planning,assignments);
   for(const card of readAllCards(session.parts))if(card.booking&&card.booking.status!=='not_booked'){
    const fixed=planning.commitments.find(c=>c.kind==='fixed_booking'&&(c.option_id===card.id||c.id===card.id));if(!fixed)throw new Error('Record the protected booking window before preparing changes');
    const start=new Date(fixed.start),time=new Intl.DateTimeFormat('en-GB',{timeZone:state.meta.timeZone!,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(start);if(card.day&&card.day!==localDateFor(start,state.meta.timeZone!)||card.time&&card.time!==time)throw new Error('Protected booking window contradicts its recorded start');
@@ -49,6 +52,6 @@ export function applyManagedScheduleReview(session:TripSession,actor:Actor,revie
  if(!selected.length||new Set(selected).size!==selected.length||selected.some(i=>!Number.isInteger(i)||!receipt.value.assignments[i]))throw new Error('Select existing manual changes once');
  const state=current(session,review.round),assignments=selected.map(i=>receipt.value.assignments[i]!),chosen=new Set(assignments.map(a=>a.option_id));
  const placed=readAllCards(session.parts).flatMap(card=>{if(chosen.has(card.id)||!card.day||!card.time||!state.planning.activities.some(a=>a.option_id===card.id)||state.planning.commitments.some(c=>c.kind==='fixed_booking'&&(c.option_id===card.id||c.id===card.id)))return[];let start:number;try{start=Date.parse(tripLocalInstant(card.day+'T'+card.time,state.meta.timeZone!));}catch{throw new Error('An existing scheduled activity has an ambiguous time; correct it before Apply');}const slots=state.planning.slots.filter(s=>Date.parse(s.start)===start);if(slots.length!==1)throw new Error('An existing scheduled activity needs a matching declared time slot before Apply');return[{option_id:card.id,slot_id:slots[0]!.slot_id,household_ids:[...slots[0]!.household_ids]}];});
- const checked=checkScheduleFeasibility({...state.planning,as_of:new Date().toISOString()},[...assignments,...placed],receipt.denied);if(checked.status==='infeasible')throw new Error('Selected changes break the declared constraints: '+checked.errors.join('; '));if(checked.status==='tentative'&&!allowTentative)throw new Error('Acknowledge the unconfirmed facts before applying tentative choices');
+ const planning={...state.planning,as_of:new Date().toISOString()};requireConfirmedAttendance(planning,[...assignments,...placed]);const checked=checkScheduleFeasibility(planning,[...assignments,...placed],receipt.denied);if(checked.status==='infeasible')throw new Error('Selected changes break the declared constraints: '+checked.errors.join('; '));if(checked.status==='tentative'&&!allowTentative)throw new Error('Acknowledge the unconfirmed facts before applying tentative choices');
  checkReceipt(receipt,session,actor);receipt.release();receipts.delete(review);return applyProposal(session,actor,receipt.value.proposal,selected);
 }
