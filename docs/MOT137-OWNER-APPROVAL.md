@@ -1,0 +1,13 @@
+# FCC mapping owner disposition — 2 November 2026
+
+Alan explicitly answered all three exact mapping questions in this chat. Recorded at 2026-11-02T07:26:07Z. This is actual owner authority, not a model recommendation. The source snapshot remains FCC `611ad54d5c4e646a5706d1fdbcf073892ddae7e7`; no upstream file or publication is changed.
+
+1. **New York — “Approve existing crops (Recommended)”.** Use the eight existing published WebP crops for `figure-0` through `figure-7`, with explicit derivative labels, for preview and personal board/composition insertion. Preserve every figure ID and existing credit/rights restriction. The exact 1254 × 1254 master remains provenance only: SHA-256 `4d367f08fa065a00b25885a8c9155ad3c65acfd63299f8ee33970d11f6e93df4`, 1,529,583 bytes. Full-sheet download and additional publishing/printing rights remain unavailable.
+2. **Ho Chi Minh City — “Approve existing crops (Recommended)”.** The same bounded disposition applies to its eight existing published crops, `figure-0` through `figure-7`. Preserve figure identity, source frames and existing credit/rights. Master SHA-256 `4e55b7a88cdb12ebceb9e22c2e54502a116e3ab8ec6e3b3326b67c26e22e2923`, 1,381,261 bytes, 1254 × 1254. No new FCC publication or invented original URL is authorized.
+3. **Brush master — “Confirm Manila / PH (Recommended)”.** Bind SHA-256 `baf3835f9d4102d83856a3f31ba06c069ef5132d26fe73c0891b636ddb4ce858` to Manila, Philippines (`manila`, `PH`), original brush-portrait artwork, not an apparel mockup. Preserve its original bytes, existing credit and rights status. This is origin/representation authority, not a new license.
+
+The exact shown images and all sixteen derivative URLs, byte hashes, dimensions and source frames are pinned in the accompanying `FCC-IMAGE-PATH-INVENTORY-SOL.json` evidence. The implementation must use each WebP's own bytes/hash/dimensions, omit `originalUrl`, register `role: derivative`, and avoid applying the full-sheet frame crop a second time. Master/frame provenance remains separate from the chosen rendition.
+
+Record these as MoT-local dispositions over the frozen 8,507-source-row inventory and 2,401 shop-product supplement. Preserve missing/unresolved/excluded accounting, existing non-insertable rights and source failures. Reconcile the brush source row and existing runtime record through explicit relations without deleting either source unit. Re-run the bounded deterministic reconciliation and relevant real-byte/browser controls, followed by actual requested independent review. Approval alone awards no task status or acceptance result.
+
+No additional FCC mapping decision is pending from this three-item check. New source/publication/rights or deployment choices remain outside this approval.
