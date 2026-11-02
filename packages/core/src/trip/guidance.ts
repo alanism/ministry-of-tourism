@@ -25,7 +25,7 @@ export const GUIDE_SECTIONS: readonly GuideSection[] = [
     'On the free board, add, move, resize or copy a note or image directly; Undo reverses your edit. These actions do not trigger a plan or create itinerary stops.',
     'Add FCC art → Browse full FCC collection searches the full pinned metadata by city, country, category and line. Inspect origin, representation, credit and rights before adding an image to the explicitly named board or magazine. Missing sources stay visible.',
     'Group preferences declares mot-household-sticker-points@1: one response per household, K is 3 or 5, rank r earns K + 1 - r, unranked earns zero, and ties stay tied. Closing freezes an advisory tally; it does not choose a trip, book anything or override a Denied stamp.',
-    'Shared rooms are exposed only through the local development test entry and its advertised capabilities. Production sharing remains unavailable. Portable household replies require explicit local sender-label resolution; labels and downloaded copies grant no remote authority.',
+    'Shared rooms are exposed only through the local development test entry and its advertised capabilities. Production sharing and live sync are unavailable. Portable household replies require explicit local sender-label resolution; labels and downloaded copies grant no remote authority.',
   ] },
   { phase: 'during', title: 'During trip', summary: 'See the next step and adjust small things locally.', points: [
     'Today shows the next activity with where its time and details came from.',

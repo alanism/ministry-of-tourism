@@ -2,7 +2,8 @@
 import {z} from 'zod';
 import {unzipSync,zipSync} from 'fflate';
 import {groupPreferencesSchema,responseLedgerSchema,validateGroupResponse,type GroupResponse} from './group-preferences.ts';
-import {sha256Hex,TRIP_PACKAGE_LIMITS} from './package.ts';
+import {sha256Hex} from './sha256.ts';
+import {TRIP_PACKAGE_LIMITS} from './package-limits.ts';
 
 const ledgerSchema=responseLedgerSchema,entrySchema=responseLedgerSchema.shape.entries.element;
 export type ResponseLedger=z.infer<typeof ledgerSchema>;

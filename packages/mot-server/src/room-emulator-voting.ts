@@ -5,7 +5,7 @@ import {validateRoomVotePayload} from '../../core/src/trip/shared-room-votes.ts'
 import {canonicalFileJson,parseFileJson} from '../../core/src/trip/file-exchange-json.ts';
 import {sha256Hex} from '../../core/src/trip/sha256.ts';
 import {POSITIONAL_VOTING_METHOD,votingSealKey,votingSealSchema} from '../../core/src/trip/voting-contract.ts';
-import {validateVotingSeal} from '../../core/src/trip/voting-lifecycle.ts';
+import {validateVotingSeal} from '../../core/src/trip/voting-seal.ts';
 import {tallyGroupPreferences} from '../../core/src/trip/preference-tally.ts';
 import {mergeResponseLedger} from '../../core/src/trip/response-ledger.ts';
 import {readRoomVotingSnapshot} from './room-emulator-voting-state.ts';

@@ -1,7 +1,7 @@
 import type {Transaction,DocumentReference} from 'firebase-admin/firestore';
 import {roomVotingSnapshotSchema,roomVotingRoundId,roomVotingResponseId,type RoomVotingSnapshot} from '../../core/src/trip/shared-room-voting-wire.ts';
 import {validateGroupResponse} from '../../core/src/trip/group-preferences.ts';
-import {validateVotingSeal} from '../../core/src/trip/voting-lifecycle.ts';
+import {validateVotingSeal} from '../../core/src/trip/voting-seal.ts';
 import {votingSealKey} from '../../core/src/trip/voting-contract.ts';
 import {canonicalFileJson} from '../../core/src/trip/file-exchange-json.ts';
 /** No public snapshot dependency: ordinary accounting may safely import this protected reader. */

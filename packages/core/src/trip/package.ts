@@ -1,3 +1,4 @@
+import {TRIP_PACKAGE_LIMITS} from './package-limits.ts';
 import {sha256Hex} from './sha256.ts';
 export {sha256Hex} from './sha256.ts';
 import {VOTING_SEAL_PREFIX} from './voting-contract.ts';
@@ -50,7 +51,7 @@ export async function exportLegacyTripPackage(bytes: Uint8Array, assetBytes: Map
  */
 export interface ExportOptions { selectedCardIds?: Set<string>; created?: string; includePrivate?: boolean; variant?: 'guide'|'stay'|'private'; }
 export const TRIP_PACKAGE_VERSION=2;
-export const TRIP_PACKAGE_LIMITS=Object.freeze({fileBytes:10*1024*1024,totalBytes:50*1024*1024});
+export {TRIP_PACKAGE_LIMITS} from './package-limits.ts';
 
 /** Export a ZIP: manifest.json, document (base64 Yjs update), readable trip.json, assets/. */
 export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint8Array> = new Map(), options: ExportOptions = {}): Promise<Uint8Array> {

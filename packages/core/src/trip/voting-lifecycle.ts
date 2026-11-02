@@ -8,31 +8,25 @@ import {groupPreferencesSchema,validateGroupUpdate,type GroupPreferences} from '
 import {mergeResponseLedger,type ResponseLedger} from './response-ledger.ts';
 import {preferenceRoundSchema,tallyGroupPreferences,type PreferenceTally} from './preference-tally.ts';
 import {DEFAULT_GROUP_POLICY} from './planning-constraints.ts';
-import {TRIP_PACKAGE_LIMITS,sha256Hex} from './package.ts';
+import {sha256Hex} from './sha256.ts';
+import {validateVotingSeal as validateSeal,stable,encoded,bounded,purpose,eligibleLedger,type VotingSeal} from './voting-seal.ts';
+export type {VotingSeal} from './voting-seal.ts';
 import {POSITIONAL_VOTING_METHOD,managedVotingRoundSchema,votingSealSchema,VOTING_SEAL_PREFIX,votingSealKey,sameVotingRound,type ManagedVotingRound,type VotingRoundKey} from './voting-contract.ts';
 
-export type VotingSeal=Omit<z.infer<typeof votingSealSchema>,'tally'> & {tally:PreferenceTally;trip_id:string;proposal_version:number;round_id:string};
 export type VotingRoundStatus='legacy'|'draft'|'open'|'closed';
 export type VotingClosePreview={token:string;proposal_version:number;round_id:string;tally:PreferenceTally;method:typeof POSITIONAL_VOTING_METHOD;responseIds:string[]};
 type Prepared={doc:Y.Doc;revision:number;actorId:string;fingerprint:string;seal:z.infer<typeof votingSealSchema>;preview:VotingClosePreview;signal?:AbortSignal};
 const prepared=new Map<string,Prepared>();
 export const preparedVotingCloseSchema=z.string().uuid().refine(token=>prepared.has(token),'Prepare the voting close preview first');
-const stable=(value:unknown):string=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([a],[b])=>a<b?-1:a>b?1:0)):item);
-const encoded=(value:unknown)=>new TextEncoder().encode(stable(value));
 const person=(actor:Actor)=>{if(actor.kind!=='human')throw new CommandError('human_only','Only a person can manage a voting round');};
 const declarationKey=(d:Pick<ManagedVotingRound,'configuration'>)=>d.configuration.rounds[0]!;
 function storedSeals(parts:TripParts){return [...parts.clock].filter(([key])=>key.startsWith(VOTING_SEAL_PREFIX)).map(([key,raw])=>({key,seal:votingSealSchema.parse(raw)}));}
 function rawSeal(parts:TripParts,key:VotingRoundKey){const matches=storedSeals(parts).filter(({seal})=>sameVotingRound(seal.configuration.rounds[0]!,key));if(matches.length>1)throw new Error('Ambiguous closed round identity');return matches[0]?.seal;}
 function declaration(doc:Y.Doc,key:VotingRoundKey){return readTripMeta(doc).groupWorkspace?.voting?.find(d=>sameVotingRound(declarationKey(d),key));}
 function fingerprint(session:Pick<TripSession,'doc'|'parts'>){const meta=readTripMeta(session.doc);return stable({group:meta.groupPreferences,workspace:meta.groupWorkspace,seals:storedSeals(session.parts)});}
-function bounded(value:unknown){if(encoded(value).length>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('Voting history exceeds the existing portable file limit; keep a backup and start a separate trip');}
 function liveRound(group:GroupPreferences|undefined,key:VotingRoundKey){const round=group?.rounds.find(r=>sameVotingRound(r,key));if(!group||!round)throw new Error('Choose a declared round');return round;}
 function latest(group:GroupPreferences,key:VotingRoundKey){if(key.proposal_version!==Math.max(...group.rounds.map(r=>r.proposal_version)))throw new Error('This proposal is stale; start a new proposal with fresh responses');}
 function matchingLedger(d:Pick<ManagedVotingRound,'configuration'>,ledger:ResponseLedger|undefined):ResponseLedger{return{version:1,trip_id:d.configuration.trip_id,entries:(ledger?.entries??[]).filter(e=>sameVotingRound(e.response,declarationKey(d)))};}
-function eligibleLedger(d:Pick<ManagedVotingRound,'ignoredResponseIds'>,ledger:ResponseLedger):ResponseLedger{return{...ledger,entries:ledger.entries.filter(e=>!d.ignoredResponseIds.includes(e.response.response_id))};}
-function purpose(configuration:GroupPreferences){return configuration.rounds[0]!.kind==='destination'?'advisory_destination_comparison' as const:'advisory_activity_shortlist' as const;}
-function sealAliases(seal:z.infer<typeof votingSealSchema>):VotingSeal{return{...seal,tally:seal.tally as PreferenceTally,trip_id:seal.configuration.trip_id,proposal_version:seal.configuration.rounds[0]!.proposal_version,round_id:seal.configuration.rounds[0]!.round_id};}
-async function validateSeal(key:string,raw:unknown){const seal=votingSealSchema.parse(raw),round=seal.configuration.rounds[0]!;bounded(seal);if(key!==votingSealKey(seal.configuration.trip_id,round)||seal.ledger.trip_id!==seal.configuration.trip_id||seal.ledger.entries.some(e=>!sameVotingRound(e.response,round)))throw new Error('Closed voting identity does not match its snapshot');if(seal.purpose!==purpose(seal.configuration))throw new Error('Closed voting purpose does not match the declared round');await mergeResponseLedger(seal.configuration,seal.ledger,[]);const accepted=(await mergeResponseLedger(seal.configuration,eligibleLedger(seal,seal.ledger),[])).current.map(r=>r.response_id);if(stable(accepted)!==stable(seal.acceptedResponseIds))throw new Error('Closed voting counted identities do not match the canonical snapshot');const tally=await tallyGroupPreferences(seal.configuration,eligibleLedger(seal,seal.ledger),{proposal_version:round.proposal_version,round_id:round.round_id});if(stable(tally)!==stable(seal.tally))throw new Error('Closed voting tally does not match its canonical response snapshot');const{digest,...body}=seal;if(await sha256Hex(encoded(body))!==digest)throw new Error('Closed voting snapshot digest does not match');return sealAliases(seal);}
 export {validateSeal as validateVotingSeal};
 
 export function votingRoundState(session:Pick<TripSession,'doc'|'parts'>,key:VotingRoundKey):VotingRoundStatus{return rawSeal(session.parts,key)?'closed':declaration(session.doc,key)?.status??'legacy';}
