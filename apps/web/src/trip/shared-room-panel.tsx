@@ -7,7 +7,7 @@ import{signInSharedRoomEmulator,type SharedRoomEmulatorSession}from'./shared-roo
 import type{SharedRoomInvite}from'./shared-room-invite';
 import{SharedRoomAdmissionPanel}from'./shared-room-admission-panel';
 import'./shared-room-panel.css';
-export interface SharedRoomDevelopmentPanelProps{active:boolean;onClose:()=>void;configuration?:{authBaseUrl:string;serviceBaseUrl:string;projectId:string};localSession?:TripSession;initialInvite?:SharedRoomInvite;onInviteConsumed?:()=>void;}
+export interface SharedRoomDevelopmentPanelProps{active:boolean;onClose:()=>void;configuration?:{authBaseUrl:string;serviceBaseUrl:string;projectId:string};localSession?:TripSession;initialInvite?:SharedRoomInvite;onInviteConsumed?:(consumed:SharedRoomInvite)=>void;}
 const emptyView:SharedRoomView={access:'unavailable',drafts:[],message:'Choose a room after signing in.'};
 const noopSubscribe=()=>()=>{};
 const errorText=(error:unknown)=>error instanceof SharedRoomRequestError?error.message:'The requested room action could not be completed. Keep your local work and check the entered fields.';
