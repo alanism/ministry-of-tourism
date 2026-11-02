@@ -29,6 +29,7 @@ export const artworkSchema = z.object({
   id, styleId: id, label, subject: id, city: id.optional(), collection: id.optional(),
   thumb: imageUrl, src: imageUrl, original: imageUrl.optional(),
   renditionRole: z.enum(['original', 'derivative']).optional(),
+  personalOnly: z.boolean().optional(),
   sourceHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   width: z.number().positive(), height: z.number().positive(), crop: crop.optional(),
   artRef:artRefSchema.optional(),

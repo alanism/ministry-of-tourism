@@ -58,6 +58,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   function add(assetId:string,raw:Record<string,unknown>,layer?:Presentation){
     const existing=candidates.find(a=>a.assetId===assetId);if(existing)return;
     const stored=parts.assets.get(assetId),source=sourceData(raw.source??stored?.get('source'));
+    if(!personal&&(raw.personalOnly===true||stored?.get('personalOnly')===true))throw new Error(`Artwork ${assetId} is personal-only; choose a personal magazine or remove it from shared output`);
     const credit=typeof raw.credit==='string'?raw.credit:stored?.get('credit');
     const rights=raw.rightsStatus??stored?.get('rightsStatus');
     if((!personal&&['unknown','restricted'].includes(String(rights)))&&!(typeof credit==='string'&&credit.trim()))throw new Error(`Artwork ${assetId} needs its actual credit before a shared export. Add the source credit and retry.`);

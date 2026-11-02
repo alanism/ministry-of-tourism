@@ -135,6 +135,7 @@ export const assetSchema = z.object({
   caption: z.string().max(1000).optional(),
   credit: z.string().max(1000).optional(),
   rightsStatus: z.enum(['approved','unknown','restricted']).optional(),
+  personalOnly: z.boolean().optional(),
   source: sourceRefSchema.optional(),
   width: z.number().positive().optional(), height: z.number().positive().optional(),
   apparel: apparelArtRefSchema.optional(),

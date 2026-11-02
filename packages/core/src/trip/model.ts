@@ -149,6 +149,8 @@ export function readAllCards(parts: TripParts): TripCard[] {
 /** Asset metadata only. The bytes live outside the doc, keyed by asset id. */
 export function writeAsset(parts: TripParts, asset: Asset): void {
   const valid = assetSchema.parse(asset);
+  if (valid.personalOnly && parts.meta.get('kind') === 'host_guide') throw new Error('Personal-only artwork cannot be added to a host guide');
+  if (valid.derivedFrom && readAsset(parts,valid.derivedFrom)?.personalOnly && !valid.personalOnly) throw new Error('A derivative must preserve its source personal-only restriction');
   const existing=readAsset(parts,valid.id);
   if(existing){
     if(JSON.stringify(existing)!==JSON.stringify(valid))throw new Error(`Asset ${valid.id} is immutable; register changed media with a new ID`);
@@ -190,6 +192,7 @@ export function presentationScope(parts: TripParts, presentation: Presentation):
 
 /** Owner policy: unknown/restricted artwork may be shared with its real credit. */
 export function assertShareableAsset(asset: Asset): void {
+  if (asset.personalOnly) throw new Error(`Artwork ${asset.id} is personal-only; use a personal backup or remove it from the shared output`);
   if ((asset.rightsStatus === 'unknown' || asset.rightsStatus === 'restricted') && !asset.credit?.trim()) throw new Error(`Artwork ${asset.id} needs its credit before sharing`);
 }
 

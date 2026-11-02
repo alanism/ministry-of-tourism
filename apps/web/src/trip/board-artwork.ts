@@ -1,5 +1,5 @@
 // Direct FCC catalog-to-free-board insertion (MOT-120): one selected original, board surface only.
-import { readAllCards, readPresentations, type Actor, type TripSession } from '@writers-board/core';
+import { readAllCards, readPresentations, readTripMeta, type Actor, type TripSession } from '@writers-board/core';
 import { artworkSchema, type Artwork } from '../artwork/catalog';
 import { MAX_BOARD_IMAGE_BYTES, prepareBoardImages } from './board-images';
 import { BOARD_SIZE, STACK_LIMIT, imagePlacementRect } from './free-board-actions';
@@ -78,6 +78,7 @@ export async function placeBoardArtwork(session: TripSession, actor: Actor, artw
   if (actorSnapshot.kind !== 'human') throw new Error('Only a person can add artwork to the board.');
   signal.throwIfAborted();
   const parsed = artworkSchema.parse(structuredClone(artwork));
+  if (parsed.personalOnly && readTripMeta(session.doc).kind==='host_guide') throw new Error('Personal-only artwork cannot be added to a host guide');
   const originSnapshot = options.origin ? { x: options.origin.x, y: options.origin.y } : { x: 120, y: 120 };
   const onCommitted = options.onCommitted;
   const ref = parsed.artRef;
@@ -153,7 +154,7 @@ export async function placeBoardArtwork(session: TripSession, actor: Actor, artw
         origin: refSource?.origin ?? ('artwork' as const),
       };
       const executeResults: unknown[] = session.executeAll(actorSnapshot, [
-        { command: 'trip_asset_register', input: { asset: { id: assetId, hash, mime: image.blob.type, role: parsed.renditionRole ?? 'original', width: image.width, height: image.height, caption: parsed.label, credit, rightsStatus, source } } },
+        { command: 'trip_asset_register', input: { asset: { id: assetId, hash, mime: image.blob.type, role: parsed.renditionRole ?? 'original', width: image.width, height: image.height, caption: parsed.label, credit, rightsStatus, source, ...(parsed.personalOnly?{personalOnly:true}:{}) } } },
         { command: 'trip_presentation_create', input: { assetId, surface: 'board', x: rect.x / BOARD_SIZE, y: rect.y / BOARD_SIZE, width: rect.width / BOARD_SIZE, height: rect.height / BOARD_SIZE, crop: [...crop], rotation: 0, zIndex: stack, locked: false, scope: 'private' } },
       ]);
       presentationId = (executeResults[executeResults.length - 1] as { id: string }).id;
