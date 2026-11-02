@@ -46,5 +46,9 @@ it('quarantines a late reservation after disposal without uploading bytes into a
  const f=await fixture(),resource=createSharedRoomMediaUndo({client:f.client,room:f.room,session,target:f.target});let finish!:(value:Awaited<ReturnType<typeof f.client.reserveRoomMedia>>)=>void;
  f.reserve.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));await resource.prepare();const pending=resource.publish(true),failure=expect(pending).rejects.toMatchObject({code:'cancelled'});void failure.catch(()=>{});
  await vi.waitFor(()=>expect(f.reserve).toHaveBeenCalledOnce());resource.dispose();finish({stageId:'b'.repeat(64),assetId:'late',expiresAt:1800000000000,uploaded:false});await failure;
- expect(f.upload).not.toHaveBeenCalled();expect(f.commit).not.toHaveBeenCalled();expect(resource.previousBytes()).toBeUndefined();expect(resource.getSnapshot().preview?.url).toBeUndefined();
+ expect(f.upload).not.toHaveBeenCalled();expect(f.commit).not.toHaveBeenCalled();expect(resource.previousBytes()).toBeUndefined();expect(resource.getSnapshot().preview).toBeUndefined();
+});
+it('never exposes a prior-photo preview before exact validation or after a failed prior-descriptor check',async()=>{
+ const f=await fixture(),changed={...f.target,capture:{...f.capture,previousAsset:{...f.capture.previousAsset!,caption:'Unverified caption'}}},resource=createSharedRoomMediaUndo({client:f.client,room:f.room,session,target:changed});
+ resource.showPreview();expect(resource.getSnapshot().preview).toBeUndefined();await expect(resource.prepare()).rejects.toThrow();resource.showPreview();expect(resource.getSnapshot().preview).toBeUndefined();
 });
