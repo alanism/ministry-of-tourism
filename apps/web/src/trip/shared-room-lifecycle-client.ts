@@ -1,7 +1,7 @@
 import type{z}from'zod';
 import{roomLifecycleOperationId,roomLifecycleStatusSchema,roomWithdrawRequestSchema,roomCloseRequestSchema,roomWithdrawResultSchema,roomCloseResultSchema,type roomLifecycleReceiptSchema}from'../../../../packages/core/src/trip/shared-room-lifecycle-wire';
 import{roomServiceErrorSchema}from'../../../../packages/core/src/trip/shared-room-domain';
-import{TRIP_PACKAGE_LIMITS}from'../../../../packages/core/src/trip/package';
+import{TRIP_PACKAGE_LIMITS}from'../../../../packages/core/src/trip/package-limits';
 import type{RoomRegisteredSession}from'../../../../packages/core/src/trip/shared-room-sessions';
 import{SharedRoomRequestError,sharedRoomAwait,sharedRoomResponseJson}from'./shared-room-client';
 const fail=(code:ConstructorParameters<typeof SharedRoomRequestError>[0]):never=>{throw new SharedRoomRequestError(code);};
