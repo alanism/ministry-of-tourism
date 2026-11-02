@@ -1,0 +1,13 @@
+import {z} from 'zod';
+import {sourceRefSchema} from './schema.ts';
+import {roomSharedMediaSchema} from './shared-room-media.ts';
+const id=z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/),hex=z.string().regex(/^[a-f0-9]{64}$/),integer=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
+const base={roomId:id,schemaMajor:z.literal(1),capability:z.literal('room-media/1'),operationId:id,sessionId:hex,membershipEpoch:integer};
+export const roomMediaReserveSchema=z.object({...base,cardId:id,baseVersion:integer,assetId:id,sourceHash:hex,sourceBytes:integer.min(1).max(10*1024*1024),caption:z.string().max(1000).optional(),credit:z.string().max(1000).optional(),rightsStatus:z.enum(['approved','unknown','restricted']).optional(),replaceAssetId:id.optional(),source:sourceRefSchema.strict().optional(),citationBinding:z.object({catalogueId:id,snapshotId:id}).strict().optional(),publicationConsent:z.literal(true)}).strict();
+export const roomMediaCommitSchema=z.object({...base,stageId:hex,baseVersion:integer}).strict();
+export const roomMediaStageResultSchema=z.object({stageId:hex,assetId:id,expiresAt:integer,uploaded:z.boolean()}).strict();
+export const roomMediaUploadResultSchema=z.object({stageId:hex,asset:roomSharedMediaSchema}).strict();
+export const roomMediaReceiptSchema=z.object({operationId:id,uid:id,kind:z.literal('media'),cardId:id,assetId:id,version:integer,requestDigest:hex,beforeDigest:hex,afterDigest:hex,acceptedAt:integer}).strict();
+export const roomMediaCommitResultSchema=z.object({receipt:roomMediaReceiptSchema,replayed:z.boolean(),asset:roomSharedMediaSchema}).strict();
+export type RoomMediaReserve=z.infer<typeof roomMediaReserveSchema>;
+export type RoomMediaCommit=z.infer<typeof roomMediaCommitSchema>;
