@@ -9,7 +9,7 @@ const id=z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,199}$/);
 const revision=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 const keys=['id','kind','title','body','stage','status','day','time','placeId','location','provenance','assetIds','x','y','boardWidth','boardHeight','boardStack'] as const;
 const shape=Object.fromEntries(keys.map(k=>[k,tripCardSchema.shape[k]])) as {[K in typeof keys[number]]:typeof tripCardSchema.shape[K]};
-export const sharedRoomCardSchema=z.object(shape).strict().superRefine((card,ctx)=>{
+export const sharedRoomCardSchema=z.object({...shape,location:tripCardSchema.shape.location.unwrap().strict().optional()}).strict().superRefine((card,ctx)=>{
   if(card.x<0||card.y<0||card.x+(card.boardWidth??1200)>10000||card.y+(card.boardHeight??900)>10000)ctx.addIssue({code:'custom',message:'Card geometry exceeds board bounds'});
 });
 export function projectSharedCard(raw:unknown){

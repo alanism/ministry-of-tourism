@@ -20,7 +20,7 @@ export function createRoomEmulatorService(){
       const admission=await roomAdmissionRoute(request,uid,db);if(admission!==null)return json(admission);
       const roomId=match[1]!,ref=db.doc('rooms/'+roomId);
       if(request.method==='GET'&&!match[2]){
-        const snapshot=await db.runTransaction(async tx=>{const room=await tx.get(ref);const meta=room.data();const member=meta?.members?.[uid];if(!meta||meta.closed||!member?.active)throw Error('unavailable');const cards=await tx.get(ref.collection('cards').limit(501));if(cards.size>500)throw Error('unavailable');return roomSnapshotSchema.parse({serviceMode:'local-emulator',schemaMajor:1,capabilities:['room-cards/1'],roomId,principal:{uid,role:member.role,membershipEpoch:member.epoch,householdId:null,householdEpoch:null},cards:cards.docs.map(d=>d.data()),sync:'accepted'});});return json(snapshot);
+        const snapshot=await db.runTransaction(async tx=>{const room=await tx.get(ref);const meta=room.data();const member=meta?.members?.[uid];if(!meta||meta.schemaMajor!==1||meta.closed||!member?.active)throw Error('unavailable');const cards=await tx.get(ref.collection('cards').limit(501));if(cards.size>500)throw Error('unavailable');return roomSnapshotSchema.parse({serviceMode:'local-emulator',schemaMajor:1,capabilities:['room-cards/1'],roomId,principal:{uid,role:member.role,membershipEpoch:member.epoch,householdId:null,householdEpoch:null},cards:cards.docs.map(d=>d.data()),sync:'accepted'});});return json(snapshot);
       }
       if(request.method!=='POST'||!match[2])return unavailable();
       if(Number(request.headers.get('content-length')??0)>65536)return json({error:{code:'limit',message:'Room intent exceeds64KiB; retain local draft',recoverableDraft:true}},413);
