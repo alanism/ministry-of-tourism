@@ -1,6 +1,6 @@
 // Durable local identity/journal around the existing native proposal engine. No network access.
 import { z } from 'zod';
-import contract from '../../../../docs/mcp-public-file.schema.json';
+import contract from '../../../../docs/mcp-public-file.schema.json' with { type: 'json' };
 import type { Actor } from '../doc/model.ts';
 import { assertAgentMediaAccess } from './commands.ts';
 import { readAsset, readCard, readTripMeta } from './model.ts';
