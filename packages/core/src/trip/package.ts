@@ -1,3 +1,5 @@
+import {sha256Hex} from './sha256.ts';
+export {sha256Hex} from './sha256.ts';
 import {VOTING_SEAL_PREFIX} from './voting-contract.ts';
 import {validateVotingLifecycle} from './voting-lifecycle.ts';
 import {agentGuidance,startHereMarkdown} from './guidance.ts';
@@ -13,11 +15,6 @@ import { toBase64 } from '../doc/board-file.ts';
 
 export const TRIP_PACKAGE_FORMAT = 'ministry-of-tourism-trip';
 export interface PackageAsset { id: string; file: string; size: number; sha256: string; mime: string; }
-
-export async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', bytes as BufferSource);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
 /** Owner-private full backup at the validated document's original legacy version: native ZIP containing the exact original binary document, a readable legacy copy, and every referenced asset's available bytes. This is not a raw-document export. */
 export async function exportLegacyTripPackage(bytes: Uint8Array, assetBytes: Map<string, Uint8Array> = new Map()): Promise<Uint8Array> {

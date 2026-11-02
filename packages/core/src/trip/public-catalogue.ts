@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {artRefSchema} from './art-ref.ts';
 import {isPublicFccUrl} from './city-source.ts';
-import {sha256Hex} from './package.ts';
+import {sha256Hex} from './sha256.ts';
 
 export const CATALOGUE_LIMITS=Object.freeze({indexBytes:16*1024*1024,detailBytes:4*1024*1024,records:100000,defaultPage:20,maxPage:50});
 const id=z.string().min(1).max(200),text=z.string().max(500),hash=z.string().regex(/^[a-f0-9]{64}$/),time=z.iso.datetime({offset:true}).max(40),count=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
