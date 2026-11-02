@@ -1,0 +1,4 @@
+import {expect,it} from 'vitest';
+import {roomSessionRegisterSchema} from './shared-room-session-wire.ts';
+import {roomAdminOperationId} from './shared-room-admission.ts';
+it('distinguishes concurrent browser registration intents while exact nonce retry keeps identity',async()=>{const base={roomId:'room',schemaMajor:1,capability:'room-sessions/1',membershipEpoch:1,baseVersion:0},a={...base,registrationNonce:'a'.repeat(64)},b={...base,registrationNonce:'b'.repeat(64)};const first=await roomAdminOperationId('person','room','session-register',a);expect(first).not.toBe(await roomAdminOperationId('person','room','session-register',b));expect(await roomAdminOperationId('person','room','session-register',a)).toBe(first);expect(roomSessionRegisterSchema.parse({...a,operationId:first})).toEqual({...a,operationId:first});expect(()=>roomSessionRegisterSchema.parse({...base,operationId:first})).toThrow();});
