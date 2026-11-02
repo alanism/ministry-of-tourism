@@ -3,12 +3,13 @@ import {SharedRoomRequestError,type SharedRoomClient} from './shared-room-client
 export interface SharedRoomDraft {operation:RoomCardOperation;before:SharedRoomCard;status:'in-memory'|'pending'|'uncertain'|'conflict'|'rejected';message?:string;}
 export interface SharedRoomView {access:'loading'|'ready'|'stale'|'unavailable';room?:RoomSnapshot;drafts:readonly SharedRoomDraft[];message:string;latestReceipt?:RoomOperationResult;}
 export interface SharedRoomController {getSnapshot:()=>SharedRoomView;subscribe:(listener:()=>void)=>()=>void;refresh:()=>Promise<void>;beginEdit:(cardId:string)=>string;updateDraft:(operationId:string,payload:SharedRoomCard)=>void;sendDraft:(operationId:string)=>Promise<void>;undoLatest:()=>Promise<void>;discardDraft:(operationId:string)=>void;recoveryData:()=>unknown;dispose:()=>void;startPolling:()=>void;stopPolling:()=>void;}
+function frozen<T>(value:T):T{if(value&&typeof value==='object'&&!Object.isFrozen(value)){for(const child of Object.values(value))frozen(child);Object.freeze(value);}return value;}
 export function createSharedRoomController(options:{client:SharedRoomClient;roomId:string;newOperationId?:()=>string}):SharedRoomController {
  roomCardOperationSchema.shape.roomId.parse(options.roomId);
- let view:SharedRoomView={access:'loading',drafts:[],message:'Shared room not loaded. Drafts are held in memory only.'},disposed=false,generation=0,readSequence=0,readAbort:AbortController|undefined,polling=false,timer:ReturnType<typeof setTimeout>|undefined;
+ let view:SharedRoomView=frozen({access:'loading',drafts:[],message:'Shared room not loaded. Drafts are held in memory only.'}),disposed=false,generation=0,readSequence=0,readAbort:AbortController|undefined,polling=false,timer:ReturnType<typeof setTimeout>|undefined;
  let undo:{operation:RoomCardOperation;before:SharedRoomCard;receipt:RoomOperationResult}|undefined;
  const listeners=new Set<()=>void>(),writes=new Set<AbortController>(),newId=options.newOperationId??(()=>crypto.randomUUID());
- const emit=(patch:Partial<SharedRoomView>)=>{view={...view,...patch};for(const listener of listeners){try{listener();}catch{/* A view observer cannot change room acceptance. */}}};
+ const emit=(patch:Partial<SharedRoomView>)=>{view=frozen({...view,...patch});for(const listener of listeners){try{listener();}catch{/* A view observer cannot change room acceptance. */}}};
  const current=()=>{if(disposed||view.access!=='ready'||!view.room)throw new SharedRoomRequestError('unavailable');return view.room;};
  const writable=()=>{const room=current();if(!['owner','editor'].includes(room.principal.role))throw new SharedRoomRequestError('unavailable');return room;};
  const bytes=(drafts:readonly SharedRoomDraft[])=>new TextEncoder().encode(JSON.stringify(drafts.map(d=>d.operation))).length;
@@ -52,6 +53,7 @@ export function createSharedRoomController(options:{client:SharedRoomClient;room
  }
  async function undoLatest(){
   const room=writable(),target=undo;if(!target||target.receipt.receipt.uid!==options.client.uid)throw Error('No trusted Undo is available in this live session.');
+  const prior=view.drafts.find(d=>d.operation.kind==='undo'&&d.operation.undoOf===target.operation.operationId);if(prior){if(prior.status==='uncertain'||prior.status==='in-memory')await sendDraft(prior.operation.operationId);return;}
   const operation=roomCardOperationSchema.parse({...target.operation,operationId:newId(),membershipEpoch:room.principal.membershipEpoch,kind:'undo',baseVersion:target.receipt.receipt.version,undoOf:target.operation.operationId,payload:target.before});
   const draft:SharedRoomDraft={operation,before:structuredClone(target.operation.payload),status:'in-memory'},drafts=[...view.drafts,draft];validateQueue(drafts);emit({drafts});await sendDraft(operation.operationId);
  }

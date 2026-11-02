@@ -41,3 +41,11 @@ it('ignores a late accepted write after context disposal and retains its uncerta
  const f=fixture();await f.controller.refresh();const id=f.controller.beginEdit('card');let resolve!:(value:Awaited<ReturnType<SharedRoomClient['operate']>>)=>void;vi.mocked(f.client.operate).mockImplementation(()=>new Promise(done=>{resolve=done;}));const pending=f.controller.sendDraft(id);f.controller.dispose();resolve({receipt:{operationId:id,uid:'owner',kind:'edit',cardId:'card',version:2,requestDigest:'a'.repeat(64),beforeDigest:'b'.repeat(64),afterDigest:'c'.repeat(64),acceptedAt:2},replayed:false});await pending;
  expect(f.controller.getSnapshot().latestReceipt).toBeUndefined();expect(f.controller.getSnapshot().room).toBeUndefined();expect(f.controller.getSnapshot().drafts[0]!.status).toBe('uncertain');
 });
+it('does not expose a mutable queued operation body through its view snapshot',async()=>{
+ const f=fixture();await f.controller.refresh();f.controller.beginEdit('card');expect(()=>{f.controller.getSnapshot().drafts[0]!.operation.payload.body='Changed outside draft API';}).toThrow();expect(f.controller.getSnapshot().drafts[0]!.operation.payload.body).toBe('Original');
+});
+it('does not create a second Undo while the first inverse is pending',async()=>{
+ const f=fixture();await f.controller.refresh();const id=f.controller.beginEdit('card');f.controller.updateDraft(id,{...f.payload,x:10});await f.controller.sendDraft(id);const replies:{operation:Parameters<SharedRoomClient['operate']>[0];resolve:(reply:Awaited<ReturnType<SharedRoomClient['operate']>>)=>void}[]=[];
+ vi.mocked(f.client.operate).mockClear().mockImplementation(operation=>new Promise(resolve=>replies.push({operation,resolve})));const first=f.controller.undoLatest(),second=f.controller.undoLatest();
+ try{expect(f.client.operate).toHaveBeenCalledTimes(1);}finally{for(const{operation,resolve}of replies)resolve({receipt:{operationId:operation.operationId,uid:'owner',kind:'undo',cardId:'card',version:3,requestDigest:'a'.repeat(64),beforeDigest:'b'.repeat(64),afterDigest:'c'.repeat(64),acceptedAt:3},replayed:false});await Promise.allSettled([first,second]);}
+});
