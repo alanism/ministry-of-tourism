@@ -44,7 +44,7 @@ export const roomClaimRequestSchema=z.object({...common,inviteSecret:hash,expire
 export const roomApproveRequestSchema=z.object({...common,inviteId:hash,confirmedSubject:wireId,expiresAt:z.number().int().positive().max(Number.MAX_SAFE_INTEGER)}).strict();
 export const roomRevokeRequestSchema=z.object({...common,uid:wireId}).strict();
 
-export const roomAdminKindSchema=z.enum(['create','invite','claim','approve','revoke','revoke-invite']);
+export const roomAdminKindSchema=z.enum(['create','invite','claim','approve','revoke','revoke-invite','session-register','session-revoke']);
 export const roomAdminReceiptSchema=z.object({operationId:hash,uid:wireId,kind:roomAdminKindSchema,requestDigest:hash,version:z.number().int().nonnegative(),acceptedAt:z.number().int().nonnegative()}).strict();
 const resultFields={receipt:roomAdminReceiptSchema,replayed:z.boolean()};
 export const roomCreateResultSchema=z.object({roomId:wireId,created:z.literal(true),...resultFields}).strict();
