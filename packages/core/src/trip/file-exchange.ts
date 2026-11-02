@@ -12,7 +12,9 @@ import { canonicalFileJson, FILE_BYTES, parseFileJson } from './file-exchange-js
 import type { ContextRequest, ProposalEnvelope, FileContextRecord, FileProposalRecord, FileExchangeStore, FileExchangeOptions, IssueContextInput, FileReview, FileReceipt } from './file-exchange-types.ts';
 export * from './file-exchange-types.ts';
 const schemaFor = (name: string) => z.fromJSONSchema({ $schema: contract.$schema, $defs: contract.$defs, $ref: '#/$defs/' + name } as unknown as Parameters<typeof z.fromJSONSchema>[0]);
-const contextSchema = schemaFor('contextRequest'), proposalSchema = schemaFor('proposalArtifact');
+let contextValidator: ReturnType<typeof schemaFor> | undefined, proposalValidator: ReturnType<typeof schemaFor> | undefined;
+const contextSchema = () => contextValidator ??= schemaFor('contextRequest');
+const proposalSchema = () => proposalValidator ??= schemaFor('proposalArtifact');
 const encoder = new TextEncoder();
 const digest = (value: unknown) => sha256Hex(encoder.encode(canonicalFileJson(value)));
 const equal = (a: unknown, b: unknown) => canonicalFileJson(a) === canonicalFileJson(b);
@@ -48,7 +50,7 @@ export class FileExchange {
   private async grant(contextId: string): Promise<FileContextRecord> {
     const record = await this.store.getContext(this.session.boardId, contextId); this.check();
     if (!record || record.boardId !== this.session.boardId || record.contextRequestId !== contextId || record.documentIdentity !== this.options.documentIdentity || record.actorId !== this.actor.id || !Number.isSafeInteger(record.version)) fail('No matching locally issued context exists for this native document.');
-    contextSchema.parse(record.context);
+    contextSchema().parse(record.context);
     const { contextDigest, ...body } = record.context;
     if (await digest(body) !== contextDigest || record.context.boardId !== record.boardId || record.context.nativeToken.boardId !== record.boardId || !equal(Object.keys(record.context.nativeToken.cardRevs).sort(), [...record.context.selectedCardIds].sort()) || !equal(record.context.context.cards.map(card => card.id).sort(), [...record.context.selectedCardIds].sort())) fail('The local context receipt is corrupt; reissue context.');
     this.check(); return record;
@@ -63,7 +65,7 @@ export class FileExchange {
     const record = await this.store.getProposal(this.session.boardId, id); this.check();
     if (!record) return null;
     if (record.boardId !== this.session.boardId || record.proposalId !== id || !Number.isSafeInteger(record.version) || !states.has(record.state)) fail('The proposal journal is corrupt; inspect and reissue.');
-    proposalSchema.parse(record.envelope);
+    proposalSchema().parse(record.envelope);
     if (record.contextRequestId !== record.envelope.contextRequestId || record.envelope.proposal.id !== id || record.envelopeHash !== await digest(record.envelope) || !unique(record.applied) || record.applied.some(i => !Number.isInteger(i) || !record.envelope.proposal.ops[i])) fail('The proposal journal identity is corrupt; inspect and reissue.');
     this.check(); return record;
   }
@@ -120,13 +122,13 @@ export class FileExchange {
     const created = this.now();
     const body = { format: 'mot.context' as const, version: 1 as const, contextRequestId: (this.options.randomId ?? (() => crypto.randomUUID()))(), boardId: this.session.boardId, baseBoardRevision: capture.revision, nativeToken: this.session.token(input.selectedCardIds), createdAt: new Date(created).toISOString(), expiresAt: input.expiresAt ?? new Date(created + 86400000).toISOString(), capabilitiesVersion: 'mot.public-file/1' as const, guideVersion: input.guideVersion, catalogSnapshot: input.catalogSnapshot, privacy: 'shared-selected' as const, purpose: 'trip-ideas' as const, allowedCommands: input.allowedCommands ?? ['trip_card_create', 'trip_card_update', 'trip_card_move', 'trip_task_set_status', 'trip_asset_attach'], selectedCardIds: [...input.selectedCardIds], context: { trip: { title: meta.title, cityId: meta.cityId, timeZone: meta.timeZone }, cards, assetRefs: assets.map(asset => ({ id: asset.id, catalogSnapshot: input.catalogSnapshot, sourceVersion: asset.source!.version! })), constraints: input.constraints ?? [] } };
     const context = { ...body, contextDigest: await digest(body) } as ContextRequest;
-    contextSchema.parse(context); this.active({ context, revoked: false } as FileContextRecord); const bytes = this.encoded(context);
+    contextSchema().parse(context); this.active({ context, revoked: false } as FileContextRecord); const bytes = this.encoded(context);
     await this.options.whenSaved(); await this.identity(); this.unchanged(capture);
     const record: FileContextRecord = { version: 0, boardId: this.session.boardId, contextRequestId: context.contextRequestId, documentIdentity: this.options.documentIdentity, actorId: this.actor.id, fingerprint: await sha256Hex(capture.fingerprintBytes), context, assets, revoked: false };
     this.unchanged(capture); await this.store.putContext(record, null); this.unchanged(capture); return { context: freeze(structuredClone(context)), bytes };
   }
   async importProposal(bytes: Uint8Array): Promise<FileReview> {
-    this.check(); const raw = parseFileJson(bytes); proposalSchema.parse(raw);
+    this.check(); const raw = parseFileJson(bytes); proposalSchema().parse(raw);
     // JSON Schema defaults validate native shape but must never change the bytes-bound envelope.
     const envelope = raw as ProposalEnvelope, hash = await digest(envelope); await this.identity();
     const grant = await this.grant(envelope.contextRequestId); this.binding(envelope, grant); let record = await this.record(envelope.proposal.id);
