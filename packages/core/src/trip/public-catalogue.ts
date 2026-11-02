@@ -5,7 +5,7 @@ import {sha256Hex} from './package.ts';
 
 export const CATALOGUE_LIMITS=Object.freeze({indexBytes:16*1024*1024,detailBytes:4*1024*1024,records:100000,defaultPage:20,maxPage:50});
 const id=z.string().min(1).max(200),text=z.string().max(500),hash=z.string().regex(/^[a-f0-9]{64}$/),time=z.iso.datetime({offset:true}).max(40),count=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
-const publicUrl=z.string().max(4096).refine(isPublicFccUrl,'Only publisher-owned public HTTPS URLs are catalogue references');
+const publicUrl=z.string().max(4096).regex(/^https:\/\/(?:foreignclubberscorespondence\.web\.app|foreignclubberscorespondence\.firebaseapp\.com)(?:\/|$)/).refine(isPublicFccUrl,'Only publisher-owned public HTTPS URLs are catalogue references');
 const locator=z.string().regex(/^\/fcc-catalogue\/(?:index|details\/[a-z0-9-]+)\.json$/);
 export const catalogueTypes=['city','place','article','art','sticker','shirt'] as const;
 const itemType=z.enum(catalogueTypes),operation=z.object({allowed:z.boolean(),reason:z.string().min(1).max(500)}).strict();
