@@ -22,3 +22,6 @@ it('uses an explicit authenticated inspection to release an obsolete epoch witho
 it('does not let a view observer alter the current session identity used for revocation',async()=>{
  const{client,revoke}=fixture(),access=createSharedRoomSessionAccess(client);await access.open('room');expect(()=>{access.getSnapshot().session!.id='b'.repeat(64);}).toThrow();await access.close();expect(revoke.mock.calls[0]![0].sessionId).toBe(record.id);
 });
+it('distinguishes independent registration intents at the same admission version while retaining exact retry identity',async()=>{
+ const first=fixture(),second=fixture(),a=createSharedRoomSessionAccess(first.client),b=createSharedRoomSessionAccess(second.client);await a.open('room');await b.open('room');const requestA=first.register.mock.calls[0]![0],requestB=second.register.mock.calls[0]![0];expect(requestA.operationId).not.toBe(requestB.operationId);expect((requestA as Record<string,unknown>).registrationNonce).toMatch(/^[a-f0-9]{64}$/);expect((requestB as Record<string,unknown>).registrationNonce).toMatch(/^[a-f0-9]{64}$/);
+});
