@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { selectedAssetClosure } from './asset-closure.ts';
 import { CommandError } from '../commands/define.ts';
 import type { TripCommandDef, TripCommandContext } from './commands.ts';
 import { readAsset, readCard, readPresentations, writeAsset, writeCard, writePresentation } from './model.ts';
@@ -42,7 +43,11 @@ export const tripAssetReplace: TripCommandDef<z.infer<typeof replaceInput>, { id
     if (!imageMime.test(input.asset.mime)) throw new CommandError('invalid_input', 'Choose a supported photograph.');
     const existing = readAsset(ctx.parts, input.asset.id);
     if (existing && JSON.stringify(existing) !== JSON.stringify(input.asset)) throw new CommandError('invalid_input', 'Original media is immutable; changed bytes need a new identity.');
-    if (input.asset.derivedFrom && (input.asset.derivedFrom === input.asset.id || !readAsset(ctx.parts, input.asset.derivedFrom))) throw new CommandError('invalid_input', 'The original for this derivative is missing.');
+    if (input.asset.derivedFrom) {
+      if (input.asset.derivedFrom === input.asset.id) throw new CommandError('invalid_input', 'Media ancestry cycle; choose a valid original.');
+      const ancestors = selectedAssetClosure(ctx.parts, [input.asset.derivedFrom]);
+      if (ancestors.some(asset => asset.id === input.asset.id)) throw new CommandError('invalid_input', 'Media ancestry cycle; choose a valid original.');
+    }
     const keepsakes = card.keepsakes ? Object.fromEntries(Object.entries(card.keepsakes).map(([format, draft]) => [format, { ...draft, photoChanged: true as const }])) : undefined;
     const next = tripCardSchema.parse({ ...card, assetIds: [...card.assetIds.slice(0, -1).filter(id => id !== input.asset.id), input.asset.id], keepsakes, updatedAt: new Date().toISOString() });
     const linked = readPresentations(ctx.parts).filter(p => p.cardId === card.id && p.assetId === input.expectedAssetId)

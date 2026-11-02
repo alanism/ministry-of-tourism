@@ -17,7 +17,7 @@ import { tripBoardDuplicate } from './board-duplicate.ts';
 import { tripBoardPaste } from './board-clipboard.ts';
 import { tripAssetReplace, tripKeepsakeCaption, tripKeepsakeSelect } from './keepsake-authoring.ts';
 import { selectedAssetClosure } from './asset-closure.ts';
-import { tripMetaSchema, assetSchema, bookingSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
+import { tripMetaSchema, assetSchema, bookingSchema, CARD_KINDS, currentFactSchema, datesSchema, locationSchema, mapUrlSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
 
 /** Trip commands run against the trip doc's own parts, typed as such (#10: no BoardParts stand-in). */
 export interface TripCommandContext { doc: Y.Doc; parts: TripParts; actor: CommandContext['actor']; newId: () => string; destinations?: readonly DestinationRecord[]; }
@@ -53,13 +53,14 @@ export const tripCardCreate = defineTripCommand({
     kind: z.enum(CARD_KINDS), title: z.string().max(500).default(''), body: z.string().max(20000).default(''),
     stage: z.enum(STAGES).default('plan'), status: opt(z.enum(TASK_STATUSES)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
     time: opt(z.string().regex(/^\d{2}:\d{2}$/)), placeId: opt(id),
-    location: opt(z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), source: z.enum(['catalog', 'traveler']) })),
+    location: opt(locationSchema), address: opt(z.string().max(1000)), mapUrl: opt(mapUrlSchema),
     booking:opt(bookingSchema), scope: opt(z.enum(SCOPES)), provenance: z.enum(PROVENANCES).default('traveler'),
     source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)),
     assetIds: z.array(id).max(100).default([]), x: z.number().finite().default(0), y: z.number().finite().default(0), boardWidth: opt(z.number().finite().min(400).max(5000)), boardHeight: opt(z.number().finite().min(300).max(5000)), boardStack: opt(z.number().int().min(-1000000).max(1000000)),
   }).strict(),
   run: (ctx, input) => {
     if (input.status !== undefined && input.kind !== 'task') throw new CommandError('invalid_input', 'status is only for kind task');
+    if(ctx.actor.kind==='agent'&&(input.address!==undefined||input.mapUrl!==undefined))throw new CommandError('scope','Only a person records a manual address or map link');
     if(ctx.actor.kind==='agent'&&input.booking!==undefined)throw new CommandError('scope','Only a person records booking status');
     if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,input.assetIds);
     const cardId = ctx.newId();
@@ -73,13 +74,14 @@ export const tripCardCreate = defineTripCommand({
 export const tripCardUpdate = defineTripCommand({
   name: 'trip_card_update', title: 'Update a trip card', description: 'Changes title, body, day, time or scope after validating. null clears day or time.',
   access: 'write',
-  input: z.object({ id, booking:opt(bookingSchema), title: opt(z.string().max(500)), body: opt(z.string().max(20000)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()), time: opt(z.string().regex(/^\d{2}:\d{2}$/).nullable()), scope: opt(z.enum(SCOPES)), source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)) }).strict(),
+  input: z.object({ id, booking:opt(bookingSchema), title: opt(z.string().max(500)), body: opt(z.string().max(20000)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()), time: opt(z.string().regex(/^\d{2}:\d{2}$/).nullable()), location: opt(locationSchema.nullable()), address: opt(z.string().max(1000).nullable()), mapUrl: opt(mapUrlSchema.nullable()), scope: opt(z.enum(SCOPES)), source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)) }).strict(),
   run: (ctx, input) => {
     if(ctx.actor.kind==='agent'&&input.booking!==undefined)throw new CommandError('scope','Only a person records booking status');
+    if(ctx.actor.kind==='agent'&&(input.location!==undefined||input.address!==undefined||input.mapUrl!==undefined))throw new CommandError('scope','Only a person edits a manual location');
     const card = find(ctx.parts, input.id);
     const day = input.day === null ? undefined : input.day ?? card.day;
     const time = input.time === null ? undefined : input.time ?? card.time;
-    writeCard(ctx.parts, { ...card, booking:input.booking??card.booking, title: input.title ?? card.title, body: input.body ?? card.body, day, time, scope: input.scope ?? card.scope, source: input.source ?? card.source, sourceText: input.sourceText ?? card.sourceText, travelerNote: input.travelerNote ?? card.travelerNote, currentFacts: input.currentFacts ?? card.currentFacts, updatedAt: now() });
+    writeCard(ctx.parts, { ...card, booking:input.booking??card.booking, title: input.title ?? card.title, body: input.body ?? card.body, day, time, location: input.location === null ? undefined : input.location ?? card.location, address: input.address === null ? undefined : input.address ?? card.address, mapUrl: input.mapUrl === null ? undefined : input.mapUrl ?? card.mapUrl, scope: input.scope ?? card.scope, source: input.source ?? card.source, sourceText: input.sourceText ?? card.sourceText, travelerNote: input.travelerNote ?? card.travelerNote, currentFacts: input.currentFacts ?? card.currentFacts, updatedAt: now() });
     return { id: input.id };
   },
 });
@@ -134,7 +136,8 @@ export const tripLineageSync = defineTripCommand({
   input: z.object({ id, card: tripCardSchema }).strict(),
   run: (ctx, input) => {
     const existing = find(ctx.parts, input.id);
-    writeCard(ctx.parts, { ...input.card, id: existing.id, x: existing.x, y: existing.y, boardWidth: existing.boardWidth, boardHeight: existing.boardHeight, boardStack: existing.boardStack, status: existing.status, travelerNote: existing.travelerNote, scope: 'guide', lineage: input.card.lineage, updatedAt: now() });
+    const keepsakes = existing.assetIds.at(-1) === input.card.assetIds.at(-1) ? existing.keepsakes : existing.keepsakes && Object.fromEntries(Object.entries(existing.keepsakes).map(([format, draft]) => [format, { ...draft, photoChanged: true as const }]));
+    writeCard(ctx.parts, { ...input.card, id: existing.id, x: existing.x, y: existing.y, boardWidth: existing.boardWidth, boardHeight: existing.boardHeight, boardStack: existing.boardStack, status: existing.status, travelerNote: existing.travelerNote, keepsakes, scope: 'guide', lineage: input.card.lineage, updatedAt: now() });
     return { id: input.id };
   },
 });

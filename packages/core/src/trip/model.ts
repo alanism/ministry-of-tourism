@@ -129,6 +129,7 @@ export function writeCard(parts: TripParts, card: TripCard): void {
   const setOrDel = (k: string, v: unknown) => { if (v === undefined) map!.delete(k); else map!.set(k, v); };
   setOrDel('status', valid.status); setOrDel('day', valid.day); setOrDel('time', valid.time);
   setOrDel('placeId', valid.placeId); setOrDel('location', valid.location);
+  setOrDel('address', valid.address); setOrDel('mapUrl', valid.mapUrl);
   setOrDel('source', valid.source); setOrDel('lineage', valid.lineage);
   setOrDel('sourceText', valid.sourceText); setOrDel('travelerNote', valid.travelerNote); setOrDel('currentFacts', valid.currentFacts);
   setOrDel('keepsakes', valid.keepsakes);

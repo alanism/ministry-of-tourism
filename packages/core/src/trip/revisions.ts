@@ -32,7 +32,7 @@ export function tokenMatches(parts: TripParts, boardId: string, token: Compariso
 
 function snapshot(parts: TripParts): Map<string, string> {
   const m = new Map<string, string>();
-  for (const c of readAllCards(parts)) m.set(c.id, syncedSnapshot(c as TripCard) + '|' + (c.travelerNote ?? '') + '|' + (c.status ?? '') + '|' + (c.day ?? '') + '|' + (c.time ?? '') + '|' + c.x + ',' + c.y + '|' + JSON.stringify([c.boardWidth ?? null, c.boardHeight ?? null, c.boardStack ?? null]) + '|' + JSON.stringify(c.booking??null) + '|' + JSON.stringify(c.bookingAttention??null));
+  for (const c of readAllCards(parts)) m.set(c.id, syncedSnapshot(c as TripCard) + '|' + (c.travelerNote ?? '') + '|' + (c.status ?? '') + '|' + (c.day ?? '') + '|' + (c.time ?? '') + '|' + c.x + ',' + c.y + '|' + JSON.stringify([c.boardWidth ?? null, c.boardHeight ?? null, c.boardStack ?? null]) + '|' + JSON.stringify(c.booking??null) + '|' + JSON.stringify(c.bookingAttention??null) + '|' + JSON.stringify(c.keepsakes??null));
   m.set('@votingSeals',JSON.stringify([...parts.clock].filter(([key])=>key.startsWith(VOTING_SEAL_PREFIX)).sort(([a],[b])=>a.localeCompare(b))));
   m.set('@meta',JSON.stringify([...parts.meta.entries()].sort(([a],[b])=>a.localeCompare(b))));
   m.set('@assets',JSON.stringify([...parts.assets.entries()].map(([id,a])=>[id,a.toJSON()]).sort(([a],[b])=>String(a).localeCompare(String(b)))));

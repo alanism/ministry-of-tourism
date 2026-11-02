@@ -23,6 +23,8 @@ export const TASK_STATUSES = ['open', 'done'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 const id = z.string().min(1).max(200);
+export const locationSchema = z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), source: z.enum(['catalog', 'traveler']) });
+export const mapUrlSchema = z.string().max(2000).refine(value => { try { const url = new URL(value); return /^https?:$/.test(url.protocol) && !url.username && !url.password && !/[\u0000-\u0020\u007f]/.test(value); } catch { return false; } }, 'Use an http or https map link without credentials');
 export const keepsakeFormatSchema = z.enum(['postcard', 'memory']);
 export const keepsakeCaptionSchema = z.string().max(1000).refine(value => !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value), 'Caption must contain valid Unicode');
 const keepsakeDraftSchema = z.object({ caption: keepsakeCaptionSchema.optional(), photoChanged: z.literal(true).optional() }).strict();
@@ -93,11 +95,9 @@ const tripCardFieldsSchema = z.object({
   day: localDate.optional(),
   time: localTime.optional(),
   placeId: id.optional(),
-  location: z.object({
-    lat: z.number().min(-90).max(90),
-    lng: z.number().min(-180).max(180),
-    source: z.enum(['catalog', 'traveler']),
-  }).optional(),
+  location: locationSchema.optional(),
+  address: z.string().max(1000).optional(),
+  mapUrl: mapUrlSchema.optional(),
   scope: z.enum(SCOPES),
   provenance: z.enum(PROVENANCES),
   source: sourceRefSchema.optional(),
@@ -180,6 +180,7 @@ export function syncedSnapshot(card: TripCard): string {
     placeId: card.placeId ?? null, location: card.location ?? null,
     source: card.source ?? null, sourceText: card.sourceText ?? null,
     currentFacts: card.currentFacts ?? null, assetIds: card.assetIds,
+    ...(card.address !== undefined ? { address: card.address } : {}), ...(card.mapUrl !== undefined ? { mapUrl: card.mapUrl } : {}),
   });
 }
 
