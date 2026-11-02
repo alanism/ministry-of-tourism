@@ -1,0 +1,16 @@
+import{isValidElement,type ReactElement}from'react';import{afterEach,beforeEach,expect,it,vi}from'vitest';
+const hooks=vi.hoisted(()=>({cursor:0,slots:[] as unknown[],effects:[] as (()=>void|(()=>void))[]}));
+vi.mock('react',async original=>({...await original<typeof import('react')>(),useState(initial:unknown){const slot=hooks.cursor++;if(!(slot in hooks.slots))hooks.slots[slot]=initial;return[hooks.slots[slot],(next:unknown)=>{hooks.slots[slot]=typeof next==='function'?next(hooks.slots[slot]):next;}];},useRef(initial:unknown){const slot=hooks.cursor++;if(!(slot in hooks.slots))hooks.slots[slot]={current:initial};return hooks.slots[slot];},useEffect(effect:()=>void|(()=>void)){hooks.effects.push(effect);}}));
+import{SharedRoomInviteControls}from'./shared-room-invite-controls';
+function nodes(value:unknown):ReactElement<Record<string,unknown>>[]{if(Array.isArray(value))return value.flatMap(nodes);if(!isValidElement(value))return[];const node=value as ReactElement<Record<string,unknown>>;return[node,...nodes(node.props.children)];}
+const link={url:'http://127.0.0.1:5199/#room=room&room-invite='+'a'.repeat(64)+'&expires=1800000000000',inviteId:'b'.repeat(64),expiresAt:1800000000000};
+function render(){hooks.cursor=0;return SharedRoomInviteControls({link,onForget(){}});}
+function button(tree:unknown,label:string){return nodes(tree).find(node=>node.type==='button'&&node.props.children===label);}
+function text(tree:unknown){return nodes(tree).flatMap(node=>typeof node.props.children==='string'?[node.props.children]:[]).join(' ');}
+beforeEach(()=>{hooks.cursor=0;hooks.slots=[];hooks.effects=[];});afterEach(()=>vi.unstubAllGlobals());
+it('copies the exact invitation only on explicit click and reports success without revealing its secret',async()=>{
+ const writeText=vi.fn(async()=>{});vi.stubGlobal('navigator',{clipboard:{writeText}});const tree=render();expect(writeText).not.toHaveBeenCalled();const copy=button(tree,'Copy invitation link');expect(copy).toBeDefined();await(copy!.props.onClick as()=>Promise<void>)();expect(writeText).toHaveBeenCalledWith(link.url);const next=render();expect(text(next)).toContain('Invitation link copied');expect(text(next)).not.toContain('a'.repeat(64));expect(nodes(next).find(node=>node.type==='input')!.props.type).toBe('password');
+});
+it('offers explicit Show/Hide manual fallback when clipboard is absent or denied without echoing the error',async()=>{
+ for(const clipboard of [undefined,{writeText:vi.fn(async()=>{throw Error('PRIVATE-CLIPBOARD-ERROR');})}]){hooks.slots=[];vi.stubGlobal('navigator',{clipboard});let tree=render();const copy=button(tree,'Copy invitation link');expect(copy).toBeDefined();await(copy!.props.onClick as()=>Promise<void>)();tree=render();expect(text(tree)).toContain('Show invitation link');expect(text(tree)).not.toContain('PRIVATE-CLIPBOARD-ERROR');const show=button(tree,'Show invitation link');expect(show).toBeDefined();(show!.props.onClick as()=>void)();tree=render();expect(nodes(tree).find(node=>node.type==='input')!.props.type).toBe('text');(button(tree,'Hide invitation link')!.props.onClick as()=>void)();expect(nodes(render()).find(node=>node.type==='input')!.props.type).toBe('password');}
+});
