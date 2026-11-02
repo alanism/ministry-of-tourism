@@ -12,7 +12,7 @@ export const roomTransferReceiptSchema=z.object({operationId:hex,uid:id,kind:roo
 export const roomTransferOfferResultSchema=z.object({offer:roomOwnershipOfferSchema,version:z.literal(1),admissionVersion:version,receipt:roomTransferReceiptSchema,replayed:z.boolean()}).strict();
 export const roomTransferAcceptResultSchema=z.object({transferred:z.literal(true),ownerUid:id,formerOwnerUid:id,formerOwnerRole:role,ownerEpoch:version,formerOwnerEpoch:version,receipt:roomTransferReceiptSchema,replayed:z.boolean()}).strict();
 export const roomTransferCancelResultSchema=z.object({cancelled:z.literal(true),admissionVersion:version,receipt:roomTransferReceiptSchema,replayed:z.boolean()}).strict();
-export const roomTransferListSchema=z.object({roomId:id,serverTime:version,admissionVersion:version,offers:z.array(z.object({offer:roomOwnershipOfferSchema,version:z.literal(1)}).strict()).max(1)}).strict();
+export const roomTransferListSchema=z.object({roomId:id,serverTime:version,authenticatedAt:version,admissionVersion:version,offers:z.array(z.object({offer:roomOwnershipOfferSchema,version:z.literal(1)}).strict()).max(1)}).strict();
 /** Same domain-separated identity shape as roomAdminOperationId; identity is not authority. */
 export async function roomTransferOperationId(uid:string,kind:z.infer<typeof roomTransferKindSchema>,intent:Record<string,unknown>){
  id.parse(uid);roomTransferKindSchema.parse(kind);const roomId=id.parse(intent.roomId);if(Object.hasOwn(intent,'operationId'))throw Error('Hash transfer intent before adding operation identity');
