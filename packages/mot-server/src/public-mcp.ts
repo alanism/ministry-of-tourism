@@ -128,6 +128,8 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
     const started = Date.now();
     let requestBytes = 0, responseBytes = 0, operation = 'unknown', counted = false, finalized = false;
     let rpcId: string | number | undefined;
+    let successfulSearch = false;
+    const wireCap = () => successfulSearch ? Math.min(limits.maxResponseBytes, limits.maxSearchResponseBytes) : limits.maxResponseBytes;
     let timer: ReturnType<typeof setTimeout> | undefined, mcp: Server | undefined, transport: StreamableHTTPServerTransport | undefined;
     const controller = new AbortController();
     res.setHeader('cache-control', 'no-store'); res.setHeader('x-content-type-options', 'nosniff');
@@ -141,7 +143,9 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
     const boundedWireError = () => {
       // The SDK wraps/escapes tool text and echoes IDs. Bound those final wire bytes too.
       if (res.headersSent) { res.destroy(); return null; }
-      let bounded = rpcId === undefined ? '' : JSON.stringify({ jsonrpc: '2.0', id: rpcId, error: { code: -32603, message: 'Response too large.' } });
+      const searchFailure = successfulSearch;
+      successfulSearch = false; // Versioned failures use the global budget, not the successful metadata budget.
+      let bounded = rpcId === undefined ? '' : JSON.stringify({ jsonrpc: '2.0', id: rpcId, ...(searchFailure ? { result: failed('LIMIT_EXCEEDED', 'Response too large.') } : { error: { code: -32603, message: 'Response too large.' } }) });
       const protocolErrorFits = bounded && bytes(bounded) <= limits.maxResponseBytes;
       if (!protocolErrorFits) bounded = JSON.stringify(failure('LIMIT_EXCEEDED', 'Response too large.'));
       res.shouldKeepAlive = false;
@@ -151,7 +155,7 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
     };
     res.write = ((chunk: string | Uint8Array, ...args: unknown[]) => {
       let length = typeof chunk === 'string' ? bytes(chunk) : chunk.byteLength;
-      if (responseBytes + length > limits.maxResponseBytes) {
+      if (responseBytes + length > wireCap()) {
         const bounded = boundedWireError(); if (bounded === null) return false;
         chunk = bounded; length = bytes(bounded);
       }
@@ -161,7 +165,7 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
     }) as typeof res.write;
     res.end = ((chunk?: string | Uint8Array | (() => void), ...args: unknown[]) => {
       let length = typeof chunk === 'string' ? bytes(chunk) : chunk instanceof Uint8Array ? chunk.byteLength : 0;
-      if (responseBytes + length > limits.maxResponseBytes) {
+      if (responseBytes + length > wireCap()) {
         const bounded = boundedWireError(); if (bounded === null) return res;
         chunk = bounded; length = bytes(bounded);
       }
@@ -232,7 +236,9 @@ export function createPublicMcpServer(options: PublicMcpOptions): http.Server {
           const raw = await interruptible(() => fn.call(options.catalogue, args, signal), signal);
           signal.throwIfAborted();
           const value = options.catalogue.validateResult(name, raw);
-          return reply(value, PUBLIC_TOOL_DEFINITIONS[name][1], name === 'fcc_search_catalog' ? Math.min(limits.maxSearchResponseBytes, limits.maxResponseBytes) : limits.maxResponseBytes);
+          const result = reply(value, PUBLIC_TOOL_DEFINITIONS[name][1], name === 'fcc_search_catalog' ? Math.min(limits.maxSearchResponseBytes, limits.maxResponseBytes) : limits.maxResponseBytes);
+          successfulSearch = name === 'fcc_search_catalog' && !('isError' in result);
+          return result;
         } catch (error) {
           if (signal.aborted) return failed('CANCELLED', 'Request cancelled.', true);
           if (error instanceof PublicCatalogueError) return failed(error.code, PUBLIC_CATALOGUE_ERRORS[error.code]);
