@@ -1,0 +1,87 @@
+{
+  "protocolRevision": "F136-v1.1",
+  "decisionCard": "MOT-136",
+  "executionCard": "MOT-129",
+  "ownerSelectedDefault": "human-visual-trip-first",
+  "ownerSelectedBackup": "reviewed-own-muse-plan-first",
+  "ownerProtocolDisposition": "approved",
+  "requestedAstraDisposition": "approved",
+  "productValidation": "pending",
+  "releaseApproval": false,
+  "observations": [],
+  "tests": [
+    {
+      "id": "T1",
+      "scope": "comparable first use and collection",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T2",
+      "scope": "predict inclusion and preserve collection",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T3",
+      "scope": "actual external-Muse round-trip",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T4",
+      "scope": "source-bound publication and cold native restore",
+      "status": "pending",
+      "receipt": null
+    },
+    {
+      "id": "T5",
+      "scope": "host/shared/offline and physical devices",
+      "status": "pending",
+      "receipt": null
+    }
+  ],
+  "ownerDispositionDate": "2026-10-31",
+  "ownerDecisionIdsApproved": [
+    "D136-01",
+    "D136-02",
+    "D136-03",
+    "D136-04",
+    "D136-05",
+    "D136-06",
+    "D136-07"
+  ],
+  "ownerApprovalSource": "Explicit owner response: Approve packet and delegate Astra review",
+  "requestedAstraModel": "gpt-6-astra",
+  "requestedAstraOpenFindings": [],
+  "ownerClarificationDisposition": {
+    "status": "approved",
+    "date": "2026-10-31",
+    "effortRule": "wrongTurns + repairSteps; equal weight; B improves only for a strictly lower total; ties do not count",
+    "overlapRule": "each observed action counted once; a failed corrective action that is a wrong turn counts only as a wrong turn",
+    "preferenceConflictRule": "retain A when A meets thresholds and qualified preference, even if B has lower effort without its required preference support",
+    "source": "Latest explicit owner answers: Lower combined total; Retain A. Supersedes earlier general instruction to use both recommendations."
+  },
+  "requestedAstraClosedFindings": [
+    "AS136-01"
+  ],
+  "requestedAstraReviewedCommit": "5a85aff87ce95c3f53f4d34ed49364676ff1e079",
+  "requestedAstraApprovalDate": "2026-10-31",
+  "decisionContractDisposition": "complete",
+  "requestedAstraReviewHistory": [
+    {
+      "round": 1,
+      "revision": "F136-v1",
+      "verdict": "request_changes",
+      "finding": "AS136-01",
+      "reviewedCommit": "5db2ddc7e093c6c50ce6412ff40d66f6b004bf27"
+    },
+    {
+      "round": 2,
+      "revision": "F136-v1.1",
+      "verdict": "approved",
+      "closedFinding": "AS136-01",
+      "reviewedCommit": "5a85aff87ce95c3f53f4d34ed49364676ff1e079"
+    }
+  ]
+}
