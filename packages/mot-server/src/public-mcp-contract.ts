@@ -1,18 +1,22 @@
 // The reviewed product contract is the single validator/advertisement source.
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
+import { Ajv2020 } from 'ajv/dist/2020.js';
+import addFormats from 'ajv-formats';
 import type { JsonSchemaType } from '@modelcontextprotocol/sdk/validation/types.js';
 import contract from '../../../docs/mcp-public-file.schema.json' with { type: 'json' };
 
 export const publicContract = contract;
 const definitions = contract.$defs as unknown as Record<string, JsonSchemaType>;
-const provider = new AjvJsonSchemaValidator();
+const ajv = new Ajv2020({ strict: true, validateFormats: true, allErrors: true });
+addFormats(ajv);
+const provider = new AjvJsonSchemaValidator(ajv);
 const validators = new Map<string, ReturnType<typeof provider.getValidator>>();
 export function publicDefinition(name: string): JsonSchemaType | undefined { return definitions[name]; }
 export function validatePublicDefinition(name: string, value: unknown): boolean {
   if (!definitions[name]) return false;
   let validate = validators.get(name);
   if (!validate) {
-    validate = provider.getValidator({ $defs: definitions, $ref: `#/$defs/${name}` });
+    validate = provider.getValidator({ $schema: contract.$schema, $defs: definitions, $ref: `#/$defs/${name}` });
     validators.set(name, validate);
   }
   return validate(value).valid;
