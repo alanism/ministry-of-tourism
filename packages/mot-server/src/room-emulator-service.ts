@@ -5,6 +5,7 @@ import {createRoomEmulatorByteStore} from './room-emulator-storage.ts';
 import {createRoomMediaAdapter} from './room-emulator-media.ts';
 import {createRoomTransferAdapter} from './room-emulator-transfer.ts';
 import {createRoomLifecycleAdapter} from './room-emulator-lifecycle.ts';
+import {createRoomMaintenance} from './room-emulator-maintenance.ts';
 import {admitRoomAttempt,prepareRoomAudit,RoomRateLimit} from './room-emulator-budgets.ts';
 import {roomAdmissionRoute} from './room-emulator-admission.ts';
 import {parseFileJson} from '../../core/src/trip/file-exchange-json.ts';
@@ -19,6 +20,7 @@ export function createRoomEmulatorService(){
   const app=initializeApp({projectId:'demo-mot-rooms'},'mot-rooms-'+crypto.randomUUID()),db=getFirestore(app),auth=getAuth(app);
   const store=createRoomEmulatorByteStore(app),media=createRoomMediaAdapter({db,store,authorize:authorizeRoom,accounting:mediaRoomAccounting,publication:async(_tx,_ref,_uid,_cardId,assetId,input)=>({roomId:input.roomId,assetId,scope:'shared',personalOnly:false,privateAncestor:false,...(input.credit!==undefined?{credit:input.credit}:{}),...(input.rightsStatus!==undefined?{rightsStatus:input.rightsStatus}:{})})});
   const transfer=createRoomTransferAdapter({db,authorize:authorizeRoom,audit:prepareRoomAudit}),lifecycle=createRoomLifecycleAdapter({db,store,authorize:authorizeRoom,readSnapshot:readRoomPublicSnapshot,audit:prepareRoomAudit});
+  const maintenance=createRoomMaintenance({db,store,lifecycleCleanup:roomId=>lifecycle.cleanupPending(roomId)}),ready=maintenance.tick();
   const json=(value:unknown,status=200)=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json','cache-control':'no-store','referrer-policy':'no-referrer'}});
   const unavailable=()=>json({error:{code:'unavailable',message:'Room operation unavailable',recoverableDraft:true}},403);
   async function handle(request:Request,transport?:{networkAddress:string}):Promise<Response>{
@@ -27,6 +29,7 @@ export function createRoomEmulatorService(){
     let uid:string,authenticatedAt:number;
     try{const bearer=/^Bearer ([^\s]{1,8192})$/.exec(request.headers.get('authorization')??'');if(!bearer)return unavailable();const token=await auth.verifyIdToken(bearer[1]!,true);if(token.firebase.sign_in_provider==='anonymous'||token.email_verified!==true)return unavailable();uid=token.uid;authenticatedAt=token.auth_time*1000;}catch{return unavailable();}
     try{
+      await ready;
       const action=match[2]??'';
       if(request.method==='POST'&&!['/revoke','/revoke-invite','/sessions/revoke','/lifecycle/withdraw','/lifecycle/close','/transfers/cancel'].includes(action)&&!action.endsWith('/discard'))await admitRoomAttempt(db,uid,match[1]??'create',transport?.networkAddress??'unknown',action==='/claims');
       const session=await roomSessionRoute(request,uid,db);if(session!==null)return json(session);
@@ -61,7 +64,7 @@ export function createRoomEmulatorService(){
       });return json(result);
     }catch(error){if(error instanceof RoomRateLimit){const response=json({error:{code:'limit',message:'Room attempt limit reached; retain draft and retry later',recoverableDraft:true}},429);response.headers.set('retry-after',String(Math.max(1,Math.ceil(error.retryAfterMs/1000))));return response;}const message=error instanceof Error?error.message:'';if(/Stale|conflict|Undo|snapshot changed/i.test(message))return json({error:{code:'conflict',message:'Room content changed; retain draft and review current version',recoverableDraft:true}},409);if(/capacity|limit|64KiB/.test(message))return json({error:{code:'limit',message:'Room limit reached; retain draft and recover locally',recoverableDraft:true}},413);return unavailable();}
   }
-  return{handle,async close(){await db.terminate();await deleteApp(app);}};
+  return{handle,async close(){await maintenance.close();await db.terminate();await deleteApp(app);}};
 }
 async function readBytes(request:Request,max:number){if(Number(request.headers.get('content-length')??0)>max)throw Error('Room intent limit');const reader=request.body?.getReader();if(!reader)throw Error('Room intent unavailable');const chunks:Uint8Array[]=[];let n=0;while(true){const part=await reader.read();if(part.done)break;n+=part.value.length;if(n>max){reader.releaseLock();throw Error('Room intent limit');}chunks.push(part.value);}const out=new Uint8Array(n);let at=0;for(const c of chunks){out.set(c,at);at+=c.length;}return out;}
 async function readJson(request:Request){if(request.headers.get('content-type')!=='application/json')throw Error('Room intent unavailable');return parseFileJson(await readBytes(request,65536));}
