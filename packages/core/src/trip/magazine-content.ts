@@ -17,6 +17,7 @@ export interface MagazineSelection {
   selectionRule?:string;
   excludedItems?:MaterialIssue[];
   privateExcluded?:{cards:number;placements:number};
+  outsideScopeExcluded?:{cards:number;placements:number};
   unresolved?:MaterialIssue[];
 }
 /** The same plain-language accounting is displayed in preview and the portable reading. */
@@ -25,6 +26,7 @@ export function magazineSelectionSummary(selection:MagazineSelection):string[]{
   const excluded=selection.excludedItems??[],hidden=selection.privateExcluded;
   if(excluded.length)lines.push(`${excluded.length} other saved items are excluded from this output: ${excluded.filter(item=>item.reason==='board-only').length} board-only placements; ${excluded.filter(item=>item.reason!=='board-only').length} outside this copy’s scope.`);
   if(hidden&&(hidden.cards||hidden.placements))lines.push(`${hidden.cards} private cards and ${hidden.placements} private placements excluded; their identities and content are not included.`);
+  const outside=selection.outsideScopeExcluded;if(outside&&(outside.cards||outside.placements))lines.push(`${outside.cards} cards and ${outside.placements} placements outside this copy’s scope are excluded without their identities or content.`);
   for(const item of selection.unresolved??[])lines.push(`${item.title??item.id}: ${item.reason==='placement-not-rendered'?'this placement is not rendered. Open Composition and remove the extra placement or use a distinct saved image.':'this selected image is not rendered. Restore its bytes or remove it from the selected item in Composition.'}`);
   return lines;
 }
@@ -43,11 +45,11 @@ export function magazineContent(doc:Y.Doc,issue:MagazineDocument,cards:TripCard[
   }),placements:layers.map(layer=>({id:layer.id,cardId:layer.cardId,assetId:layer.assetId,crop:[...layer.crop],rotation:layer.rotation,pageIds:issue.pages.filter(page=>page.svg.includes(`data-placement="${escapeXml(layer.id)}"`)).map(page=>page.id)})),excluded:{reason:scope==='guide'?'outside-guide':'private',cards:readAllCards(parts).length-cards.length}};
   const allCards=readAllCards(parts),allLayers=readPresentations(parts),selectedCards=new Set(cards.map(card=>card.id)),selectedLayers=new Set(layers.map(layer=>layer.id));
   const privateCards=new Set(allCards.filter(card=>card.scope==='private').map(card=>card.id)),privateLayer=(layer:Presentation)=>layer.scope==='private'||!!(layer.cardId&&privateCards.has(layer.cardId));
+  const permittedLayer=(layer:Presentation)=>scope==='personal'||(!privateLayer(layer)&&(scope!=='guide'||layer.scope==='guide')&&(!layer.cardId||selectedCards.has(layer.cardId)));
   const excludedItems:MaterialIssue[]=[];
-  for(const card of allCards)if(!selectedCards.has(card.id)&&(scope==='personal'||card.scope!=='private'))excludedItems.push({kind:'card',id:card.id,title:card.title,reason:scope==='guide'?'outside-guide':'outside-copy'});
-  for(const layer of allLayers)if(!selectedLayers.has(layer.id)&&(scope==='personal'||!privateLayer(layer)))excludedItems.push({kind:'placement',id:layer.id,reason:layer.surface==='board'?'board-only':scope==='guide'?'outside-guide':'outside-copy'});
+  for(const layer of allLayers)if(!selectedLayers.has(layer.id)&&permittedLayer(layer))excludedItems.push({kind:'placement',id:layer.id,reason:layer.surface==='board'?'board-only':'outside-copy'});
   const unresolved:MaterialIssue[]=[...issue.selection.assets.filter(item=>!item.pageIds.length).map(item=>({kind:'asset' as const,id:item.id,title:item.caption,reason:'image-not-rendered' as const})),...issue.selection.placements.filter(item=>!item.pageIds.length).map(item=>({kind:'placement' as const,id:item.id,reason:'placement-not-rendered' as const}))];
-  Object.assign(issue.selection,{selectionRule:'All saved cards permitted by this copy’s scope, eligible magazine placements, and explicitly saved apparel. Memory reactions do not change magazine selection.',excludedItems,privateExcluded:{cards:scope==='personal'?0:privateCards.size,placements:scope==='personal'?0:allLayers.filter(privateLayer).length},unresolved});
+  Object.assign(issue.selection,{selectionRule:'All saved cards permitted by this copy’s scope, eligible magazine placements, and explicitly saved apparel. Memory reactions do not change magazine selection.',excludedItems,privateExcluded:{cards:scope==='personal'?0:privateCards.size,placements:scope==='personal'?0:allLayers.filter(privateLayer).length},outsideScopeExcluded:{cards:allCards.filter(card=>!selectedCards.has(card.id)&&!privateCards.has(card.id)).length,placements:allLayers.filter(layer=>!permittedLayer(layer)&&!privateLayer(layer)).length},unresolved});
   if(unresolved.length)issue.warnings.push(`${unresolved.length} selected items are unresolved. Open Composition and review inclusion details before exporting HTML.`);
   issue.navigation=issue.spreads.map(spread=>({id:spread.id,title:spread.title,pageIds:[...spread.pageIds]}));
 }

@@ -23,12 +23,11 @@ it('accounts for scope and board-only material without exposing private identiti
   const issue = buildMagazine(s.doc, { variant: 'guide', assetUrls: new Map([['photo', image]]) });
   expect(issue.selection).toHaveProperty('selectionRule');
   expect(issue.selection).toHaveProperty('excludedItems', expect.arrayContaining([
-    expect.objectContaining({ kind: 'card', id: stay, reason: 'outside-guide' }),
     expect.objectContaining({ kind: 'placement', id: board, reason: 'board-only' }),
   ]));
   expect(issue.selection).toHaveProperty('privateExcluded', { cards: 1, placements: 1 });
   const serialized = JSON.stringify(issue.selection);
-  for (const canary of [secret, hidden, 'PRIVATE INVENTORY CANARY']) expect(serialized).not.toContain(canary);
+  for (const canary of [stay, secret, hidden, 'PRIVATE INVENTORY CANARY']) expect(serialized).not.toContain(canary);
   expect(issue.reading?.map(item => item.id).sort()).toEqual(issue.selection?.cards.map(card => card.id).sort());
   expect(issue.selection?.assets[0]).toHaveProperty('source.version', 'v2');
   expect(encodeTrip(s.doc)).toEqual(before);
@@ -49,4 +48,12 @@ it('reports actual placement identity instead of claiming every crop of one asse
 it('refuses missing selected image bytes instead of emitting a complete inventory', () => {
   const { s } = fixture();
   expect(() => buildMagazine(s.doc)).toThrow(/unavailable/i);
+});
+it('keeps stay-only identities and labels out of a guide manifest, even in excluded inventory', () => {
+  const { s, stay } = fixture();
+  const excluded = s.execute<{id:string}>(actor, 'trip_presentation_create', { cardId: stay, scope: 'stay' }).id;
+  const issue = buildMagazine(s.doc, { variant: 'guide', assetUrls: new Map([['photo', image]]) });
+  const serialized = JSON.stringify(issue.selection);
+  for (const canary of [stay, excluded, 'Trip note']) expect(serialized).not.toContain(canary);
+  expect(issue.selection).toHaveProperty('outsideScopeExcluded', { cards: 1, placements: 1 });
 });
