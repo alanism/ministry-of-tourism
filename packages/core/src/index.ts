@@ -77,3 +77,6 @@ export * from './trip/managed-plan-review.ts';
 
 export * from './trip/voting-contract.ts';
 export * from './trip/voting-lifecycle.ts';
+export * from './trip/public-catalogue.ts';
+export * from './trip/file-exchange.ts';
+export * from './trip/file-exchange-json.ts';

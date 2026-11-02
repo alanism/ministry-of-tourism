@@ -6,7 +6,7 @@ import CountryArtworkBrowser from './CountryArtworkBrowser';
 import ArtworkPreview from './ArtworkPreview';
 
 const categories=[['city-illustrations','Scenes'],['city-ink','City ink'],['cafe','Café'],['portraits','Brush & fashion portraits'],['hotels','Hotels'],['restaurants','Restaurants'],['activities','Activities'],['people','People'],['objects','Objects'],['stickers','Stickers'],['maps','Maps']] as const;
-interface TripContext{destination:{cityId?:string;city:string;countryCode?:string};destinations:readonly ArtDestination[];}
+interface TripContext{destination:{cityId?:string;city:string;countryCode?:string};destinations:readonly ArtDestination[];insertionTarget?:'board'|'magazine';}
 export default function TripArtworkBrowser({manifest,trip,onPick,busy,onUpload}:{manifest:Manifest;trip:TripContext;onPick:(art:Artwork)=>void;busy:boolean;onUpload?:()=>void}){
  const [mode,setMode]=useState<'city'|'country'>('city'),[category,setCategory]=useState('all'),[chosenCountry,setChosenCountry]=useState<string>(),[countryQuery,setCountryQuery]=useState(''),[selected,setSelected]=useState<Artwork|null>(null);
  const selectedButton=useRef<HTMLElement|null>(null);
@@ -47,6 +47,6 @@ export default function TripArtworkBrowser({manifest,trip,onPick,busy,onUpload}:
     <div className="art-notice-actions">{(scope.state==='cityabsent'||scope.state==='categorygap')&&offered>0&&<button type="button" className="m-btn ink" onClick={()=>changeMode('country')}>Browse {offered} across {country}</button>}{onUpload&&<button type="button" className="m-btn" onClick={onUpload}>Upload your photos</button>}</div>
    </section>:<CountryArtworkBrowser manifest={manifest} subject={category} countryCode={countryCode} destinations={trip.destinations} scopeOverride={scope} mode={mode} destinationCityId={cityId} onPick={select} busy={busy} preview/>}
   </div>
-  {selected?<ArtworkPreview key={selected.id} artwork={selected} origin={trip.destinations.find(city=>city.id===selected.city)?.name??manifest.cities.find(city=>city.id===selected.city)?.label??selected.city??'Origin unknown'} away={!!selected.city&&selected.city!==cityId} busy={busy} onAdd={()=>onPick(selected)} onBack={back}/>:<aside className="trip-art-preview art-preview-empty"><h3>Pick a picture to preview it</h3><p>See who drew it, where it’s from and how large its pixels print.</p></aside>}
+  {selected?<ArtworkPreview destination={trip.insertionTarget} key={selected.id} artwork={selected} origin={trip.destinations.find(city=>city.id===selected.city)?.name??manifest.cities.find(city=>city.id===selected.city)?.label??selected.city??'Origin unknown'} away={!!selected.city&&selected.city!==cityId} busy={busy} onAdd={()=>onPick(selected)} onBack={back}/>:<aside className="trip-art-preview art-preview-empty"><h3>Pick a picture to preview it</h3><p>See who drew it, where it’s from and how large its pixels print.</p></aside>}
  </div>;
 }

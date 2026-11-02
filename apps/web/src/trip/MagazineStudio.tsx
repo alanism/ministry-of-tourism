@@ -20,7 +20,7 @@ function TeeChoice({session,art,chosen,busy,onChoose}:{session:TripSession;art:A
   const cached=useAssetUrl(session,art.assetId);
   return <button type="button" className="mot-issue-tee" aria-pressed={chosen} disabled={busy} onClick={onChoose}><img src={cached??art.thumbnailUrl} alt="" loading="lazy" referrerPolicy="no-referrer" /><span>{art.label??'FCC tee'}</span>{chosen&&<strong>In your issue</strong>}</button>;
 }
-export function MagazineStudio({session,tick,onExport}:{session:TripSession;tick:number;onExport:()=>void}) {
+export function MagazineStudio({session,tick,onExport,onBrowseCollection}:{session:TripSession;tick:number;onExport:()=>void;onBrowseCollection?:()=>void}) {
   const [magazine,setMagazine]=useState<MagazineDocument>(),[error,setError]=useState(''),[includePrivate,setIncludePrivate]=useState(false);
   const [teeChoices,setTeeChoices]=useState<ApparelArtRef[]>([]);
   const cityId=readTripMeta(session.doc).cityId;
@@ -65,12 +65,13 @@ export function MagazineStudio({session,tick,onExport}:{session:TripSession;tick
             const image=<PageImage svg={postcard?postcardPreviewSvg(page.svg,turned):page.svg} alt={`${page.title??group.title} · page ${page.folio}`} printLayout={fitPages} />;
             return <figure className={page.section==='front-cover'?'front':''} key={page.id}>{postcard?<button className="mot-issue-postcard" type="button" aria-label="Turn the postcard over" aria-pressed={turned} onClick={()=>setTurned(value=>!value)}>{image}</button>:image}<figcaption>Page {page.folio}{postcard?' · Tap the postcard to turn it over':''} <a href="#trip-reading">Read complete text</a></figcaption></figure>;
           })}</div>
-          {pages.some(page=>page.pattern==='merch'||page.pattern==='tee-advert')&&magazine?.cityId&&<p className="mot-issue-shop"><a className="m-btn ink" href={fccShopUrl(magazine.cityId)} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Order on FCC →</a><span className="m-muted">Sizes, prices and delivery are on FCC. MoT takes no payment.</span></p>}
+          {pages.some(page=>page.pattern==='merch'||page.pattern==='tee-advert')&&magazine?.cityId&&<p className="mot-issue-shop">{onBrowseCollection&&<button type="button" className="m-btn" onClick={onBrowseCollection}>Browse the FCC T-shirt collection</button>}<a className="m-btn ink" href={fccShopUrl(magazine.cityId)} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Open the city’s FCC shop →</a><span className="m-muted">Sizes, prices and delivery are on FCC. MoT takes no payment.</span></p>}
           {pages.some(page=>page.credits.length>0)&&<details className="mot-issue-credits"><summary>Credits and sources</summary>{[...new Set(pages.flatMap(page=>page.credits))].map(credit=><p key={credit}>{credit}</p>)}</details>}
         </article>;
       })}</div>
     </div>}
     {!!teeChoices.length&&<section className="mot-issue-tee-choices" aria-label="Choose the tee in your issue"><h4>Choose a tee to include</h4><p>These are FCC catalogue choices. Only your saved selection joins the magazine.</p><div>{teeChoices.map(art=><TeeChoice key={art.assetId} session={session} art={art} chosen={wornTee===art.assetId} busy={choosingTee} onChoose={()=>void chooseTee(art)} />)}</div>{choosingTee&&<p role="status">Keeping the original tee images… <button type="button" className="m-btn small" onClick={()=>teeController.current?.abort()}>Cancel tee selection</button></p>}</section>}
+    {onBrowseCollection&&<p><button type="button" className="m-btn" onClick={onBrowseCollection}>More shirts · browse every FCC city</button></p>}
     {magazine&&<MagazineReading issue={magazine}/>}
     {!!magazine?.warnings.length&&<details className="mot-issue-notes"><summary>Issue notes ({magazine.warnings.length})</summary>{magazine.warnings.map(warning=><p className="m-muted" key={warning}>{warning}</p>)}</details>}
   </section>;
