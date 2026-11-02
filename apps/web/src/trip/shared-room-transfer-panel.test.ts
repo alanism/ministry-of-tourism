@@ -14,7 +14,7 @@ const click=(p:SharedRoomTransferPanelProps,label:string)=>(node(p,label).props.
 const change=(p:SharedRoomTransferPanelProps,label:string,value:string|boolean)=>(node(p,label).props.onChange as(e:unknown)=>void)({target:typeof value==='boolean'?{checked:value}:{value}});
 function fixture(uid='owner',role:RoomSnapshot['principal']['role']='owner'){
  const client=createSharedRoomClient({baseUrl:'http://127.0.0.1:48125',projectId:'demo-mot-rooms',auth:{uid,getIdToken:async()=>{throw Error('No implicit network');}},session:{...session,uid}}),transfers=vi.spyOn(client,'transfers').mockResolvedValue({roomId:'room',serverTime:now+1000,authenticatedAt:now,admissionVersion:4,offers:uid==='recipient'?[{offer:offered,version:1}]:[]});
- const room:RoomSnapshot={serviceMode:'local-emulator',schemaMajor:1,capabilities:['room-cards/1'],roomId:'room',principal:{uid,role,membershipEpoch:1,householdId:null,householdEpoch:null},cards:[],sync:'accepted'};
+ const room:RoomSnapshot={serviceMode:'local-emulator',schemaMajor:1,capabilities:['room-cards/1','room-transfer/1'],roomId:'room',principal:{uid,role,membershipEpoch:1,householdId:null,householdEpoch:null},cards:[],sync:'accepted'};
  const props:SharedRoomTransferPanelProps={active:true,client,roomId:'room',room,session:{...session,uid},onChanged:vi.fn(),onAccessUnavailable:vi.fn(),onRecoveryChange:vi.fn()};return{props,client,transfers};
 }
 async function refresh(p:SharedRoomTransferPanelProps){click(p,'Check ownership transfer');await vi.waitFor(()=>expect(node(p,'Check ownership transfer').props.disabled).toBe(false));render(p);}
@@ -44,4 +44,7 @@ it('keeps an explicitly rejected request rejected when the same account gets a r
 });
 it('cancels only an explicitly confirmed current offer without creating another offer',async()=>{
  const{props,client,transfers}=fixture();transfers.mockResolvedValue({roomId:'room',serverTime:now+1000,authenticatedAt:now,admissionVersion:4,offers:[{offer:offered,version:1}]});const send=vi.spyOn(client,'cancelTransfer').mockImplementation(async input=>({cancelled:true,admissionVersion:5,replayed:false,receipt:{uid:'owner',kind:'transfer-cancel',operationId:input.operationId,requestDigest:input.operationId,version:2,acceptedAt:now+1000}})),offer=vi.spyOn(client,'offerTransfer');await refresh(props);expect(node(props,'Cancel this transfer offer').props.disabled).toBe(true);change(props,'Confirm transfer cancellation',true);click(props,'Cancel this transfer offer');await vi.waitFor(()=>expect(send).toHaveBeenCalledOnce());expect(send.mock.calls[0]![0]).toMatchObject({offerId:offered.offerId,baseVersion:1,membershipEpoch:1,sessionId:session.id});expect(offer).not.toHaveBeenCalled();
+});
+it('keeps transfer unavailable when the actual feed advertises only card support',async()=>{
+ const{props:initial,client,transfers}=fixture(),props={...initial,room:{...initial.room!,capabilities:['room-cards/1'] as RoomSnapshot['capabilities']}};const offer=vi.spyOn(client,'offerTransfer'),accept=vi.spyOn(client,'acceptTransfer');render(props);expect(node(props,'Check ownership transfer').props.disabled).toBe(true);click(props,'Check ownership transfer');await Promise.resolve();expect(transfers).not.toHaveBeenCalled();expect(offer).not.toHaveBeenCalled();expect(accept).not.toHaveBeenCalled();expect(node(props,'Confirm transfer offer')).toBeUndefined();
 });
