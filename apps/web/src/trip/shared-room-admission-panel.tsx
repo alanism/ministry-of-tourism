@@ -1,5 +1,5 @@
 import{useEffect,useRef,useState}from'react';
-import{readAllCards,readTripMeta,type TripSession}from'@writers-board/core';import type{z}from'zod';
+import{readAllCards,readTripMeta}from'../../../../packages/core/src/trip/model';import type{TripSession}from'../../../../packages/core/src/trip/session';import type{z}from'zod';
 import{roomAdminOperationId,roomCreateRequestSchema,type RoomAdminReceipt,roomAdmissionSnapshotSchema}from'../../../../packages/core/src/trip/shared-room-admission';
 import{projectSharedCard,type RoomSnapshot}from'../../../../packages/core/src/trip/shared-room-domain';
 import{sha256Hex}from'../../../../packages/core/src/trip/sha256';
