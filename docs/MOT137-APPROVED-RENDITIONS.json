@@ -379,5 +379,26 @@
     "allPassed": true,
     "representations": 17
   },
-  "approvalHashEncoding": "UTF-8/LF"
+  "approvalHashEncoding": "UTF-8/LF",
+  "transportObservations": {
+    "receiptSha256": "85f6813f7c0ba77e846793f3430bf3239b2b8344f36d806ab54d7d5f9a76eb1b",
+    "unavailableInsertionUrls": [
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/0.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/1.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/2.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/3.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/4.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/5.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/6.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/7.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/0.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/1.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/2.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/3.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/4.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/5.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/6.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/7.webp"
+    ]
+  }
 }
