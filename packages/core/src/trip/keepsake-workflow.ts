@@ -8,18 +8,23 @@ export type Reaction = 'keep' | 'maybe' | 'skip';
 export interface MemoryItem { cardId: string; title: string; kind: TripCard['kind']; assetId?: string; note: string; day?: string; reaction?: Reaction; why: string; }
 export interface MemoryShortlist { items: MemoryItem[]; skipped: string[]; more: number; }
 
-const MEMORY_KINDS = new Set<TripCard['kind']>(['photo', 'note', 'place']);
 const rank = (item: MemoryItem) => (item.reaction === 'keep' ? 0 : item.reaction === 'maybe' ? 1 : 2) * 10 + (item.assetId ? 0 : 1);
 
 /** A first shortlist from permitted photos and notes. Every photo is welcome; nothing is judged by quality. */
 export function memoryShortlist(session: TripSession, options: { reactions?: Readonly<Record<string, Reaction>>; includePrivate?: boolean; limit?: number } = {}): MemoryShortlist {
   const reactions = options.reactions ?? {};
-  const candidates = readAllCards(session.parts).filter(card => (options.includePrivate || card.scope !== 'private') && MEMORY_KINDS.has(card.kind) && (card.assetIds.length > 0 || card.kind === 'note' && card.body.trim().length > 0));
+  const candidates = readAllCards(session.parts).filter(card => {
+    if (!options.includePrivate && card.scope === 'private') return false;
+    // An explicitly collected image card remains eligible; a free artwork placement alone is not a card or a visit.
+    const photograph = card.assetIds.length > 0;
+    const authoredNote = !!card.travelerNote?.trim() || (card.kind === 'note' && card.provenance === 'traveler' && !card.source && !!card.body.trim());
+    return photograph || authoredNote;
+  });
   const skipped = candidates.filter(card => reactions[card.id] === 'skip').map(card => card.id).sort();
   const items = candidates.filter(card => reactions[card.id] !== 'skip').map((card): MemoryItem => ({
     cardId: card.id, title: card.title, kind: card.kind, ...(card.assetIds.length ? { assetId: card.assetIds[card.assetIds.length - 1] } : {}),
     note: (card.travelerNote ?? card.body).trim().slice(0, 400), ...(card.day ? { day: card.day } : {}), ...(reactions[card.id] ? { reaction: reactions[card.id] } : {}),
-    why: card.assetIds.length ? (card.stage === 'remember' ? 'A photo you filed under Remember.' : 'A photo from your trip.') : 'A note in your own words.',
+    why: card.assetIds.some(id => readAsset(session.parts, id)?.source?.kind === 'artwork') ? 'Artwork you collected, not a record of a visit.' : card.assetIds.length ? (card.stage === 'remember' ? 'A photo you filed under Remember.' : 'A photo from your trip.') : 'A note in your own words.',
   })).sort((a, b) => rank(a) - rank(b) || (a.day ?? '9999').localeCompare(b.day ?? '9999') || a.title.localeCompare(b.title) || a.cardId.localeCompare(b.cardId));
   const limit = Math.max(1, Math.min(500, options.limit ?? 12));
   return { items: items.slice(0, limit), skipped, more: Math.max(0, items.length - limit) };

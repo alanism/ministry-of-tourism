@@ -23,6 +23,11 @@ export const TASK_STATUSES = ['open', 'done'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 const id = z.string().min(1).max(200);
+export const keepsakeFormatSchema = z.enum(['postcard', 'memory']);
+export const keepsakeCaptionSchema = z.string().max(1000).refine(value => !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value), 'Caption must contain valid Unicode');
+const keepsakeDraftSchema = z.object({ caption: keepsakeCaptionSchema.optional(), photoChanged: z.literal(true).optional() }).strict();
+export const keepsakeDraftsSchema = z.object({ postcard: keepsakeDraftSchema.optional(), memory: keepsakeDraftSchema.optional() }).strict();
+export const keepsakeSelectionSchema = z.object({ cardId: id, format: keepsakeFormatSchema }).strict();
 // Shared ISO choices: explicit country validation is identical in commands and the picker.
 export const COUNTRY_CODES = 'AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'.split(' ');
 export const countryCodeSchema=z.string().refine(value=>COUNTRY_CODES.includes(value),'Choose an ISO country code');
@@ -68,6 +73,7 @@ export const tripMetaSchema = z.object({
   groupWorkspace: groupWorkspaceSchema.optional(),
   groupVotingVersion: z.literal(1).optional(),
   memoryWorkflow:memoryWorkflowSchema.optional(),
+  keepsakeSelection: keepsakeSelectionSchema.optional(),
   lineage: z.object({ guideBoardId: id, copiedAt: z.string().min(1) }).optional(),
   magazine: z.object({wornTeeAssetId:id,apparelAssetIds:z.array(id).min(1).max(3).refine(ids=>new Set(ids).size===ids.length)}).strict()
     .refine(value=>value.apparelAssetIds.includes(value.wornTeeAssetId),'The chosen tee must be cached').optional(),
@@ -97,6 +103,7 @@ const tripCardFieldsSchema = z.object({
   source: sourceRefSchema.optional(),
   sourceText: z.string().max(100000).optional(),
   travelerNote: z.string().max(20000).optional(),
+  keepsakes: keepsakeDraftsSchema.optional(),
   currentFacts: z.array(currentFactSchema).max(100).optional(),
   booking: bookingSchema.optional(),
   bookingAttention: bookingAttentionSchema.optional(),

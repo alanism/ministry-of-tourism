@@ -53,6 +53,7 @@ export interface CreateTripOptions {
   groupWorkspace?: TripMeta['groupWorkspace'];
   groupVotingVersion?: TripMeta['groupVotingVersion'];
   memoryWorkflow?:TripMeta['memoryWorkflow'];
+  keepsakeSelection?: TripMeta['keepsakeSelection'];
   newId?: () => string;
 }
 
@@ -83,6 +84,7 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     groupWorkspace: options.groupWorkspace,
     groupVotingVersion: options.groupVotingVersion,
     memoryWorkflow:options.memoryWorkflow,
+    keepsakeSelection: options.keepsakeSelection,
   });
   const parts = tripParts(doc);
   doc.transact(() => {
@@ -129,6 +131,7 @@ export function writeCard(parts: TripParts, card: TripCard): void {
   setOrDel('placeId', valid.placeId); setOrDel('location', valid.location);
   setOrDel('source', valid.source); setOrDel('lineage', valid.lineage);
   setOrDel('sourceText', valid.sourceText); setOrDel('travelerNote', valid.travelerNote); setOrDel('currentFacts', valid.currentFacts);
+  setOrDel('keepsakes', valid.keepsakes);
   setOrDel('bookingAttention', valid.bookingAttention); setOrDel('booking', valid.booking);
   setOrDel('boardWidth', valid.boardWidth); setOrDel('boardHeight', valid.boardHeight); setOrDel('boardStack', valid.boardStack);
 }

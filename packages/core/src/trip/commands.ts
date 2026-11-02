@@ -15,6 +15,7 @@ import { CommandError, type CommandContext, type CommandDef } from '../commands/
 import { presentationScope, readAllCards, readAsset, readCard, readPresentation, readPresentations, readTripMeta, writeAsset, writeCard, writePresentation, type TripParts } from './model.ts';
 import { tripBoardDuplicate } from './board-duplicate.ts';
 import { tripBoardPaste } from './board-clipboard.ts';
+import { tripAssetReplace, tripKeepsakeCaption, tripKeepsakeSelect } from './keepsake-authoring.ts';
 import { selectedAssetClosure } from './asset-closure.ts';
 import { tripMetaSchema, assetSchema, bookingSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
 
@@ -165,8 +166,8 @@ export const tripMetaUpdate = defineTripCommand({
     ctx.parts.meta.set('city',input.city);ctx.parts.meta.set('timeZone',input.timeZone);
     for (const key of ['cityId','countryCode'] as const) if (input[key] === undefined) ctx.parts.meta.delete(key); else ctx.parts.meta.set(key,input[key]);
     if (input.dates) ctx.parts.meta.set('dates',input.dates);
-    const {groupPreferences,groupBallots,groupWorkspace,groupVotingVersion,memoryWorkflow,...publicMeta}=readTripMeta(ctx.doc);
-    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{}),...(groupWorkspace?{groupWorkspace}:{}),...(groupVotingVersion?{groupVotingVersion}:{}),...(memoryWorkflow?{memoryWorkflow}:{})};
+    const {groupPreferences,groupBallots,groupWorkspace,groupVotingVersion,memoryWorkflow,keepsakeSelection,...publicMeta}=readTripMeta(ctx.doc);
+    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{}),...(groupWorkspace?{groupWorkspace}:{}),...(groupVotingVersion?{groupVotingVersion}:{}),...(memoryWorkflow?{memoryWorkflow}:{}),...(keepsakeSelection?{keepsakeSelection}:{})};
   },
 });
 
@@ -265,4 +266,4 @@ export const tripVotingDeclare=defineTripCommand({name:'trip_voting_declare',tit
 export const tripVotingOpen=defineTripCommand({name:'trip_voting_open',title:'Open a declared voting round',description:'Person-only opening; responses delivered before opening remain uncounted.',access:'write',humanOnly:true,input:preferenceRoundSchema,run:(ctx,input)=>commitVotingOpen(ctx.doc,input)});
 export const tripVotingClose=defineTripCommand({name:'trip_voting_close',title:'Seal a confirmed voting result',description:'Person-only prepared close. A readable sealed result survives ordinary Undo; revising needs a fresh round.',access:'write',humanOnly:true,input:z.object({prepared:preparedVotingCloseSchema}).strict(),run:(ctx,input)=>commitPreparedVotingClose(ctx.doc,ctx.actor,input.prepared)});
 
-export const TRIP_COMMANDS: TripCommand[] = [tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate,tripBoardPaste];
+export const TRIP_COMMANDS: TripCommand[] = [tripAssetReplace,tripKeepsakeCaption,tripKeepsakeSelect,tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate,tripBoardPaste];

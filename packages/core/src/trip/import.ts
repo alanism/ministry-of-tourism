@@ -104,7 +104,7 @@ export async function importTripPackage(bytes: Uint8Array, options: { newId?: ()
   // Imported metadata cannot grant tools (MOT-31): Autopilot never arrives switched on.
   const agentMode = meta.agentMode === 'autopilot' ? 'together' : meta.agentMode;
   if(meta.magazine?.apparelAssetIds.some(id=>!assets.has(id)||!readAsset(srcParts,id)?.apparel))fail('Magazine preference references missing apparel');
-  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,groupVotingVersion:meta.groupVotingVersion,memoryWorkflow:meta.memoryWorkflow,newId: options.newId });
+  const fresh = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, dates: meta.dates, party: meta.party, agentMode, magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,groupVotingVersion:meta.groupVotingVersion,memoryWorkflow:meta.memoryWorkflow,keepsakeSelection:meta.keepsakeSelection,newId: options.newId });
   const dstParts = tripParts(fresh);
   fresh.transact(() => {
     for(const [key,value] of srcParts.clock)if(key.startsWith('groupResponse:')||key.startsWith('votingSeal:'))dstParts.clock.set(key,structuredClone(value));

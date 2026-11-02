@@ -65,13 +65,13 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
   const apparel=options.selectedCardIds?[]:readMagazineApparel(parts,personal);
   const preference=sourceMeta.magazine;
   const magazine=preference&&apparel.some(asset=>asset.id===preference.wornTeeAssetId)?{...preference,apparelAssetIds:apparel.map(asset=>asset.id)}:undefined;
-  const {magazine:omitted,groupPreferences,groupBallots,groupWorkspace,groupVotingVersion,memoryWorkflow,...plainMeta}=sourceMeta;
+  const {magazine:omitted,groupPreferences,groupBallots,groupWorkspace,groupVotingVersion,memoryWorkflow,keepsakeSelection,...plainMeta}=sourceMeta;
   const included=(scope:string)=>personal || (variant==='guide'?scope==='guide':scope!=='private');
   const cards = all.filter(c=>included(c.scope) && (!options.selectedCardIds || options.selectedCardIds.has(c.id)));
   const cardIds=new Set(cards.map(c=>c.id));
   const retainedReactions=Object.fromEntries(Object.entries(memoryWorkflow?.reactions??{}).filter(([id])=>cardIds.has(id)));
   if(personal)await validateVotingLifecycle(doc);
-  const meta={...plainMeta,...(personal&&groupVotingVersion?{groupVotingVersion}:{}),...(personal&&groupPreferences?{groupPreferences}:{}),...(personal&&groupBallots?{groupBallots}:{}),...(personal&&groupWorkspace?{groupWorkspace}:{}),...(magazine?{magazine}:{}),...(memoryWorkflow&&Object.keys(retainedReactions).length?{memoryWorkflow:{version:1 as const,reactions:retainedReactions}}:{})};
+  const meta={...plainMeta,...(personal&&groupVotingVersion?{groupVotingVersion}:{}),...(personal&&groupPreferences?{groupPreferences}:{}),...(personal&&groupBallots?{groupBallots}:{}),...(personal&&groupWorkspace?{groupWorkspace}:{}),...(magazine?{magazine}:{}),...(keepsakeSelection&&cardIds.has(keepsakeSelection.cardId)?{keepsakeSelection}:{}),...(memoryWorkflow&&Object.keys(retainedReactions).length?{memoryWorkflow:{version:1 as const,reactions:retainedReactions}}:{})};
   const presentations=readPresentations(parts).filter(p=>included(presentationScope(parts,p)) && (!p.cardId || cardIds.has(p.cardId)) && (!options.selectedCardIds || !!p.cardId));
   const wantedAssets = new Set([...cards.flatMap((c) => c.assetIds),...presentations.flatMap(p=>p.assetId?[p.assetId]:[]),...apparel.map(asset=>asset.id)]);
   if (personal) for (const asset of selectedAssetClosure(parts,wantedAssets)) wantedAssets.add(asset.id);
@@ -97,7 +97,7 @@ export async function exportTripPackage(doc: Y.Doc, assetBytes: Map<string, Uint
   const readable = { meta, cards, presentations, agent_guidance:agentGuidance() };
   files['manifest.json'] = strToU8(JSON.stringify(manifest, null, 2));
   // The document must contain only exported cards: encoding the live doc would leak private cards.
-  const filtered = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, boardId: meta.boardId, dates: meta.dates, party: meta.party, agentMode: meta.agentMode, lineage: meta.lineage,magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,groupVotingVersion:meta.groupVotingVersion,memoryWorkflow:meta.memoryWorkflow });
+  const filtered = createTrip({ title: meta.title, city: meta.city, cityId:meta.cityId,countryCode:meta.countryCode,timeZone: meta.timeZone, kind: meta.kind, boardId: meta.boardId, dates: meta.dates, party: meta.party, agentMode: meta.agentMode, lineage: meta.lineage,magazine:meta.magazine,groupPreferences:meta.groupPreferences,groupBallots:meta.groupBallots,groupWorkspace:meta.groupWorkspace,groupVotingVersion:meta.groupVotingVersion,memoryWorkflow:meta.memoryWorkflow,keepsakeSelection:meta.keepsakeSelection });
   const filteredParts = tripParts(filtered);
   filtered.transact(() => {
     if(personal)for(const [key,value] of parts.clock)if(key.startsWith('groupResponse:')||key.startsWith(VOTING_SEAL_PREFIX))filteredParts.clock.set(key,structuredClone(value));
