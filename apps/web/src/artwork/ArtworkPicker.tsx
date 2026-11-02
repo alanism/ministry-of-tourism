@@ -159,7 +159,7 @@ export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload
   }}>
     <section ref={section} className={'dialog artwork-picker'+(trip?' trip-artwork':'')} role="dialog" aria-modal="true" aria-labelledby="artwork-title" aria-busy={!!busy}>
       <div className="artwork-heading"><h2 id="artwork-title">{trip?'Add FCC art':'Artwork'}</h2><button type="button" onClick={close} aria-label="Close artwork">Close</button></div>
-      <p className="dialog-note">{trip?'Drawings for your trip. Choose a picture, then add its original.':'People, places and objects for your ideas. Images load as you browse.'}</p>
+      <p className="dialog-note">{trip?'Drawings for your trip. Preview a picture and its source before adding it.':'People, places and objects for your ideas. Images load as you browse.'}</p>
       {busy && <p className="artwork-notice" role="status">{committed?'Saving image bytes…':`Adding ${busy}…`}</p>}
       {error && <p className="dialog-error" role="alert">{error}</p>}
       {onUpload&&<input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" hidden onChange={event=>{const file=event.target.files?.[0];event.target.value='';if(file)void pick(file);}}/>}

@@ -153,7 +153,7 @@ export async function placeBoardArtwork(session: TripSession, actor: Actor, artw
         origin: refSource?.origin ?? ('artwork' as const),
       };
       const executeResults: unknown[] = session.executeAll(actorSnapshot, [
-        { command: 'trip_asset_register', input: { asset: { id: assetId, hash, mime: image.blob.type, role: 'original', width: image.width, height: image.height, caption: parsed.label, credit, rightsStatus, source } } },
+        { command: 'trip_asset_register', input: { asset: { id: assetId, hash, mime: image.blob.type, role: parsed.renditionRole ?? 'original', width: image.width, height: image.height, caption: parsed.label, credit, rightsStatus, source } } },
         { command: 'trip_presentation_create', input: { assetId, surface: 'board', x: rect.x / BOARD_SIZE, y: rect.y / BOARD_SIZE, width: rect.width / BOARD_SIZE, height: rect.height / BOARD_SIZE, crop: [...crop], rotation: 0, zIndex: stack, locked: false, scope: 'private' } },
       ]);
       presentationId = (executeResults[executeResults.length - 1] as { id: string }).id;

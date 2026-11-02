@@ -61,6 +61,7 @@ export function hasEphemeralAssets(doc:Y.Doc):boolean {
 
 /** Fetch only selected media; the original stays intact and crop is document geometry. */
 export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:Artwork,signal:AbortSignal):Promise<void> {
+  if(artwork.renditionRole==='derivative'&&artwork.original)throw new Error('A derivative rendition cannot claim an original download');
   const ref=artwork.artRef;
   if(ref?.kind==='apparel-mockup')throw new Error('Apparel belongs in Wear the trip, not decorative artwork.');
   const blob=await prepareTripMedia(async()=>{
@@ -82,9 +83,9 @@ export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:A
   const width=Math.min(.38,.65/ratio),height=width*ratio;
   await commitTripBlob(blob,hash=>{
     if(ref?.hash&&hash!==ref.hash)throw new Error('The original bytes changed. Refresh the catalog before adding it.');
-    const existing=[...session.parts.assets.keys()].map(id=>readAsset(session.parts,id)).find(asset=>asset?.hash===hash&&asset.source?.id===artwork.id&&asset.source.url===(artwork.original??artwork.src)&&asset.credit===credit&&asset.rightsStatus===rightsStatus);
+    const existing=[...session.parts.assets.keys()].map(id=>readAsset(session.parts,id)).find(asset=>asset?.hash===hash&&asset.role===(artwork.renditionRole??'original')&&asset.source?.id===artwork.id&&asset.source.url===(artwork.original??artwork.src)&&asset.credit===credit&&asset.rightsStatus===rightsStatus);
     const assetId=existing?.id??crypto.randomUUID();
-    const ops:{command:string;input:Record<string,unknown>}[]=existing?[]:[{command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:blob.type,role:'original',width:artwork.width,height:artwork.height,caption:artwork.label,credit,rightsStatus,source:{...ref?.source,id:artwork.id,url:artwork.original??artwork.src,retrievedAt:new Date().toISOString(),provider:'fcc',cityId:ref?.originCityId??extended.originCityId??artwork.city,countryCode:ref?.countryCode??extended.countryCode,kind:'artwork',origin:'artwork'}}}}];
+    const ops:{command:string;input:Record<string,unknown>}[]=existing?[]:[{command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:blob.type,role:artwork.renditionRole??'original',width:artwork.width,height:artwork.height,caption:artwork.label,credit,rightsStatus,source:{...ref?.source,id:artwork.id,url:artwork.original??artwork.src,retrievedAt:new Date().toISOString(),provider:'fcc',cityId:ref?.originCityId??extended.originCityId??artwork.city,countryCode:ref?.countryCode??extended.countryCode,kind:'artwork',origin:'artwork'}}}}];
     ops.push({command:'trip_presentation_create',input:{assetId,x:.08,y:.08,width,height,crop,scope:'private'}});
     session.executeAll(actor,ops);
   },signal);
