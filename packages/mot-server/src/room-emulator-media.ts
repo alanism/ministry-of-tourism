@@ -7,7 +7,9 @@ import {sanitizeRoomMediaUpload,roomSharedMediaSchema,type RoomMediaContext,type
 import {roomMediaReserveSchema,roomMediaCommitSchema,roomMediaStageResultSchema,roomMediaUploadResultSchema,roomMediaReceiptSchema,roomMediaCommitResultSchema,type RoomMediaReserve} from '../../core/src/trip/shared-room-media-wire.ts';
 import {roomSnapshotSchema,type RoomMember,type RoomCardRecord} from '../../core/src/trip/shared-room-domain.ts';
 import {validateRoomMediaInverse,roomMediaUndoAdditionSchema,roomMediaUndoReceiptSchema,roomMediaUndoResultSchema} from '../../core/src/trip/shared-room-media-undo.ts';
-import {roomAccountingFields,roomPublicMetadata} from './room-emulator-snapshot.ts';
+import {roomAccountingFields,roomPublicMetadata,withRoomVotingBytes} from './room-emulator-snapshot.ts';
+import {readRoomVotingSnapshot} from './room-emulator-voting-state.ts';
+import {measureRoomVotingState} from '../../core/src/trip/shared-room-voting-wire.ts';
 import {measureRoomSnapshot} from '../../core/src/trip/shared-room-limits.ts';
 import type {createRoomEmulatorByteStore} from './room-emulator-storage.ts';
 
@@ -74,7 +76,7 @@ export function createRoomMediaAdapter(o:RoomMediaAdapterOptions){
   const cards=cardDocs.docs.map(d=>roomSnapshotSchema.shape.cards.element.parse(d.data())).map(c=>c.payload.id===input.cardId&&input.replaceAssetId?{...c,payload:{...c.payload,assetIds:c.payload.assetIds.filter(a=>a!==input.replaceAssetId)}}:c);
   const ids=[...new Set(cards.flatMap(c=>c.payload.assetIds))];if(ids.length>200)throw Error('Room media capacity reached');const docs=ids.length?await tx.getAll(...ids.map(a=>ref.collection('media').doc(a))):[];
   const assets=docs.map(d=>{if(!d.exists)throw Error('Room media unavailable');const asset=roomSharedMediaSchema.parse(d.get('payload'));if(asset.id!==d.id)throw Error('Room media identity mismatch');return asset;});
-  return measureRoomSnapshot({metadata:roomPublicMetadata(meta),cards,presentations:[],assets},assets.map(a=>({assetId:a.id,hash:a.hash,bytes:a.bytes})));
+  return withRoomVotingBytes(measureRoomSnapshot({metadata:roomPublicMetadata(meta),cards,presentations:[],assets},assets.map(a=>({assetId:a.id,hash:a.hash,bytes:a.bytes}))),measureRoomVotingState(await readRoomVotingSnapshot(tx,ref)));
  }
  function stageResult(stage:Stage){return roomMediaStageResultSchema.parse({stageId:stage.id,assetId:stage.input.assetId,expiresAt:stage.expiresAt,uploaded:stage.phase==='uploaded'});}
  async function reserve(rawPrincipal:RoomMediaPrincipal,raw:unknown){
