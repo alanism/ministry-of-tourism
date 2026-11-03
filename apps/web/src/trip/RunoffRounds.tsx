@@ -4,7 +4,7 @@ import type {InstantRunoffResult} from '@writers-board/core';
 export function RunoffRounds({result,name}:{result:InstantRunoffResult;name:(optionId:string)=>string}){
  const {outcome,rounds}=result,last=rounds.at(-1);
  const headline=outcome.kind==='no_ballots'?'No ranked replies yet.'
-  :outcome.kind==='winner'?`${name(outcome.option_id)} leads: ${outcome.majority?`more than half of the ${last!.active} active replies`:'the last option left'} in round ${last!.round}.`
+  :outcome.kind==='winner'?`${name(outcome.option_id)} leads in round ${last!.round}: ${outcome.majority?`more than half of all ${result.ranked} ranked replies`:`more than half of the ${last!.active} replies still in the count; ${last!.exhausted} ran out of choices, so this is not a majority of all ${result.ranked}`}.`
   :`Tie between ${outcome.option_ids.map(name).join(' and ')} after ${rounds.length} round${rounds.length===1?'':'s'}. Ties stay tied.`;
  const options=rounds[0]?.counts.map(c=>c.option_id)??[];
  const votes=(round:InstantRunoffResult['rounds'][number],id:string)=>round.counts.find(c=>c.option_id===id)?.votes;
