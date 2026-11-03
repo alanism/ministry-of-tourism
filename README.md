@@ -6,9 +6,13 @@ Your flights are in an email. Your hotel is in a screenshot. Your places are sca
 
 **Ministry of Tourism turns those pieces into a trip you can shape, share and keep.**
 
-A travel board for the solo traveler, the host making a guest guide, and the person somehow organizing the whole reunion. Bring your plans. Add a little local culture. Give your AI the admin. Keep the decisions yours.
+**Built specifically for Muse AI, with a hands-on workspace for people who prefer to do it themselves.**
 
-**[Open Ministry of Tourism](https://ministryoftourism.web.app/?view=trip)** · [Guide for your AI](https://ministryoftourism.web.app/guides/trip-best-practices.md) · [Agent contract](https://ministryoftourism.web.app/trip-agents.md)
+Bring your own Muse agent: its reasoning uses your Muse access and usage allowance. Firebase Hosting serves the web app; MoT handles the trip workspace, local data, FCC assets and magazine composition through ordinary application code. In this workflow, Muse does the thinking and MoT turns the result into something you can use.
+
+A travel board for the solo traveler, the host making a guest guide, and the person somehow organizing the whole reunion. Bring your plans. Add a little local culture. Give Muse the admin. Keep the decisions yours.
+
+**[Open Ministry of Tourism](https://ministryoftourism.web.app/?view=trip)** · [Guide for Muse](https://ministryoftourism.web.app/guides/trip-best-practices.md) · [Agent contract](https://ministryoftourism.web.app/trip-agents.md)
 
 ![Bangkok magazine cover in the MoT composition view](docs/images/01-magazine-cover.jpg)
 
@@ -21,7 +25,7 @@ A travel board for the solo traveler, the host making a guest guide, and the per
 3. Add a flight, a hotel and a place or two as cards.
 4. Press **Export** and take home your magazine.
 
-Want to see the AI side? Paste this into an AI agent with an interactive browser:
+Want Muse to help? Paste this into Muse AI with its interactive browser:
 
 > Open https://ministryoftourism.web.app/?view=trip and read https://ministryoftourism.web.app/guides/trip-best-practices.md. Create a clearly labelled fictional Bangkok demo trip. Add arrival, hotel and departure cards without inventing flight numbers, confirmed bookings or verified prices. Add an open evening and afternoon, then suggest activities for those gaps. Save, reload and confirm what you added. Export the magazine and editable ZIP. Report any blocked step.
 
@@ -54,13 +58,13 @@ flowchart TB
 
 *Food, culture and city art share the page with your own trip.*
 
-## Your AI is the clerk. You hold the stamp.
+## Muse is the clerk. You hold the stamp.
 
 Ask Muse AI in your browser to bring the pieces together, suggest something for an open evening, or turn a board into a magazine. You decide what belongs in the trip.
 
-MoT is built to be used by both people and browser-operating agents. An agent can work through the visible interface. Where its browser supports JavaScript, it can also discover the app's available commands, make a bounded change, save it and read it back.
+MoT is built for you and Muse to use the same workspace. Muse can work through the visible interface. Where its browser supports JavaScript, it can also discover the app's available commands, make a bounded change, save it and read it back.
 
-That creates a practical handoff: **an AI helps with a real trip in a real app, and returns a file you can use.**
+That creates a practical handoff: **Muse helps with a real trip in a real app, and returns a file you can use.**
 
 ```mermaid
 sequenceDiagram
@@ -99,7 +103,7 @@ That is the core product loop: bring the facts, let an AI help with the gaps, th
 - **Give the trip a visual identity.** Add city stories, places, artwork and stickers from [Foreign Clubbers Correspondence](https://foreignclubberscorespondence.web.app/), with credits.
 - **Compose a magazine.** Turn the material on your board into designed pages, from the plan to the keepsakes.
 - **Take it with you.** Export a standalone HTML magazine, a screen-friendly PDF, or an editable `.mot.zip` to reopen in MoT.
-- **Work with an AI or work by hand.** Manual planning does not require a model key.
+- **Work with Muse or work by hand.** Manual planning does not require a model key.
 
 A solo traveler can make a personal trip. A host can build a guide for guests. A reunion organizer can collect the group's ideas in one place. Trips live in your own browser, and shared files make the handoff possible.
 
@@ -114,7 +118,7 @@ Muse works with MoT in two ways:
 1. **As a browser agent.** Muse operates the public app through its interface or the in-page `window.motTrip` API. This is the path used in the Bangkok walkthrough.
 2. **Through the model API (optional).** A locally configured server-held runtime requests proposals from a Meta model. The app validates them and lets you apply or Undo. See [Muse runtime](docs/MUSE-RUNTIME.md).
 
-The browser API exposes capabilities, board identity and revision, commands, persistence and export receipts. It gives agents a way to check their work rather than merely say it is done.
+The browser API exposes capabilities, board identity and revision, commands, persistence and export receipts. It gives Muse a way to check its work rather than merely say it is done.
 
 ```mermaid
 flowchart TB
@@ -132,7 +136,7 @@ flowchart TB
     Server -. Validation and human review .-> Core
 ```
 
-Separate browser profiles do not automatically share a trip. Import its ZIP or rebuild it from the facts you choose to provide. Agents should read the [current guide](https://ministryoftourism.web.app/guides/trip-best-practices.md) and inspect the available controls before starting.
+Separate browser profiles do not automatically share a trip. Import its ZIP or rebuild it from the facts you choose to provide. Muse should read the [current guide](https://ministryoftourism.web.app/guides/trip-best-practices.md) and inspect the available controls before starting.
 
 ![Muse file handoff with selected cards and a trip request](docs/images/05-muse-file-handoff.jpg)
 
