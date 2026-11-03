@@ -14,7 +14,7 @@ import { Keepsakes,MemoryChoice } from './Keepsakes.tsx';
 
 import { GuestCopyPanel } from './GuestCopyPanel.tsx';
 import { Diamond, FocusSheet, Icon, Logo, Menu, Toast, type MenuEntry } from './ui';
-import { STORAGE_ERROR_EVENT, STORAGE_STATUS_EVENT, forgetLastBoard, lastBoardId, listBoards, openTrip, type OpenTrip, type SavedStatus } from './trip-store.ts';
+import { STORAGE_ERROR_EVENT, STORAGE_STATUS_EVENT, forgetLastBoard, forgetMissingBoard, lastBoardId, listBoards, openTrip, type OpenTrip, type SavedStatus } from './trip-store.ts';
 import { hasEphemeralAssets, placeTripArtwork, placeTripUpload, storeImportedAssets } from './trip-assets';
 import { BRIEF_TEMPLATE, cityLabel, isSample, parseBrief, tripSubtitle } from './sample';
 import { enableMetrics, readMetrics, recordOutcome } from './metrics';
@@ -209,6 +209,8 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
     }, (e: unknown) => {
       if (op !== opRef.current) return;
       const err = e as Error & { storeName?: string; original?: Uint8Array; bytes?: Uint8Array; originalUpdates?: Uint8Array[] };
+      // Nothing stored to repair: forget the pointer and say so on the first screen instead of opening Recovery.
+      if (!err.original && !err.bytes && !err.originalUpdates && !err.storeName) { forgetMissingBoard(id); setLost(true); return; }
       setRecovery({ bytes: err.original ?? err.bytes, originalUpdates: err.originalUpdates, boardId: id, storeName: err.storeName, context: 'Restore last board', error: err instanceof Error ? err.message : 'Could not open the last board.', autoInspect: Boolean(err.original ?? err.bytes ?? err.storeName) });
     }).finally(() => { if (op === opRef.current) setBooting(false); });
     return () => { if (opRef.current === op) opRef.current += 1; };

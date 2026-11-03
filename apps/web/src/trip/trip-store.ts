@@ -662,3 +662,8 @@ export function lastBoardId(): string | null {
 }
 
 export function forgetLastBoard(): void { try { localStorage.removeItem(LAST_KEY); } catch { /* ignore */ } }
+/** Drops a remembered board whose stored trip no longer exists in this browser. */
+export function forgetMissingBoard(id: string): void {
+  try { localStorage.setItem(BOARDS_KEY, JSON.stringify(listBoards().filter((b) => b.id !== id))); } catch { /* convenience only */ }
+  if (lastBoardId() === id) forgetLastBoard();
+}
