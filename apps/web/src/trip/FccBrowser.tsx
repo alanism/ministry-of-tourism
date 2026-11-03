@@ -42,10 +42,14 @@ export function SourceFreshness({state,onOpen}:{state:FccBrowserState|undefined;
     {!state.pending&&!state.failure&&state.updatedKeys.length>0&&<p>FCC updated {state.updatedKeys.length} {state.updatedKeys.length===1?'story':'stories'}. Your notes and checks were kept.</p>}
   </div>;
 }
-export function FccBrowser({session,actor,refresh,notify,onContent,onState,initialState}:{session:TripSession;actor:Actor;refresh:()=>void;notify:(message:string)=>void;onContent:(content:FccCityContent|undefined)=>void;onState?:(state:FccBrowserState)=>void;initialState?:FccBrowserState}) {
+export function FccBrowser({session,actor,refresh,notify,onContent,onState,initialState,onBrowseArt,onBrowseShirts}:{session:TripSession;actor:Actor;refresh:()=>void;notify:(message:string)=>void;onContent:(content:FccCityContent|undefined)=>void;onState?:(state:FccBrowserState)=>void;initialState?:FccBrowserState;onBrowseArt?:()=>void;onBrowseShirts?:()=>void}) {
   const meta=readTripMeta(session.doc),id=meta.cityId??citySlug(meta.city);
   const [attempt,setAttempt]=useState(0),[state,setState]=useState<SourceLoadState>(()=>initialState??{pending:true,offline:false,updatedKeys:[]}),[error,setError]=useState('');
+  const [query,setQuery]=useState('');
   const result=state.result,loaded=result&&result.status!=='unavailable'?result.value:undefined;
+  // Plain text search over what is loaded for this city; nothing is sent anywhere.
+  const terms=query.toLowerCase().split(/\s+/).filter(Boolean),hit=(text:string)=>terms.every(term=>text.toLowerCase().includes(term));
+  const articles=loaded?loaded.articles.filter(article=>hit(`${article.title} ${article.body}`)):[],places=loaded?loaded.places.filter(place=>hit(place.name)):[];
   useEffect(()=>{onContent(loaded);},[loaded,onContent]);
   useEffect(()=>{onState?.({...state,boardId:session.boardId,cityId:id});},[state,session.boardId,id,onState]);
   useEffect(()=>{
@@ -57,14 +61,22 @@ export function FccBrowser({session,actor,refresh,notify,onContent,onState,initi
     return()=>{live=false;clearTimeout(timer);controller.abort();};
   },[session,id,attempt]);
   const add=(input:Record<string,unknown>)=>{setError('');try{session.execute(actor,'trip_card_create',input);refresh();notify('FCC source added to this trip. Your notes stay separate.');}catch(cause){setError(cause instanceof Error?cause.message:'The source could not be added.');}};
-  return <section className="mot-fcc" aria-label="Explore FCC"><h2>Explore FCC · {meta.city}</h2><p className="m-muted">Public FCC requests send only the city ID. Historical editorial is separate from current opening hours, prices and your own notes.</p><button type="button" className="m-btn" disabled={state.pending} onClick={()=>setAttempt(value=>value+1)}>Refresh FCC content</button>
+  return <section className="mot-fcc" aria-label="Explore FCC"><h2>Explore FCC · {meta.city}</h2>
+    <p>The Foreign Clubbers Correspondence collection, free to browse: magazine articles and places for {meta.city}, plus city art, stickers and T-shirts for every FCC city. Search below and add anything to your trip.</p>
+    <div className="mot-fcc-entry">
+      <label className="mot-fcc-search">Search {meta.city} articles and places<input className="m-field" type="search" value={query} placeholder="e.g. noodles, river, coffee, market" onChange={event=>setQuery(event.target.value)} /></label>
+      <div className="mot-fcc-collections">{onBrowseArt&&<button type="button" className="m-btn ink" onClick={onBrowseArt}>Search FCC art and stickers</button>}{onBrowseShirts&&<button type="button" className="m-btn" onClick={onBrowseShirts}>Browse FCC T-shirts</button>}</div>
+    </div>
+    <p className="m-muted t-1">Only the city name is sent to FCC. FCC stories are editorial: check current opening hours and prices yourself.</p>
+    <button type="button" className="m-btn small ghost" disabled={state.pending} onClick={()=>setAttempt(value=>value+1)}>Refresh FCC content</button>
     <Almanac cityId={id} session={session} actor={actor} refresh={refresh} notify={notify} load={browserFcc.getAlmanac}/>
     <SourceFreshness state={{...state,boardId:session.boardId,cityId:id}}/>
     {!result&&state.pending&&<p>Loading the selected city's issue…</p>}
     {result?.status==='unavailable'&&<div><p>{result.reason}</p><button className="m-btn" type="button" disabled={state.pending} onClick={()=>setAttempt(value=>value+1)}>Retry FCC</button><p className="m-muted">Your board and artwork remain usable.</p></div>}
     {error&&<p role="alert">{error}</p>}
-    {loaded&&<><h3>Articles</h3>{loaded.articles.map(article=><article key={article.id} className="m-panel mot-fcc-item"><h3>{article.title}</h3><p className="mot-source-attribution">FCC Magazine{article.source.publishedAt?' · published '+sourceDate(article.source.publishedAt):''} · retrieved {sourceDate(article.source.retrievedAt)}</p><SourceLink url={article.source.canonicalUrl}/><details><summary>Read article</summary><pre>{article.body}</pre></details><button type="button" className="m-btn" onClick={()=>add({kind:'note',title:article.title,body:article.body.slice(0,2000),sourceText:article.body,travelerNote:'',stage:'explore',provenance:'fcc',source:article.source})}>Add opening excerpt</button></article>)}
-      <h3>Places</h3>{loaded.places.map(place=><article key={place.id} className="m-panel mot-fcc-item"><h3>{place.name}</h3><SourceLink url={place.source.canonicalUrl}/><p className="mot-source-attribution">Venue · FCC · retrieved {sourceDate(place.source.retrievedAt)}</p><p className="m-muted">FCC editorial · current operating details unverified</p><button type="button" className="m-btn" onClick={()=>add({kind:'place',title:place.name,body:'',placeId:place.id,stage:'explore',provenance:'fcc',source:place.source})}>Add place</button></article>)}
+    {loaded&&terms.length>0&&<p role="status" className="m-muted">{articles.length+places.length?`${articles.length} of ${loaded.articles.length} articles and ${places.length} of ${loaded.places.length} places match “${query.trim()}”.`:`Nothing in ${meta.city}'s articles or places matches “${query.trim()}”. Try another word, or search FCC art and stickers across all cities.`}</p>}
+    {loaded&&<>{articles.length>0&&<h3>Articles</h3>}{articles.map(article=><article key={article.id} className="m-panel mot-fcc-item"><h3>{article.title}</h3><p className="mot-source-attribution">FCC Magazine{article.source.publishedAt?' · published '+sourceDate(article.source.publishedAt):''} · retrieved {sourceDate(article.source.retrievedAt)}</p><SourceLink url={article.source.canonicalUrl}/><details><summary>Read article</summary><pre>{article.body}</pre></details><button type="button" className="m-btn" onClick={()=>add({kind:'note',title:article.title,body:article.body.slice(0,2000),sourceText:article.body,travelerNote:'',stage:'explore',provenance:'fcc',source:article.source})}>Add opening excerpt</button></article>)}
+      {places.length>0&&<h3>Places</h3>}{places.map(place=><article key={place.id} className="m-panel mot-fcc-item"><h3>{place.name}</h3><SourceLink url={place.source.canonicalUrl}/><p className="mot-source-attribution">Venue · FCC · retrieved {sourceDate(place.source.retrievedAt)}</p><p className="m-muted">FCC editorial · current operating details unverified</p><button type="button" className="m-btn" onClick={()=>add({kind:'place',title:place.name,body:'',placeId:place.id,stage:'explore',provenance:'fcc',source:place.source})}>Add place</button></article>)}
       <p className="m-muted">Almanac observations remain available from FCC's separate Almanac publication.</p>
     </>}
   </section>;
