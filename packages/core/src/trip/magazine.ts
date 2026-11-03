@@ -148,7 +148,11 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   const dates=meta.dates?`${meta.dates.start} — ${meta.dates.end}`:'';
   const isArticle=(c:TripCard)=>c.source?.kind==='article';
   const brief=cards.find(c=>c.kind==='brief'&&c.body.trim());
-  const featureLead=brief??cards.find(c=>isArticle(c)&&c.body.trim())??cards.find(c=>c.kind!=='note'&&c.body.trim())??cards.find(c=>c.kind!=='note');
+  // Without a brief or article, lead with a pictured or stay card, never a flight or transfer leg; ties keep board order.
+  const travelLeg=/(fly|flight|depart(?:ure)?|arriv(?:e|al)|airport|train|bus|ferry|transfer)/i,stay=/(hotel|resort|villas?|hostel|inn|lodge|stay|guesthouse|apartment)/i;
+  const leadScore=(c:TripCard)=>(c.assetIds.length?2:0)+(stay.test(c.title)?1:0)-(travelLeg.test(c.title)?3:0);
+  const bestLead=(list:TripCard[])=>list.reduce<TripCard|undefined>((best,c)=>!best||leadScore(c)>leadScore(best)?c:best,undefined);
+  const featureLead=brief??cards.find(c=>isArticle(c)&&c.body.trim())??bestLead(cards.filter(c=>c.kind!=='note'&&c.body.trim()))??bestLead(cards.filter(c=>c.kind!=='note'));
   const first=featureLead??cards[0],notes=cards.filter(c=>c.travelerNote?.trim()||(c.kind==='note'&&c.provenance!=='fcc'&&!isArticle(c)&&c.body.trim())),places=cards.filter(c=>c.kind==='place');
   const noteField=(c:TripCard)=>c.travelerNote?.trim()?'travelerNote':'body';
   const remainingText=new Map(cards.flatMap(c=>[[c.id+':body',c.body],[c.id+':travelerNote',c.travelerNote??'']]));
