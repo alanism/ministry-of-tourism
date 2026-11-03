@@ -139,6 +139,8 @@ export const assetSchema = z.object({
   source: sourceRefSchema.optional(),
   width: z.number().positive().optional(), height: z.number().positive().optional(),
   apparel: apparelArtRefSchema.optional(),
+  /** AI-generated image provenance (MOT-151). Never holds a key or the full custom prompt. */
+  generated: z.object({ provider: z.literal('meta'), model: z.string().min(1).max(80), presetId: z.string().min(1).max(80), presetVersion: z.number().int().positive(), createdAt: z.string().min(1).max(40) }).strict().optional(),
 }).strict().refine(asset=>!asset.apparel||(asset.apparel.assetId===asset.id&&asset.apparel.hash===asset.hash&&asset.apparel.mimeType===asset.mime&&asset.apparel.credit===asset.credit&&asset.apparel.rightsStatus===asset.rightsStatus),'Cached apparel must match its registered image, hash and credit');
 export type Asset = z.infer<typeof assetSchema>;
 

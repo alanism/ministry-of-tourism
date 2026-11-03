@@ -7,9 +7,11 @@ import { FocusSheet } from './ui';
 import { coverAssetId, useAssetUrl } from './trip-assets';
 import { buildMoveCommand, classifyPaste, imagePlacementRect, ingestBoardImages, moveRect, nextStack, rectsEqual, resizeRect, textNoteInput, validateBoardRect, type BoardObjectRef, type BoardRect } from './free-board-actions';
 import { placeBoardArtwork } from './board-artwork';
+import { museImageEnabled } from './muse-image';
 import type { Artwork } from '../artwork/catalog';
 import type { ArtDestination } from '../artwork/country-art';
 const ArtworkPicker = lazy(() => import('../artwork/ArtworkPicker'));
+const MuseImagePanel = lazy(() => import('./MuseImagePanel').then(m => ({ default: m.MuseImagePanel })));
 import './free-board.css';
 import type { Ghost } from './ProposalReview';
 type Props = ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void; destinations?: readonly ArtDestination[] };
@@ -41,6 +43,7 @@ export function FreeBoard(props: Props) {
   const [openAssetId, setOpenAssetId] = useState<string | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [artOpen, setArtOpen] = useState(false);
+  const [museOpen, setMuseOpen] = useState(false), museImage = useMemo(museImageEnabled, []);
   const [noteText, setNoteText] = useState('');
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
@@ -213,6 +216,7 @@ export function FreeBoard(props: Props) {
         <button type="button" className="m-btn" onClick={() => { setNoteOpen(!noteOpen); setPasteOpen(false); }}>New note</button>
         <button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Add images</button>
         <button type="button" className="m-btn" disabled={busy} onClick={(e) => { artTriggerRef.current = e.currentTarget; setArtOpen(true); }}>Add FCC art</button>
+        {museImage && <button type="button" className="m-btn" disabled={busy} onClick={() => setMuseOpen(true)}>Create with Muse Image</button>}
         <button type="button" className="m-btn" onClick={() => { crossClipboard.cancel(); setPasteOpen(!pasteOpen); }}>Paste</button>
         <button type="button" className="m-btn" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.05, +(z - 0.05).toFixed(2)))}>Zoom out</button>
         <span aria-live="polite">{Math.round(zoom * 100)}%</span>
@@ -254,6 +258,7 @@ export function FreeBoard(props: Props) {
         </div>
       </div>
       {artOpen && <Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{ destination: readTripMeta(session.doc), destinations }} onClose={closeArtworkPicker} onInsert={insertBoardArtwork} /></Suspense>}
+      {museOpen && <FocusSheet label="Create with Muse Image" onClose={() => setMuseOpen(false)}><Suspense fallback={<p role="status">Opening Muse Image…</p>}><MuseImagePanel session={session} actor={actor as Actor} refresh={refresh} notify={notify} origin={origin} onClose={() => setMuseOpen(false)} /></Suspense></FocusSheet>}
       {openCard && <FocusSheet label={`Card · ${openCard.title || 'Untitled'}`} onClose={() => { setOpenCardId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}><button type="button" className="m-btn" onClick={() => { setOpenCardId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}>Close</button><TripCardView whenSaved={props.whenSaved} card={openCard} session={session} actor={actor as Actor} kind={readTripMeta(session.doc).kind} refresh={refresh} notify={notify} updatedSources={props.updatedSources} /></FocusSheet>}
       {openPresentation && <FocusSheet label="Image" onClose={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}><div><button type="button" className="m-btn" onClick={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}>Close</button>{openPresentation.assetId && <AssetLarge session={session} assetId={openPresentation.assetId} />}<p>{openAsset?.caption || 'Image'}</p>{openAsset?.credit && <p>Credit: {openAsset.credit}</p>}</div></FocusSheet>}
     </section>
