@@ -4,6 +4,13 @@ import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
 import { svgPdfTextLayer } from './pdf-text-layer';
 import {checkedPixels,HTML_LIMITS,rasterDimensions,sanitizedRaster,type EmbeddedMedia} from './standalone-media';
+import {cityArtSnapshot,snapshotWarnings,tripCityId,type CityArtSnapshot} from './export-snapshot';
+/** Shared city art for every export; a failed or absent lookup keeps the trip's own pages. */
+async function citySnapshot(doc:import('yjs').Doc,signal?:AbortSignal):Promise<CityArtSnapshot|undefined>{
+  const cityId=tripCityId(readTripMeta(doc));if(!cityId)return;
+  try{return await cityArtSnapshot(cityId,{signal});}catch(error){if(signal?.aborted)throw error;return;}
+}
+const snapshotArtwork=(snapshot:CityArtSnapshot|undefined,saved:readonly NonNullable<ReturnType<typeof readMagazineApparel>[number]['apparel']>[]):unknown[]=>[...saved,...(snapshot?.tees??[]).filter(tee=>!saved.some(s=>s.assetId===tee.assetId))].slice(0,3).concat(snapshot?.art as never[]??[]);
 
 export const diagnostics=new DiagnosticLog();
 let lastOperation:OperationState|undefined;
@@ -49,6 +56,17 @@ export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSigna
     }
     const urls=new Map<string,string>(),dimensions=new Map<string,{width:number;height:number}>(),media:EmbeddedMedia[]=[];
     let embeddedBytes=0;
+    const snapshot=await citySnapshot(doc,signal),warnings=snapshot?snapshotWarnings(snapshot):[];
+    for(const [id,blob] of snapshot?.blobs??[]){
+      signal?.throwIfAborted();if(bytes.has(id))continue;
+      try{
+        const original=new Uint8Array(await blob.arrayBuffer()),size=rasterDimensions(original,blob.type);
+        if(pixels+checkedPixels(size)>HTML_LIMITS.totalPixels)throw new Error('over the HTML pixel budget');
+        const png=await sanitizedRaster(blob,size,signal);if(embeddedBytes+png.size>HTML_LIMITS.sourceBytes)throw new Error('over the HTML size budget');
+        pixels+=size.width*size.height;embeddedBytes+=png.size;urls.set(id,await dataUrl(png));dimensions.set(id,size);
+        media.push({assetId:id,sourceSha256:await artifactSha256(blob),embeddedSha256:await artifactSha256(png),...size});
+      }catch(error){signal?.throwIfAborted();warnings.push(`City art ${id} was left out: ${error instanceof Error?error.message:'it could not be embedded'}.`);}
+    }
     for(const [id,original] of bytes){
       signal?.throwIfAborted();const asset=readAsset(selected.parts,id)!;
       try{
@@ -59,7 +77,7 @@ export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSigna
       }catch(error){signal?.throwIfAborted();throw new Error(`Image ${id}: ${error instanceof Error?error.message:'Privacy sanitation failed.'}`);}
     }
     signal?.throwIfAborted();onProgress?.({stage:'layout',completed:0,unit:'pages',done:false});
-    const magazine=buildMagazine(doc,{assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:readMagazineApparel(selected.parts,scope==='personal').map(asset=>asset.apparel!),limits:{pages:HTML_LIMITS.pages,svgBytes:HTML_LIMITS.outputBytes},signal});
+    const magazine=buildMagazine(doc,{assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:snapshotArtwork(snapshot,readMagazineApparel(selected.parts,scope==='personal').map(asset=>asset.apparel!)),limits:{pages:HTML_LIMITS.pages,svgBytes:HTML_LIMITS.outputBytes},signal});magazine.warnings.push(...warnings);
     const missing=magazine.selection?.assets.find(asset=>!asset.pageIds.length);
     if(missing)throw new Error(`Selected image ${missing.id} has no reading representation. Review its placement or keep the complete trip in an editable ZIP.`);
     if(magazine.pages.length>HTML_LIMITS.pages)throw new Error('The magazine exceeds the experimental 128-page HTML limit. Keep the complete trip in an editable ZIP.');
@@ -90,44 +108,10 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
       try{signal?.throwIfAborted();dimensions.set(id,{width:image.width,height:image.height});}finally{image.close();}
     }
     signal?.throwIfAborted();
-    const meta=readTripMeta(doc),cityId=meta.cityId??meta.city.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
     const cached=readMagazineApparel(tripParts(doc),scope==='personal').map(asset=>asset.apparel!);
-    let apparel:Awaited<ReturnType<typeof loadCityApparel>>=[...cached];const warnings:string[]=[];
-    try{
-      const fresh=await loadCityApparel(cityId,{signal});
-      const variants=fresh.some(art=>art.role)?fresh.filter(art=>art.role):fresh;
-      apparel=[...cached,...variants.filter(art=>!cached.some(saved=>saved.assetId===art.assetId))].slice(0,3);
-      const downloads=apparel.filter(art=>!urls.has(art.assetId));
-      let failed=0,downloaded=0;
-      for(const [index,art] of downloads.entries()){
-        options.onProgress?.({stage:'collect',completed:bytes.size+downloaded,total:bytes.size+downloads.length,unit:'assets',done:false});
-        signal?.throwIfAborted();
-        try{
-          const response=await fetch(art.originalUrl??art.renditionUrl,{signal,credentials:'omit',redirect:'error'});
-          if(!response.ok)throw new Error('FCC tee image unavailable');
-          if(Number(response.headers.get('content-length'))>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('FCC tee image exceeds the portable image limit');
-          const image=await response.blob();
-          if(image.type!==art.mimeType||!image.size||image.size>TRIP_PACKAGE_LIMITS.fileBytes)throw new Error('FCC tee image does not match its declared raster');
-          const hash=await artifactSha256(image);
-          if((art.hash&&art.hash!==hash)||(art.source.contentHash&&art.source.contentHash!==hash))throw new Error('FCC tee original changed');
-          const decoded=await new Promise<ImageBitmap>((resolve,reject)=>{
-            const stop=()=>reject(signal?.reason??new DOMException('Export cancelled','AbortError'));
-            if(signal?.aborted){stop();return;}
-            signal?.addEventListener('abort',stop,{once:true});
-            Promise.resolve().then(()=>{signal?.throwIfAborted();return createImageBitmap(image);}).then(
-              decoded=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){decoded.close();stop();}else resolve(decoded);},
-              error=>{signal?.removeEventListener('abort',stop);reject(error);},
-            );
-          });
-          try{signal?.throwIfAborted();if(decoded.width!==art.width||decoded.height!==art.height)throw new Error('FCC tee dimensions changed');}finally{decoded.close();}
-          signal?.throwIfAborted();
-          urls.set(art.assetId,await dataUrl(image));dimensions.set(art.assetId,{width:art.width,height:art.height});downloaded++;
-        }catch(error){if(signal?.aborted)throw error;failed++;}
-        options.onProgress?.({stage:'collect',completed:bytes.size+downloaded,total:bytes.size+downloads.length,unit:'assets',done:index===downloads.length-1});
-      }
-      apparel=apparel.filter(art=>urls.has(art.assetId));
-      if(failed)warnings.push(`${failed} FCC tee photo${failed===1?' is':'s are'} unavailable; the remaining trip pages are kept.`);
-    }catch(error){if(signal?.aborted)throw error;apparel=[...cached];warnings.push(cached.length?'FCC is unavailable; your cached tee choice is kept.':'FCC tee pages are unavailable; your trip pages are kept.');}
+    const snapshot=await citySnapshot(doc,signal),warnings=snapshot?snapshotWarnings(snapshot):['City art and FCC tee pages are unavailable; your trip pages are kept.'];
+    for(const [id,blob] of snapshot?.blobs??[])if(!urls.has(id)){urls.set(id,await dataUrl(blob));dimensions.set(id,snapshot!.dimensions.get(id)!);}
+    const apparel=snapshotArtwork(snapshot,cached);
     options.onProgress?.({stage:'layout',completed:0,unit:'pages',done:false});
     const renderOptions:NonNullable<Parameters<typeof buildMagazine>[1]>&{artwork:readonly unknown[]}={assetUrls:urls,assetDimensions:dimensions,includePrivate:scope==='personal',variant:scope,artwork:apparel};
     const magazine=buildMagazine(doc,renderOptions);magazine.warnings.push(...warnings);signal?.throwIfAborted();options.onPrepared?.(renderOptions);

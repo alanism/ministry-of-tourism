@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {createTrip,encodeTrip,TripSession} from '@writers-board/core';
 import {prepareMagazine} from './artifacts';
+import {resetCityArtSnapshots} from './export-snapshot';
 const origin='https://foreignclubberscorespondence.web.app';
 const photos=['brush','mono','color'].map((variant,index)=>{
  const bytes='original '+variant;
@@ -40,7 +41,7 @@ it('drops only a changed original, verifies checksum and decoded dimensions, and
 });
 it('omits every tee frame when no classified apparel exists and recomposes missing metadata',async()=>{
  items=[];const empty=await prepareMagazine(make());expect(empty.apparel?.length??0).toBe(0);expect(empty.pages.filter(p=>p.pattern==='merch'||p.pattern==='tee-advert')).toEqual([]);
- items=photos.filter(a=>a.variant!=='mono');const partial=await prepareMagazine(make());expect(partial.apparel?.map(a=>a.variant)).toEqual(['brush','color']);expect(partial.pages.filter(p=>p.pattern==='merch'||p.pattern==='tee-advert')).toHaveLength(2);
+ items=photos.filter(a=>a.variant!=='mono');resetCityArtSnapshots();const partial=await prepareMagazine(make());expect(partial.apparel?.map(a=>a.variant)).toEqual(['brush','color']);expect(partial.pages.filter(p=>p.pattern==='merch'||p.pattern==='tee-advert')).toHaveLength(2);
 });
 it('does not replace a missing named variant with an unrelated fourth catalog style',async()=>{
  items=[...photos.filter(a=>a.variant!=='mono'),{...photos[0],assetId:'architecture',variant:'architecture',role:undefined}];

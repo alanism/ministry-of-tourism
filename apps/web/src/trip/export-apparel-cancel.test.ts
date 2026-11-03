@@ -9,7 +9,8 @@ async function fixture(){
   const blob=new Blob(['synthetic FCC garment decoder control'],{type:'image/png'}),hash=await sha256Hex(new Uint8Array(await blob.arrayBuffer()));
   const art:ApparelArtRef={assetId:'fcc:bangkok:tee-control',kind:'apparel-mockup',category:'apparel',originCityId:'bangkok',role:'apparel-brush',width:800,height:1200,mimeType:'image/png',hash,thumbnailUrl:'https://foreignclubberscorespondence.web.app/tee-thumb.png',renditionUrl:'https://foreignclubberscorespondence.web.app/tee.png',credit:'FCC decoder control',rightsStatus:'unknown',source:{provider:'fcc',sourceId:'tee-control',canonicalUrl:'https://foreignclubberscorespondence.web.app/bangkok.html',cityId:'bangkok',kind:'artwork',retrievedAt:'2026-10-30',origin:'artwork',contentHash:hash}};
   vi.mocked(loadCityApparel).mockResolvedValue([art]);
-  const fetcher=vi.fn<typeof fetch>(async()=>new Response(blob));vi.stubGlobal('fetch',fetcher);
+  // City art catalogues are absent here; only the garment request is under test.
+  const fetcher=vi.fn<typeof fetch>(async input=>String(input).startsWith('/artwork/')?new Response('',{status:404}):new Response(blob));vi.stubGlobal('fetch',fetcher);
   const doc=createTrip({title:'Garment cancellation control',city:'Bangkok',cityId:'bangkok',timeZone:null}),session=new TripSession(doc);
   session.execute({kind:'human',id:'qa',name:'QA'},'trip_card_create',{kind:'note',title:'Keep the note unchanged',scope:'guide'});
   return{blob,art,fetcher,doc,session,before:encodeTrip(doc)};
@@ -24,7 +25,7 @@ it('settles a stalled FCC garment decode on Cancel, preserves the reason and clo
     await started;controller.abort(reason);
     expect(await Promise.race([pending,new Promise(resolve=>setTimeout(()=>resolve('still decoding'),30))])).toEqual({error:reason});
     release({width:800,height:1200,close} as unknown as ImageBitmap);await Promise.resolve();await Promise.resolve();
-    expect(close).toHaveBeenCalledOnce();expect(prepared).not.toHaveBeenCalled();expect(f.fetcher).toHaveBeenCalledOnce();expect(encodeTrip(f.doc)).toEqual(f.before);
+    expect(close).toHaveBeenCalledOnce();expect(prepared).not.toHaveBeenCalled();expect(f.fetcher.mock.calls.filter(([input])=>!String(input).startsWith('/artwork/'))).toHaveLength(1);expect(encodeTrip(f.doc)).toEqual(f.before);
   }finally{release?.({width:800,height:1200,close} as unknown as ImageBitmap);await pending;f.session.destroy();f.doc.destroy();}
 });
 
