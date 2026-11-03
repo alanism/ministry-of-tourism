@@ -2,7 +2,7 @@
 // UI, the built-in agent, MCP tools for outside agents, and undo history.
 import { z } from 'zod';
 import type * as Y from 'yjs';
-import type { Actor, BoardParts } from '../doc/model.ts';
+import type { Actor } from '../doc/model.ts';
 
 /**
  * read: never changes the board.
@@ -13,7 +13,7 @@ export type Access = 'read' | 'write' | 'sensitive';
 
 export interface CommandContext {
   doc: Y.Doc;
-  parts: BoardParts;
+  parts: any;
   actor: Actor;
   newId: () => string;
 }
@@ -26,7 +26,7 @@ export interface CommandDef<I, O> {
   input: z.ZodType<I>;
   /** Only a person may run this (for example, turning "Draft for me" on). */
   humanOnly?: boolean;
-  /** True when this call would put words into the writer's own text. */
+  /** True when this call would put words into the person's own text. */
   writesProse?: (input: I) => boolean;
   /** True when the command reaches the internet (for example, image generation). */
   openWorld?: boolean;
@@ -48,7 +48,6 @@ export type CommandErrorCode =
   | 'invalid_input'
   | 'not_found'
   | 'human_only'
-  | 'coach_mode'
   | 'solo_mode'
   | 'quote_not_found'
   | 'quote_ambiguous'
@@ -66,7 +65,7 @@ export class CommandError extends Error {
   }
 }
 
-/** MCP tool annotations (as ChatGPT and other MCP clients read them). */
+/** MCP tool annotations (as MCP clients read them). */
 export function toolAnnotations(def: CommandMeta) {
   return {
     title: def.title,

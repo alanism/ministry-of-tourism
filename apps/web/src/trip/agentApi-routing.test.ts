@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createGroupResponse, createTrip, encodeTrip, TripSession } from '@writers-board/core';
+import { createGroupResponse, createTrip, encodeTrip, TripSession } from '@mot/core';
 import { createTripApi } from './agentApi';
 
 const owner = { kind: 'human' as const, id: 'owner', name: 'Owner' };

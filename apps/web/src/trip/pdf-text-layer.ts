@@ -1,4 +1,4 @@
-import type { PdfTextRun } from '@writers-board/core';
+import type { PdfTextRun } from '@mot/core';
 
 /** Measure only the text actually printed by the canonical SVG, never its unprinted data-flow-source. */
 export async function svgPdfTextLayer(source:string,signal?:AbortSignal):Promise<PdfTextRun[]> {

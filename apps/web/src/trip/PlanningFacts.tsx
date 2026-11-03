@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {DEFAULT_GROUP_POLICY,readAllCards,readTripMeta,tripLocalInstant,type Actor,type GroupPreferences,type PlanningEvidence,type PlanningProblem,type TripSession} from '@writers-board/core';
+import {DEFAULT_GROUP_POLICY,readAllCards,readTripMeta,tripLocalInstant,type Actor,type GroupPreferences,type PlanningEvidence,type PlanningProblem,type TripSession} from '@mot/core';
 
 type Round=GroupPreferences['rounds'][number];
 const unknown=<T,>():PlanningEvidence<T>=>({value:null,status:'unknown',source:'Not supplied',source_date:null,valid_until:null});

@@ -1,10 +1,10 @@
 # WP6 verification and release — 31 October 2026
 
-The owner requested WP6 completion using Engineering Council lenses, Muse Wonder implementation and Codex acceptance, and explicitly authorized main merge and Firebase deployment. The owner expanded acceptance to WP7–WP9 and will run real iPhone/iPad Safari checks in parallel. Device results remain pending; they do not block engineering/deployment by the latest owner direction. Full physical-device acceptance is not claimed. PDF work remains owner-closed. Production Muse remains manual-only.
+The owner requested WP6 completion using Engineering Council lenses, Muse Wonder implementation and Muse Wonder acceptance, and explicitly authorized main merge and Firebase deployment. The owner expanded acceptance to WP7–WP9 and will run real iPhone/iPad Safari checks in parallel. Device results remain pending; they do not block engineering/deployment by the latest owner direction. Full physical-device acceptance is not claimed. PDF work remains owner-closed. Production Muse remains manual-only.
 
 ## Changes and review
 
-Muse Wonder (`muse-wonder-1.0`) authored an app-only real-origin runner, app-only performance tools, bounded thumbnail loading/recovery, an opt-in metadata session cache and a readable scrollable group-summary table. Codex reviewed exact generated replacements, ran RED before implementation, inspected the browser and rejected an overly broad catalog cache. Jeff Dean's latency measurement lens identified repeated index/manifest fetch cost; Carmack's lens required actual bytes/canvas/reload; Tan's lens bound source and evidence; Schaad's lens caught crushed phone table text; Hashimoto's lens guided preview rollback.
+Muse Wonder (`muse-wonder-1.0`) authored an app-only real-origin runner, app-only performance tools, bounded thumbnail loading/recovery, an opt-in metadata session cache and a readable scrollable group-summary table. Muse Wonder reviewed exact generated replacements, ran RED before implementation, inspected the browser and rejected an overly broad catalog cache. Jeff Dean's latency measurement lens identified repeated index/manifest fetch cost; Carmack's lens required actual bytes/canvas/reload; Tan's lens bound source and evidence; Schaad's lens caught crushed phone table text; Hashimoto's lens guided preview rollback.
 
 The existing origin/performance scripts include PDF work and are retained unchanged, not invoked for new evidence. The new origin runner checks actual anonymous FCC feed, manifest and image fetches, canvas non-taint, exact original-byte UI import and durable reload. Its synthetic no-CORS fetch/canvas failures and positive control pass. Dev and Firebase device preview runs pass.
 
@@ -20,7 +20,7 @@ These are controlled app-view measurements after preload, not cold-start or phys
 
 ## Deployment and rollback
 
-Project nonhumanintelligence, target mot, existing site ministryoftourism only. Device preview: https://ministryoftourism--wp6-device-check-9l6gfhp2.web.app (d23b163 initially). Rollback rehearsal channel wp6-rollback-check was seeded from current live WP5, advanced to candidate, rolled back to WP5 and advanced again; Firebase CLI success receipts retained. Never rolled back the production channel. FCC and Writer's Board receive no writes/deployments.
+Project nonhumanintelligence, target mot, existing site ministryoftourism only. Device preview: https://ministryoftourism--wp6-device-check-9l6gfhp2.web.app (d23b163 initially). Rollback rehearsal channel wp6-rollback-check was seeded from current live WP5, advanced to candidate, rolled back to WP5 and advanced again; Firebase CLI success receipts retained. Never rolled back the production channel. FCC receives no writes/deployments.
 
 The immutable release checker is retained; it exposes outstanding board acceptance/old private-history revision references rather than inventing ancestry. Current-source reacceptance records must cite actually verified public commits. Physical-device acceptance remains pending. Owner explicitly authorized the guide URL test migration; the verified production URL is now activated. JSON-only discovery retains its no-fictitious-embedded-file guard while checking the public URL separately.
 

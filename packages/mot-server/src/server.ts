@@ -2,14 +2,16 @@
 import { createServer, type Server } from 'node:http';
 import { pathToFileURL } from 'node:url';
 import { createMuseAdapter, JOB_LIMITS, type MuseDependencies } from './index.ts';
+import {createPrivateDiagnostics,defaultDiagnosticsDirectory} from './private-diagnostics.ts';
 
 export function createMuseHttpServer(env:Record<string,string|undefined>,dependencies:MuseDependencies={}):Server{
   const origin=env.MOT_ORIGIN??'http://127.0.0.1:5173';
   const configured=new URL(origin);
   if(configured.origin!==origin || !['http:','https:'].includes(configured.protocol))throw new Error('MOT_ORIGIN must be one exact browser origin');
-  const adapter=createMuseAdapter(env,{...dependencies,log:dependencies.log??(entry=>{process.stderr.write(JSON.stringify(entry)+'\n');})});
+  const diagnostics=dependencies.log?undefined:createPrivateDiagnostics(env.MOT_LOG_DIR??defaultDiagnosticsDirectory());
+  const adapter=createMuseAdapter(env,{...dependencies,log:dependencies.log??diagnostics!.log});
   const counters=new Map<string,{since:number;count:number}>();
-  return createServer(async(request,response)=>{
+  const server=createServer(async(request,response)=>{
     response.setHeader('content-type','application/json; charset=utf-8');response.setHeader('cache-control','no-store');response.setHeader('x-content-type-options','nosniff');
     const send=(status:number,value:unknown)=>{if(!response.destroyed){response.writeHead(status);response.end(JSON.stringify(value));}};
     if(request.url==='/api/muse/status'&&request.method==='GET'){send(200,adapter.status());return;}
@@ -29,12 +31,15 @@ export function createMuseHttpServer(env:Record<string,string|undefined>,depende
       send(result.status==='ok'?200:result.status==='unavailable'?503:result.error.code==='invalid_request'?400:result.error.code==='rate_limited'?429:result.error.code==='busy'?409:502,result);
     }catch{send(400,{status:'error',error:{code:'invalid_request',message:'Request interrupted.'}});}
   });
+  if(diagnostics){const close=()=>diagnostics.close();process.once('exit',close);server.once('close',()=>{diagnostics.close();process.removeListener('exit',close);});}
+  return server;
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const port=Number(process.env.MOT_SERVER_PORT??8788);
   if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid MoT server port');
-  const server=createMuseHttpServer(process.env,{log:entry=>process.stderr.write(JSON.stringify(entry)+'\n')});
+  const server=createMuseHttpServer(process.env);
   server.requestTimeout=15000;server.headersTimeout=10000;
   server.listen(port,'127.0.0.1',()=>process.stderr.write(`MoT Muse adapter listening on loopback port ${port}\n`));
+  for(const signal of ['SIGINT','SIGTERM'] as const)process.once(signal,()=>{server.closeAllConnections();server.close(()=>process.exit(0));});
 }

@@ -1,6 +1,6 @@
 import {afterEach,describe,expect,it,vi} from 'vitest';
-vi.mock('@writers-board/core',async()=>await import('../../../../packages/core/src/index.ts'));
-import {createTrip,encodeTrip,exportTripPackage,importTripPackage,readAsset,readTripMeta,TripSession} from '@writers-board/core';
+vi.mock('@mot/core',async()=>await import('../../../../packages/core/src/index.ts'));
+import {createTrip,encodeTrip,exportTripPackage,importTripPackage,readAsset,readTripMeta,TripSession} from '@mot/core';
 const storage=vi.hoisted(()=>({blobs:new Map<string,Blob>(),writes:0,full:false}));
 vi.mock('../state/blobs',()=>({
   hashBlob:async(blob:Blob)=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()))].map(n=>n.toString(16).padStart(2,'0')).join(''),

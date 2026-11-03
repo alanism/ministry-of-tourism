@@ -1,4 +1,4 @@
-import { fccShopUrl, selectCityApparel } from '@writers-board/core';
+import { fccShopUrl, selectCityApparel } from '@mot/core';
 
 export interface WearTheTripProps { cityId: string; cityName: string; artwork: unknown; }
 export default function WearTheTrip({ cityId, cityName, artwork }: WearTheTripProps) {

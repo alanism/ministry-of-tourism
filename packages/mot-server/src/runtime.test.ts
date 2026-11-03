@@ -7,6 +7,10 @@ const request={boardId:'board-test',prompt:'Suggest a day',cards:[{id:'card-1',t
 const proposal={boardId:'board-test',ops:[{command:'trip_card_create',input:{kind:'note',title:'Suggested day'}}],reason:'A plan',sources:[]};
 const response=()=>new Response(JSON.stringify({id:'provider-request-1',model:'muse-spark-1.3',choices:[{message:{content:JSON.stringify(proposal)},finish_reason:'stop'}],usage:{prompt_tokens:100,completion_tokens:40,total_tokens:140}}),{status:200,headers:{'content-type':'application/json'}});
 const openServers:Server[]=[];
+
+it('distinguishes provider authentication failures without logging credentials or provider text',async()=>{
+ for(const status of [401,403]){const logs:unknown[]=[];const result=await createMuseAdapter(env,{fetcher:async()=>new Response('PRIVATE_PROVIDER_AUTH '+env.META_API_KEY,{status}),log:entry=>logs.push(entry)}).propose(request);expect(result).toMatchObject({status:'error',error:{code:'authentication_failed'}});expect(logs).toMatchObject([{errorClass:'authentication_failed',costUnits:1}]);expect(JSON.stringify([logs,result])).not.toContain('PRIVATE_PROVIDER_AUTH');expect(JSON.stringify([logs,result])).not.toContain(env.META_API_KEY);}
+});
 afterEach(async()=>{vi.useRealTimers();await Promise.all(openServers.splice(0).map(server=>new Promise<void>((resolve,reject)=>server.close(error=>error?reject(error):resolve()))));});
 
 describe('MOT-95 bounded server-held Muse runtime',()=>{

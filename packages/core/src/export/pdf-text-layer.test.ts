@@ -36,7 +36,7 @@ describe('searchable magazine PDF text',()=>{
     const output=syntax(buildPdf([page({textLayer:undefined})]));
     expect(output).not.toContain('/ToUnicode');
     expect(output).not.toContain('/StructTreeRoot');
-    expect(output).toContain("/Producer (Writer's Board)");
+    expect(output).toContain("/Producer (Ministry of Tourism)");
   });
   it('allows the MoT caller to set its producer and preserves the Unicode trip title in metadata',()=>{
     const output=syntax(buildPdf([page()], 'San Sebastián — 私の旅', {producer:'Ministry of Tourism'}));

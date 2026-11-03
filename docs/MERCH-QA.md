@@ -12,7 +12,7 @@ Run `node scripts/test-mot-shop-cities.cjs <begin> <end>` for bounded ranges cov
 
 Unit regressions cover current canonical catalog ordering, checksum/dimension failures, preserving the rest of a batch, no-apparel omission, missing named variants, all 200 canonical shop URLs, existing strict classification/privacy and saved-choice/package round trips. Explicit saved choices stay first; named roles determine fresh brush/mono/colour choices. Catalogue-only fourth styles do not fill a missing named style. No classification is inferred from a filename.
 
-Independent visual sign-off remains with Opus. The full-issue layout and previously recorded review holds are unchanged. Browser plugin not available; these checks use sandboxed Playwright Chromium, not a physical phone or a checkout transaction.
+Independent visual sign-off remains with Muse Wonder. The full-issue layout and previously recorded review holds are unchanged. Browser plugin not available; these checks use sandboxed Playwright Chromium, not a physical phone or a checkout transaction.
 
 The combined content branch also retains the published garment-decoder cancellation fix from `ed1c198`. Run `node scripts/test-mot-export-apparel-cancel.cjs` with the same browser variables. It holds a real FCC garment's decode, cancels through Export, disposes the late bitmap once, checks no late ready/kept file and then downloads a verified retry. Existing selected-image and PDF cancellation checks remain unchanged. See the [original cancellation evidence guide](https://github.com/alanism/ministry-of-tourism/blob/ed1c198411ab0cbecba87dfcfa40f090de5898c5/docs/EXPORT-APPAREL-CANCELLATION-QA.md) for that source checkpoint; its historical suite counts are distinct from this branch's current check.
 

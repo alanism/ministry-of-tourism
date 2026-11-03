@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import type { BoardKind, TripMeta } from '@writers-board/core';
+import type { BoardKind, TripMeta } from '@mot/core';
 import type { NewTrip } from './trip-store';
 import { countryChoices, countryName, destinationDetails, foldDestination, matchRange, searchDestinations, type DestinationRegistryStatus, type DestinationRow } from './destination';
 import './destination.css';

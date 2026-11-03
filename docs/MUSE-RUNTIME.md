@@ -20,6 +20,7 @@ Use a supported Node version with TypeScript type stripping. From the repository
 | `META_PRIVACY_ACKNOWLEDGED=true` | Owner has reviewed the data-use notice and provider terms |
 | `MOT_ORIGIN` | Exact MoT browser origin; defaults to `http://127.0.0.1:5173` |
 | `MOT_SERVER_PORT` | Optional loopback port; defaults to 8788 |
+| `MOT_LOG_DIR` | Optional dedicated owner-only diagnostics directory outside the web root; defaults to the OS user state directory under `MinistryOfTourism/muse-diagnostics` |
 
 Without all three Meta settings, status and proposal requests report unavailable. Existing manual board, artwork, saving, and export workflows require no key.
 
@@ -31,7 +32,7 @@ The local Vite app can proxy `/api/muse` to this loopback server. A proposal POS
 - `POST /api/muse/propose`: strict `{boardId,prompt,cards,assetIds,grounding?}`. Returns unavailable, a typed error, or `{status:'ok',proposal,receipt}`. The receipt records request ID, model ID, date, latency, and token usage when supplied by the provider.
 - The browser must run the returned proposal through its actual `parseMuseOutput`/command/revision validator before it can be applied. Server envelope validation is not board authorization.
 
-Typed adapter errors distinguish invalid input/output, rate limit, provider unavailability, timeout, cancellation, and an already-running request. The adapter returns no provider error body, stack trace, or echoed prompt.
+Typed adapter errors distinguish invalid input/output, rate limit, provider authentication failure (401/403), provider unavailability, timeout, cancellation, and an already-running request. The adapter returns no provider error body, stack trace, or echoed prompt.
 
 ## Data leaving the device
 
@@ -49,9 +50,13 @@ The server forwards that bounded JSON as user-role data, separately from its fix
 
 ## Diagnostics access and retention
 
-Server diagnostics contain only request ID, model ID, timestamp, error class, latency, call units, and numeric token usage. They never contain prompt/card/article text, image bytes, names, credentials, stay details, or provider error bodies. The application writes these records only to the owning process's standard error; there is no web endpoint to read logs, and it creates no durable log file or database.
+Server diagnostics contain only request ID, model ID, timestamp, error class, latency, call units, and numeric token usage. The sink revalidates and strips extra fields before writing JSONL. Prompt/card/article text, image bytes, names, credentials, stay details and provider bodies are excluded. HTTP 401/403 is `authentication_failed`, distinct from a provider outage. There is no HTTP log-reading endpoint and request diagnostics are no longer copied to standard error.
 
-Application retention is process/terminal-session only. If the owner deliberately captures standard error, that sink must be readable only by the owner and rotate/delete entries within 24 hours. Production deployment must enforce those access and retention rules in its logging configuration; this local implementation does not claim to configure an external platform's log retention.
+The default sink is outside the source/web roots in the OS user's state directory (`%LOCALAPPDATA%/MinistryOfTourism/muse-diagnostics` on Windows; the XDG state directory or `~/.local/state` elsewhere). Windows creates and verifies a protected DACL with only the current owner SID, inherited by newly created log files. POSIX directories/files use 0700/0600 and the directory owner is checked. The server refuses to start if private diagnostics cannot be established. Windows requires its installed Windows PowerShell; Node's mode bits alone do not establish owner-only Windows access ([Node file permissions](https://nodejs.org/api/fs.html#fschmodpath-mode-callback)). The browser, native packages and built assets contain no log files.
+
+Each process has its own session file. An idle timer removes individual records after 24 hours while the process is running; normal server close and process exit delete that session file. A killed process or power loss cannot run cleanup: its owner-only remnant is removed on the next server start, and old session files are pruned then. This is the stated local retention policy, not a promise that an offline operating system deletes crash remnants at a wall-clock deadline. An owner who separately captures terminal output or runs a production platform must configure that external sink's access and retention independently.
+
+Local tests inspect the actual Windows directory/file ACLs, verify a safe canary-free log, advance an idle session beyond 24 hours, check deletion on close, and refuse an unsecured sink before any provider call. Cancellation and the unchanged 30-second deadline also settle when a fixture transport ignores abort; that transport retains the single-call lease until it ends, preventing overlapping provider requests or late success logs.
 
 The browser preserves typed failures and offers **Copy diagnostic receipt**. Its allowlisted projection contains request ID, operation, board ID, revision, error class, start/finish time, app version and numeric latency. It excludes prompt/card/article text, board title, provider error text and arbitrary server receipt fields. The same projection is applied again on copy. Local transport/proxy failures receive a locally generated request ID; that ID does not claim a provider call took place.
 
@@ -65,4 +70,6 @@ Local loopback only, owner-directed: built web app (`vite preview`, 127.0.0.1:51
 
 Static Firebase Hosting alone does not run this Node process. Production needs an explicitly approved authenticated server/ingress, per-user authorization and spending controls, owner-only log access/retention, and the correct same-origin route. Do not expose the loopback development adapter as an unauthenticated public paid proxy.
 
-MOT-95 stays short of live acceptance until the owner configures the server and a real browser → server → Meta → validated proposal round trip records request ID, model ID, date, and the exact application revision. Also recheck cancellation, failure, privacy disclosure, and manual operation with the runtime disabled. No deployment or paid call is authorized by this document.
+The historical live receipt above remains evidence for its recorded application revision. Local follow-up combines the newer Ask Muse sheet with W6's schema-valid provider instruction, owner-only diagnostics, exact field disclosure and typed recovery. New checks use labelled transport fixtures only: no fresh provider call, credential handling or deployment is implied. The UI states the sent board/card/source fields, empty picture-ID list, 30-second ceiling, local retention policy and provider-account retention boundary. Sample changes retain explicit test-adapter attribution after save/reopen and do not claim that a separately configured live runtime is disconnected.
+
+On 31 October 2026 the owner reviewed the actual Ask Muse composer and timeout-recovery screenshots and explicitly chose: "Use my approval of these screenshots" to replace the Muse Wonder-specific final design gate for this local closeout. This is owner approval, not an Muse Wonder review, independent model verification or a claim of independently awarded Design Council scores. The saved design/harness rules and model assignments are unchanged. Production setup still needs the separately approved authenticated ingress, owner-managed provider settings and platform retention described above.

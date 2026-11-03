@@ -1,6 +1,4 @@
-// A small PDF writer: the board as a picture on a landscape page, and the
-// draft in standard manuscript form (Courier 12, one-inch margins, double
-// spaced). JPEGs pass through; magazine canvas pixels use lossless RGB/Flate.
+// A small PDF builder for MoT magazine pages. JPEGs pass through (magazine screen pages); raw canvas pixels use lossless RGB/Flate.
 import { zlibSync } from 'fflate';
 
 export interface PdfLink {url:string;x:number;y:number;width:number;height:number;}
@@ -26,9 +24,6 @@ const LETTER: [number, number] = [612, 792];
 const MARGIN = 72;
 const FONT_SIZE = 12;
 const LEADING = 24; // double spaced
-const CHAR_WIDTH = 0.6 * FONT_SIZE; // Courier is monospaced: 600 units per glyph
-export const MANUSCRIPT_COLUMNS = Math.floor((LETTER[0] - 2 * MARGIN) / CHAR_WIDTH);
-export const MANUSCRIPT_LINES = Math.floor((LETTER[1] - 2 * MARGIN) / LEADING);
 
 /** Characters outside Latin-1 that WinAnsi has codes for (quotes, dashes, ellipsis…). */
 const WIN_ANSI: Record<string, number> = {
@@ -70,48 +65,10 @@ function pageLinks(links:PdfLink[]|undefined,pw:number,ph:number):{url:string;re
   });
 }
 
-/** Wraps text into manuscript lines: paragraphs indented, words kept whole where they fit. */
-export function wrapManuscript(text: string, columns = MANUSCRIPT_COLUMNS): string[] {
-  const lines: string[] = [];
-  for (const paragraph of text.replace(/\r/g, '').split('\n')) {
-    if (!paragraph.trim()) {
-      lines.push('');
-      continue;
-    }
-    let line = '     '; // first-line indent, as in manuscript format
-    for (const word of paragraph.trim().split(/\s+/)) {
-      let rest = word;
-      while (rest.length > columns) {
-        if (line.trim()) lines.push(line.trimEnd());
-        lines.push(rest.slice(0, columns));
-        rest = rest.slice(columns);
-        line = '';
-      }
-      const candidate = line.trim() ? `${line} ${rest}` : `${line}${rest}`;
-      if ([...candidate].length > columns) {
-        lines.push(line.trimEnd());
-        line = rest;
-      } else line = candidate;
-    }
-    if (line.trim()) lines.push(line.trimEnd());
-  }
-  return lines;
-}
-
-/** Splits manuscript lines into text pages, with a running header and page numbers. */
-export function manuscriptPages(text: string, header: string): PdfPage[] {
-  const lines = wrapManuscript(text);
-  const pages: PdfPage[] = [];
-  for (let i = 0; i < lines.length; i += MANUSCRIPT_LINES) {
-    pages.push({ kind: 'text', lines: lines.slice(i, i + MANUSCRIPT_LINES), header, pageNumber: pages.length + 1 });
-  }
-  return pages;
-}
-
 const unicodeHex=(value:string)=>Array.from({length:value.length},(_,i)=>value.charCodeAt(i).toString(16).padStart(4,'0')).join('');
 const metadataString=(value:string)=>/[^\x20-\x7e]/.test(value)?`<feff${unicodeHex(value)}>`:pdfString(value);
 
-export function buildPdf(pages: PdfPage[], title = 'Writer’s Board', options:{producer?:string}={}): Uint8Array {
+export function buildPdf(pages: PdfPage[], title = 'Ministry of Tourism', options:{producer?:string}={}): Uint8Array {
   const characters=new Map<string,{bank:number;code:number}>(),banks:string[][]=[];
   for(const page of pages)if(page.kind==='image'&&page.textLayer!==undefined){
     if(!Array.isArray(page.textLayer)||page.textLayer.length>2000)throw new Error('PDF text layer has too many lines.');
@@ -247,7 +204,7 @@ export function buildPdf(pages: PdfPage[], title = 'Writer’s Board', options:{
   object(1, () => write(`<< /Type /Catalog /Pages 2 0 R${pageLabels}${structureId?` /MarkInfo << /Marked true >> /StructTreeRoot ${structureId} 0 R`:''} >>`));
   object(2, () => write(`<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`));
   object(3, () => write('<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>'));
-  object(4, () => write(`<< /Title ${options.producer?metadataString(title):pdfString(title)} /Producer ${metadataString(options.producer??"Writer's Board")} >>`));
+  object(4, () => write(`<< /Title ${options.producer?metadataString(title):pdfString(title)} /Producer ${metadataString(options.producer??"Ministry of Tourism")} >>`));
 
   write('%PDF-1.4\n%âãÏÓ\n');
   for (let n = 1; n < next; n++) objects[n]!();

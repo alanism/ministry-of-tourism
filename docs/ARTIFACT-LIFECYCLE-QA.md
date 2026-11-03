@@ -8,4 +8,4 @@ The browser evidence helper is retained outside source with the task's evidence 
 
 The helper then injects one IndexedDB deletion failure: the existing verified download must remain usable, and a normal retry must remove it. The other board's stored checksum and trip document must remain unchanged. Captures check 1920/1440/1280/768/375/280 px; no provider request or external publication is needed. Browser plugin not available; this is Chromium viewport evidence, not physical iOS/Safari validation.
 
-The regression suite was RED before the lifecycle change. No existing harness assertion, timeout, schema or permission was changed. This engineering fix leaves MOT-94 Implemented and its Opus design hold untouched; it supplies no independent sign-off or new visual score.
+The regression suite was RED before the lifecycle change. No existing harness assertion, timeout, schema or permission was changed. This engineering fix leaves MOT-94 Implemented and its Muse Wonder design hold untouched; it supplies no independent sign-off or new visual score.

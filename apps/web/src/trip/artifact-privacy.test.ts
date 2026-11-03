@@ -1,6 +1,6 @@
 import {unzipSync,strFromU8} from 'fflate';
 import {describe,expect,it} from 'vitest';
-import {createTrip,TripSession} from '@writers-board/core';
+import {createTrip,TripSession} from '@mot/core';
 import {createTripArtifact} from './artifacts';
 describe('MOT-92 agent artifact privacy',()=>{
   it('excludes private content from an explicitly shared artifact',async()=>{

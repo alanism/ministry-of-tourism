@@ -1,5 +1,5 @@
 // First screens (MOT-53): one obvious action per audience. Copy fixed from the owner's memo.
-import type { BoardKind } from '@writers-board/core';
+import type { BoardKind } from '@mot/core';
 import { Logo } from './ui';
 import type { BoardEntry } from './trip-store';
 

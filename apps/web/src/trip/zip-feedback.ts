@@ -1,4 +1,4 @@
-import type {DiagnosticErrorClass,DiagnosticStep} from '@writers-board/core';
+import type {DiagnosticErrorClass,DiagnosticStep} from '@mot/core';
 import type {ArtifactProgress} from './artifacts';
 export type ZipFeedbackStep=DiagnosticStep;
 export interface ZipFeedback {status:'failed'|'cancelled';step:ZipFeedbackStep;stepLabel:string;errorClass:DiagnosticErrorClass;message:string;}

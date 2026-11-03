@@ -1,5 +1,6 @@
-// Trip document (MOT-10): its own Yjs doc, so Writer's Board boards stay untouched.
+// Trip document (MOT-10): its own Yjs doc.
 import * as Y from 'yjs';
+import {votingSealSchema,VOTING_SEAL_PREFIX,votingSealKey} from './voting-contract.ts';
 import {validateLocalBallot} from './group-ballot.ts';
 import { SYSTEM_ORIGIN, type AgentMode } from '../doc/model.ts';
 import { assetSchema, presentationSchema, TRIP_SCHEMA_VERSION, tripCardSchema, tripMetaSchema, type Asset, type BoardKind, type Presentation, type TripCard, type TripMeta } from './schema.ts';
@@ -50,7 +51,9 @@ export interface CreateTripOptions {
   groupPreferences?: TripMeta['groupPreferences'];
   groupBallots?: TripMeta['groupBallots'];
   groupWorkspace?: TripMeta['groupWorkspace'];
+  groupVotingVersion?: TripMeta['groupVotingVersion'];
   memoryWorkflow?:TripMeta['memoryWorkflow'];
+  keepsakeSelection?: TripMeta['keepsakeSelection'];
   newId?: () => string;
 }
 
@@ -79,7 +82,9 @@ export function initializeTrip(doc: Y.Doc, options: CreateTripOptions): void {
     groupPreferences: options.groupPreferences,
     groupBallots: options.groupBallots,
     groupWorkspace: options.groupWorkspace,
+    groupVotingVersion: options.groupVotingVersion,
     memoryWorkflow:options.memoryWorkflow,
+    keepsakeSelection: options.keepsakeSelection,
   });
   const parts = tripParts(doc);
   doc.transact(() => {
@@ -94,6 +99,10 @@ export function readTripMeta(doc: Y.Doc): TripMeta {
   const meta=tripMetaSchema.parse(raw);
   for(const ballot of meta.groupBallots??[])validateLocalBallot(ballot,meta.groupPreferences);
   if(meta.groupWorkspace&&(!meta.groupPreferences||(meta.groupWorkspace.ledger&&meta.groupWorkspace.ledger.trip_id!==meta.groupPreferences.trip_id)))throw new Error('Workspace belongs to another group');
+  const seals=[...parts.clock].filter(([key])=>key.startsWith(VOTING_SEAL_PREFIX));
+  if((seals.length||meta.groupWorkspace?.voting?.length)&&meta.groupVotingVersion!==1)throw new Error('Managed voting capability marker is missing');
+  let votingTripId=meta.groupPreferences?.trip_id;
+  for(const [key,value] of seals){const seal=votingSealSchema.parse(value);votingTripId??=seal.configuration.trip_id;if(seal.configuration.trip_id!==votingTripId)throw new Error('Closed voting record belongs to another trip identity');if(key!==votingSealKey(seal.configuration.trip_id,seal.configuration.rounds[0]!))throw new Error('Closed voting identity does not match its snapshot');}
   return meta;
 }
 
@@ -120,9 +129,12 @@ export function writeCard(parts: TripParts, card: TripCard): void {
   const setOrDel = (k: string, v: unknown) => { if (v === undefined) map!.delete(k); else map!.set(k, v); };
   setOrDel('status', valid.status); setOrDel('day', valid.day); setOrDel('time', valid.time);
   setOrDel('placeId', valid.placeId); setOrDel('location', valid.location);
+  setOrDel('address', valid.address); setOrDel('mapUrl', valid.mapUrl);
   setOrDel('source', valid.source); setOrDel('lineage', valid.lineage);
   setOrDel('sourceText', valid.sourceText); setOrDel('travelerNote', valid.travelerNote); setOrDel('currentFacts', valid.currentFacts);
+  if (JSON.stringify(map.get('keepsakes')) !== JSON.stringify(valid.keepsakes)) setOrDel('keepsakes', valid.keepsakes);
   setOrDel('bookingAttention', valid.bookingAttention); setOrDel('booking', valid.booking);
+  setOrDel('boardWidth', valid.boardWidth); setOrDel('boardHeight', valid.boardHeight); setOrDel('boardStack', valid.boardStack);
 }
 
 export function readCard(parts: TripParts, id: string): TripCard | undefined {
@@ -137,6 +149,8 @@ export function readAllCards(parts: TripParts): TripCard[] {
 /** Asset metadata only. The bytes live outside the doc, keyed by asset id. */
 export function writeAsset(parts: TripParts, asset: Asset): void {
   const valid = assetSchema.parse(asset);
+  if (valid.personalOnly && parts.meta.get('kind') === 'host_guide') throw new Error('Personal-only artwork cannot be added to a host guide');
+  if (valid.derivedFrom && readAsset(parts,valid.derivedFrom)?.personalOnly && !valid.personalOnly) throw new Error('A derivative must preserve its source personal-only restriction');
   const existing=readAsset(parts,valid.id);
   if(existing){
     if(JSON.stringify(existing)!==JSON.stringify(valid))throw new Error(`Asset ${valid.id} is immutable; register changed media with a new ID`);
@@ -178,6 +192,7 @@ export function presentationScope(parts: TripParts, presentation: Presentation):
 
 /** Owner policy: unknown/restricted artwork may be shared with its real credit. */
 export function assertShareableAsset(asset: Asset): void {
+  if (asset.personalOnly) throw new Error(`Artwork ${asset.id} is personal-only; use a personal backup or remove it from the shared output`);
   if ((asset.rightsStatus === 'unknown' || asset.rightsStatus === 'restricted') && !asset.credit?.trim()) throw new Error(`Artwork ${asset.id} needs its credit before sharing`);
 }
 

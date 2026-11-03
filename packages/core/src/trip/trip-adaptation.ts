@@ -1,3 +1,4 @@
+import {assertUnmanagedVotingPlan} from './voting-lifecycle.ts';
 // During-trip next step and local adaptation (MOT-114). Reads only board state; returns an ordinary
 // proposal the person applies (and undoes) through the existing proposal path. Confirmed bookings,
 // private cards and other days are never changed here.
@@ -73,6 +74,7 @@ export async function planTripAdaptation(session:TripSession,raw:unknown,options
  const meta=readTripMeta(session.doc);if(!meta.timeZone){plan.unknowns.push('Destination time zone is unknown.');return plan;}
  const context=options.context?adaptationContextSchema.parse(options.context):meta.groupPreferences&&meta.groupWorkspace?.planning?{configuration:meta.groupPreferences,ledger:meta.groupWorkspace.ledger,planning:meta.groupWorkspace.planning}:null;
  if(!context){plan.unknowns.push('Save dated WP8 planning facts and participant time slots first.');return plan;}
+ assertUnmanagedVotingPlan(session,context.planning);
  const p=structuredClone(context.planning);p.as_of=new Date().toISOString();validatePlanningGroup(p,context.configuration);
  const declared=context.configuration.rounds.find(r=>r.proposal_version===p.proposal_version&&r.round_id===p.round_id);
  if(p.trip_id!==(meta.groupPreferences?.trip_id??meta.boardId)||p.proposal_version!==Math.max(...context.configuration.rounds.map(r=>r.proposal_version))||declared?.kind==='city_venue'&&declared.city_id!==meta.cityId||meta.dates&&(change.day<meta.dates.start||change.day>meta.dates.end)){plan.unknowns.push('Planning context is stale for the trip destination, dates or proposal. Review those facts first.');return plan;}

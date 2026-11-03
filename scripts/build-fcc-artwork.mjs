@@ -48,8 +48,8 @@ for(const [slug,records] of Object.entries(catalog).sort(([a],[b])=>a.localeComp
  for(const [i,slot] of (fashion?.slots??[]).entries())if(fashion.frames?.[i])drawing(sheet,'fashion',humanize(slot),cropFor(fashion.frames[i],fashion.width,fashion.height),'portrait');
  for(const figure of city?.figures??[]){
   if(figure.kind==='style')continue;const record=records.find(value=>value.id===figure.sha256);if(!record||used.has(record.id))continue;
-  const category=['backdrop','foreground'].includes(figure.kind)?figure.kind:figure.kind==='scene'?'people':figure.kind==='object'?'objects':record.category;
-  drawing(record,category,figure.label,cropFor(figure.frame,figure.width,figure.height),['backdrop','foreground'].includes(figure.kind)?figure.kind:undefined);
+  const category=['backdrop','foreground','tag','stamp'].includes(figure.kind)?figure.kind:figure.kind==='scene'?'people':figure.kind==='object'?'objects':record.category;
+  drawing(record,category,figure.label,cropFor(figure.frame,figure.width,figure.height),['backdrop','foreground','tag','stamp'].includes(figure.kind)?figure.kind:undefined);
  }
  for(const record of records){
   if(used.has(record.id)||['fashion','fashion-men'].includes(record.category)||/sheet/i.test(record.label))continue;

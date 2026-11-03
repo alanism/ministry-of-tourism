@@ -15,12 +15,9 @@ fs.mkdirSync(evidence,{recursive:true});
   try {
     await page.goto(origin+'/?view=trip');
     await createTripThroughDestination(page, { city: 'San Sebastián' });
-    const initial=await page.evaluate(()=>({probe:window.motTrip.probe(),read:window.motTrip.read(),writer:!!window.writersBoard}));
-    assert.equal(initial.writer,false);
+    const initial=await page.evaluate(()=>({probe:window.motTrip.probe(),read:window.motTrip.read()}));
     assert.equal(initial.read.cards.length,0,'New destination must not contain sample Bangkok cards');
     assert.equal(initial.read.meta.city,'San Sebastián');
-    const dbs=await page.evaluate(async()=> (await indexedDB.databases()).map(db=>db.name));
-    assert(!dbs.some(name=>name.startsWith('writers-board:')),'Trip route initialized a hidden writer board');
     await page.getByLabel('New card title').fill('A personal note');
     await page.getByRole('button',{name:'Add card',exact:true}).click();
     const later=await page.evaluate(()=>window.motTrip.probe());
@@ -55,12 +52,7 @@ fs.mkdirSync(evidence,{recursive:true});
     await page.setViewportSize({width:375,height:812});
     await page.screenshot({path:path.join(evidence,'trip-mobile.png')});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),375,'Mobile document overflows');
-    const writer=await context.newPage();writer.on('pageerror',error=>errors.push(error.message));
-    await writer.goto(origin+'/?view=agent');await writer.locator('[data-agent-view="board"]').waitFor();
-    assert.equal(await writer.evaluate(()=>typeof window.writersBoard?.tools),'function');
-    await writer.goto(origin+'/?view=board');await writer.locator('.app .stage').waitFor();
-    await writer.close();
     assert.deepEqual(errors,[]);
-    fs.writeFileSync(path.join(evidence,'browser-result.json'),JSON.stringify({origin,initial,later,dbs,artifact,uiPdf:uiPdf.receipt,uiZip:uiZip.receipt,writerAndAgentRoutes:true,errors},null,2));
+    fs.writeFileSync(path.join(evidence,'browser-result.json'),JSON.stringify({origin,initial,later,artifact,uiPdf:uiPdf.receipt,uiZip:uiZip.receipt,errors},null,2));
   } finally {await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

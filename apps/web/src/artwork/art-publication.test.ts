@@ -1,6 +1,6 @@
 import {readFileSync} from 'node:fs';
 import {expect,it} from 'vitest';
-import {artRefSchema,selectCityApparel} from '@writers-board/core';
+import {artRefSchema,selectCityApparel} from '@mot/core';
 import {catalogSchema,manifestSchema} from './catalog';
 
 it('publishes strict ArtRefs, keeps 50 real map-tee photos out of flat maps, and exposes only populated categories',()=>{

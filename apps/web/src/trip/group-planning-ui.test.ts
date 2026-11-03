@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {applyProposal,bookingAttention,createTrip,readAllCards,readCard,TripSession,type TripCard} from '@writers-board/core';
+import {applyProposal,bookingAttention,createTrip,readAllCards,readCard,TripSession,type TripCard} from '@mot/core';
 import {addBookingAttention,bookingAttentionFromForm,formatTripInstant,optionStampCounts,roundConflicts,undoGroupPlan,type BookingAttentionDraft} from './group-planning-ui';
 
 const person={kind:'human' as const,id:'owner',name:'Owner'};

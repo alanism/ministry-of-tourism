@@ -10,7 +10,7 @@ npm run check   # vitest run + typecheck; non-zero exit on any failure
 
 ## First usable board (manual, no keys/accounts/maps)
 
-1. Open the app (`npm run dev -w @writers-board/web`, http://localhost:5173/).
+1. Open the app (`npm run dev -w @mot/web`, http://localhost:5173/).
 2. Create a trip board. Add a card, edit its text.
 3. Move the card to another stage (lane).
 4. Open Today: the same card appears with the same content.

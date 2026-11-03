@@ -1,5 +1,5 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import type {MagazineDocument} from '@writers-board/core';
+import type {MagazineDocument} from '@mot/core';
 import {magazinePdf} from './artifacts';
 
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});

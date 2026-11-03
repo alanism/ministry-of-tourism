@@ -1,7 +1,7 @@
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {expect,it} from 'vitest';
-import {createTrip,TripSession,type GroupBallot} from '@writers-board/core';
+import {createTrip,TripSession,type GroupBallot} from '@mot/core';
 import {RankBallot,changeRank} from './RankBallot';
 
 const actor={kind:'human' as const,id:'person',name:'Person'};

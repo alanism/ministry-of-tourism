@@ -1,5 +1,5 @@
 import {describe,expect,it,vi} from 'vitest';
-import {createTrip,diagnosticText,TripSession,type DiagnosticReceipt} from '@writers-board/core';
+import {createTrip,diagnosticText,TripSession,type DiagnosticReceipt} from '@mot/core';
 import {createTripArtifact} from './artifacts';
 const blobState=vi.hoisted(()=>({blob:null as Blob|null}));
 vi.mock('../state/blobs',()=>({

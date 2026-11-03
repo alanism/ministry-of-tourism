@@ -1,5 +1,10 @@
 # MOT-101 public source candidate — 31 October 2026
 
+Historical source-integration evidence follows. The later consolidated local
+candidate, passing default suite and current evidence mapping are documented in
+`LOCAL-RELEASE-CANDIDATE.md`; these later results do not retroactively change the
+test outcomes or scope recorded below.
+
 This branch prepares source for review. It does not authorize a deployment or
 claim release acceptance. MOT-101 remains Doing; assigned reviewers and owner
 approval, device, real-origin and rollback requirements remain in force.
@@ -23,7 +28,7 @@ from `mot-content-cards`. Published app follow-ups from `mot-wp3-art` at
 The MoT root-entry fix and unchanged browser regression are carried from the
 already committed `92c478f` implementation: `/` opens the travel workspace,
 advertises the trip agent contract, creates an empty trip and reopens its durable
-board without a query string or hidden Writer API/database. Explicit inherited
+board without a query string or hidden API/database. Explicit inherited
 `view=board` and `view=agent` entry points retain their existing route selection.
 Vite's inline-note input now uses the trip contract; compiler/server constraints,
 tests, dependency/lock files and thresholds are unchanged.
@@ -48,7 +53,7 @@ an ancestry pass to satisfy the release checker.
 
 Fourteen unchanged incoming regression files ran before source integration:
 43 failures and three passes. After integration all 46 pass. The root browser
-regression fails against the old default Writer route, then passes on development
+regression fails against the old default, then passes on development
 and production builds at 1440 and 375 pixels.
 
 The ordinary `npm run check` was run: **817/818 tests pass**, with the unchanged
@@ -92,11 +97,11 @@ labelled transport fixtures; no paid/live model or credential is used.
   revision, ignores late values, and allows retry/reload. Direct city/Almanac
   cancellation settles in 0–0.1 ms online/offline. No timeout is added to storage.
 - Root-entry smoke passes on the built app at 1440/375 without a query string,
-  hidden Writer API/database, page errors or document overflow. Screenshots of
+  hidden API/database, page errors or document overflow. Screenshots of
   root, phone Today and Muse recovery were inspected.
 
 Normal WP8/WP9, root and cache runs have no page/console/provider failures. The
-root RED capture's inherited Writer warning and intentional storage-fault errors
+root RED capture's inherited warning and intentional storage-fault errors
 are retained separately. Physical iOS/Safari, cold offline startup, new live Muse
 calls, independent design/model reviews, production FCC smoke and preview rollback
 were not exercised by this source-only task.
@@ -130,7 +135,7 @@ from `scripts/`. Restart the owned Vite server after integration before module
 injection/offline probes; root smoke also runs on the production preview.
 
 Local canonical evidence is `Design Sprints/Build-MOT-101-Public-Source-2026-10-31`
-in the planning workspace. Spark builder cards, MOT-94, PDF closure, FCC and Writer
+in the planning workspace. Spark builder cards, MOT-94, PDF closure and FCC
 repositories, live deployments and guide URL remain untouched. Account bindings
 stay outside this public source checkout. A later deployment requires the existing
 owner authorization and release checks; a local preview is not a deployment.

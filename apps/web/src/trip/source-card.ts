@@ -1,4 +1,4 @@
-import type {TripCard} from '@writers-board/core';
+import type {TripCard} from '@mot/core';
 
 export interface CardDraft {title:string;body:string;travelerNote:string;day:string;time:string;scope:TripCard['scope'];}
 export const sourceTextFor=(card:TripCard)=>card.sourceText??(card.provenance==='fcc'?card.body:undefined);

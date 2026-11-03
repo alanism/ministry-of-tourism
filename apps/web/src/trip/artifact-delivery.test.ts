@@ -1,5 +1,5 @@
 import {afterEach,describe,expect,it,vi} from 'vitest';
-import {createTrip,TripSession} from '@writers-board/core';
+import {createTrip,TripSession} from '@mot/core';
 import * as artifacts from './artifacts';
 import {unzipSync,strFromU8} from 'fflate';
 afterEach(()=>{vi.useRealTimers();vi.restoreAllMocks();});

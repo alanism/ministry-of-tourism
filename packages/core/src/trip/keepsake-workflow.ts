@@ -8,18 +8,23 @@ export type Reaction = 'keep' | 'maybe' | 'skip';
 export interface MemoryItem { cardId: string; title: string; kind: TripCard['kind']; assetId?: string; note: string; day?: string; reaction?: Reaction; why: string; }
 export interface MemoryShortlist { items: MemoryItem[]; skipped: string[]; more: number; }
 
-const MEMORY_KINDS = new Set<TripCard['kind']>(['photo', 'note', 'place']);
 const rank = (item: MemoryItem) => (item.reaction === 'keep' ? 0 : item.reaction === 'maybe' ? 1 : 2) * 10 + (item.assetId ? 0 : 1);
 
 /** A first shortlist from permitted photos and notes. Every photo is welcome; nothing is judged by quality. */
 export function memoryShortlist(session: TripSession, options: { reactions?: Readonly<Record<string, Reaction>>; includePrivate?: boolean; limit?: number } = {}): MemoryShortlist {
   const reactions = options.reactions ?? {};
-  const candidates = readAllCards(session.parts).filter(card => (options.includePrivate || card.scope !== 'private') && MEMORY_KINDS.has(card.kind) && (card.assetIds.length > 0 || card.kind === 'note' && card.body.trim().length > 0));
+  const candidates = readAllCards(session.parts).filter(card => {
+    if (!options.includePrivate && card.scope === 'private') return false;
+    // An explicitly collected image card remains eligible; a free artwork placement alone is not a card or a visit.
+    const photograph = card.assetIds.length > 0;
+    const authoredNote = !!card.travelerNote?.trim() || (card.kind === 'note' && card.provenance === 'traveler' && !card.source && !!card.body.trim());
+    return photograph || authoredNote;
+  });
   const skipped = candidates.filter(card => reactions[card.id] === 'skip').map(card => card.id).sort();
   const items = candidates.filter(card => reactions[card.id] !== 'skip').map((card): MemoryItem => ({
     cardId: card.id, title: card.title, kind: card.kind, ...(card.assetIds.length ? { assetId: card.assetIds[card.assetIds.length - 1] } : {}),
     note: (card.travelerNote ?? card.body).trim().slice(0, 400), ...(card.day ? { day: card.day } : {}), ...(reactions[card.id] ? { reaction: reactions[card.id] } : {}),
-    why: card.assetIds.length ? (card.stage === 'remember' ? 'A photo you filed under Remember.' : 'A photo from your trip.') : 'A note in your own words.',
+    why: card.assetIds.some(id => readAsset(session.parts, id)?.source?.kind === 'artwork') ? 'Artwork you collected, not a record of a visit.' : card.assetIds.length ? (card.stage === 'remember' ? 'A photo you filed under Remember.' : 'A photo from your trip.') : 'A note in your own words.',
   })).sort((a, b) => rank(a) - rank(b) || (a.day ?? '9999').localeCompare(b.day ?? '9999') || a.title.localeCompare(b.title) || a.cardId.localeCompare(b.cardId));
   const limit = Math.max(1, Math.min(500, options.limit ?? 12));
   return { items: items.slice(0, limit), skipped, more: Math.max(0, items.length - limit) };
@@ -31,7 +36,7 @@ export function reusableArt(session: TripSession, options: { includePrivate?: bo
   const seen = new Map<string, ReusableArt>();
   const order = { guide: 0, stay: 1, private: 2 } as const;
   for (const p of readPresentations(session.parts)) {
-    if (!p.assetId) continue;
+    if (!p.assetId || p.surface === 'board') continue;
     const scope = presentationScope(session.parts, p);
     if (scope === 'private' && !options.includePrivate) continue;
     const asset = readAsset(session.parts, p.assetId);
@@ -68,7 +73,7 @@ export function reviewKeepsakePages(session: TripSession, input: { cardIds: read
     if (card.day && meta.dates && (card.day < meta.dates.start || card.day > meta.dates.end)) problems.push({ kind: 'wrong_detail', ids: [card.id], detail: `${card.title || 'A memory'} is dated ${card.day}, outside the trip (${meta.dates.start} to ${meta.dates.end}).` });
     for (const id of card.assetIds) { const asset = readAsset(session.parts, id); if (asset && (asset.rightsStatus === 'unknown' || asset.rightsStatus === 'restricted') && !asset.credit?.trim()) problems.push({ kind: 'needs_credit', ids: [card.id, id], detail: `${card.title || 'A memory'} uses art without its credit; add it before sharing.` }); }
   }
-  const art = readPresentations(session.parts).filter(p => (!p.cardId || wanted.has(p.cardId)) && (input.includePrivate || presentationScope(session.parts, p) !== 'private'));
+  const art = readPresentations(session.parts).filter(p => p.surface !== 'board' && (!p.cardId || wanted.has(p.cardId)) && (input.includePrivate || presentationScope(session.parts, p) !== 'private'));
   for (const p of art) if (p.assetId && !input.hasBytes(p.assetId)) problems.push({ kind: 'missing_image', ids: [p.id, p.assetId], detail: 'A placed artwork is missing its image in this browser.' });
   const front = art.filter(p => p.magazineRole !== 'backdrop' && !p.locked);
   for (let i = 0; i < front.length; i++) for (let j = i + 1; j < front.length; j++) {

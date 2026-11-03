@@ -1,21 +1,52 @@
 .mot-ballot label { display: grid; gap: 6px; font-size: var(--t-1); font-weight: 600; min-width: 0; }
-.mot-ballot-selectors, .mot-ballot-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.mot-ballot-selectors { margin: 12px 0; }
-.mot-ballot-scale { margin-top: 20px; font-weight: 600; }
+.mot-ballot-selectors { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.mot-ballot-rule { margin-top: 20px; font-weight: 600; overflow-wrap: anywhere; }
 .mot-ballot-status { margin: 10px 0; font-family: var(--m-mono); font-size: var(--t-1); }
-.mot-ballot-options { display: grid; gap: 12px; margin: 18px 0; }
-.mot-ballot-option { border: 1px solid var(--m-line); border-radius: 12px; padding: 14px; background: var(--m-paper, var(--m-surface)); }
-.mot-ballot-title { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.mot-ballot-title h3 { font-size: var(--t-2); overflow-wrap: anywhere; }
-.mot-rank-sticker { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border: 1px dashed var(--m-line-2); border-radius: 50%; font-family: var(--m-mono); }
-.mot-rank-sticker.ranked { background: var(--m-ink); color: var(--m-surface); border-style: solid; transform: rotate(-5deg); }
-.mot-ballot-stamp.approved { border: 2px solid var(--m-ink); }
-.mot-ballot-stamp.maybe { border: 2px dashed var(--m-ink-2); }
-.mot-ballot-stamp.denied { border: 2px solid var(--m-red); color: var(--m-red-ink); }
 .mot-ballot-note { margin-top: 20px; }
 .mot-ballot-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .mot-ballot-setup { display: grid; gap: 18px; padding-top: 12px; }
 .mot-ballot-setup fieldset { border: 1px solid var(--m-line); padding: 12px; border-radius: 12px; }
 .mot-ballot-setup .mot-ballot-check { display: flex; align-items: center; gap: 12px; min-height: 44px; overflow-wrap: anywhere; }
 .mot-ballot-check input { width: 20px; height: 20px; flex: none; }
-@media (max-width: 420px) { .mot-ballot-selectors, .mot-ballot-controls { grid-template-columns: 1fr; } }
+.mot-ballot button { min-height: 44px; }
+.mot-points, .mot-reply-review { border: 1px solid var(--m-line); border-radius: 12px; background: var(--m-surface); margin: 12px 0; overflow-wrap: anywhere; }
+.mot-points { padding: 0 14px; }
+.mot-points[open] { padding-bottom: 12px; }
+.mot-reply-review { padding: 12px 14px; }
+.mot-points summary, .mot-concern summary, .mot-reply-review summary { display: list-item; min-height: 44px; padding: 11px 0; box-sizing: border-box; line-height: 22px; cursor: pointer; }
+.mot-tray { border: 1px solid var(--m-line); border-radius: 12px; padding: 14px; background: var(--m-surface); margin: 16px 0; }
+.mot-tray h3, .mot-reply-review h3 { overflow-wrap: anywhere; }
+.mot-tray-hint { margin: 6px 0 0; }
+.mot-tray-list { display: grid; gap: 10px; list-style: none; margin: 12px 0 0; padding: 0; }
+.mot-tray-item { display: grid; gap: 10px; border: 1px solid var(--m-line-2); border-radius: 12px; padding: 10px; background: var(--m-paper); min-width: 0; }
+.mot-tray-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mot-tray-text { display: grid; gap: 2px; min-width: 0; }
+.mot-tray-title { font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
+.mot-tray-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.mot-tray-actions .m-btn[aria-disabled="true"] { opacity: .45; cursor: default; }
+.mot-tray-badge { display: grid; place-items: center; flex: none; width: 44px; height: 44px; border-radius: 50%; background: var(--m-ink); color: var(--m-surface); font-family: var(--m-mono); font-size: var(--t-1); line-height: 1.15; text-align: center; white-space: nowrap; transform: rotate(-5deg); padding: 4px; box-sizing: border-box; }
+.mot-tray-empty { border: 1px dashed var(--m-line-2); border-radius: 12px; padding: 12px; color: var(--m-ink-2); font-family: var(--m-mono); font-size: var(--t-1); overflow-wrap: anywhere; }
+.mot-postcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 14px; margin: 18px 0; }
+.mot-ballot-card { display: grid; align-content: start; gap: 10px; border: 1px solid var(--m-line); border-radius: 12px; padding: 14px; background: var(--m-paper); min-width: 0; overflow-wrap: anywhere; }
+.mot-ballot-card.ranked { border: 2px solid var(--m-ink); }
+.mot-ballot-card h3 { font-size: var(--t-2); overflow-wrap: anywhere; margin: 0; }
+.mot-ballot-card-figure { margin: 0; }
+.mot-ballot-card-figure img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border-radius: 8px; }
+.mot-ballot-card-band { display: grid; place-items: center; height: 64px; border: 1px dashed var(--m-line-2); border-radius: 8px; background: var(--m-paper); color: var(--m-ink); font-size: var(--t-4); font-weight: 700; letter-spacing: -0.02em; }
+.mot-ballot-card-excerpt { margin: 0; color: var(--m-ink-2); overflow-wrap: anywhere; }
+.mot-fav-chip { display: inline-block; margin: 0; border: 1px solid var(--m-ink); border-radius: 999px; padding: 8px 10px; font-family: var(--m-mono); font-size: var(--t-1); }
+.mot-add-btn { border: 1.5px solid var(--m-ink); }
+.mot-text-btn { background: none; border: 0; color: var(--m-ink); text-decoration: underline; cursor: pointer; padding: 6px 2px; font: inherit; }
+.mot-concern { border-top: 1px solid var(--m-line); padding-top: 8px; }
+.mot-concern fieldset { border: 1px solid var(--m-line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; min-width: 0; }
+.mot-concern legend { font-weight: 700; overflow-wrap: anywhere; }
+.mot-concern .mot-radio { display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 500; overflow-wrap: anywhere; }
+.mot-radio input { width: 20px; height: 20px; flex: none; }
+.mot-concern-denied { color: var(--m-red-ink); font-weight: 700; }
+.mot-reply-review { display: grid; gap: 10px; }
+.mot-reply-review p, .mot-reply-review h3 { margin: 0; overflow-wrap: anywhere; }
+.mot-review-list { margin: 0; padding-left: 20px; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: no-preference) { .mot-tray-badge { transition: transform 160ms ease; } .mot-ballot-card, .mot-tray-item { transition: border-color 160ms ease; } }
+@media (max-width: 420px) { .mot-ballot-selectors { grid-template-columns: 1fr; } }
+
+.mot-ballot-editable{border:0;padding:0;min-inline-size:0;margin:0}

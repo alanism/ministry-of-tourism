@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {createTrip,TripSession,encodeTrip,DEFAULT_GROUP_POLICY} from '@writers-board/core';
+import {createTrip,TripSession,encodeTrip,DEFAULT_GROUP_POLICY} from '@mot/core';
 import {problem} from '../../../../packages/core/src/trip/planning-test-fixtures.ts';
 import {createTripApi} from './agentApi';
 it('exposes real planning/feasibility/attention tools over supplied data without mutating or reading private context',async()=>{

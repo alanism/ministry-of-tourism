@@ -20,7 +20,7 @@ access and are not part of this check.
 
 1. Check out the named commit. `npm install`, then `npm run check` must pass
    (vitest plus typecheck of core, bridge, mot-server and web).
-2. `npm run dev -w @writers-board/web -- --port 5173 --host 127.0.0.1`, open
+2. `npm run dev -w @mot/web -- --port 5173 --host 127.0.0.1`, open
    `http://127.0.0.1:5173/?view=trip`.
 3. Board: make a trip, add a card, edit it (title, notes, day, time, who can
    see it), move it with the ⋮ menu and by drag, mark a task done, reload.
@@ -37,7 +37,7 @@ access and are not part of this check.
 7. Every unavailable surface says so: Muse, routes, checkout, print ordering.
 8. At 375 px: no page-level horizontal scroll; every action has a 44 px target
    and works by keyboard (lanes scroll sideways by design).
-9. `npm run build -w @writers-board/web`; `META_API_KEY` appears nowhere in
+9. `npm run build -w @mot/web`; `META_API_KEY` appears nowhere in
    `apps/web/dist`.
 
 ## Three-minute demo script (MOT-58)

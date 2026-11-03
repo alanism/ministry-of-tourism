@@ -1,7 +1,7 @@
 // Pure helpers behind the WP8 organizer summary and booking-attention form (MOT-112/113), kept out of the
 // components so the honesty rules (separate cost evidence, no false Undo/Saved claims, round-scoped
 // conflicts, replied-vs-pending stamps, trip-local display times) are unit tested.
-import {tripLocalInstant,undoProposal,type Actor,type TripSession} from '@writers-board/core';
+import {tripLocalInstant,undoProposal,type Actor,type TripSession} from '@mot/core';
 
 export interface BookingAttentionDraft {option:string;activity:string;deadline:string;source:string;date:string;status:'confirmed'|'unknown';costStatus:'confirmed'|'unknown';importance:string;promotion:boolean;cost:string;}
 

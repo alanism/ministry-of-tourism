@@ -83,7 +83,7 @@ async function previewPng(page,img,target) {
 }
 async function rasterPdf(page,pdf,prefix) {
   const started=performance.now(),timeout=20000,directory=path.dirname(prefix),stem=path.basename(prefix);
-  // Poppler's PNG writer dominates the old timeout. PPM preserves its exact
+  // Poppler's PNG encoder dominates the old timeout. PPM preserves its exact
   // pixels; browser PNG encoding is checked losslessly before the existing gate.
   execFileSync(process.env.MOT_PDFTOPPM||'pdftoppm',['-scale-to-x','1184','-scale-to-y','1680',pdf,prefix],{stdio:['ignore','pipe','pipe'],timeout});
   const renderMs=performance.now()-started;

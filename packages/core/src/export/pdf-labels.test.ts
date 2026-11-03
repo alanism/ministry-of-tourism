@@ -14,7 +14,7 @@ describe('magazine PDF page labels',()=>{
   });
   it('keeps legacy unlabeled PDFs unchanged and resets numbering for an unlabeled page in a labeled file',()=>{
     expect(text([page(),{kind:'text',lines:['Legacy']}])).not.toContain('/PageLabels');
-    const output=text([page('front'),{kind:'text',lines:['Manuscript']},page('back (calm)')]);
+    const output=text([page('front'),{kind:'text',lines:['Itinerary']},page('back (calm)')]);
     expect(output).toContain('1 << /S /D /St 2 >>');
     expect(output).toContain('/P (back \\(calm\\) )');
   });

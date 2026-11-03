@@ -1,8 +1,8 @@
 // Keepsakes (predicted build 04): pick a trip photo, write a note, download a real PNG postcard.
-import { useEffect, useMemo, useState } from 'react';
-import { POSTCARD, itineraryHtml, memorabiliaHtml, pngWithPrintInfo, readAllCards, readTripMeta, tripParts, type TripSession } from '@writers-board/core';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { POSTCARD, itineraryHtml, memorabiliaHtml, pngWithPrintInfo, readAllCards, readAsset, readCard, readTripMeta, tripParts, type Actor, type TripSession } from '@mot/core';
 import { Icon, type IconName } from './ui';
-import { coverAssetId, useAssetUrl } from './trip-assets';
+import { coverAssetId, useAssetMedia, useAssetUrl } from './trip-assets';
 import { cityLabel } from './sample';
 import type { SavedStatus } from './trip-store';
 import { recordOutcome } from './metrics';
@@ -73,50 +73,66 @@ function PhotoChoice({ session, assetId, selected, onPick, label }: { session: T
   return <button type="button" aria-pressed={selected} aria-label={label} onClick={onPick}>{url && <img src={url} alt="" />}</button>;
 }
 
-export function Keepsakes({ session, tick, saved, onExport, onBack, notify }: { session: TripSession; tick: number; saved: SavedStatus; onExport: () => void; onBack: () => void; notify: (m: string) => void }) {
+export function Keepsakes({ session, actor, tick, saved, refresh, whenSaved, onExport, onBack, notify }: { session: TripSession; actor: Actor; tick: number; saved: SavedStatus; refresh: () => void; whenSaved: () => Promise<void>; onExport: () => void; onBack: () => void; notify: (m: string) => void }) {
   void tick;
   const meta = readTripMeta(session.doc);
-  // One entry per photo: two cards can share the same picture.
+  // Draft identity belongs to the card/output, even when the photograph is reused.
   const photos = useMemo(() => {
-    const seen = new Set<string>();
     return readAllCards(tripParts(session.doc)).filter((c) => c.scope !== 'private' && c.assetIds.length).map((c) => ({ card: c, assetId: coverAssetId(c)! }))
-      .filter((p) => !seen.has(p.assetId) && seen.add(p.assetId));
+      .filter(p => /^image\/(png|jpeg|webp|gif|avif)$/.test(readAsset(session.parts,p.assetId)?.mime??''));
   }, [session, tick]);
-  const [picked, setPicked] = useState<string | undefined>(() => (photos.find((p) => p.card.kind === 'photo') ?? photos[0])?.assetId);
-  const current = photos.find((p) => p.assetId === picked) ?? photos[0];
-  const url = useAssetUrl(session, current?.assetId);
-  const [note, setNote] = useState('Our first evening on the river.');
-  const [template, setTemplate] = useState<Template>('postcard');
+  const current = photos.find((p) => p.card.id === meta.keepsakeSelection?.cardId) ?? photos.find(p=>p.card.kind==='photo') ?? photos[0];
+  const template:Template = meta.keepsakeSelection?.format??'postcard';
+  const media = useAssetMedia(session, current?.assetId),url=media.url;
+  const draft=current?.card.keepsakes?.[template],editKey=JSON.stringify([meta.boardId,current?.card.id,template]);
+  const [rejected,setRejected]=useState<{key:string;text:string;error:string}|null>(null);
+  const note=rejected?.key===editKey?rejected.text:draft?.caption??'';
+  const [saveFailure,setSaveFailure]=useState('');
+  const saveRun=useRef(0);
+  useEffect(()=>()=>{saveRun.current++;},[session]);
   const [busy, setBusy] = useState(false);
+  const persist=()=>{const run=++saveRun.current;refresh();void whenSaved().then(()=>{if(run===saveRun.current)setSaveFailure('');},error=>{if(run===saveRun.current)setSaveFailure(`${error instanceof Error?error.message:'Storage did not complete.'} Keep this tab open; check save status or download a personal ZIP backup below.`);});};
+  const select=(cardId:string,format:Template)=>{try{session.execute(actor,'trip_keepsake_select',{cardId,format});persist();}catch(error){notify(error instanceof Error?error.message:'Could not select that photo.');}};
+  const writeCaption=(caption:string)=>{
+    if(!current)return;
+    try{
+      const selection={cardId:current.card.id,format:template};
+      session.executeAll(actor,[...(meta.keepsakeSelection?.cardId!==selection.cardId||meta.keepsakeSelection.format!==selection.format?[{command:'trip_keepsake_select',input:selection}]:[]),{command:'trip_keepsake_caption',input:{...selection,caption}}]);
+      setRejected(null);persist();
+    }
+    catch(error){setRejected({key:editKey,text:caption,error:error instanceof Error?error.message:'Could not save this caption.'});}
+  };
   const heading = template === 'postcard' ? cityLabel(meta.city) : current?.card.title ?? meta.title;
   const size = sizeFor(template === 'memory');
-  const [rendered, setRendered] = useState<{ image: string; key: string; photoWidth: number; photoHeight: number } | null>(null);
+  const [rendered, setRendered] = useState<{ image: string; blob: Blob; key: string; photoWidth: number; photoHeight: number } | null>(null);
   const [previewError, setPreviewError] = useState('');
-  const previewKey = JSON.stringify([url, heading, note, template]);
+  const revision=session.boardRev;
+  const previewKey = JSON.stringify([meta.boardId,revision,current?.card.id,current?.assetId,url, heading, note, template]);
   useEffect(() => {
     if (!url) return;
     let live = true;
     const timer = setTimeout(() => {
       void renderPostcard(url, heading, note, template === 'postcard').then(({ blob, photoWidth, photoHeight }) => {
-        if (!live) return;
-        setRendered({ image: URL.createObjectURL(blob), key: previewKey, photoWidth, photoHeight }); setPreviewError('');
+        if (!live || session.boardRev!==revision) return;
+        setRendered({ image: URL.createObjectURL(blob), blob, key: previewKey, photoWidth, photoHeight }); setPreviewError('');
       }, (e: unknown) => { if (live) setPreviewError(e instanceof Error ? e.message : 'Could not prepare the preview.'); });
     }, 180);
     return () => { live = false; clearTimeout(timer); };
-  }, [url, heading, note, template, previewKey]);
+  }, [session,revision,url, heading, note, template, previewKey]);
   useEffect(() => () => { if (rendered) URL.revokeObjectURL(rendered.image); }, [rendered]);
-  const ready = rendered?.key === previewKey && !previewError;
+  const ready = !!url && rendered?.key === previewKey && !previewError && rejected?.key!==editKey;
   const lowResolution = ready && rendered && (rendered.photoWidth < size.w || rendered.photoHeight < size.h * (template === 'postcard' ? .7 : .45));
 
-  const downloadPostcard = async () => {
-    if (!url) return;
+  const downloadPostcard = () => {
+    if (!ready || !rendered || session.boardRev!==revision || !current || readCard(session.parts,current.card.id)?.scope==='private') return;
     setBusy(true);
     try {
-      const { blob, photoWidth } = await renderPostcard(url, heading, note, template === 'postcard');
+      if(meta.keepsakeSelection?.cardId!==current.card.id||meta.keepsakeSelection.format!==template){session.execute(actor,'trip_keepsake_select',{cardId:current.card.id,format:template});persist();}
+      const { blob, photoWidth } = rendered;
       download(blob, `${template === 'postcard' ? 'postcard' : 'memory-page'}-${meta.city}.png`);
       recordOutcome('keepsake_created');
       const name = template === 'postcard' ? 'Postcard' : 'Memory page';
-      notify(photoWidth < size.w ? `${name} downloaded. The photo is ${photoWidth}px wide, so a print would look soft.` : `${name} downloaded`);
+      notify(photoWidth < size.w ? `${name} download started. The photo is ${photoWidth}px wide, so a print would look soft.` : `${name} download started`);
     } catch (e) { notify(e instanceof Error ? e.message : 'Could not make the postcard.'); }
     finally { setBusy(false); }
   };
@@ -129,24 +145,27 @@ export function Keepsakes({ session, tick, saved, onExport, onBack, notify }: { 
         <button type="button" className="m-btn ghost small mot-studio-back" style={{ marginLeft: -14 }} onClick={onBack}><Icon name="chevronLeft" /> Back to board</button>
         <hr className="m-rule" style={{ marginTop: 8 }} />
         <p className="m-eyebrow" style={{ marginBottom: 10 }}>Photo</p>
-        {current && url ? (
+        {current ? (
           <>
-            <div className="mot-photo-main"><img src={url} alt={current.card.title} /></div>
-            <p className="m-muted mot-original-label t-1" style={{ margin: '8px 0 12px' }}>Original photo · {current.card.title}</p>
+            <div className="mot-photo-main">{url&&<img src={url} alt={current.card.title} />}</div>
+            <p className="m-muted mot-original-label t-1" style={{ margin: '8px 0 12px' }}>Current photo · {current.card.title}</p>
             {photos.length > 1 && (
               <div className="mot-photo-pick">
-                {photos.map((p) => <PhotoChoice key={p.assetId} session={session} assetId={p.assetId} label={`Use ${p.card.title}`} selected={p.assetId === current.assetId} onPick={() => setPicked(p.assetId)} />)}
+                {photos.map((p) => <PhotoChoice key={p.card.id} session={session} assetId={p.assetId} label={`Use ${p.card.title}`} selected={p.card.id === current.card.id} onPick={() => select(p.card.id,template)} />)}
               </div>
             )}
           </>
         ) : <p className="m-muted">No photos on this board yet. Add one to a card from its ⋮ menu.</p>}
         <label className="m-eyebrow" htmlFor="mot-note" style={{ display: 'block', margin: '22px 0 10px' }}>Note</label>
-        <textarea id="mot-note" className="m-field" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
+        <textarea id="mot-note" className="m-field" rows={2} value={note} disabled={!current} onChange={(e) => writeCaption(e.target.value)} />
+        {current&&draft?.caption===undefined&&rejected?.key!==editKey&&<p className="m-muted t-1">Optional suggestion: Our first evening on the river. <button type="button" className="m-btn small" onClick={()=>writeCaption('Our first evening on the river.')}>Use suggestion</button></p>}
+        {draft?.photoChanged&&<p role="status">Photo changed; review this caption. Edit the note to confirm its wording for this photo.</p>}
+        {rejected?.key===editKey&&<p role="alert" className="mot-preview-error">{rejected.error} Your text remains editable here; correct it before leaving.</p>}
         {previewError && <p role="status" className="mot-preview-error">{previewError}</p>}
         <p className="m-eyebrow" style={{ margin: '22px 0 0' }}>Template</p>
         {TEMPLATES.map((t) => (
           <label key={t.id} className="mot-template">
-            <input type="radio" name="mot-template" checked={template === t.id} onChange={() => setTemplate(t.id)} />
+            <input type="radio" name="mot-template" checked={template === t.id} disabled={!current} onChange={() => {if(current)select(current.card.id,t.id);}} />
             <Icon name={t.icon} />
             <span><strong>{t.name}</strong><small>{t.hint}</small></span>
           </label>
@@ -157,12 +176,12 @@ export function Keepsakes({ session, tick, saved, onExport, onBack, notify }: { 
         <h2 className="m-label">Preview</h2>
         {/* The keepsake develops when its photo or template changes, then is postmarked across the preview's edge (Satori changes 4 and 6). */}
         <div className={`mot-postcard-wrap${template === 'memory' ? ' memory' : ''}`}>
-          <figure className={`mot-postcard${template === 'memory' ? ' memory' : ''}`} style={{ margin: 0 }} aria-busy={!!url && !ready}>
-            {rendered ? <img key={`${url}|${template}`} className="reveal" src={rendered.image} alt={`${heading}. ${note}`} /> : <div className="mot-preview-empty">{url ? 'Preparing your keepsake…' : 'Choose a photo to begin.'}</div>}
+          <figure className={`mot-postcard${template === 'memory' ? ' memory' : ''}`} style={{ margin: 0 }} aria-busy={media.status==='loading'||!!url && !ready}>
+            {ready && rendered ? <img key={previewKey} className="reveal" src={rendered.image} alt={`${heading}. ${note}`} /> : <div className="mot-preview-empty">{media.status==='loading'?'Loading the selected photo…':media.status==='missing'?'Selected photo unavailable.':url ? 'Preparing your keepsake…' : 'Choose a photo to begin.'}</div>}
           </figure>
-          {rendered && <span key={`${url}|${template}`} className="mot-postmark" aria-hidden="true"><b>{cityLabel(meta.city)}</b><span>300 dpi</span></span>}
+          {ready && <span key={previewKey} className="mot-postmark" aria-hidden="true"><b>{cityLabel(meta.city)}</b><span>300 dpi</span></span>}
         </div>
-        <p className="mot-preview-status" role="status">{previewError ? 'Preview needs a shorter note.' : !ready && url ? 'Updating preview…' : lowResolution ? 'Digital keepsake · this photo is too small for a sharp print.' : 'Preview matches your download. Original photo unchanged.'}</p>
+        <p className="mot-preview-status" role="status">{media.status==='none'?'Choose a photo to begin.':media.status==='loading'?'Loading the selected photo…':media.status==='missing'?'The selected photo bytes are unavailable in this browser. Import a ZIP backup containing the photo, or choose another photo. Your caption stays editable.':previewError ? 'Preview could not be prepared; review the note or restore the photo.' : !ready ? 'Updating preview…' : lowResolution ? 'Digital keepsake · this photo is too small for a sharp print.' : 'Preview matches your download. Original photo unchanged.'}</p>
       </div>
 
       <div className="m-panel mot-studio-download" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -185,6 +204,7 @@ export function Keepsakes({ session, tick, saved, onExport, onBack, notify }: { 
           <span className="ok" style={saved === 'saved' ? undefined : { background: 'var(--m-red)' }}><Icon name={saved === 'saved' ? 'check' : 'close'} /></span>
           <span><strong>{saved === 'saved' ? 'Saved on this device' : saved === 'error' ? 'Not saved: storage error' : 'Saving…'}</strong></span>
         </div>
+        {(saved==='error'||saveFailure)&&<div role="alert"><p>{saveFailure||'Your editable work is in this tab. Check save status or download a personal ZIP backup before closing.'}</p><p>For a personal backup in Export, choose Include private content, then Export package.</p><button type="button" className="m-btn small" onClick={()=>{void whenSaved().then(()=>{setSaveFailure('');notify('Saved on this device');},error=>setSaveFailure(`${error instanceof Error?error.message:'Storage did not complete.'} Your edits remain in this tab. Checking status does not save these edits; download a personal ZIP backup before closing.`));}}>Check save status</button><button type="button" className="m-btn small" onClick={onExport}>Download personal backup</button></div>}
       </div>
     </section>
   );

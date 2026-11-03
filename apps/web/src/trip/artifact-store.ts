@@ -3,7 +3,7 @@ export type ArtifactScope='guide'|'stay'|'personal';
 export interface ArtifactInventory {cards:number;placements:number;assets:number;notes:number;credits:number;}
 export interface StoredArtifact {
   id:string;boardId:string;revision:number;filename:string;mime:string;byteCount:number;createdAt:string;sha256:string;
-  scope:ArtifactScope;format:'pdf'|'zip';blob:Blob;coverSvg?:string;inventory?:ArtifactInventory;
+  scope:ArtifactScope;format:'html'|'pdf'|'zip';blob:Blob;coverSvg?:string;inventory?:ArtifactInventory;embeddedMedia?:import('./standalone-media').EmbeddedMedia[];selection?:import('@mot/core').MagazineDocument['selection'];
 }
 const DB='mot-export-artifacts',STORE='artifacts';
 let pendingDb:Promise<IDBDatabase>|null=null;
@@ -30,7 +30,7 @@ export async function artifactSha256(blob:Blob):Promise<string>{
 function validRecord(value:unknown):value is StoredArtifact{
   if(!value||typeof value!=='object')return false;
   const record=value as StoredArtifact;
-  return typeof record.id==='string'&&typeof record.boardId==='string'&&typeof record.filename==='string'&&typeof record.createdAt==='string'&&Number.isSafeInteger(record.revision)&&['guide','stay','personal'].includes(record.scope)&&['pdf','zip'].includes(record.format)&&record.blob instanceof Blob&&record.blob.size===record.byteCount&&/^[a-f0-9]{64}$/.test(record.sha256);
+  return typeof record.id==='string'&&typeof record.boardId==='string'&&typeof record.filename==='string'&&typeof record.createdAt==='string'&&Number.isSafeInteger(record.revision)&&['guide','stay','personal'].includes(record.scope)&&['html','pdf','zip'].includes(record.format)&&record.blob instanceof Blob&&record.blob.size===record.byteCount&&/^[a-f0-9]{64}$/.test(record.sha256);
 }
 export async function readArtifact(id:string):Promise<StoredArtifact|null>{
   const raw=await transact('readonly',store=>store.get(id) as IDBRequest<unknown>);

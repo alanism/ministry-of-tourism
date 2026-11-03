@@ -39,7 +39,7 @@ export function prevalidateProposal(session: TripSession, proposal: Proposal, ow
     if(op.input.booking!==undefined)throw new CommandError('scope','Booking status must be recorded by a person, never a proposed purchase');
     if(op.input.currentFacts!==undefined || (op.command==='trip_card_update' && (op.input.source!==undefined || op.input.sourceText!==undefined)))throw new CommandError('scope','Agents cannot replace source evidence or assert independently verified facts');
     if(op.command==='trip_card_create')assertAgentMediaAccess(session.parts,(parsed.data as {assetIds:string[]}).assetIds);
-    if(op.command==='trip_asset_attach')assertAgentMediaAccess(session.parts,[(parsed.data as {asset:{id:string}}).asset.id]);
+    if(op.command==='trip_asset_attach'){const {asset}=parsed.data as {asset:{id:string;derivedFrom?:string}};assertAgentMediaAccess(session.parts,[asset.id,...(asset.derivedFrom?[asset.derivedFrom]:[])]);}
     const cardId = touchedCardId(op);
     if (cardId === undefined) continue;
     // Every touched card must be in the token, or a later edit could be overwritten unseen.

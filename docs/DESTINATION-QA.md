@@ -11,4 +11,4 @@ The bundled list and published JSON are generated together by `node scripts/buil
 
 The existing five-second registry deadline now settles headers and JSON reads even when injected work ignores abort. Cancellation retains the exact dated saved copy, or the included list without inventing a retrieval date. Late responses are discarded and cannot replace the cache. `destination-settlement.test.ts` exercises stalled headers/body, cancellation and the unavailable case without saved/included data. The existing maximum timeout, country/schema rules and three UI retries are unchanged. The external WP2 destination-deadline helper holds actual publication JSON completion and checks the real deadline, all 200 included cities, Donostia search and no late cache write at six widths.
 
-Known boundary: screenshots use Chromium, not a physical phone. Opus owns independent design approval. Other app-surface reference scenarios belong to their own tasks.
+Known boundary: screenshots use Chromium, not a physical phone. Muse Wonder owns independent design approval. Other app-surface reference scenarios belong to their own tasks.

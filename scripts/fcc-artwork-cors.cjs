@@ -46,7 +46,7 @@ const site = 'foreignclubberscorespondence';
   assert.deepEqual(updated.config.rewrites, version.config.rewrites, 'All rewrites are retained');
   const current = await hosting.getChannel('nonhumanintelligence', site, 'live');
   assert.equal(current.release.version.name, version.name, 'Stop if another FCC release happened during the update');
-  const release = await hosting.createRelease(site, 'live', clone.name, { message: 'Allow public optimized artwork reads for the Writer’s Board picker' });
+  const release = await hosting.createRelease(site, 'live', clone.name, { message: 'Allow public optimized artwork reads for Ministry of Tourism' });
   await fs.writeFile(auditPath, JSON.stringify({ previousVersion: version.name, previousConfig: version.config, newVersion: clone.name, release: release.name, files: updated.fileCount }, null, 2));
   console.log(JSON.stringify({ released: release.name, version: clone.name, files: updated.fileCount, header }));
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

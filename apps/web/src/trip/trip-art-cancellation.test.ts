@@ -1,5 +1,5 @@
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
-import {createTrip,encodeTrip,TripSession} from '@writers-board/core';
+import {createTrip,encodeTrip,TripSession} from '@mot/core';
 import type {Artwork} from '../artwork/catalog';
 const storage=vi.hoisted(()=>({hashBlob:vi.fn(),getBlob:vi.fn(),putBlob:vi.fn()}));
 vi.mock('../state/blobs',()=>storage);

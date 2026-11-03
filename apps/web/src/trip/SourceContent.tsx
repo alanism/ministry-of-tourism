@@ -1,4 +1,4 @@
-import type {TripCard} from '@writers-board/core';
+import type {TripCard} from '@mot/core';
 import '@fontsource/ibm-plex-serif/600.css';
 import {editedSourceCopy,sourceDate,sourceHref,sourceTextFor} from './source-card';
 import {cardProvenanceLabel} from './sample';

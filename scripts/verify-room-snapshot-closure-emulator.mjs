@@ -1,0 +1,7 @@
+import assert from 'node:assert/strict';
+import {initializeApp,deleteApp} from 'firebase-admin/app';
+import {getFirestore} from 'firebase-admin/firestore';
+import {reconcileRoomAccounting} from '../packages/mot-server/src/room-emulator-snapshot.ts';
+if(process.env.FIRESTORE_EMULATOR_HOST!=='127.0.0.1:8080')throw Error('Explicit demo Firestore required');
+const app=initializeApp({projectId:'demo-mot-rooms'},'closure-'+Date.now()),db=getFirestore(app),ref=db.doc('rooms/closure-'+Date.now());
+try{const meta={id:ref.id,title:'Closure proof',schemaMajor:1},payload={id:'card',kind:'photo',title:'Photo',body:'',stage:'plan',provenance:'traveler',assetIds:['good'],x:0,y:0};await ref.set(meta);await ref.collection('cards').doc('card').set({version:1,authorUid:'owner',updatedAt:1,payload});await ref.collection('media').doc('good').set({payload:{id:'good',hash:'a'.repeat(64),mime:'image/png',width:1,height:1,bytes:70}});await ref.collection('media').doc('withdrawn').set({id:'withdrawn',withdrawn:true,hash:'b'.repeat(64),bytes:80,withdrawnAt:1});const result=await db.runTransaction(tx=>reconcileRoomAccounting(tx,ref,meta));assert.equal(result.mediaCount,1);assert.equal(result.mediaBytes,70);console.log(JSON.stringify({pass:true,actualFirestore:true,referencedMediaOnly:true,withdrawnTombstoneExcluded:true,mediaCount:result.mediaCount,limitations:'Authoritative metadata closure fixture, not uploaded pixel proof'}));}finally{await db.terminate();await deleteApp(app);}

@@ -1,9 +1,10 @@
 // Trip photos (#6): bytes in the shared SHA-256 blob store, metadata on the trip doc.
 import { useEffect, useState } from 'react';
 import type * as Y from 'yjs';
-import { presentationScope, readAllCards, readAsset, readPresentations, tripParts, type Actor, type TripCard, type TripSession } from '@writers-board/core';
+import { selectedAssetClosure, presentationScope, readAllCards, readAsset, readCard, readPresentations, readTripMeta, tripParts, type Actor, type Scope, type TripCard, type TripSession } from '@mot/core';
 import { getBlob, hashBlob, putBlob } from '../state/blobs';
 import type { Artwork } from '../artwork/catalog';
+import { prepareBoardImages } from './board-images';
 
 const ephemeral = new Map<string, Blob>();
 const tabOnly=()=>{if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent('mot-storage-error',{detail:'In this tab only: image storage is full. Download a full ZIP backup before closing this tab.'}));};
@@ -60,6 +61,8 @@ export function hasEphemeralAssets(doc:Y.Doc):boolean {
 
 /** Fetch only selected media; the original stays intact and crop is document geometry. */
 export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:Artwork,signal:AbortSignal):Promise<void> {
+  if(artwork.personalOnly&&readTripMeta(session.doc).kind==='host_guide')throw new Error('Personal-only artwork cannot be added to a host guide');
+  if(artwork.renditionRole==='derivative'&&artwork.original)throw new Error('A derivative rendition cannot claim an original download');
   const ref=artwork.artRef;
   if(ref?.kind==='apparel-mockup')throw new Error('Apparel belongs in Wear the trip, not decorative artwork.');
   const blob=await prepareTripMedia(async()=>{
@@ -81,9 +84,9 @@ export async function placeTripArtwork(session:TripSession,actor:Actor,artwork:A
   const width=Math.min(.38,.65/ratio),height=width*ratio;
   await commitTripBlob(blob,hash=>{
     if(ref?.hash&&hash!==ref.hash)throw new Error('The original bytes changed. Refresh the catalog before adding it.');
-    const existing=[...session.parts.assets.keys()].map(id=>readAsset(session.parts,id)).find(asset=>asset?.hash===hash&&asset.source?.id===artwork.id&&asset.source.url===(artwork.original??artwork.src)&&asset.credit===credit&&asset.rightsStatus===rightsStatus);
+    const existing=[...session.parts.assets.keys()].map(id=>readAsset(session.parts,id)).find(asset=>asset?.hash===hash&&asset.role===(artwork.renditionRole??'original')&&asset.source?.id===artwork.id&&asset.source.url===(artwork.original??artwork.src)&&asset.credit===credit&&asset.rightsStatus===rightsStatus&&!!asset.personalOnly===!!artwork.personalOnly);
     const assetId=existing?.id??crypto.randomUUID();
-    const ops:{command:string;input:Record<string,unknown>}[]=existing?[]:[{command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:blob.type,role:'original',width:artwork.width,height:artwork.height,caption:artwork.label,credit,rightsStatus,source:{...ref?.source,id:artwork.id,url:artwork.original??artwork.src,retrievedAt:new Date().toISOString(),provider:'fcc',cityId:ref?.originCityId??extended.originCityId??artwork.city,countryCode:ref?.countryCode??extended.countryCode,kind:'artwork',origin:'artwork'}}}}];
+    const ops:{command:string;input:Record<string,unknown>}[]=existing?[]:[{command:'trip_asset_register',input:{asset:{id:assetId,hash,mime:blob.type,role:artwork.renditionRole??'original',width:artwork.width,height:artwork.height,caption:artwork.label,credit,rightsStatus,...(artwork.personalOnly?{personalOnly:true}:{}),source:{...ref?.source,id:artwork.id,url:artwork.original??artwork.src,retrievedAt:new Date().toISOString(),provider:'fcc',cityId:ref?.originCityId??extended.originCityId??artwork.city,countryCode:ref?.countryCode??extended.countryCode,kind:'artwork',origin:'artwork'}}}}];
     ops.push({command:'trip_presentation_create',input:{assetId,x:.08,y:.08,width,height,crop,scope:'private'}});
     session.executeAll(actor,ops);
   },signal);
@@ -101,9 +104,26 @@ export async function placeTripUpload(session:TripSession,actor:Actor,file:File,
 }
 
 /** Stage original bytes in this tab, attach atomically, then persist them by hash. */
-export async function attachPhoto(session: TripSession, actor: Actor, cardId: string, blob: Blob): Promise<void> {
+export interface PhotoAttachment { operation: 'add' | 'replace'; expectedAssetId?: string; scope: Scope; revision: number; signal?: AbortSignal }
+export async function attachPhoto(session: TripSession, actor: Actor, cardId: string, blob: Blob, options?: PhotoAttachment): Promise<void> {
   if (!blob.type.startsWith('image/')) throw new Error('Choose an image file.');
-  await commitTripBlob(blob,hash=>session.execute(actor, 'trip_asset_attach', { cardId, asset: { id: crypto.randomUUID(), hash, mime: blob.type, role: 'original' } }));
+  const revision=options?.revision??session.boardRev,scope=options?.scope??readCard(session.parts,cardId)?.scope;
+  const validate=()=>{
+    options?.signal?.throwIfAborted();
+    const card=readCard(session.parts,cardId);
+    if(!card||session.boardRev!==revision||card.scope!==scope)throw new Error('The board or photo context changed. Choose the photo again.');
+    if(options?.operation==='replace'&&(!options.expectedAssetId||coverAssetId(card)!==options.expectedAssetId))throw new Error('The selected photo changed. Choose Replace again.');
+  };
+  validate();
+  const file=blob instanceof File?blob:new File([blob],'Trip photo',{type:blob.type});
+  const [prepared]=await prepareBoardImages([file],options?.signal);
+  if(!prepared)throw new Error('Choose a supported photo.');
+  validate();
+  await commitTripBlob(prepared.blob,hash=>{
+    validate();
+    const asset={id:crypto.randomUUID(),hash,mime:prepared.blob.type,role:'original' as const,width:prepared.width,height:prepared.height};
+    session.execute(actor,options?.operation==='replace'?'trip_asset_replace':'trip_asset_attach',{cardId,...(options?.operation==='replace'?{expectedAssetId:options.expectedAssetId}:{}),asset});
+  },options?.signal);
 }
 
 /** The card's cover photo: the most recently attached one. */
@@ -116,6 +136,7 @@ export async function assetBytes(doc: Y.Doc,options:{includePrivate?:boolean}={}
   const cards=readAllCards(parts).filter(card=>options.includePrivate!==false||card.scope!=='private'),included=new Set(cards.map(card=>card.id));
   const placements=readPresentations(parts).filter(object=>(options.includePrivate!==false||presentationScope(parts,object)!=='private')&&(!object.cardId||included.has(object.cardId)));
   const wanted=new Set([...cards.flatMap(card=>card.assetIds),...placements.flatMap(object=>object.assetId?[object.assetId]:[])]);
+  if (options.includePrivate !== false) for (const asset of selectedAssetClosure(parts,wanted)) wanted.add(asset.id);
   for (const id of wanted) {
     const meta = readAsset(parts, id);
     const blob = meta ? await getTripBlob(meta.hash) : null;
@@ -143,19 +164,25 @@ export async function storeImportedAssets(doc: Y.Doc, assets: Map<string, Uint8A
   return stored;
 }
 
-/** An object URL for a card photo, or null while loading or when this browser lacks the bytes. */
-export function useAssetUrl(session: TripSession, assetId: string | undefined): string | null {
+export interface AssetMedia { url: string | null; status: 'none' | 'loading' | 'missing' | 'ready' }
+/** Media state is bound to its session and exact asset, including while effects are pending. */
+export function useAssetMedia(session: TripSession, assetId: string | undefined): AssetMedia {
   const hash = assetId ? readAsset(session.parts, assetId)?.hash : undefined;
-  const [url, setUrl] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState<{session:TripSession;assetId:string;hash:string;url:string|null}|null>(null);
   useEffect(() => {
     let live = true;
-    setUrl(null);
+    setLoaded(null);
     let created:string|undefined;
-    if (hash) void getTripBlob(hash).then(blob => { if(live&&blob){created=URL.createObjectURL(blob);setUrl(created);} }).catch(()=>{if(live)setUrl(null);});
+    if (hash&&assetId) void getTripBlob(hash).then(blob => { if(live){created=blob?URL.createObjectURL(blob):undefined;setLoaded({session,assetId,hash,url:created??null});} }).catch(()=>{if(live)setLoaded({session,assetId,hash,url:null});});
     return () => { live = false;if(created)URL.revokeObjectURL(created); };
-  }, [hash]);
-  return url;
+  }, [session,assetId,hash]);
+  if(!assetId)return{url:null,status:'none'};
+  if(!hash)return{url:null,status:'missing'};
+  if(!loaded||loaded.session!==session||loaded.assetId!==assetId||loaded.hash!==hash)return{url:null,status:'loading'};
+  return{url:loaded.url,status:loaded.url?'ready':'missing'};
 }
+/** An object URL for a card photo, or null while loading or when this browser lacks the bytes. */
+export function useAssetUrl(session: TripSession, assetId: string | undefined): string | null { return useAssetMedia(session,assetId).url; }
 
 /** Opens the file picker and attaches the chosen photo. */
 export function pickPhoto(onFile: (file: File) => void): void {

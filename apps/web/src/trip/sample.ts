@@ -1,5 +1,5 @@
 // Sample boards and shared formatting. Sample content is labelled once, in the footnote.
-import type { Actor, BoardKind, Stage, TripCard, TripMeta, TripSession } from '@writers-board/core';
+import type { Actor, BoardKind, Stage, TripCard, TripMeta, TripSession } from '@mot/core';
 import { attachPhoto } from './trip-assets';
 import type { NewTrip } from './trip-store';
 import { samplePhotoUrl, type SamplePhoto } from './sample-media';

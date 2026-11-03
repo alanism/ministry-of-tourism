@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {startRoomEmulatorHttp} from '../packages/mot-server/src/room-emulator-http.ts';
+import {initializeApp,deleteApp} from 'firebase-admin/app';
+import {getFirestore} from 'firebase-admin/firestore';
+import {getAuth} from 'firebase-admin/auth';
+const fixtureApp=initializeApp({projectId:'demo-mot-rooms'},'room-proof-'+Date.now()),fixtureDb=getFirestore(fixtureApp),fixtureAuth=getAuth(fixtureApp);
+const service=await startRoomEmulatorHttp({port:0,appOrigin:'http://127.0.0.1:5173'});
+const signup=async(email)=>{const r=await fetch('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signUp?key=synthetic-emulator-key',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:'Synthetic-Only-123!',returnSecureToken:true})});assert(r.ok);const user=await r.json();await fixtureAuth.updateUser(user.localId,{emailVerified:true});const signed=await fetch('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=synthetic-emulator-key',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email,password:'Synthetic-Only-123!',returnSecureToken:true})});assert(signed.ok);return signed.json();};
+const suffix=Date.now(),owner=await signup(`owner-${suffix}@example.test`),editor=await signup(`editor-${suffix}@example.test`),outsider=await signup(`outsider-${suffix}@example.test`);
+const card={id:'card',kind:'note',title:'Shared',body:'Visible',stage:'plan',provenance:'traveler',assetIds:[],x:0,y:0};
+const roomId=`proof-${suffix}`;
+// Synthetic service-storage fixture, not a claim of create/invite UI acceptance.
+const fixture={id:roomId,schemaMajor:1,ownerUid:owner.localId,closed:false,receiptCount:0,members:{[owner.localId]:{role:'owner',epoch:1,active:true},[editor.localId]:{role:'editor',epoch:1,active:true}}};
+await fixtureDb.doc('rooms/'+roomId).set(fixture);await fixtureDb.doc('rooms/'+roomId+'/cards/card').set({version:1,authorUid:owner.localId,updatedAt:1,payload:card});
+const call=(user,method,body)=>fetch(`${service.url}/rooms/${roomId}${method==='POST'?'/operations':''}`,{method,headers:{Authorization:'Bearer '+user.idToken,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+assert.equal((await call(outsider,'GET')).status,403);
+const directBase='http://127.0.0.1:8080/v1/projects/demo-mot-rooms/databases/(default)/documents/rooms/'+roomId;
+const directRead=await fetch(directBase,{headers:{Authorization:'Bearer '+editor.idToken}});assert.equal(directRead.status,403);
+const directWrite=await fetch(directBase+'?updateMask.fieldPaths=ownerUid',{method:'PATCH',headers:{Authorization:'Bearer '+editor.idToken,'content-type':'application/json'},body:JSON.stringify({fields:{ownerUid:{stringValue:editor.localId}}})});assert.equal(directWrite.status,403);
+const corsDenied=await fetch(service.url+'/rooms/'+roomId,{headers:{Origin:'https://untrusted.example',Authorization:'Bearer '+editor.idToken}});assert.equal(corsDenied.status,403);
+const preflight=await fetch(service.url+'/rooms/'+roomId+'/operations',{method:'OPTIONS',headers:{Origin:'http://127.0.0.1:5173'}});assert.equal(preflight.status,204);assert.equal(preflight.headers.get('access-control-allow-origin'),'http://127.0.0.1:5173');
+
+const initial=await call(editor,'GET');assert.equal(initial.status,200);assert.equal((await initial.json()).principal.uid,editor.localId);
+const operation={roomId,schemaMajor:1,capability:'room-cards/1',operationId:'edit',membershipEpoch:1,kind:'edit',cardId:'card',baseVersion:1,payload:{...card,body:'Accepted'}};
+const duplicateWire=JSON.stringify({...operation,operationId:'wire-duplicate'}).replace('"operationId":"wire-duplicate"','"operationId":"wire-duplicate","operationId":"wire-duplicate"');
+const duplicate=await fetch(service.url+'/rooms/'+roomId+'/operations',{method:'POST',headers:{Authorization:'Bearer '+editor.idToken,'content-type':'application/json'},body:duplicateWire});assert.equal(duplicate.status,403);
+const a=await call(editor,'POST',operation);assert.equal(a.status,200);const receipt=await a.json();assert.equal(receipt.receipt.uid,editor.localId);
+const replay=await call(editor,'POST',operation);assert.equal((await replay.json()).replayed,true);
+const stale=await call(owner,'POST',{...operation,operationId:'race'});assert.equal(stale.status,409);
+const observed=await call(owner,'GET');assert.equal((await observed.json()).cards[0].payload.body,'Accepted');
+fixture.members[editor.localId].active=false;fixture.members[editor.localId].epoch++;await fixtureDb.doc('rooms/'+roomId).set(fixture);
+assert.equal((await call(editor,'GET')).status,403);assert.equal((await call(editor,'POST',operation)).status,403);
+await service.close();await fixtureDb.terminate();await deleteApp(fixtureApp);console.log(JSON.stringify({pass:true,actualAuthUsers:3,actualFirestore:true,directRulesDenied:true,actualLoopbackHttp:true,corsRestricted:true,receiptIdentity:true,lostAckReplay:true,staleConflict:true,revocation:true,limitations:'Synthetic seeded room only; create/invite/media/votes/UI still unproved'}));

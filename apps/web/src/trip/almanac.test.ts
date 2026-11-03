@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {createTrip,readAllCards,TripSession,type FccAlmanacSnapshot,type FccResult} from '@writers-board/core';
+import {createTrip,readAllCards,TripSession,type FccAlmanacSnapshot,type FccResult} from '@mot/core';
 import {almanacRows,almanacPin} from './almanac-facts';
 
 const snapshot=():FccAlmanacSnapshot=>({schema:'fcc.almanac.city/1',slug:'san-sebastian',status:'available',asOf:'2026-10-16',page:'/san-sebastian.html?section=almanac',market:'Spain',labels:{it:[['coffee','Coffee'],['missing','No dated observation']],co:[],me:[],fa:[['shirt','Shirt']]},economy:{},city:{s:'san-sebastian',n:'San Sebastián',c:'Spain',cur:'EUR',r:1.1208,fx:'2026-10-15',asOf:'2026-10-25',it:{coffee:[6.7,'A menu','https://example.org/menu','2026-10-25','Delivery listing; fees differ.',0],missing:[0,'A source','https://example.org/zero',null,'Zero is a valid observation.',0]},co:{},me:{},fu:null,fa:{shirt:[40,'USD',1,'https://example.org/shirt','A different currency, without a dated rate.']}}});

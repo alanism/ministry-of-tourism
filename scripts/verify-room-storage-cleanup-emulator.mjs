@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';
+import {initializeApp,deleteApp} from 'firebase-admin/app';
+import {createRoomEmulatorByteStore} from '../packages/mot-server/src/room-emulator-storage.ts';
+import {sha256Hex} from '../packages/core/src/trip/sha256.ts';
+const app=initializeApp({projectId:'demo-mot-rooms'},'storage-cleanup-'+Date.now());
+try{const s=createRoomEmulatorByteStore(app),n=Date.now(),a='cleanup-'+n+'-a',b='cleanup-'+n+'-b',bytes=new Uint8Array([1,2,3]),hash=await sha256Hex(bytes);await s.putAsset(a,'asset',bytes,hash);await s.putAsset(b,'asset',bytes,hash);await s.discardAsset(a,'asset',hash);await assert.rejects(s.readAsset(a,'asset',bytes.length,hash));await s.putAsset(a,'second',bytes,hash);await s.putStage(a,'uid','stage',bytes,hash);await s.discardRoom(a);await assert.rejects(s.readAsset(a,'second',bytes.length,hash));await assert.rejects(s.readStage(a,'uid','stage',bytes.length,hash));assert.deepEqual(await s.readAsset(b,'asset',bytes.length,hash),bytes);await assert.rejects(s.discardRoom('../outside'));console.log(JSON.stringify({pass:true,actualStorage:true,exactAssetDeletion:true,closedRoomPrefixDeletion:true,otherRoomPreserved:true,pathEscapeDenied:true}));}finally{await deleteApp(app);}

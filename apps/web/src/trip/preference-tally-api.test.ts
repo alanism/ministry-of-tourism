@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {createTrip,TripSession,encodeTrip,createGroupResponse,mergeResponseLedger} from '@writers-board/core';
+import {createTrip,TripSession,encodeTrip,createGroupResponse,mergeResponseLedger} from '@mot/core';
 import {createTripApi} from './agentApi';
 
 it('exposes the same read-only tally as a board tool over supplied response data without reading private local ballots',async()=>{

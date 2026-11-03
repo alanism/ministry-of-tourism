@@ -1,4 +1,4 @@
-import { FCC_ORIGIN, type FccAlmanacSnapshot, type FccResult } from "@writers-board/core";
+import { FCC_ORIGIN, type FccAlmanacSnapshot, type FccResult } from "@mot/core";
 import {sourceHref} from './source-card';
 export interface AlmanacRow { id: string; label: string; value: number | null; currency: string; rate: number | null; observedAt: string | null; fxDate: string | null; source: string | null; url: string | null; note: string; unit: string; }
 type Avail = Exclude<FccResult<FccAlmanacSnapshot>, { status: "unavailable" }>;

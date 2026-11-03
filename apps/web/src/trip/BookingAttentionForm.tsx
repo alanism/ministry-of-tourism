@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {readAllCards,readTripMeta,type Actor,type TripSession} from '@writers-board/core';
+import {readAllCards,readTripMeta,type Actor,type TripSession} from '@mot/core';
 import {addBookingAttention} from './group-planning-ui';
 
 export function BookingAttentionForm({session,actor,refresh,whenSaved,onMessage}:{session:TripSession;actor:Actor;refresh:()=>void;whenSaved:()=>Promise<void>;onMessage:(s:string)=>void}){

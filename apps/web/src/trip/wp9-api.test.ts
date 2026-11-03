@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {encodeTrip,GUIDE_VERSION} from '@writers-board/core';
+import {encodeTrip,GUIDE_VERSION} from '@mot/core';
 import {wp9Trip} from '../../../../packages/core/src/trip/wp9-test-fixtures';
 import {createTripApi} from './agentApi';
 it('routes against the native WP8 ledger without exposing household/private content or writing',async()=>{

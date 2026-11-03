@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTrip, encodeTrip, TripSession } from '@writers-board/core';
+import { createTrip, encodeTrip, TripSession } from '@mot/core';
 import { createTripApi } from './agentApi';
 
 describe('MOT-70 trip agent boundary', () => {
@@ -17,7 +17,7 @@ describe('MOT-70 trip agent boundary', () => {
   });
   it('rejects stale or wrong-document changes before the first write', () => {
     const session=make(),api=createTripApi(session),before=encodeTrip(session.doc);
-    expect(()=>api.execute({boardId:'hidden-writer',revision:0,ops:[{command:'trip_card_create',input:{kind:'note',title:'bad'}}]})).toThrow();
+    expect(()=>api.execute({boardId:'hidden-board',revision:0,ops:[{command:'trip_card_create',input:{kind:'note',title:'bad'}}]})).toThrow();
     expect(()=>api.execute({boardId:session.boardId,revision:999,ops:[]})).toThrow();
     expect(encodeTrip(session.doc)).toEqual(before);
   });

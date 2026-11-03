@@ -5,7 +5,7 @@
   "ownerSelectedDefault": "human-visual-trip-first",
   "ownerSelectedBackup": "reviewed-own-muse-plan-first",
   "ownerProtocolDisposition": "approved",
-  "requestedAstraDisposition": "approved",
+  "requestedWonderDisposition": "approved",
   "productValidation": "pending",
   "releaseApproval": false,
   "observations": [],
@@ -51,9 +51,9 @@
     "D136-06",
     "D136-07"
   ],
-  "ownerApprovalSource": "Explicit owner response: Approve packet and delegate Astra review",
-  "requestedAstraModel": "gpt-6-astra",
-  "requestedAstraOpenFindings": [],
+  "ownerApprovalSource": "Explicit owner response: Approve packet and delegate Muse Wonder review",
+  "requestedWonderModel": "muse-wonder-1.0",
+  "requestedWonderOpenFindings": [],
   "ownerClarificationDisposition": {
     "status": "approved",
     "date": "2026-10-31",
@@ -62,13 +62,13 @@
     "preferenceConflictRule": "retain A when A meets thresholds and qualified preference, even if B has lower effort without its required preference support",
     "source": "Latest explicit owner answers: Lower combined total; Retain A. Supersedes earlier general instruction to use both recommendations."
   },
-  "requestedAstraClosedFindings": [
+  "requestedWonderClosedFindings": [
     "AS136-01"
   ],
-  "requestedAstraReviewedCommit": "5a85aff87ce95c3f53f4d34ed49364676ff1e079",
-  "requestedAstraApprovalDate": "2026-10-31",
+  "requestedWonderReviewedCommit": "5a85aff87ce95c3f53f4d34ed49364676ff1e079",
+  "requestedWonderApprovalDate": "2026-10-31",
   "decisionContractDisposition": "complete",
-  "requestedAstraReviewHistory": [
+  "requestedWonderReviewHistory": [
     {
       "round": 1,
       "revision": "F136-v1",

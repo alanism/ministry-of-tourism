@@ -1,6 +1,6 @@
 // Create a guest copy (predicted build 02). The checkboxes decide what is copied.
 import { useState } from 'react';
-import { readAllCards, readTripMeta, tripParts, type TripCard, type TripSession } from '@writers-board/core';
+import { readAllCards, readTripMeta, tripParts, type TripCard, type TripSession } from '@mot/core';
 import { Icon, Thumb } from './ui';
 import { coverAssetId, useAssetUrl } from './trip-assets';
 import { cityLabel } from './sample';

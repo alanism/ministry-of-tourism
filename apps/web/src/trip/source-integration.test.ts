@@ -1,7 +1,7 @@
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {expect,it} from 'vitest';
-import {createTrip,readAllCards,TripSession} from '@writers-board/core';
+import {createTrip,readAllCards,TripSession} from '@mot/core';
 import {CardContent} from './SourceContent';
 it('source-card rendering preserves honest Test adapter authorship from the current Muse runtime',()=>{
  const session=new TripSession(createTrip({title:'Attribution QA',city:'San Sebastián',countryCode:'ES',timeZone:null}));

@@ -22,8 +22,8 @@ describe('clickable PDF image-page links',()=>{
     for(const change of [{x:NaN},{y:Infinity},{width:0},{height:-1},{x:.9,width:.2},{y:.9,height:.2}])expect(()=>buildPdf([page([{...link,...change}])])).toThrow(/link|bounds|rectangle/i);
     expect(()=>buildPdf([page(Array.from({length:21},()=>link))])).toThrow(/20|link/i);
   });
-  it('leaves legacy image and manuscript pages free of annotations',()=>{
-    const pdf=decode(buildPdf([{kind:'image',jpeg,width:1,height:1},{kind:'text',lines:['Legacy manuscript']} ]));
+  it('leaves legacy image and text pages free of annotations',()=>{
+    const pdf=decode(buildPdf([{kind:'image',jpeg,width:1,height:1},{kind:'text',lines:['Legacy Itinerary']} ]));
     expect(pdf).not.toContain('/Annots');expect(pdf).not.toContain('/Subtype /Link');expect(pdf).toContain('/Count 2');
   });
 });

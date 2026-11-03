@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
-import { createTrip, encodeTrip, readTripMeta } from '@writers-board/core';
+import { createTrip, encodeTrip, readTripMeta } from '@mot/core';
 import { openTrip, TRIP_PREFIX } from './trip-store';
 
 const fake=vi.hoisted(()=>({stores:new Map<string,{updates:Uint8Array[];custom:Map<string,unknown>}>(),constructed:[] as string[],hold:false,fail:false,barriers:[] as (()=>void)[]}));
@@ -44,7 +44,7 @@ describe('trip browser persistence migration and commit receipts',()=>{
   it('upgrades a v1 board into a separate durable store and keeps the source bytes untouched',async()=>{
     const old=createTrip({title:'Legacy personal journal',city:'bangkok',timeZone:'Asia/Bangkok',boardId:'legacy'});old.getMap('tripMeta').set('schemaVersion',1);
     const original=encodeTrip(old);store(TRIP_PREFIX+'legacy').updates.push(original.slice());
-    const opened=await openTrip('legacy');expect(readTripMeta(opened.doc).schemaVersion).toBe(2);expect(readTripMeta(opened.doc).boardId).toBe('legacy');
+    const opened=await openTrip('legacy');expect(readTripMeta(opened.doc).schemaVersion).toBe(3);expect(readTripMeta(opened.doc).boardId).toBe('legacy');
     await opened.whenSaved();expect(fake.constructed).not.toContain(TRIP_PREFIX+'legacy');expect(store(TRIP_PREFIX+'legacy').updates).toEqual([original]);
     opened.doc.getMap('tripMeta').set('title','Edited migrated copy');await opened.whenSaved();opened.destroy();
     const reopened=await openTrip('legacy');expect(readTripMeta(reopened.doc).title).toBe('Edited migrated copy');expect(store(TRIP_PREFIX+'legacy').updates).toEqual([original]);reopened.destroy();old.destroy();
@@ -59,7 +59,7 @@ describe('trip browser persistence migration and commit receipts',()=>{
     const old=createTrip({title:'Legacy',city:'bangkok',timeZone:'Asia/Bangkok',boardId:'quota'});old.getMap('tripMeta').set('schemaVersion',1);const original=encodeTrip(old);store(TRIP_PREFIX+'quota').updates.push(original);fake.fail=true;
     const opened=await openTrip('quota');expect(opened.status()).toBe('error');await expect(opened.whenSaved()).rejects.toThrow();expect(readTripMeta(opened.doc).title).toBe('Legacy');expect(store(TRIP_PREFIX+'quota').updates).toEqual([original]);opened.destroy();old.destroy();
   });
-  it('rejects an unknown future version without attaching a writer to the source store',async()=>{
+  it('rejects an unknown future version without attaching persistence to the source store',async()=>{
     const future=createTrip({title:'Future',city:'bangkok',timeZone:'Asia/Bangkok',boardId:'future'});future.getMap('tripMeta').set('schemaVersion',999);const original=encodeTrip(future);store(TRIP_PREFIX+'future').updates.push(original);
     await expect(openTrip('future')).rejects.toThrow(/Unsupported/);expect(fake.constructed).toEqual([]);expect(store(TRIP_PREFIX+'future').updates).toEqual([original]);future.destroy();
   });

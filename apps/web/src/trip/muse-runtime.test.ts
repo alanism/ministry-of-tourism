@@ -1,5 +1,5 @@
 import {expect,it,vi} from 'vitest';
-import {createTrip,encodeTrip,TripSession} from '@writers-board/core';
+import {createTrip,encodeTrip,TripSession} from '@mot/core';
 import {requestMuseProposal,museDiagnosticText} from './muse-client';
 const make=()=>new TripSession(createTrip({title:'PRIVATE-BOARD-TITLE',city:'Bilbao',timeZone:null}));
 it('retains typed failure and a projected receipt without server message/body/extra fields',async()=>{

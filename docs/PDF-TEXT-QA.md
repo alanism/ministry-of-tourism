@@ -1,12 +1,12 @@
 # Magazine PDF text
 
-R7-2 adds a text layer measured from the canonical page SVG. R7-6 sets MoT's PDF producer and preserves the Unicode trip title. Visible pages still use the same lossless raster, layout, art, links and labels. Existing Writer's Board PDF callers keep their defaults.
+R7-2 adds a text layer measured from the canonical page SVG. R7-6 sets MoT's PDF producer and preserves the Unicode trip title. Visible pages still use the same lossless raster, layout, art, links and labels.
 
 `svgPdfTextLayer` measures rendered lines after fonts settle, including their anchor and rotation. It reads printed text nodes, never `data-flow-source` or card metadata. Hidden ancestors, transparent text and lines wholly outside the trim are excluded. The temporary measurement node is removed on completion, failure or cancellation. Audience filtering happens before this step, through the existing magazine preparation and export scope.
 
-The PDF writer maps Unicode code points through ToUnicode, including surrogate pairs. Its self-contained Type 3 font has blank glyphs, so it cannot alter the page image or introduce a visible fallback typeface. Measured baselines, sizes, widths and turns position each line; line-level selection widths are proportional rather than the original font's individual glyph advances. Paragraph tags and a page/document structure preserve the canonical content order. This is searchable/selectable text with basic reading structure, not a claim of PDF/UA conformance, complete heading/image semantics or tested assistive-technology support. No OCR or external service is used.
+The PDF producer maps Unicode code points through ToUnicode, including surrogate pairs. Its self-contained Type 3 font has blank glyphs, so it cannot alter the page image or introduce a visible fallback typeface. Measured baselines, sizes, widths and turns position each line; line-level selection widths are proportional rather than the original font's individual glyph advances. Paragraph tags and a page/document structure preserve the canonical content order. This is searchable/selectable text with basic reading structure, not a claim of PDF/UA conformance, complete heading/image semantics or tested assistive-technology support. No OCR or external service is used.
 
-The writer validates geometry and bounds text runs before assembling bytes. Unicode font banks and object allocation follow source order; no clock, artifact ID or request metadata enters the PDF. Re-export from the same imported trip remains deterministic. Artwork already containing lettering in raster pixels is not transcribed.
+The producer validates geometry and bounds text runs before assembling bytes. Unicode font banks and object allocation follow source order; no clock, artifact ID or request metadata enters the PDF. Re-export from the same imported trip remains deterministic. Artwork already containing lettering in raster pixels is not transcribed.
 
 ## Reproduce
 

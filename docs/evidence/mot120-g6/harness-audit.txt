@@ -1,0 +1,1 @@
+Exactly two existing assertions changed: integration-state.test.ts schemaVersion toBe(2)->toBe(3), trip-store.test.ts schemaVersion toBe(2)->toBe(3). All other baseline tests/config/lockfiles unchanged. New tests are additive. Destination helper accepts only its consumed metadata fields via Pick; no schema or runtime validation weakened.

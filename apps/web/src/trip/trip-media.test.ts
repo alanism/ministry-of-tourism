@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {createTrip,TripSession} from '@writers-board/core';
+import {createTrip,TripSession} from '@mot/core';
 const hashing=vi.hoisted(()=>({wait:undefined as Promise<void>|undefined,started:undefined as (()=>void)|undefined,writes:0}));
 vi.mock('../state/blobs',()=>({hashBlob:async()=>{hashing.started?.();if(hashing.wait)await hashing.wait;return 'a'.repeat(64);},putBlob:async()=>{hashing.writes++;throw new DOMException('Full','QuotaExceededError');},getBlob:async()=>null,blobUrl:async()=>null}));
 import { getTripBlob, placeTripArtwork, storeTripBlob } from './trip-assets';

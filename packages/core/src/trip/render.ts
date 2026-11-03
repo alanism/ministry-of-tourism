@@ -23,9 +23,9 @@ export function memorabiliaHtml(doc: Y.Doc, excludedAssetIds: Set<string> = new 
   const items = cards.map((c) => {
     const assets = c.assetIds.filter((a) => !excludedAssetIds.has(a));
     const photos=assets.map(a=>media?photo(a,c.title):`<figure data-asset="${esc(a)}">Photo ${esc(a)}</figure>`).join('');
-    return `<article><h3>${esc(c.title)}</h3><p>${esc(media?(c.travelerNote??c.body):c.body)}</p>${photos}</article>`;
+    return `<article><h3>${esc(c.title)}</h3><p>${esc(c.keepsakes?.memory?.caption??(media?(c.travelerNote??c.body):c.body))}</p>${photos}</article>`;
   }).join('');
-  const used=new Set(cards.flatMap(c=>c.assetIds)),art=media?[...new Set(readPresentations(tripParts(doc)).filter(p=>presentationScope(tripParts(doc),p)!=='private'&&(!p.cardId||cards.some(c=>c.id===p.cardId))).flatMap(p=>p.assetId&&!used.has(p.assetId)&&!excludedAssetIds.has(p.assetId)?[p.assetId]:[]))].map(id=>photo(id,'Trip artwork')).join(''):'';
+  const used=new Set(cards.flatMap(c=>c.assetIds)),art=media?[...new Set(readPresentations(tripParts(doc)).filter(p=>p.surface!=='board'&&presentationScope(tripParts(doc),p)!=='private'&&(!p.cardId||cards.some(c=>c.id===p.cardId))).flatMap(p=>p.assetId&&!used.has(p.assetId)&&!excludedAssetIds.has(p.assetId)?[p.assetId]:[]))].map(id=>photo(id,'Trip artwork')).join(''):'';
   return `<!doctype html>${media?'<meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font:16px/1.6 system-ui;margin:24px auto;padding:0 16px;max-width:760px}article{margin:28px 0;overflow-wrap:anywhere}img{display:block;max-width:100%;height:auto}figure{margin:16px 0}figcaption{font-size:13px}p{white-space:pre-wrap}</style>':''}<title>Trip memorabilia</title><h1>Memorabilia</h1><p>Rendered without AI. Excluded photos never appear.</p>${items}${art}`;
 }
 

@@ -1,5 +1,5 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import {createTrip,encodeTrip,sha256Hex,TripSession} from '@writers-board/core';
+import {createTrip,encodeTrip,sha256Hex,TripSession} from '@mot/core';
 import {prepareMagazine} from './artifacts';
 import {getTripBlob} from './trip-assets';
 

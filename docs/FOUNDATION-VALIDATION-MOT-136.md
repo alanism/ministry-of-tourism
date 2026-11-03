@@ -1,6 +1,6 @@
 # F136-v1.1: Foundation validation protocol
 
-31 October 2026 · Owner approved before observations; requested Astra review tracked separately
+31 October 2026 · Owner approved before observations; requested Muse Wonder review tracked separately
 
 Purpose: falsify the product bet in [MOT-136's decision record](FOUNDATION-DECISION-MOT-136.md). This protocol has not been executed against users or app variants. Its planning thresholds are owner-approved decision rules, not measured product performance, statistical guarantees or changes to the engineering harness.
 
@@ -32,7 +32,7 @@ Record the exact defect and affected scope. Stop a study path that exposes unsaf
 
 Compare A and B in the same supported environment with matched inputs. Three participants use A then B; three use B then A. Alternate destination fixtures independently of that order. Record deviations; do not pool incomparable runs as if matched. Preserve manual fallback in both variants; identify what the participant actually used.
 
-Each participant starts from a fresh trip and, without UI coaching:
+Each participant starts from a fresh trip and, without UI guidance:
 
 1. Identifies the destination and useful next action.
 2. Adds an unlisted place with an address/map reference and a personal photo/note.
@@ -61,7 +61,7 @@ Using a populated fixture, ask what will appear in Memories, selected compositio
 
 Exercise media replacement, caption edit/clear, view changes, rapid navigation, Undo/Redo, acknowledged save and cold native restore. Overlap completions deliberately in the engineering fixture. A private item, unknown location or excluded hotel must have the declared scoped behavior; invisibility is not automatically data loss.
 
-Record whether at least five of six participants can correctly explain inclusion and the latest save state without coaching. Independently, every applicable content/privacy assertion must pass; a participant comprehension rate cannot excuse a correctness failure.
+Record whether at least five of six participants can correctly explain inclusion and the latest save state without guidance. Independently, every applicable content/privacy assertion must pass; a participant comprehension rate cannot excuse a correctness failure.
 
 ## T3: supported own-Muse path
 
@@ -75,7 +75,7 @@ Before output, obtain the participant's predicted selection/order and identify b
 
 No new PDF generation/testing. No invented image rights, route stops, visits, bookings, purchases or historical denominators. An output receipt/hash is necessary evidence identity, not proof of visible fidelity. Missing output capability stays pending.
 
-At least five of six participants should identify the trip framing and correctly predict selected/excluded material without coaching. Every applicable fidelity/privacy assertion must also pass.
+At least five of six participants should identify the trip framing and correctly predict selected/excluded material without guidance. Every applicable fidelity/privacy assertion must also pass.
 
 ## T5: host/shared, offline and devices
 

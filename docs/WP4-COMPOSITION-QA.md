@@ -1,6 +1,6 @@
 # Current acceptance
 
-On31October2026 the owner reassigned WP4 acceptance to Codex. See [WP4-WONDER-ACCEPTANCE.md](WP4-WONDER-ACCEPTANCE.md) for current results; pending Opus statements below describe the historical30October run. PDF-only work stays closed.
+On31October2026 the owner reassigned WP4 acceptance to Muse Wonder. See [WP4-WONDER-ACCEPTANCE.md](WP4-WONDER-ACCEPTANCE.md) for current results; pending Muse Wonder statements below describe the historical30October run. PDF-only work stays closed.
 
 # WP4 composition and portable state
 
@@ -14,7 +14,7 @@ these zones with the text and moves the credit and its paper together.
 Run `npm run check` and `npm --prefix apps/web run build`. Start a fresh local Vite
 server with `npm --prefix apps/web run dev -- --host 127.0.0.1 --port 5199`.
 The Browser plugin was unavailable for the recorded run; sandboxed Playwright
-Chromium was used. Physical iOS and independent Opus design scoring remain open.
+Chromium was used. Physical iOS and independent Muse Wonder design scoring remain open.
 PDF-only work is owner-closed and excluded from this workflow.
 
 Use `MOT_TEST_ORIGIN`, `MOT_EVIDENCE_DIR`, `MOT_ART_FIXTURES` and, if needed,
@@ -57,7 +57,7 @@ them from changing visibility. No permission rule was relaxed for the probe.
 
 The recorded WP4 engineering checks do not award design scores or mark a builder's
 own work Verified. Five previously Complete cards retain their status. MOT-89,
-MOT-102 and MOT-103 retain Implemented pending Opus. The owner chose to keep paired
-spreads and defer consolidation of sparse/repeated sections to Opus. Catalogue
+MOT-102 and MOT-103 retain Implemented pending Muse Wonder. The owner chose to keep paired
+spreads and defer consolidation of sparse/repeated sections to Muse Wonder. Catalogue
 alias relocation remains an upstream coordination note. MOT-94 and release holds
 are outside this change.

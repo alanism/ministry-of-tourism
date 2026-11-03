@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createTrip, readAllCards, TripSession } from '@writers-board/core';
+import { createTrip, readAllCards, TripSession } from '@mot/core';
 import { FirstScreen } from './FirstScreen';
 import { seedSample } from './sample';
 import { attachPhoto } from './trip-assets';

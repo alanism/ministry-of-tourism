@@ -1,0 +1,19 @@
+# MOT-124 bounded local implementation — 2 November 2026
+
+Actual Muse Wonder implemented this isolated delta on6f001db9. No source board, production deployment or kanban status was changed. Existing shared schema/model/commands/index/TripApp and all pre-existing tests/configuration remain unchanged.
+
+The household interface ports only8edabf6's postcard/favorites delta, retaining current managed declarations, read-only lifecycle guards and method controls. Household IDs disambiguate repeated labels. Reply downloads explicitly do not prove delivery.
+
+The organizer can preview a native response-request ZIP for the exact latest open activity round. The fresh projection includes declared roster/round IDs, explicit option titles/body and sanitized media representations with credit/rights. It excludes source private/history/ledger/ballots/planning/captions and unrelated metadata. Normal import makes a fresh local board while preserving group trip/round identity for response correlation. Imported labels grant no room authority. Source media uses the existing bounded browser rasterizer to freshPNG, existing native limits, source hashes, and asset-ID/reference/ancestor privacy. No hash-wide privacy rule is added. Unsupported/missing or private media refuses atomically. Source changes/navigation/cancellation fence preparation and final download.
+
+Managed planning is explicit human option/time-block selection on the latest OPEN activity round, with a provisional result. The legacy automatic planner remains guarded and unchanged. Managed receipts bind session/doc/actor/round/revision and configuration/lifecycle/ledger/planning/seal state; any document update, edit+Undo, cancellation or navigation invalidates them. SelectiveApply rechecks retained placements, protected bookings, attendance, access, availability, Denied and tentative facts, then uses existing atomic proposalApply/Undo. Closed/draft/destination/historical scheduling stays unavailable; start a fresh round to revise sealed results.
+
+Verification:55 focused tests across7files pass in1.94s; core and web TypeScript pass. Includes8 request tests and8 managed manual-review tests, plus existing group-plan/UI regressions and ported new postcard/tray tests. New-module REDs retained; actual reviewer-found text-only private-media blocker has behaviouralRED thenGREEN. Setup mistakes in new tests (roundkey vs full planning object; party enum; immutable assetfixture) remain in failed logs and were fixed without old assertions. Renderer mocks test serializer boundaries; they are not a real browser decode claim.
+
+Actual Muse Wonder approved the bounded manual-open-round definition and reviewed the request projection. One projector blocker (unrelated broken private media blocking a text-only request) was reproduced and fixed. Reviewer independently ran request tests8/8pass and reports no remaining actionable finding in that scoped delta. This is not a full implementation/security or physical-device acceptance.
+
+Logs: C:/Users/alani/OneDrive/Documents/Vibe Code/Ministry of Tourism/Design Sprints/Prerequisite-Check-2026-11-02/mot124-*.log. Definition: Design Sprints/Past-80-2026-11-02/WONDER-DEFINITION-REVIEW.md beside the kanban.
+
+Pending: root integration/current-candidate checks and real rendered producer/recipient import/reply/resolve/manualReview/selectiveApply/Undo/reload journey; real raster/image metadata proof in browser; physical iPhone/iPad, keyboard/focus and unassisted comprehension acceptance, shared-room/production/release holds. No full-task acceptance or score increase is claimed by this commit.
+
+Root-owned barrel follow-up if desired: export * from './trip/managed-plan-review.ts'; UI currently imports this new helper directly by repository-relative path to avoid editing the shared barrel during concurrent work.

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { agentContext,agentGuidance,GUIDE_VERSION,guideMetadata,memoryShortlist,nextStep,planTripAdaptation,reusableArt,readTripMeta,routeTripRequest,routeGroupRequest,tripPhase,WORKFLOW_SUMMARY,WORKFLOWS,tripChangeSchema,adaptationContextSchema,CommandError, OperationTracker, TRIP_SCHEMA_VERSION, type GroupPlanningResult, type ScheduleFeasibilityResult, type PreferenceTally, type Asset, type DiagnosticReceipt, type OperationState, type Presentation, type TripCard, type TripSession } from '@writers-board/core';
+import { agentContext,agentGuidance,GUIDE_VERSION,guideMetadata,memoryShortlist,nextStep,planTripAdaptation,reusableArt,readTripMeta,routeTripRequest,routeGroupRequest,tripPhase,WORKFLOW_SUMMARY,WORKFLOWS,tripChangeSchema,adaptationContextSchema,CommandError, OperationTracker, TRIP_SCHEMA_VERSION, type GroupPlanningResult, type ScheduleFeasibilityResult, type PreferenceTally, type Asset, type DiagnosticReceipt, type OperationState, type Presentation, type TripCard, type TripSession } from '@mot/core';
 
 const agent = {kind:'agent' as const,id:'agent:trip-page',name:'Trip page agent'};
 const runSchema=z.object({boardId:z.string().min(1),revision:z.number().int().nonnegative(),ops:z.array(z.object({command:z.string().min(1),input:z.record(z.string(),z.unknown())}).strict()).max(100)}).strict();
@@ -8,8 +8,8 @@ const routeExtraSchema=z.object({answers:z.record(z.string().max(60),z.object({s
 const groupRouteExtraSchema=routeExtraSchema.extend({ledger:z.unknown().optional()}).strict();
 const reactionsSchema=z.record(z.string().min(1).max(200),z.enum(['keep','maybe','skip']));
 const parse=<T,>(schema:z.ZodType<T>,raw:unknown,what:string):T=>{const parsed=schema.safeParse(raw);if(!parsed.success)throw new CommandError('invalid_input',`Invalid ${what}. Nothing changed.`);return parsed.data;};
-export interface TripArtifact {filename:string;mime:string;byteCount:number;boardId:string;revision:number;url:string;id?:string;createdAt?:string;sha256?:string;kept?:boolean;scope?:'guide'|'stay'|'personal';urlExpiresAt?:string|null;}
-export interface TripApiOptions {onChange?:()=>void;providers?:()=>{fcc:boolean;muse:boolean};whenSaved?:()=>Promise<void>;onDiagnostic?:(receipt:DiagnosticReceipt)=>void;exportState?:()=>OperationState|undefined;exportArtifact?:(format:'pdf'|'zip',signal?:AbortSignal)=>Promise<TripArtifact>;}
+export interface TripArtifact {filename:string;mime:string;byteCount:number;boardId:string;revision:number;url:string;id?:string;createdAt?:string;sha256?:string;kept?:boolean;scope?:'guide'|'stay'|'personal';urlExpiresAt?:string|null;embeddedMedia?:import('./standalone-media').EmbeddedMedia[];selection?:import('@mot/core').MagazineDocument['selection'];}
+export interface TripApiOptions {onChange?:()=>void;providers?:()=>{fcc:boolean;muse:boolean};whenSaved?:()=>Promise<void>;onDiagnostic?:(receipt:DiagnosticReceipt)=>void;exportState?:()=>OperationState|undefined;exportArtifact?:(format:'html'|'pdf'|'zip',signal?:AbortSignal)=>Promise<TripArtifact>;}
 
 export function createTripApi(session:TripSession,options:TripApiOptions={}) {
   let tracker:OperationTracker|undefined;
@@ -60,7 +60,8 @@ export function createTripApi(session:TripSession,options:TripApiOptions={}) {
       await tracker.run('persisting','persisted',options.whenSaved);
       return tracker.state;
     },
-    exportArtifact:(format:'pdf'|'zip',signal?:AbortSignal)=>{
+    exportArtifact:(format:'html'|'pdf'|'zip',signal?:AbortSignal)=>{
+      if(!['html','pdf','zip'].includes(format))throw new CommandError('invalid_input','Choose html for an offline magazine, pdf for a light screen PDF or zip for an editable trip.');
       if(!options.exportArtifact)throw new CommandError('unavailable','Artifact export is unavailable until a trip is open.');
       return options.exportArtifact(format,signal);
     },
@@ -70,7 +71,6 @@ export type TripApi=ReturnType<typeof createTripApi>;
 declare global {interface Window {motTrip?:TripApi;}}
 
 export function installTripApi(session:TripSession,options:TripApiOptions={}) {
-  delete window.writersBoard;
   const api=createTripApi(session,options);
   window.motTrip=api;
   return ()=>{if(window.motTrip===api)delete window.motTrip;};

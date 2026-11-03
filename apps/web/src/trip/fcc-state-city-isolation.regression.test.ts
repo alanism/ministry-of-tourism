@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { FccCityContent, FccResult } from '@writers-board/core';
+import type { FccCityContent, FccResult } from '@mot/core';
 import { finishSourceLoad } from './fcc-state';
 
 const loaded = (city: string, body = 'Before'): FccResult<FccCityContent> => ({

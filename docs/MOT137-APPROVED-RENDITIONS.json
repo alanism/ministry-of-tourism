@@ -1,0 +1,404 @@
+{
+  "schema": "mot.fcc-operation-dispositions/1",
+  "approvedBy": "Alan",
+  "approvedAt": "2026-11-02T07:26:07Z",
+  "approvalDocumentSha256": "b1d6da04b605048299151196baf9179ba2a53e9a63ffd93d4f26c66c9ad72978",
+  "inventorySha256": "30e3e9fc1a57beab908e55f91de76655c89b3a0d7cd783cc448338ef5573a7f7",
+  "sourceRevision": "611ad54d5c4e646a5706d1fdbcf073892ddae7e7",
+  "sheets": [
+    {
+      "city": "new-york",
+      "countryCode": "US",
+      "masterSha256": "4d367f08fa065a00b25885a8c9155ad3c65acfd63299f8ee33970d11f6e93df4",
+      "masterBytes": 1529583,
+      "width": 1254,
+      "height": 1254,
+      "figures": [
+        {
+          "sourceId": "figure-0",
+          "index": 0,
+          "frameLTRB": [
+            91,
+            48,
+            291,
+            626
+          ],
+          "cropXYWH": [
+            0.07256778309409888,
+            0.03827751196172249,
+            0.1594896331738437,
+            0.4609250398724083
+          ],
+          "sha256": "4a8614d8e49a2f5531bdd3f23cb1736ba349256821a954152ab33a3b405b98d0",
+          "bytes": 36160,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/0.webp",
+          "width": 180,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-1",
+          "index": 1,
+          "frameLTRB": [
+            355,
+            22,
+            597,
+            627
+          ],
+          "cropXYWH": [
+            0.28309409888357256,
+            0.017543859649122806,
+            0.19298245614035087,
+            0.4824561403508772
+          ],
+          "sha256": "8c26eff1f796abfc5fe0133d1fded36e19d4fa41d64e8202878227c8f229b89d",
+          "bytes": 28984,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/1.webp",
+          "width": 208,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-2",
+          "index": 2,
+          "frameLTRB": [
+            674,
+            34,
+            873,
+            631
+          ],
+          "cropXYWH": [
+            0.5374800637958532,
+            0.02711323763955343,
+            0.15869218500797447,
+            0.47607655502392343
+          ],
+          "sha256": "bfa5263c487986c347081a78810fb63eeae36b3fd6ed15f45a209a9ba1014e30",
+          "bytes": 33182,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/2.webp",
+          "width": 173,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-3",
+          "index": 3,
+          "frameLTRB": [
+            963,
+            18,
+            1208,
+            630
+          ],
+          "cropXYWH": [
+            0.7679425837320574,
+            0.014354066985645933,
+            0.19537480063795853,
+            0.4880382775119617
+          ],
+          "sha256": "9a9a1ead80cd1931788e85a0807ab19250007364c6b941719d88cade05770b69",
+          "bytes": 26748,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/3.webp",
+          "width": 208,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-4",
+          "index": 4,
+          "frameLTRB": [
+            65,
+            633,
+            289,
+            1213
+          ],
+          "cropXYWH": [
+            0.051834130781499205,
+            0.5047846889952153,
+            0.17862838915470494,
+            0.4625199362041467
+          ],
+          "sha256": "8d4ccca4b788ff5beebdb99d2e9c5d97094f2d397d06bb40ed4ed63357dcaaff",
+          "bytes": 38768,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/4.webp",
+          "width": 201,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-5",
+          "index": 5,
+          "frameLTRB": [
+            384,
+            656,
+            567,
+            1209
+          ],
+          "cropXYWH": [
+            0.3062200956937799,
+            0.5231259968102073,
+            0.145933014354067,
+            0.4409888357256778
+          ],
+          "sha256": "53d111b782831d8b6a373915fa27425288b7790a5c0447c9391560266c5117ac",
+          "bytes": 31992,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/5.webp",
+          "width": 172,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-6",
+          "index": 6,
+          "frameLTRB": [
+            670,
+            636,
+            889,
+            1209
+          ],
+          "cropXYWH": [
+            0.5342902711323764,
+            0.507177033492823,
+            0.17464114832535885,
+            0.4569377990430622
+          ],
+          "sha256": "a6c44900102b468810a547f3beedf9bb6bbdf23e48c34b5bfaf7a7518ad667f0",
+          "bytes": 30198,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/6.webp",
+          "width": 199,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-7",
+          "index": 7,
+          "frameLTRB": [
+            986,
+            640,
+            1218,
+            1215
+          ],
+          "cropXYWH": [
+            0.7862838915470495,
+            0.5103668261562998,
+            0.1850079744816587,
+            0.4585326953748006
+          ],
+          "sha256": "fdee166076759d2bf03ff8c0309b8226e31a4d9d23e3ba634307659e5e291d41",
+          "bytes": 28130,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/7.webp",
+          "width": 210,
+          "height": 520
+        }
+      ]
+    },
+    {
+      "city": "ho-chi-minh-city",
+      "countryCode": "VN",
+      "masterSha256": "4e55b7a88cdb12ebceb9e22c2e54502a116e3ab8ec6e3b3326b67c26e22e2923",
+      "masterBytes": 1381261,
+      "width": 1254,
+      "height": 1254,
+      "figures": [
+        {
+          "sourceId": "figure-0",
+          "index": 0,
+          "frameLTRB": [
+            89,
+            37,
+            291,
+            626
+          ],
+          "cropXYWH": [
+            0.07097288676236045,
+            0.029505582137161084,
+            0.16108452950558214,
+            0.4696969696969697
+          ],
+          "sha256": "8d805c63548d15084525ce3135a51957562b25c01732221db7e70c3e8f13eed8",
+          "bytes": 30136,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/0.webp",
+          "width": 178,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-1",
+          "index": 1,
+          "frameLTRB": [
+            365,
+            11,
+            605,
+            628
+          ],
+          "cropXYWH": [
+            0.29106858054226475,
+            0.008771929824561403,
+            0.19138755980861244,
+            0.4920255183413078
+          ],
+          "sha256": "8d25f9ddb38e98e96b130c1032981cd3d6ddad6cef3368b08ab15eac04831894",
+          "bytes": 29894,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/1.webp",
+          "width": 202,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-2",
+          "index": 2,
+          "frameLTRB": [
+            671,
+            32,
+            891,
+            631
+          ],
+          "cropXYWH": [
+            0.5350877192982456,
+            0.025518341307814992,
+            0.17543859649122806,
+            0.47767145135566186
+          ],
+          "sha256": "914d5c77740e772f94ab13929f93ebbb8dce0be3bb48b15d88f97f614c373976",
+          "bytes": 33784,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/2.webp",
+          "width": 191,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-3",
+          "index": 3,
+          "frameLTRB": [
+            969,
+            10,
+            1192,
+            634
+          ],
+          "cropXYWH": [
+            0.7727272727272727,
+            0.007974481658692184,
+            0.17783094098883573,
+            0.49760765550239233
+          ],
+          "sha256": "083184872e22caeefeaa046d626494c580515c5275e7fc555ba9eafd886ff83c",
+          "bytes": 21912,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/3.webp",
+          "width": 186,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-4",
+          "index": 4,
+          "frameLTRB": [
+            54,
+            627,
+            289,
+            1223
+          ],
+          "cropXYWH": [
+            0.0430622009569378,
+            0.5,
+            0.18740031897926634,
+            0.47527910685805425
+          ],
+          "sha256": "4730fef678c281238581642acca9d4e88ee3bd51d2fb192f7c323355379146fb",
+          "bytes": 37412,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/4.webp",
+          "width": 205,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-5",
+          "index": 5,
+          "frameLTRB": [
+            398,
+            642,
+            620,
+            1220
+          ],
+          "cropXYWH": [
+            0.31738437001594894,
+            0.5119617224880383,
+            0.17703349282296652,
+            0.4609250398724083
+          ],
+          "sha256": "b726d5b4dd1bc6f74260ffeab6f9bde800182b5d02f5d68b0fc025ddd57e94c3",
+          "bytes": 30940,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/5.webp",
+          "width": 200,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-6",
+          "index": 6,
+          "frameLTRB": [
+            689,
+            646,
+            886,
+            1215
+          ],
+          "cropXYWH": [
+            0.5494417862838915,
+            0.5151515151515151,
+            0.15709728867623604,
+            0.45374800637958534
+          ],
+          "sha256": "e3fc60afaea8b6f56e2a2230e485df326f1c238db51e3733f92be989d36df1a5",
+          "bytes": 28668,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/6.webp",
+          "width": 180,
+          "height": 520
+        },
+        {
+          "sourceId": "figure-7",
+          "index": 7,
+          "frameLTRB": [
+            978,
+            635,
+            1213,
+            1222
+          ],
+          "cropXYWH": [
+            0.7799043062200957,
+            0.5063795853269537,
+            0.18740031897926634,
+            0.46810207336523124
+          ],
+          "sha256": "bbfbca1bd0bec046126d19341cfce9cb3449f0025fc8c481d7bc2fb43afbb208",
+          "bytes": 24684,
+          "publicUrl": "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/7.webp",
+          "width": 208,
+          "height": 520
+        }
+      ]
+    }
+  ],
+  "brush": {
+    "sourceId": "artworkMaster",
+    "cityId": "manila",
+    "countryCode": "PH",
+    "sha256": "baf3835f9d4102d83856a3f31ba06c069ef5132d26fe73c0891b636ddb4ce858",
+    "bytes": 1884614,
+    "width": 1055,
+    "height": 1600,
+    "originalUrl": "https://foreignclubberscorespondence.web.app/assets/brush-portraits-v1/manila/baf3835f9d41-artwork-original.png"
+  },
+  "liveByteProof": {
+    "sha256": "ccc8d639e83f24c661c6808807cfad21766f2a2a092929c305afb298bd7678be",
+    "observedAt": "2026-11-02T07:30:53.694743+00:00",
+    "allPassed": true,
+    "representations": 17
+  },
+  "approvalHashEncoding": "UTF-8/LF",
+  "transportObservations": {
+    "receiptSha256": "85f6813f7c0ba77e846793f3430bf3239b2b8344f36d806ab54d7d5f9a76eb1b",
+    "unavailableInsertionUrls": [
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/0.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/1.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/2.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/3.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/4.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/5.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/6.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/ho-chi-minh-city/7.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/0.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/1.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/2.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/3.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/4.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/5.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/6.webp",
+      "https://foreignclubberscorespondence.web.app/output/prototypes/city-pages/journal/art/new-york/7.webp"
+    ]
+  }
+}

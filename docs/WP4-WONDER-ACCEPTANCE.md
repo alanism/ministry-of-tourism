@@ -1,6 +1,6 @@
-# WP4 Codex acceptance — 31 October 2026
+# WP4 Muse Wonder acceptance — 31 October 2026
 
-Owner-authorized acceptance: Codex replaces the pending Opus sign-off for MOT-89, MOT-102 and MOT-103. Muse Wonder 1.0 authored all product changes, the crop regressions, browser regression modes and navigation updates. This is Codex's assessment using the Council lenses, not a statement by the named designers. Previously Complete MOT-87/88/90/91/92 retain historical acceptance; current synthetic checks supplement it. PDF-only work remains owner-closed. Paired spreads remain as requested.
+Owner-authorized acceptance: Muse Wonder replaces the pending Muse Wonder sign-off for MOT-89, MOT-102 and MOT-103. Muse Wonder 1.0 authored all product changes, the crop regressions, browser regression modes and navigation updates. This is Muse Wonder's assessment using the Council lenses, not a statement by the named designers. Previously Complete MOT-87/88/90/91/92 retain historical acceptance; current synthetic checks supplement it. PDF-only work remains owner-closed. Paired spreads remain as requested.
 
 ## Changes and observed failures
 
@@ -32,7 +32,7 @@ S1:48 computed-style scans pass after DPI fix. S2:no competing red primaries in 
 
 ## Design Council scorecard
 
-Each row lists five dimensions in the order from the owner rubrics. Scores are Codex review judgments informed by rendered evidence, not automated measurements or opinions of the named designers.
+Each row lists five dimensions in the order from the owner rubrics. Scores are Muse Wonder review judgments informed by rendered evidence, not automated measurements or opinions of the named designers.
 
 | Lens | Magazine/merch | Composition |
 |---|---|---|

@@ -68,12 +68,12 @@ describe('MOT-78 real separate Almanac publication', () => {
   });
 
   it('rejects malformed IDs before fetching and leaves cache untouched on cancellation', async () => {
-    const fetcher = vi.fn(async () => response(snapshot())); const cache = new MemoryCityCache(); const writer = vi.spyOn(cache, 'write');
+    const fetcher = vi.fn(async () => response(snapshot())); const cache = new MemoryCityCache(); const writeSpy = vi.spyOn(cache, 'write');
     const adapter = setup(fetcher as typeof fetch, cache);
     expect(await adapter.getAlmanac('../private')).toMatchObject({ status: 'unavailable', error: { code: 'invalid_feed' } });
     const controller = new AbortController(); controller.abort();
     expect(await adapter.getAlmanac('san-sebastian', { signal: controller.signal })).toMatchObject({ status: 'unavailable', error: { code: 'cancelled' } });
-    expect(fetcher).not.toHaveBeenCalled(); expect(writer).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled(); expect(writeSpy).not.toHaveBeenCalled();
   });
 
   it('reports the final network error honestly and never logs raw error text', async () => {

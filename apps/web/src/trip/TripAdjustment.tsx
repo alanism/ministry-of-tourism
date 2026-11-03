@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {applyTripAdaptation,nextStep,planTripAdaptation,undoProposal,type Actor,type AdaptationPlan,type TripChange,type TripSession} from '@writers-board/core';
+import {applyTripAdaptation,nextStep,planTripAdaptation,undoProposal,type Actor,type AdaptationPlan,type TripChange,type TripSession} from '@mot/core';
 import {dayLabel} from './sample';
 
 export function NextStepPanel({session}:{session:TripSession}){

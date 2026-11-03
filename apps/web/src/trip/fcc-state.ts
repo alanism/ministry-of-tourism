@@ -1,4 +1,4 @@
-import type {FccCityContent,FccError,FccResult} from '@writers-board/core';
+import type {FccCityContent,FccError,FccResult} from '@mot/core';
 import {sourceKey} from './source-card';
 
 export interface SourceLoadState {result?:FccResult<FccCityContent>;pending:boolean;offline:boolean;updatedKeys:string[];failure?:FccError;}

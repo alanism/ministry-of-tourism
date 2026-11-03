@@ -10,17 +10,32 @@ function db(): Promise<IDBDatabase> {
   dbPromise ??= new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
     request.onupgradeneeded = () => request.result.createObjectStore(STORE);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      // The browser can close a long-lived connection (version change, storage pressure); reopen on next use.
+      const database = request.result, forget = () => { if (dbPromise === opened) dbPromise = null; };
+      database.onclose = forget;
+      database.onversionchange = () => { forget(); database.close(); };
+      resolve(database);
+    };
+    request.onerror = () => { dbPromise = null; reject(request.error); };
   });
-  return dbPromise;
+  const opened = dbPromise;
+  return opened;
 }
 
-function tx<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+function tx<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>, retried = false): Promise<T> {
   return db().then(
     (database) =>
       new Promise<T>((resolve, reject) => {
-        const transaction = database.transaction(STORE, mode);
+        let transaction: IDBTransaction;
+        try { transaction = database.transaction(STORE, mode); }
+        catch (error) {
+          // "The database connection is closing": drop the stale handle and retry once on a fresh one.
+          if (retried || !(error instanceof DOMException && error.name === 'InvalidStateError')) { reject(error); return; }
+          if (dbPromise) dbPromise = null;
+          tx(mode, fn, true).then(resolve, reject);
+          return;
+        }
         const request = fn(transaction.objectStore(STORE));
         transaction.oncomplete = () => resolve(request.result);
         transaction.onabort = () => reject(transaction.error ?? new Error('Image storage failed. Please try again.'));

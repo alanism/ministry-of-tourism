@@ -1,0 +1,262 @@
+{
+  "version": 1,
+  "baseline": "e3b9d4015b76fafc7f0bd3966ed5307e9d837a96",
+  "localOnly": true,
+  "sourceWrites": false,
+  "auditContractUnchanged": "Production audit remains metadata-only; this separate bounded diagnostic hashes only two embedded PNG payloads in memory; it fetches no image and writes no decoded image.",
+  "inputs": {
+    "data/optimized-assets-release.json": {
+      "sha256": "478f648a83d1622ed067e244590ed12e2e59eeb765c53d89b44cfb86416504a2",
+      "bytes": 7481671
+    },
+    "content/assets/registry.json": {
+      "sha256": "74b91f0de1767a245dd1fcb938e47494070b828af87f99b263b0082cbdb45202",
+      "bytes": 6288764
+    },
+    "output/prototypes/city-pages/journal/collections.json": {
+      "sha256": "a2cdb08a8f6faf870963f7df0dd1795a9e89bbd35fef49dea3438a9cf4fc8abf",
+      "bytes": 476927
+    },
+    "data/brush-portraits.json": {
+      "sha256": "5de41d2bd6ec6a8a8b283c2041d2d7f2582e304f58c712b6ae5b5de8ece29bdf",
+      "bytes": 79253
+    },
+    "output/magazine-articles/art-registry.json": {
+      "sha256": "e61f65abab76dba12fbc4624986e482400b44b68aff784e23d1242895f6789bf",
+      "bytes": 1077693
+    },
+    "content/cities/new-york/city.json": {
+      "sha256": "9bddad4e3409af369a303d53f091e1ab3449a681342c26c48091416cedd3d3a8",
+      "bytes": 2512419
+    },
+    "output/prototypes/city-pages/journal/art/new-york.originals.json": {
+      "sha256": "6aa7968efa21ddf80691840cef8195444e337846980ce04e36af8ff6d2009d18",
+      "bytes": 2040703
+    },
+    "content/cities/ho-chi-minh-city/city.json": {
+      "sha256": "ea14446a44beba43dbdced54ad2bd4ee8fb7a30314ece0a48338690fb739ef06",
+      "bytes": 2057189
+    },
+    "output/prototypes/city-pages/journal/art/ho-chi-minh-city.originals.json": {
+      "sha256": "78bdfa54bc163974b0adb5147a4dd6fe63d3c2c9b02d888d4dae015abaef2380",
+      "bytes": 1843290
+    }
+  },
+  "inlineSheets": [
+    {
+      "city": "new-york",
+      "inlineTextSha256": "486876933ada40846532e05a1e9953dfd62b9f86cba2197c8fda2343dbb2f0e8",
+      "inlineTextCharacters": 2039466,
+      "pngSha256": "4d367f08fa065a00b25885a8c9155ad3c65acfd63299f8ee33970d11f6e93df4",
+      "pngBytes": 1529583,
+      "width": 1254,
+      "height": 1254,
+      "releaseMatches": [],
+      "registryDigestMatches": [],
+      "derivatives": [
+        {
+          "key": "figure-0",
+          "index": 0,
+          "derivative": "art/new-york/0.webp",
+          "frame": [
+            91,
+            48,
+            291,
+            626
+          ]
+        },
+        {
+          "key": "figure-1",
+          "index": 1,
+          "derivative": "art/new-york/1.webp",
+          "frame": [
+            355,
+            22,
+            597,
+            627
+          ]
+        },
+        {
+          "key": "figure-2",
+          "index": 2,
+          "derivative": "art/new-york/2.webp",
+          "frame": [
+            674,
+            34,
+            873,
+            631
+          ]
+        },
+        {
+          "key": "figure-3",
+          "index": 3,
+          "derivative": "art/new-york/3.webp",
+          "frame": [
+            963,
+            18,
+            1208,
+            630
+          ]
+        },
+        {
+          "key": "figure-4",
+          "index": 4,
+          "derivative": "art/new-york/4.webp",
+          "frame": [
+            65,
+            633,
+            289,
+            1213
+          ]
+        },
+        {
+          "key": "figure-5",
+          "index": 5,
+          "derivative": "art/new-york/5.webp",
+          "frame": [
+            384,
+            656,
+            567,
+            1209
+          ]
+        },
+        {
+          "key": "figure-6",
+          "index": 6,
+          "derivative": "art/new-york/6.webp",
+          "frame": [
+            670,
+            636,
+            889,
+            1209
+          ]
+        },
+        {
+          "key": "figure-7",
+          "index": 7,
+          "derivative": "art/new-york/7.webp",
+          "frame": [
+            986,
+            640,
+            1218,
+            1215
+          ]
+        }
+      ],
+      "disposition": "held: no authoritative published original mapping in supplied snapshot; no substitution or guessed URL"
+    },
+    {
+      "city": "ho-chi-minh-city",
+      "inlineTextSha256": "909d93d856833f851c81a962a1b24f057ac40815434cc87c43598dda87ac3433",
+      "inlineTextCharacters": 1841706,
+      "pngSha256": "4e55b7a88cdb12ebceb9e22c2e54502a116e3ab8ec6e3b3326b67c26e22e2923",
+      "pngBytes": 1381261,
+      "width": 1254,
+      "height": 1254,
+      "releaseMatches": [],
+      "registryDigestMatches": [],
+      "derivatives": [
+        {
+          "key": "figure-0",
+          "index": 0,
+          "derivative": "art/ho-chi-minh-city/0.webp",
+          "frame": [
+            89,
+            37,
+            291,
+            626
+          ]
+        },
+        {
+          "key": "figure-1",
+          "index": 1,
+          "derivative": "art/ho-chi-minh-city/1.webp",
+          "frame": [
+            365,
+            11,
+            605,
+            628
+          ]
+        },
+        {
+          "key": "figure-2",
+          "index": 2,
+          "derivative": "art/ho-chi-minh-city/2.webp",
+          "frame": [
+            671,
+            32,
+            891,
+            631
+          ]
+        },
+        {
+          "key": "figure-3",
+          "index": 3,
+          "derivative": "art/ho-chi-minh-city/3.webp",
+          "frame": [
+            969,
+            10,
+            1192,
+            634
+          ]
+        },
+        {
+          "key": "figure-4",
+          "index": 4,
+          "derivative": "art/ho-chi-minh-city/4.webp",
+          "frame": [
+            54,
+            627,
+            289,
+            1223
+          ]
+        },
+        {
+          "key": "figure-5",
+          "index": 5,
+          "derivative": "art/ho-chi-minh-city/5.webp",
+          "frame": [
+            398,
+            642,
+            620,
+            1220
+          ]
+        },
+        {
+          "key": "figure-6",
+          "index": 6,
+          "derivative": "art/ho-chi-minh-city/6.webp",
+          "frame": [
+            689,
+            646,
+            886,
+            1215
+          ]
+        },
+        {
+          "key": "figure-7",
+          "index": 7,
+          "derivative": "art/ho-chi-minh-city/7.webp",
+          "frame": [
+            978,
+            635,
+            1213,
+            1222
+          ]
+        }
+      ],
+      "disposition": "held: no authoritative published original mapping in supplied snapshot; no substitution or guessed URL"
+    }
+  ],
+  "unmappedDerivatives": 16,
+  "brushMaster": {
+    "sourceId": "artworkMaster",
+    "sha256": "baf3835f9d4102d83856a3f31ba06c069ef5132d26fe73c0891b636ddb4ce858",
+    "original": "/assets/brush-portraits-v1/manila/baf3835f9d41-artwork-original.png",
+    "explicitCityFieldPresent": false,
+    "registryDigestMatches": [],
+    "disposition": "held: URL path and existing hardcoded MoT city are not independent source-city proof"
+  },
+  "diagnosticNegativeControls": 4,
+  "productionAcceptance": false
+}

@@ -1,5 +1,5 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import {createTrip,TripSession,readAsset,readPresentations,readTripMeta,mapProjection} from '@writers-board/core';
+import {createTrip,TripSession,readAsset,readPresentations,readTripMeta,mapProjection} from '@mot/core';
 import type {Artwork} from '../artwork/catalog';
 vi.mock('../state/blobs',()=>{const stored=new Map<string,Blob>(),hashBlob=async(blob:Blob)=>Buffer.from(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer())).toString('hex');return{hashBlob,getBlob:async(hash:string)=>stored.get(hash)??null,putBlob:async(blob:Blob)=>{stored.set(await hashBlob(blob),blob);}};});
 import {placeTripArtwork,placeTripUpload,getTripBlob} from './trip-assets';

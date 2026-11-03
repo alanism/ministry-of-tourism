@@ -1,5 +1,5 @@
 import { describe,expect,it } from 'vitest';
-import { createTrip,TripSession } from '@writers-board/core';
+import { createTrip,TripSession } from '@mot/core';
 import { requestMuseProposal } from './muse-client';
 const actor={kind:'human' as const,id:'owner',name:'Owner'};
 describe('MOT-95 browser revision boundary',()=>{

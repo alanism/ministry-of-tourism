@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {cardEditInput,editedSourceCopy,sourceHref,sourceTextFor} from './source-card';
-import {createTrip,readAllCards,TripSession,type TripCard} from '@writers-board/core';
+import {createTrip,readAllCards,TripSession,type TripCard} from '@mot/core';
 const card={id:'card',title:'Source',provenance:'fcc',body:'Saved excerpt',sourceText:'The original published text.',source:{id:'fcc:city:11',retrievedAt:'2026-10-28'}} as TripCard;
 const draft={title:'Source',body:'Do not overwrite the excerpt',travelerNote:'My own words',day:'',time:'',scope:'stay' as const};
 describe('source-card editing boundary',()=>{

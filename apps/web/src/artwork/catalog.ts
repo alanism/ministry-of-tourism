@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import {artRefSchema} from '@writers-board/core';
+import {artRefSchema} from '@mot/core';
 
 const id = z.string().min(1).max(160);
 const label = z.string().min(1).max(300);
@@ -28,10 +28,13 @@ export const manifestSchema = z.object({
 export const artworkSchema = z.object({
   id, styleId: id, label, subject: id, city: id.optional(), collection: id.optional(),
   thumb: imageUrl, src: imageUrl, original: imageUrl.optional(),
+  renditionRole: z.enum(['original', 'derivative']).optional(),
+  personalOnly: z.boolean().optional(),
   sourceHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
   width: z.number().positive(), height: z.number().positive(), crop: crop.optional(),
   artRef:artRefSchema.optional(),
 }).superRefine((art,ctx)=>{
+  if(art.renditionRole==='derivative'&&art.original)ctx.addIssue({code:'custom',message:'A derivative rendition cannot claim an original download'});
   const ref=art.artRef;if(ref&&(art.id!==ref.assetId||art.city!==ref.originCityId||art.width!==ref.width||art.height!==ref.height||art.thumb!==ref.thumbnailUrl||art.src!==ref.renditionUrl||art.original!==ref.originalUrl))ctx.addIssue({code:'custom',message:'Artwork display fields conflict with its ArtRef'});
 });
 

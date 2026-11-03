@@ -22,12 +22,12 @@ describe('PDF raster placement', () => {
     },
   );
 
-  it('retains the existing framed-image placement and manuscript page', () => {
+  it('retains the existing framed-image placement and text page', () => {
     const pdf = decode(buildPdf([
       { kind: 'image', jpeg, width: 600, height: 800 },
-      { kind: 'text', lines: ['Existing manuscript'] },
+      { kind: 'text', lines: ['Existing Itinerary'] },
     ]));
     expect(pdf).toContain('q 405.00 0 0 540.00 193.50 36.00 cm /Im0 Do Q');
-    expect(pdf).toContain('(Existing manuscript) Tj');
+    expect(pdf).toContain('(Existing Itinerary) Tj');
   });
 });

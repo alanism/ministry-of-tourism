@@ -1,18 +1,20 @@
 import {TripGuidance} from './TripGuidance';
-import {tripPhase} from '@writers-board/core';
+import {tripPhase} from '@mot/core';
 // Trip shell, matched to the predicted builds: header pill nav, brief sidebar, lanes, Muse rail, review and keepsakes.
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { TripSession, boardProjection, createGuestCopy, importTripPackage, readAllCards, readTripMeta, tripParts, type Actor, type BoardKind, type FccCityContent } from '@writers-board/core';
+import { TripSession, boardProjection, createGuestCopy, encodeTrip, importTripPackage, readAllCards, readTripMeta, tripParts, type Actor, type BoardKind, type FccCityContent } from '@mot/core';
+import { TripRecovery, type TripRecoverySource } from './TripRecovery.tsx';
 import './trip.css';
 import './integration.css';
 import { FirstScreen } from './FirstScreen.tsx';
-import { BoardView, MapView, TodayView } from './BoardView.tsx';
+import { MapView, TodayView } from './BoardView.tsx';
+import { FreeBoard } from './FreeBoard.tsx';
 import { ProposalReview, ghostCards, type PendingReview, type Ghost } from './ProposalReview.tsx';
 import { Keepsakes,MemoryChoice } from './Keepsakes.tsx';
 
 import { GuestCopyPanel } from './GuestCopyPanel.tsx';
 import { Diamond, FocusSheet, Icon, Logo, Menu, Toast, type MenuEntry } from './ui';
-import { STORAGE_ERROR_EVENT, STORAGE_STATUS_EVENT, forgetLastBoard, lastBoardId, listBoards, openTrip, type OpenTrip, type SavedStatus } from './trip-store.ts';
+import { STORAGE_ERROR_EVENT, STORAGE_STATUS_EVENT, forgetLastBoard, forgetMissingBoard, lastBoardId, listBoards, openTrip, type OpenTrip, type SavedStatus } from './trip-store.ts';
 import { hasEphemeralAssets, placeTripArtwork, placeTripUpload, storeImportedAssets } from './trip-assets';
 import { BRIEF_TEMPLATE, cityLabel, isSample, parseBrief, tripSubtitle } from './sample';
 import { enableMetrics, readMetrics, recordOutcome } from './metrics';
@@ -28,19 +30,24 @@ import type { NewTrip } from './trip-store';
 import { FccBrowser,SourceFreshness,citySlug,type FccBrowserState } from './FccBrowser';
 
 import { MusePlan } from './MusePlan';
+import {consumeSharedRoomInvite,type SharedRoomInvite} from './shared-room-invite';
 
 const ArtworkPicker=lazy(()=>import('../artwork/ArtworkPicker'));
 const GroupPreferences=lazy(()=>import('./GroupPreferences').then(module=>({default:module.GroupPreferences})));
+const OwnMuseFiles=lazy(()=>import('./OwnMuseFiles').then(module=>({default:module.OwnMuseFiles})));
+const SharedRoomDevelopmentPanel=lazy(()=>import('./shared-room-panel').then(module=>({default:module.SharedRoomDevelopmentPanel})));
 const bundledDestinations:unknown=JSON.parse(bundledDestinationText).cities;
 
 const YOU: Actor = { kind: 'human', id: 'traveler-1', name: 'You' };
 type Tab = 'board' | 'composition' | 'fcc' | 'today' | 'map' | 'keepsakes' | 'export';
 const TABS: { id: Tab; label: string }[] = [{ id: 'board', label: 'Board' },{id:'composition',label:'Composition'},{id:'fcc',label:'Explore FCC'}, { id: 'today', label: 'Today' }, { id: 'map', label: 'Map' }, { id: 'keepsakes', label: 'Keepsakes' }, {id:'export',label:'Export'}];
 const KIND_LABEL: Record<BoardKind, string> = { traveler: 'Trip', guest: 'Guest copy', host_guide: 'Host guide' };
+function downloadBytes(bytes: Uint8Array, name: string) { const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/zip' })); const a = document.createElement('a'); a.href = url; a.download = name; a.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); }
 
 function Saved({ status, exportedAt }: { status: SavedStatus; exportedAt: string | null }) {
   return <><p className={`mot-saved${status === 'saved' ? '' : ' unsaved'}`}><Icon name="device" />{status === 'error' ? 'In this tab only · download a ZIP backup' : status === 'saved' ? 'Saved on this device' : 'Saving…'}</p>{exportedAt && <small className="m-muted">Last export: {new Date(exportedAt).toLocaleString()}</small>}</>;
 }
+export function DevelopmentSampleReviewButton({onReview}:{onReview:()=>void}){if(!import.meta.env.DEV)return null;return <button type="button" className="m-btn small" onClick={()=>{if(import.meta.env.DEV)onReview();}}><Icon name="sparkle"/>Review development samples</button>;}
 
 function BriefPanel({ session, refresh, notify }: { session: TripSession; refresh: () => void; notify: (m: string) => void }) {
   const card = readAllCards(tripParts(session.doc)).find((c) => c.kind === 'brief');
@@ -75,21 +82,38 @@ function BriefPanel({ session, refresh, notify }: { session: TripSession; refres
 }
 
 export function TripApp() {
+  const [room,setRoom]=useState<{active:boolean;mounted:boolean;invite?:SharedRoomInvite;localSource?:TripSession}>(()=>{
+    const invite=!import.meta.env.DEV||typeof window==='undefined'?undefined:consumeSharedRoomInvite(window.location.href,clean=>window.history.replaceState(null,'',clean));
+    return{active:import.meta.env.DEV&&!!invite,mounted:import.meta.env.DEV&&!!invite,...(import.meta.env.DEV&&invite?{invite}:{})};
+  });
+  useEffect(()=>{
+    if(!import.meta.env.DEV)return;
+    const receive=()=>{if(!import.meta.env.DEV)return;const invite=consumeSharedRoomInvite(window.location.href,clean=>window.history.replaceState(null,'',clean));if(invite)setRoom(current=>({...current,active:true,mounted:true,invite}));};
+    window.addEventListener('hashchange',receive);return()=>window.removeEventListener('hashchange',receive);
+  },[]);
+  return <><TripWorkspace onOpenSharedRoom={source=>{if(import.meta.env.DEV)setRoom(current=>({...current,active:true,mounted:true,localSource:source}));}}/>{import.meta.env.DEV&&room.mounted&&<div className="mot" style={{display:'contents'}}><Suspense fallback={room.active?<p role="status">Opening local shared room…</p>:null}><SharedRoomDevelopmentPanel active={room.active} onClose={()=>setRoom(current=>({...current,active:false}))} localSession={room.localSource} initialInvite={room.invite} onInviteConsumed={consumed=>setRoom(current=>current.invite?.roomId===consumed.roomId&&current.invite.inviteSecret===consumed.inviteSecret&&current.invite.expiresAt===consumed.expiresAt?{...current,invite:undefined}:current)} configuration={{authBaseUrl:'http://127.0.0.1:9099',serviceBaseUrl:'http://127.0.0.1:48125',projectId:'demo-mot-rooms'}}/></Suspense></div>}</>;
+}
+
+function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession)=>void}) {
   const [open, setOpen] = useState<OpenTrip | null>(null);
   const [session, setSession] = useState<TripSession | null>(null);
   const [booting, setBooting] = useState(true);
-  const [tab, setTab] = useState<Tab>('board');
+  const [tab, setTab] = useState<Tab>('board'); const [landOnLanes, setLandOnLanes] = useState(false);
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [keepsakeFormat,setKeepsakeFormat]=useState<'magazine'|'postcard'|'memories'>('memories');
   const [tick, setTick] = useState(0);
   const [toast, setToast] = useState<{ message: string; action?: { label: string; run: () => void } } | null>(null);
   const [lost, setLost] = useState(false);
-  const [panel, setPanel] = useState<'review' | 'guest' | 'art' | 'destination' | 'muse' | 'ballot' | null>(null);
+  const [recovery, setRecovery] = useState<TripRecoverySource | null>(null);
+  const [panel, setPanel] = useState<'review' | 'guest' | 'art' | 'destination' | 'muse' | 'ballot' | 'shirts' | 'own-files' | null>(null);
+  const [filesSession,setFilesSession]=useState<TripSession|null>(null);
   const [creating,setCreating]=useState<BoardKind|null>(null);
   const [destinations,setDestinations]=useState<DestinationRow[]>([]);
   const [destinationIndex,setDestinationIndex]=useState<Awaited<ReturnType<typeof loadDestinations>>>();
   const [registryAttempt,setRegistryAttempt]=useState(0);
   const registryRef=useRef<DestinationRow[]>([]);
   const startingTrip=useRef(false);
+  const opRef=useRef(0);
   const [cityContent,setCityContent]=useState<FccCityContent>();
   const [fccState,setFccState]=useState<FccBrowserState>();
   const [museAvailable,setMuseAvailable]=useState(false);
@@ -98,6 +122,8 @@ export function TripApp() {
   const providers=useRef({fcc:false,muse:false});
 
   const [pending, setPending] = useState<PendingReview | null>(null);
+  const pendingNativeId=useRef<string|undefined>(undefined);pendingNativeId.current=pending?.suggestion.proposal.id;
+  useEffect(()=>{if(filesSession&&filesSession!==session)setFilesSession(null);},[session,filesSession]);
   const [focusOp, setFocusOp] = useState<number | undefined>(undefined);
   const [museOpen, setMuseOpen] = useState(true);
   const [newTitle, setNewTitle] = useState('');
@@ -112,41 +138,81 @@ export function TripApp() {
     toastTimer.current = window.setTimeout(() => setToast(null), action ? 6000 : 3200);
   };
 
-  const adopt = (trip: OpenTrip) => { setOpen(trip); setSession(new TripSession(trip.doc,{destinations:registryRef.current})); setPanel(null); setPending(null); refresh(); };
+  const adopt = (trip: OpenTrip) => { if (trip.status() === 'error' || hasEphemeralAssets(trip.doc)) { let boardId: string | undefined; try { boardId = readTripMeta(trip.doc).boardId; } catch { boardId = undefined; } const bytes = encodeTrip(trip.doc); trip.destroy(); setOpen(null); setSession(null); setRecovery({ bytes, boardId, context: 'Open board', error: 'This board could not be saved durably on this device, so it has not been adopted as a saved board.', backupOnly: true }); return false; } setOpen(trip); setSession(new TripSession(trip.doc,{destinations:registryRef.current})); setPanel(null); setPending(null); refresh(); return true; };
   const switchTo = async (id: string) => {
-    try { adopt(await openTrip(id)); setTab('board'); }
-    catch (e) { notify(e instanceof Error ? e.message : 'Could not open that board.'); }
+    const op = opRef.current + 1; opRef.current = op;
+    try {
+      const trip = await openTrip(id); if (op !== opRef.current) { trip.destroy(); return; }
+      if (!adopt(trip)) return; setLandOnLanes(false); setTab('board');
+    } catch (e) {
+      if (op !== opRef.current) return;
+      const err = e as Error & { storeName?: string; original?: Uint8Array; bytes?: Uint8Array; originalUpdates?: Uint8Array[] };
+      setOpen(null); setSession(null);
+      setRecovery({ bytes: err.original ?? err.bytes, originalUpdates: err.originalUpdates, boardId: id, storeName: err.storeName, context: 'Open board', error: err instanceof Error ? err.message : 'Could not open that board.', autoInspect: Boolean(err.original ?? err.bytes ?? err.storeName) });
+    }
+  };
+  const onImport = async (file: File) => {
+    const op = opRef.current + 1; opRef.current = op;
+    const bytes = new Uint8Array(await file.arrayBuffer()); if (op !== opRef.current) return;
+    let importedDoc: Awaited<ReturnType<typeof importTripPackage>>['doc'] | undefined;
+    try {
+      const imported = await importTripPackage(bytes); importedDoc = imported.doc; if (op !== opRef.current) return;
+      await storeImportedAssets(imported.doc, imported.assets); if (op !== opRef.current) return;
+      const boardId = readTripMeta(imported.doc).boardId;
+      const trip = await openTrip(boardId, { from: imported.doc }); if (op !== opRef.current) { trip.destroy(); return; }
+      importedDoc.destroy(); importedDoc = undefined;
+      if (!adopt(trip)) { setRecovery({ bytes, fileName: file.name, fileType: file.type || 'application/zip', boardId, context: 'Import', error: 'The imported board could not be saved on this device, so it has not been adopted as a saved board.', backupOnly: true, isPackage: true }); return; }
+      setRecovery(null); setLandOnLanes(true); setTab('board'); notify('Imported as a new board · showing Lanes', { label: 'Download original ZIP', run: () => downloadBytes(bytes, file.name || 'original.zip') });
+    } catch (e) {
+      if (op !== opRef.current) return;
+      setOpen(null); setSession(null);
+      setRecovery({ bytes, fileName: file.name, fileType: file.type || 'application/zip', context: 'Import', error: e instanceof Error ? e.message : 'Import failed.', autoInspect: true, isPackage: true });
+    } finally { importedDoc?.destroy(); }
   };
   const start = async (details:NewTrip) => {
     if(startingTrip.current)return;
     startingTrip.current=true;
+    const op = opRef.current + 1; opRef.current = op;
     try {
-      const trip = await openTrip(crypto.randomUUID(), details);
+      const trip = await openTrip(crypto.randomUUID(), details); if (op !== opRef.current) { trip.destroy(); return; }
+      if (!adopt(trip)) return;
       recordOutcome('board_created');
-      adopt(trip);setCreating(null); setTab('board');
-    } catch (e) { notify(e instanceof Error ? e.message : 'Could not start the trip.'); }
+      setCreating(null); setLandOnLanes(false); setTab('board');
+    } catch (e) { if (op === opRef.current) notify(e instanceof Error ? e.message : 'Could not start the trip.'); }
     finally { startingTrip.current=false; }
   };
-  const newBoard = () => { forgetLastBoard(); setOpen(null); setSession(null); };
+  const newBoard = () => { opRef.current += 1; forgetLastBoard(); setOpen(null); setSession(null); };
 
   useEffect(()=>{
-    delete window.writersBoard;
     const inherited=document.querySelector<HTMLElement>('.agent-notes'),previousDisplay=inherited?.style.display;
     if(inherited)inherited.style.display='none';
     return()=>{if(inherited)inherited.style.display=previousDisplay??'';};
   },[]);
   useEffect(()=>{
+    if(booting||recovery)return;
     const controller=new AbortController();let alive=true;setDestinationIndex(undefined);
     void loadDestinations({signal:controller.signal,bundled:bundledDestinations,offline:!navigator.onLine}).then(index=>{if(alive){registryRef.current.splice(0,registryRef.current.length,...index.cities);setDestinations(index.cities);setDestinationIndex(index);}});
     return()=>{alive=false;controller.abort();};
-  },[registryAttempt]);
+  },[registryAttempt,booting,recovery]);
   useEffect(()=>{if(!session||!open)return;const cleanup=installTripApi(session,{onChange:refresh,providers:()=>providers.current,whenSaved:async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are in this tab only. Download a package before closing.');},onDiagnostic:receipt=>diagnostics.record(receipt),exportState:currentTripOperation,exportArtifact:(format,signal)=>createTripArtifact(session,format,signal,{includePrivate:false})});const updated=()=>refresh();session.doc.on('update',updated);return()=>{cleanup();session.doc.off('update',updated);session.destroy();};},[session,open]);
 
+  useEffect(() => () => { opRef.current += 1; }, []);
   useEffect(() => {
+    const op = opRef.current + 1; opRef.current = op;
     const id = lastBoardId();
     if (!id) { setBooting(false); return; }
     // A board that was here but is gone (browser storage cleared or evicted) is said out loud, not skipped (MOT-15).
-    void openTrip(id).then(adopt, () => { forgetLastBoard(); setLost(true); }).finally(() => setBooting(false));
+    void openTrip(id).then((trip) => {
+      if (op !== opRef.current) { trip.destroy(); return; }
+      adopt(trip);
+    }, (e: unknown) => {
+      if (op !== opRef.current) return;
+      const err = e as Error & { storeName?: string; original?: Uint8Array; bytes?: Uint8Array; originalUpdates?: Uint8Array[] };
+      // Nothing stored to repair: forget the pointer and say so on the first screen instead of opening Recovery.
+      if (err.message === 'Trip not found in this browser.' && !err.original && !err.bytes && !err.originalUpdates && !err.storeName) { forgetMissingBoard(id); setLost(true); return; }
+      setRecovery({ bytes: err.original ?? err.bytes, originalUpdates: err.originalUpdates, boardId: id, storeName: err.storeName, context: 'Restore last board', error: err instanceof Error ? err.message : 'Could not open the last board.', autoInspect: Boolean(err.original ?? err.bytes ?? err.storeName) });
+    }).finally(() => { if (op === opRef.current) setBooting(false); });
+    return () => { if (opRef.current === op) opRef.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => () => { open?.destroy(); }, [open]);
@@ -162,8 +228,9 @@ export function TripApp() {
   useEffect(() => { shellRef.current?.scrollTo(0, 0);shellRef.current?.querySelector<HTMLElement>('.mot-nav button[aria-current="page"]')?.scrollIntoView({block:'nearest',inline:'nearest'}); }, [tab, open]);
 
   const destinationProps={registry:destinations,registryStatus:destinationIndex?.status??'loading' as const,registryUpdatedAt:destinationIndex?.retrievedAt,registryError:destinationIndex?.error,onRetryRegistry:registryAttempt<3?()=>setRegistryAttempt(attempt=>attempt+1):undefined};
+  if (recovery) return <TripRecovery source={recovery} onCancel={() => { opRef.current += 1; setRecovery(null); }} onImportFile={(file) => void onImport(file)} onRecovered={(trip) => { opRef.current += 1; if (adopt(trip)) { setRecovery(null); setTab('board'); } }} />;
   if (booting) return <main className="mot" />;
-  if (!open || !session) return <><FirstScreen onStart={(kind) => { setLost(false);setCreating(kind); }} boards={listBoards()} onOpen={(id) => void switchTo(id)}
+  if (!open || !session) return <><input ref={fileRef} type="file" accept=".zip,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void onImport(f); }} /><div className="mot mot-import-corner"><button type="button" className="m-btn small" onClick={() => fileRef.current?.click()}>Import ZIP</button></div><FirstScreen onStart={(kind) => { setLost(false);setCreating(kind); }} boards={listBoards()} onOpen={(id) => void switchTo(id)}
     notice={lost ? 'Your last board is no longer in this browser’s storage. It may have been cleared by the browser or by you. If you exported a ZIP backup, import it to get the board back.' : undefined} />{creating&&<FocusSheet label="Choose destination" onClose={()=>setCreating(null)}><DestinationPicker kind={creating} {...destinationProps} onClose={()=>setCreating(null)} onSave={details=>void start(details)} /></FocusSheet>}</>;
   const meta = readTripMeta(session.doc);
   const contentCity=meta.cityId??citySlug(meta.city),sourceState=fccState?.boardId===meta.boardId&&fccState.cityId===contentCity?fccState:undefined;
@@ -175,22 +242,16 @@ export function TripApp() {
   const host = meta.kind === 'host_guide';
   const boards = listBoards();
 
-  const onImport = async (file: File) => {
-    try {
-      const { doc, assets } = await importTripPackage(new Uint8Array(await file.arrayBuffer()));
-      await storeImportedAssets(doc, assets);
-      const trip = await openTrip(readTripMeta(doc).boardId, { from: doc });
-      doc.destroy();
-      adopt(trip); setTab('board'); notify('Imported as a new board');
-    } catch (e) { notify(e instanceof Error ? e.message : 'Import failed. Your current board is unchanged.'); }
-  };
+
   const guestCopy = async (copyTitle: string, cardIds: Set<string>) => {
+    const op = opRef.current + 1; opRef.current = op;
+    let guest: ReturnType<typeof createGuestCopy> | undefined;
     try {
-      const guest = createGuestCopy(session.doc, { title: copyTitle, cardIds });
-      const trip = await openTrip(readTripMeta(guest).boardId, { from: guest });
-      guest.destroy();
-      adopt(trip); notify('Guest copy created. Your master guide stays unchanged.');
-    } catch (e) { notify(e instanceof Error ? e.message : 'Could not create the guest copy.'); }
+      guest = createGuestCopy(session.doc, { title: copyTitle, cardIds });
+      const trip = await openTrip(readTripMeta(guest).boardId, { from: guest }); if (op !== opRef.current) { trip.destroy(); return; }
+      if (!adopt(trip)) return; notify('Guest copy created. Your master guide stays unchanged.');
+    } catch (e) { if (op === opRef.current) notify(e instanceof Error ? e.message : 'Could not create the guest copy.'); }
+    finally { guest?.destroy(); }
   };
   const addCard = () => {
     if (!newTitle.trim()) return;
@@ -199,7 +260,8 @@ export function TripApp() {
     setNewTitle(''); refresh(); notify('Card added');
   };
 
-  const review = (op?: number) => { setFocusOp(op); setPanel('review'); };
+  const review = (op?: number) => { if(!import.meta.env.DEV)return;setFocusOp(op); setPanel('review'); };
+  const ownFiles=()=>{setFilesSession(session);setPanel('own-files');};
   const undo = () => { const ok = session.undo(YOU.id); refresh(); notify(ok ? 'Undone' : 'Nothing to undo'); };
   const boardItems: MenuEntry[] = [
     { heading: 'Boards on this device' },
@@ -207,6 +269,8 @@ export function TripApp() {
     'divider',
     { label: 'Start a new board', onSelect: newBoard },
     { label: 'Import ZIP', onSelect: () => fileRef.current?.click() },
+    { label: 'Use your own Muse with files', onSelect: ownFiles },
+    ...(import.meta.env.DEV?[{label:'Shared room · local test',onSelect:()=>onOpenSharedRoom(session)}]:[]),
     { label: 'Group preferences', onSelect: () => setPanel('ballot') },
     { label: 'Undo', onSelect: undo },
   ];
@@ -233,11 +297,12 @@ export function TripApp() {
     </aside>
   ) : (
     <aside className="m-panel mot-side" aria-label="Trip">
-      <h1>{meta.title}</h1>
+      {renaming!==null?<form className="mot-rename" onSubmit={event=>{event.preventDefault();try{session.execute(YOU,'trip_rename',{title:renaming});setRenaming(null);refresh();}catch(error){notify(error instanceof Error?error.message:'The trip could not be renamed.');}}}><input aria-label="Trip name" value={renaming} maxLength={120} autoFocus onChange={event=>setRenaming(event.target.value)} /><button type="submit" className="m-btn small primary">Save name</button><button type="button" className="m-btn small ghost" onClick={()=>setRenaming(null)}>Cancel</button></form>
+        :<h1>{meta.title} <button type="button" className="m-btn small ghost mot-rename-btn" onClick={()=>setRenaming(meta.title)}>Rename</button></h1>}
       <div className="mot-trip-meta"><p className="sub">{tripSubtitle(meta) || cityLabel(meta.city)}</p><Saved status={saved} exportedAt={open.lastExportedAt()} /></div>
       <div className="mot-phone-actions">
         <button type="button" className="m-btn small" aria-expanded={briefOpen} aria-controls="mot-brief-body" onClick={() => setBriefOpen(!briefOpen)}>Trip brief <Icon name={briefOpen ? 'chevronUp' : 'chevronDown'} /></button>
-        <button type="button" className="m-btn small" aria-label="Review sample changes" onClick={() => review()}><Icon name="sparkle" />Review samples</button>
+        <DevelopmentSampleReviewButton onReview={()=>review()}/>
       </div>
       <div id="mot-brief-body" className={`mot-brief-body${briefOpen ? ' is-open' : ''}`}><hr className="m-rule" /><BriefPanel key={meta.boardId} session={session} refresh={refresh} notify={notify} /></div>
       <div className="mot-side-actions">
@@ -258,7 +323,7 @@ export function TripApp() {
         <button type="button" className="m-icon-btn" aria-label="Collapse Muse" onClick={() => setMuseOpen(false)}><Icon name="chevronDown" /></button>
       </div>
       <p className="mot-rail-note m-muted">{ghostCount ? `${ghostCount} ${ghostCount === 1 ? 'suggestion waits' : 'suggestions wait'} on your board, dashed.` : 'Your board stays in your hands.'}</p>
-      <button type="button" className="m-btn small" onClick={() => review()}>Review sample changes</button>
+      <DevelopmentSampleReviewButton onReview={()=>review()}/>
     </aside>
   ) : (
     <aside className="m-panel mot-rail collapsed" aria-label="Muse">
@@ -293,25 +358,26 @@ export function TripApp() {
       <input ref={fileRef} type="file" accept=".zip,application/zip" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void onImport(f); }} />
 
       {tab === 'export' ? <ExportScreen key={meta.boardId} session={session} tick={tick} notify={notify} onExported={()=>open.markExported()} /> : tab === 'keepsakes' ? (
-        <div><nav className="mot-keepsake-formats" aria-label="Keepsake formats"><button type="button" className={`m-btn small${keepsakeFormat==='memories'?' ink':''}`} aria-pressed={keepsakeFormat==='memories'} onClick={()=>setKeepsakeFormat('memories')}>Memories</button><button type="button" className={`m-btn small${keepsakeFormat==='magazine'?' ink':''}`} aria-pressed={keepsakeFormat==='magazine'} onClick={()=>setKeepsakeFormat('magazine')}>Magazine</button><button type="button" className={`m-btn small${keepsakeFormat==='postcard'?' ink':''}`} aria-pressed={keepsakeFormat==='postcard'} onClick={()=>setKeepsakeFormat('postcard')}>Photo postcard</button></nav>{keepsakeFormat==='memories'?<MemoryChoice key={meta.boardId} session={session} actor={YOU} tick={tick} saved={saved} notify={notify} refresh={refresh} whenSaved={whenSaved}/>:keepsakeFormat==='magazine'?<MagazineStudio session={session} tick={tick} onExport={()=>setTab('export')} />:<Keepsakes key={meta.boardId} session={session} tick={tick} saved={saved} onExport={() => setTab('export')} onBack={() => setTab('board')} notify={notify} />}</div>
-      ) : tab==='composition' ? <Composition session={session} actor={YOU} refresh={refresh} notify={notify} /> : tab==='fcc'?<FccBrowser key={`${meta.boardId}:${contentCity}`} session={session} actor={YOU} refresh={refresh} notify={notify} onContent={setCityContent} onState={setFccState} initialState={sourceState} /> : (
+        <div><nav className="mot-keepsake-formats" aria-label="Keepsake formats"><button type="button" className={`m-btn small${keepsakeFormat==='memories'?' ink':''}`} aria-pressed={keepsakeFormat==='memories'} onClick={()=>setKeepsakeFormat('memories')}>Memories</button><button type="button" className={`m-btn small${keepsakeFormat==='magazine'?' ink':''}`} aria-pressed={keepsakeFormat==='magazine'} onClick={()=>setKeepsakeFormat('magazine')}>Magazine</button><button type="button" className={`m-btn small${keepsakeFormat==='postcard'?' ink':''}`} aria-pressed={keepsakeFormat==='postcard'} onClick={()=>setKeepsakeFormat('postcard')}>Photo postcard</button></nav>{keepsakeFormat==='memories'?<MemoryChoice key={meta.boardId} session={session} actor={YOU} tick={tick} saved={saved} notify={notify} refresh={refresh} whenSaved={whenSaved}/>:keepsakeFormat==='magazine'?<MagazineStudio session={session} tick={tick} onExport={()=>setTab('export')} onBrowseCollection={()=>setPanel('shirts')} />:<Keepsakes key={meta.boardId} actor={YOU} refresh={refresh} whenSaved={whenSaved} session={session} tick={tick} saved={saved} onExport={() => setTab('export')} onBack={() => setTab('board')} notify={notify} />}</div>
+      ) : tab==='composition' ? <Composition session={session} actor={YOU} refresh={refresh} notify={notify} /> : tab==='fcc'?<FccBrowser key={`${meta.boardId}:${contentCity}`} session={session} actor={YOU} refresh={refresh} notify={notify} onContent={setCityContent} onState={setFccState} initialState={sourceState} onBrowseArt={()=>setPanel('art')} onBrowseShirts={()=>setPanel('shirts')} /> : (
         <div className={`mot-work view-${tab}`}>
           {sidebar}
           <div className="mot-main">
-            {tab === 'board' && <BoardView session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
+            {tab === 'board' && <FreeBoard key={session.boardId} initialView={landOnLanes ? 'lanes' : undefined} whenSaved={whenSaved} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} destinations={destinations} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
             {tab === 'today' && <div className="mot-board"><TodayView whenSaved={whenSaved} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} /></div>}
 
-            {tab === 'map' && <div className="mot-board"><MapView session={session} tick={tick} onBack={() => setTab('board')} /></div>}
+            {tab === 'map' && <div className="mot-board"><MapView session={session} actor={YOU} refresh={refresh} notify={notify} whenSaved={whenSaved} tick={tick} onBack={() => setTab('board')} /></div>}
           </div>
         </div>
       )}
       <div className="mot-guidance-wrap"><TripGuidance phase={tripPhase(meta)}/></div>
       {panel==='ballot'&&<FocusSheet label="Group preferences" onClose={()=>setPanel(null)}><Suspense fallback={<p role="status">Opening group preferences…</p>}><GroupPreferences key={meta.boardId} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} whenSaved={async()=>{await open.whenSaved();if(hasEphemeralAssets(session.doc))throw new Error('Image bytes are still in this tab. Download a personal ZIP backup.');}} onClose={()=>setPanel(null)} /></Suspense></FocusSheet>}
-      {panel === 'review' && <FocusSheet label="Review changes" onClose={() => setPanel(null)}><ProposalReview key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={() => setPanel(null)} pending={pending} focus={focusOp} onPending={setPending} /></FocusSheet>}
+      {import.meta.env.DEV&&panel === 'review' && <FocusSheet label="Development sample changes" onClose={() => setPanel(null)}><ProposalReview key={meta.boardId} session={session} actor={YOU} refresh={refresh} notify={notify} onClose={() => setPanel(null)} pending={pending} focus={focusOp} onPending={setPending} /></FocusSheet>}
       {panel === 'guest' && host && <FocusSheet label="Create a guest copy" onClose={() => setPanel(null)}><GuestCopyPanel key={meta.boardId} session={session} onCreate={(t, ids) => void guestCopy(t, ids)} onClose={() => setPanel(null)} /></FocusSheet>}
       {panel==='destination'&&<FocusSheet label="Change destination" onClose={()=>setPanel(null)}><DestinationPicker current={meta} kind={meta.kind} {...destinationProps} preservedCards={Object.values(boardProjection(session.doc)).flat().map(card=>({id:card.id,title:card.title,sourceCity:destinations.find(row=>row.id===card.source?.cityId)?.name??card.source?.cityId}))} onClose={()=>setPanel(null)} onSave={details=>{try{session.execute(YOU,'trip_meta_update',{city:details.city,cityId:details.cityId,countryCode:details.countryCode,timeZone:details.timeZone,dates:details.dates});setPanel(null);refresh();notify('Destination changed. Existing cards keep their sources; refresh FCC content when ready.');}catch(error){notify(error instanceof Error?error.message:'Destination could not be changed.');}}} /></FocusSheet>}
-      {panel==='art'&&<Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{destination:meta,destinations}} onClose={()=>setPanel(null)} onUpload={async(file,signal)=>{await placeTripUpload(session,YOU,file,signal);refresh();setTab('composition');notify('Photo added to your trip.',{label:'Undo',run:undo});}} onInsert={async(artwork,signal)=>{await placeTripArtwork(session,YOU,artwork,signal);refresh();setTab('composition');notify('Artwork added to your trip.',{label:'Undo',run:undo});}} /></Suspense>}
-      {panel==='muse'&&<MusePlan key={meta.boardId} session={session} actor={YOU} content={scopedContent} onAvailability={setMuseAvailable} onState={setMuseLabel} onGhosts={setMuseGhosts} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} />}
+      {(panel==='art'||panel==='shirts')&&<Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker initialCollection={panel==='shirts'?'shirt':undefined} trip={{destination:meta,destinations,insertionTarget:'magazine'}} onClose={()=>setPanel(null)} onUpload={async(file,signal)=>{await placeTripUpload(session,YOU,file,signal);refresh();setTab('composition');notify('Photo added to your trip.',{label:'Undo',run:undo});}} onInsert={async(artwork,signal)=>{await placeTripArtwork(session,YOU,artwork,signal);refresh();setTab('composition');notify('Artwork added to your trip.',{label:'Undo',run:undo});}} /></Suspense>}
+      {panel==='muse'&&<MusePlan key={meta.boardId} session={session} actor={YOU} content={scopedContent} onAvailability={setMuseAvailable} onState={setMuseLabel} onGhosts={setMuseGhosts} refresh={refresh} notify={notify} onClose={()=>setPanel(null)} onOwnFiles={ownFiles} />}
+      {filesSession===session&&<Suspense fallback={panel==='own-files'?<p role="status">Opening local file exchange…</p>:null}><OwnMuseFiles key={`${meta.boardId}:${session.doc.clientID}`} session={session} open={open} actor={YOU} tick={tick} active={panel==='own-files'} onClose={()=>setPanel(null)} onExport={()=>{setPanel(null);setTab('export');}} refresh={refresh} whenSaved={whenSaved} hasPendingNativeProposalId={id=>pendingNativeId.current===id}/></Suspense>}
 
       {toast && panel!=='art' && <Toast message={toast.message} action={toast.action} onClose={() => setToast(null)} />}
       <div className="mot-foot">

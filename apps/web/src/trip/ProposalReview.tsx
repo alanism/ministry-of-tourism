@@ -2,7 +2,7 @@
 // While Muse is not connected, suggestions come from the labeled test adapter, run as a real job with Stop.
 // An undecided suggestion stays on the Board as ghost cards (Satori change 5); this dialog is their detail view.
 import { useEffect, useRef, useState } from 'react';
-import { JobRunner, applyProposal, describeAgentFailure, fakeReviewSuggestion, undoProposal, type Actor, type ReviewOp, type ReviewSuggestion, type Stage, type TripSession } from '@writers-board/core';
+import { JobRunner, applyProposal, describeAgentFailure, fakeReviewSuggestion, undoProposal, type Actor, type ReviewOp, type ReviewSuggestion, type Stage, type TripSession } from '@mot/core';
 import { Icon } from './ui';
 import { useAssetUrl } from './trip-assets';
 import { recordOutcome } from './metrics';
@@ -116,7 +116,7 @@ export function ProposalReview({ session, actor, refresh, notify, onClose, pendi
         <button type="button" className="m-icon-btn" aria-label="Close review" onClick={onClose}><Icon name="close" /></button>
       </div>
       <div className="mot-sheet-scroll">
-      <div style={{ marginTop: 10 }}><span className="m-chip muse">Test adapter · Muse not connected</span></div>
+      <div style={{ marginTop: 10 }}><span className="m-chip muse">Test adapter · sample changes</span></div>
       <p className="lede t-1">Based on current board</p>
 
       {phase.kind === 'asking' && (

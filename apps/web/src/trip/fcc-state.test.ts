@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import type {FccCityContent,FccResult} from '@writers-board/core';
+import type {FccCityContent,FccResult} from '@mot/core';
 import {finishSourceLoad} from './fcc-state';
 const loaded=(body='Before',city='san-sebastian'):FccResult<FccCityContent>=>({status:'ready',retrievedAt:'2026-10-28',sourceVersion:'v1',value:{city:{id:city,name:city,countryCode:null,timeZone:null},articles:[{id:city+':11',cityId:city,title:'Article',body,source:{id:city+':11',sourceId:'11',provider:'fcc',url:'https://example.org/story',canonicalUrl:'https://example.org/story',cityId:city,kind:'article',retrievedAt:'2026-10-28',version:'v1',origin:'editorial'}}],places:[],almanac:[]}});
 const unavailable:FccResult<FccCityContent>={status:'unavailable',reason:'Timed out',error:{code:'cancelled',message:'Timed out'}};

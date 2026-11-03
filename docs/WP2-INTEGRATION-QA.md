@@ -16,4 +16,4 @@ Start a fresh local Vite instance. Set `MOT_TEST_ORIGIN`, `MOT_PLAYWRIGHT_MODULE
 
 The external WP2 evidence also contains a before/after surface probe and real destination deadline probe. `source-integration.test.ts` prevents attribution regressions; `destination-settlement.test.ts` prevents unbounded registry waits. Existing schema, command, source-integrity, privacy and grounding tests remain unchanged.
 
-These are builder checks, not independent Opus design acceptance or physical iOS/Safari certification. No Hosting deployment, paid model call or credential handling is required. Cards remain at their existing Complete/Implemented status, and the kanban records the exact combined revision, results and outstanding design holds.
+These are builder checks, not independent Muse Wonder design acceptance or physical iOS/Safari certification. No Hosting deployment, paid model call or credential handling is required. Cards remain at their existing Complete/Implemented status, and the kanban records the exact combined revision, results and outstanding design holds.

@@ -1,5 +1,5 @@
 import {expect,it,vi} from 'vitest';
-import {createTrip,encodeTrip,TripSession,type FccCityContent} from '@writers-board/core';
+import {createTrip,encodeTrip,TripSession,type FccCityContent} from '@mot/core';
 import {requestMuseProposal} from './muse-client';
 const human={kind:'human' as const,id:'owner',name:'Owner'};
 const make=()=>new TripSession(createTrip({title:'Private trip title',city:'San Sebastián',cityId:'san-sebastian',timeZone:null}));

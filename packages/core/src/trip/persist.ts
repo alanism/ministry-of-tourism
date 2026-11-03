@@ -1,6 +1,7 @@
 // Trip persistence bytes (MOT-15 core): same Yjs update bytes the web app stores in IndexedDB.
 import * as Y from 'yjs';
 import { TRIP_SCHEMA_VERSION } from './schema.ts';
+import { inspectLegacyTrip } from './trip-recovery.ts';
 import { readAllCards, readAsset, readPresentations, readTripMeta, tripParts } from './model.ts';
 
 export function encodeTrip(doc: Y.Doc): Uint8Array { return Y.encodeStateAsUpdate(doc); }
@@ -18,18 +19,22 @@ export function loadTripWithMigration(update: Uint8Array): {doc:Y.Doc; original:
     const meta=tripParts(doc).meta;
     const initial=meta.get('schemaVersion');
     let version=initial;
-    while(typeof version==='number' && version<TRIP_SCHEMA_VERSION && TRIP_MIGRATIONS[version]) {
-      const from=version;
-      doc.transact(()=>{TRIP_MIGRATIONS[from]!(doc);meta.set('schemaVersion',from+1);});
-      version=from+1;
+    while(version!==TRIP_SCHEMA_VERSION) {
+      if(version===1||version===2) {
+        const inspection=inspectLegacyTrip(encodeTrip(doc));
+        if(inspection.issues.length) { const failure=new Error('Legacy trip card geometry is outside board bounds; repair is required to recover this trip') as Error & {original?:Uint8Array}; failure.original=update.slice(); throw failure; }
+        if(version===1 && TRIP_MIGRATIONS[1]) { doc.transact(()=>{TRIP_MIGRATIONS[1]!(doc);meta.set('schemaVersion',2);}); version=2; continue; }
+        doc.transact(()=>{meta.set('schemaVersion',TRIP_SCHEMA_VERSION);}); version=TRIP_SCHEMA_VERSION; continue;
+      }
+      if(typeof version==='number' && TRIP_MIGRATIONS[version]) { const from=version; doc.transact(()=>{TRIP_MIGRATIONS[from]!(doc);meta.set('schemaVersion',from+1);}); version=from+1; continue; }
+      throw new Error(`Unsupported trip version ${String(version)}; expected ${TRIP_SCHEMA_VERSION}`);
     }
-    if(version!==TRIP_SCHEMA_VERSION)throw new Error(`Unsupported trip version ${String(version)}; expected ${TRIP_SCHEMA_VERSION}`);
     const parts=tripParts(doc);
     readTripMeta(doc);readAllCards(parts);readPresentations(parts);
     for(const id of parts.assets.keys())readAsset(parts,id);
     const migrated=initial!==version;
     return {doc,original:migrated?update.slice():null,migrated};
-  } catch(error) {doc.destroy();throw error;}
+  } catch(error) { if(error && typeof error==='object' && !(error as {original?:unknown}).original) (error as {original?:Uint8Array}).original=update.slice(); doc.destroy();throw error;}
 }
 
 export function loadTrip(update: Uint8Array): Y.Doc {

@@ -1,6 +1,6 @@
 // Below-board guidance (MOT-116): quiet native disclosures rendered from the one guidance source.
 // Content is in the page from the first render; nothing is fetched on click.
-import { GUIDE_PATH, GUIDE_SECTIONS, GUIDE_TITLE, GUIDE_VERSION, type TripPhase } from '@writers-board/core';
+import { GUIDE_PATH, GUIDE_SECTIONS, GUIDE_TITLE, GUIDE_VERSION, type TripPhase } from '@mot/core';
 
 export function TripGuidance({ phase }: { phase: TripPhase }) {
   return (

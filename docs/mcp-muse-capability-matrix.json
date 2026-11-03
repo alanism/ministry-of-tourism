@@ -1,0 +1,136 @@
+{
+  "observedOn": "2026-11-01",
+  "userIdentifiedReference": "https://platform.muse.ai/docs",
+  "target": {
+    "product": "Meta Muse personal agent / Connector Platform",
+    "executionEnvironment": "Muse dedicated cloud VM",
+    "surfaces": "Web/mobile delivery surfaces connect to the VM; no local CLI is required for MoT discovery.",
+    "build": "Not exposed by the public connector guidelines; per-VM runtime build NOT OBSERVED.",
+    "notTarget": [
+      "Muse Code CLI",
+      "Meta Model API"
+    ]
+  },
+  "documentedCapabilities": [
+    {
+      "capability": "Dedicated cloud filesystem, terminal, browser and artifact creation",
+      "source": "https://introducing.muse.ai/",
+      "evidenceClass": "official documentation"
+    },
+    {
+      "capability": "Cloud VM, client/VM separation, API/CLI custom connectors and Sentinel-controlled egress",
+      "source": "https://research.meta.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse",
+      "evidenceClass": "official documentation"
+    },
+    {
+      "capability": "API or MCP connector documentation accepted in platform submission; approved connector discovery and review",
+      "source": "https://platform.muse.ai/docs",
+      "evidenceClass": "official documentation"
+    },
+    {
+      "capability": "Custom connector creation for services outside the listed connectors",
+      "source": "https://www.meta.com/help/superintelligence/1687253048996149/",
+      "evidenceClass": "official documentation"
+    }
+  ],
+  "runtimeChecks": [
+    {
+      "id": "M138-C0",
+      "capability": "Actual Muse cloud agent calls an authorized read-only reference MCP service; capture actual transport/revision",
+      "runtimeStatus": "NOT EXECUTED",
+      "reason": "No cloud-agent execution or reference-service transcript is available in this session. A reference result would not certify MoT integration."
+    },
+    {
+      "id": "M138-C1",
+      "capability": "Cloud agent discovers/calls an actual MoT public MCP endpoint",
+      "runtimeStatus": "NOT EXECUTED",
+      "reason": "No MoT endpoint is implemented or deployed; MOT-140 owns it. No approved MoT platform connector exists."
+    },
+    {
+      "id": "M138-C2",
+      "capability": "Observe actual Muse transport/protocol/resource-or-tool fallback",
+      "runtimeStatus": "NOT EXECUTED",
+      "reason": "Public platform guidelines do not pin these values; requires a cloud-agent/server transcript."
+    },
+    {
+      "id": "M138-F1",
+      "capability": "Deliberate selected context reaches Muse VM unchanged",
+      "runtimeStatus": "NOT EXECUTED",
+      "reason": "No cloud-agent file receipt available. No private/user trip is authorized or needed for the synthetic probe."
+    },
+    {
+      "id": "M138-F2",
+      "capability": "Muse VM returns a downloadable .mot.proposal.json with a matching digest",
+      "runtimeStatus": "NOT EXECUTED",
+      "reason": "Generic artifact creation is documented; this exact file/MIME/download workflow has not been exercised."
+    },
+    {
+      "id": "M138-F3",
+      "capability": "MoT validates/reviews/applies/undoes/saves returned proposal on desktop/mobile",
+      "runtimeStatus": "NOT EXECUTED",
+      "reason": "Exchange importer is MOT-141; actual end-to-end client/device acceptance is MOT-142."
+    }
+  ],
+  "observedButExcluded": {
+    "product": "Muse Code",
+    "version": "1.4.14 (1.4.14-R7309.1)",
+    "check": "muse --version / --help only",
+    "inference": "Does not verify the target cloud agent. No provider run or paid call."
+  },
+  "consumerCloudAgentExecuted": false,
+  "productionConnectorApproved": false,
+  "privateTripAccess": "DEFERRED",
+  "protocol": {
+    "currentSpecificationObserved": "2026-07-28",
+    "existingSdk": {
+      "package": "@modelcontextprotocol/sdk",
+      "version": "1.32.1",
+      "lockfile": "package-lock.json",
+      "latestProtocolInInstalledSdk": "2025-11-25",
+      "defaultProtocolInInstalledSdk": "2025-03-26"
+    },
+    "candidateProfile": "Existing SDK / 2025-11-25 Streamable HTTP only if the actual cloud handshake proves compatibility. No upgrade selected by MOT-138.",
+    "actualMuseProtocol": "NOT OBSERVED",
+    "actualMuseRuntime": "NOT OBSERVED",
+    "nodeObserved": "v24.14.0",
+    "npmObserved": "11.9.0"
+  },
+  "review": {
+    "independentContractReview": {
+      "initialCommit": "9ebccc4b0fb6f51ec81e0560af917139e203a6d4",
+      "round1Disposition": "REQUEST CHANGES",
+      "findings": [
+        "AS138-001",
+        "AS138-002",
+        "AS138-003"
+      ],
+      "finalDispositionSource": "External review receipt pinned to the exact corrected commit; not inferred from this file."
+    },
+    "ownerContractDisposition": "PENDING",
+    "clientCompatibilityClaimAllowed": false
+  },
+  "proposalIdentity": {
+    "key": [
+      "boardId",
+      "proposal.id"
+    ],
+    "boundFields": [
+      "contextRequestId",
+      "canonicalEnvelopeSha256"
+    ],
+    "canonicalPayload": "RFC8785(full proposalArtifact envelope)",
+    "reservation": "durable-before-apply",
+    "legacyCollision": "reject-and-reissue",
+    "retainedStates": [
+      "reserved",
+      "partly-applied",
+      "applied",
+      "rejected",
+      "cancelled",
+      "expired",
+      "undone"
+    ],
+    "undoGate": "matching-local-identity-receipt-only",
+    "scope": "Proposed importer obligation, not installed identity storage or authority."
+  }
+}

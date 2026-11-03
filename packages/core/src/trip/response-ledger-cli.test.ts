@@ -1,5 +1,5 @@
 import {expect,it} from 'vitest';
-import {mkdtempSync,readFileSync,writeFileSync,rmSync,statSync,utimesSync,realpathSync} from 'node:fs';
+import {mkdtempSync,readFileSync,writeFileSync,rmSync,statSync,utimesSync,realpathSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -24,4 +24,14 @@ it('refuses to overwrite config/response files and reports a busy ledger for ret
 it('W1 F4: reports a missing output directory as a path error, not a busy ledger',async()=>fixture(p=>{
  const out=join(p.root,'missing-dir','ledger.json'),failed=cli(['--config',p.config,'--out',out,'--resolve-household','family',p.response]);
  expect(failed.status).toBe(1);expect(failed.stderr).not.toMatch(/busy/i);expect(failed.stderr).toMatch(/output folder|directory/i);expect(failed.stderr).toMatch(/previous ledger.*unchanged/i);
+}));
+it('flushes the containing directory or uses a native Windows write-through move before successful replacement',async()=>fixture(p=>{
+ const audit=join(p.root,'durability.json'),hook=join(p.root,'durability-hook.mjs');writeFileSync(hook,`import fs from 'node:fs';import cp from 'node:child_process';import {syncBuiltinESMExports} from 'node:module';const audit=${JSON.stringify(audit)},flush=fs.fsyncSync,spawn=cp.spawnSync;fs.fsyncSync=fd=>{if(fs.fstatSync(fd).isDirectory())fs.writeFileSync(audit,JSON.stringify({directory:true}));return flush(fd)};cp.spawnSync=(command,args,options)=>{if(/powershell(?:\\.exe)?$/i.test(String(command)))fs.writeFileSync(audit,JSON.stringify({native:true,command:args.join(' ')}));return spawn(command,args,options)};syncBuiltinESMExports();`);
+ const result=spawnSync(process.execPath,['--import',new URL('file:///'+hook.replace(/\\/g,'/')).href,script,'--config',p.config,'--out',p.out,'--resolve-household','family',p.response],{encoding:'utf8'});
+ expect(result.status,result.stderr).toBe(0);expect(existsSync(audit),'A successful rename must cross the platform durability barrier').toBe(true);const proof=JSON.parse(readFileSync(audit,'utf8'));if(process.platform==='win32'){expect(proof.native).toBe(true);expect(proof.command).toMatch(/WRITE_THROUGH/);}else expect(proof.directory).toBe(true);
+}));
+it('reports uncertain durability rather than claiming the old file is unchanged after a failed post-rename flush',async()=>fixture(p=>{
+ const hook=join(p.root,'flush-failure.mjs');writeFileSync(hook,`import fs from 'node:fs';import cp from 'node:child_process';import path from 'node:path';import {syncBuiltinESMExports} from 'node:module';const root=${JSON.stringify(p.root)},out=${JSON.stringify(p.out)},flush=fs.fsyncSync,spawn=cp.spawnSync;fs.fsyncSync=fd=>{if(fs.fstatSync(fd).isDirectory())throw new Error('Injected directory flush failure');return flush(fd)};cp.spawnSync=(command,args,options)=>{if(/powershell(?:\\.exe)?$/i.test(String(command))){const temp=fs.readdirSync(root).find(n=>n.endsWith('.tmp'));if(!temp)throw new Error('Missing same-directory candidate');fs.renameSync(path.join(root,temp),out);return{status:1,stdout:'',stderr:'Injected post-rename flush failure'}}return spawn(command,args,options)};syncBuiltinESMExports();`);
+ const result=spawnSync(process.execPath,['--import',new URL('file:///'+hook.replace(/\\/g,'/')).href,script,'--config',p.config,'--out',p.out,'--resolve-household','family',p.response],{encoding:'utf8'});
+ expect(result.status).toBe(1);expect(result.stderr).toMatch(/durab|reopen/i);expect(result.stderr).not.toMatch(/previous ledger is unchanged/i);expect(JSON.parse(readFileSync(p.out,'utf8')).entries).toHaveLength(1);
 }));

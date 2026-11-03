@@ -2,9 +2,9 @@
 
 ## Scope and authorship
 
-Owner authorized Engineering Council lenses, Muse Wonder implementation, Codex acceptance, merge and production deployment. WP5 contains MOT-93–97. MOT-94 was the sole unfinished card. MOT-93 remains administratively owner-closed: no new PDF generation, proof, benchmark, PDF-only implementation or independent PDF acceptance was performed. MOT-95 remains accepted for the local runtime only; the production key, authenticated ingress, spending and retention restrictions are not waived. MOT-96's hosting mapping and MOT-97's journal adapter are preserved.
+Owner authorized Engineering Council lenses, Muse Wonder implementation, Muse Wonder acceptance, merge and production deployment. WP5 contains MOT-93–97. MOT-94 was the sole unfinished card. MOT-93 remains administratively owner-closed: no new PDF generation, proof, benchmark, PDF-only implementation or independent PDF acceptance was performed. MOT-95 remains accepted for the local runtime only; the production key, authenticated ingress, spending and retention restrictions are not waived. MOT-96's hosting mapping and MOT-97's journal adapter are preserved.
 
-Council lenses: Carmack (real bytes, deterministic commit/cancellation), Carlini (allowlisted diagnostics and private-content boundaries), Schaad (state clarity, readable responsive controls), Tan (test-first and exact release evidence). Codex reviewed generated changes and ran acceptance; it does not claim an independent Opus review.
+Council lenses: Carmack (real bytes, deterministic commit/cancellation), Carlini (allowlisted diagnostics and private-content boundaries), Schaad (state clarity, readable responsive controls), Tan (test-first and exact release evidence). Muse Wonder reviewed generated changes and ran acceptance; it does not claim an independent Muse Wonder review.
 
 Actual implementation model: `muse-wonder-1.0` through Meta's API. Tool-free prompts contain relevant source only, never credentials. Exact generated replacements were reviewed and applied after RED. Request receipts and full responses are retained in the local evidence directory.
 
@@ -14,7 +14,7 @@ The original public main exposed injected private error text in the ZIP failure 
 
 ZIP errors now use safe class-specific recovery copy; diagnostic step is an optional fixed allowlist projected again at serialization. Missing and corrupt selected images receive unavailable/invalid_input classes. Cancellation and browser-storage fallback retain their actual step, with no raw message or private text. No ready/download URL appears before verified bytes; cancelled late results cannot create an advertised artifact. Ready download and durable browser storage remain distinct facts. Narrow cards reserve space above the receipt for the stamp, metadata aligns, and kept actions share a row. Header responsiveness preserves a legible brand and visible active Export tab; the shortcut has an accessible name and tooltip.
 
-Codex rejected Wonder's first inherited-property step check and an unnecessary tablet single-column change; Wonder regenerated both. A second visual pass caught desktop header compression too. No existing assertion, timeout, harness configuration, type rule, package dependency or PDF-specific branch was changed.
+Muse Wonder rejected Wonder's first inherited-property step check and an unnecessary tablet single-column change; Wonder regenerated both. A second visual pass caught desktop header compression too. No existing assertion, timeout, harness configuration, type rule, package dependency or PDF-specific branch was changed.
 
 ## Verification
 

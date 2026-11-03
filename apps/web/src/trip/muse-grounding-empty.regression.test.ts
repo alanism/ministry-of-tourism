@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMuseRequest, createTrip, TripSession, type FccCityContent } from '@writers-board/core';
+import { buildMuseRequest, createTrip, TripSession, type FccCityContent } from '@mot/core';
 
 describe('MOT-82 Muse grounding truthfulness', () => {
   it('reports unavailable grounding when the selected-city issue contains no articles', () => {

@@ -1,5 +1,5 @@
 {
-  "name": "writers-board",
+  "name": "ministry-of-tourism",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -10,10 +10,7 @@
     "check": "vitest run && npm run typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/bridge --noEmit && tsc -p packages/mot-server --noEmit && tsc -p apps/web --noEmit",
-    "bridge": "node packages/bridge/src/cli.ts",
-    "lenses:sync": "node scripts/sync-lenses.ts",
-    "lenses:build": "node scripts/build-lenses.ts"
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p packages/mot-server --noEmit && tsc -p apps/web --noEmit"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

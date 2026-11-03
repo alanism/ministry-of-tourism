@@ -1,5 +1,6 @@
 // Trip commands (MOT-12): the only way to change a trip. Validate before writing.
 import { z } from 'zod';
+import {commitManagedDeclaration,commitVotingOpen,commitPreparedVotingClose,preparedVotingCloseSchema,assertVotingHousehold,assertLegacyVotingConfiguration} from './voting-lifecycle.ts';
 import {preparedGroupChangeSchema,commitPreparedGroupChange,validatePlanningGroup} from './group-workspace.ts';
 import {proposeGroupSchedule} from './schedule-proposal.ts';
 import {checkScheduleFeasibility} from './schedule-feasibility.ts';
@@ -12,7 +13,11 @@ import { groupPreferencesSchema, validateGroupUpdate } from './group-preferences
 import * as Y from 'yjs';
 import { CommandError, type CommandContext, type CommandDef } from '../commands/define.ts';
 import { presentationScope, readAllCards, readAsset, readCard, readPresentation, readPresentations, readTripMeta, writeAsset, writeCard, writePresentation, type TripParts } from './model.ts';
-import { tripMetaSchema, assetSchema, bookingSchema, CARD_KINDS, currentFactSchema, datesSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
+import { tripBoardDuplicate } from './board-duplicate.ts';
+import { tripBoardPaste } from './board-clipboard.ts';
+import { tripAssetReplace, tripKeepsakeCaption, tripKeepsakeSelect } from './keepsake-authoring.ts';
+import { selectedAssetClosure } from './asset-closure.ts';
+import { tripMetaSchema, assetSchema, bookingSchema, CARD_KINDS, currentFactSchema, datesSchema, locationSchema, mapUrlSchema, presentationFieldsSchema, PROVENANCES, SCOPES, sourceRefSchema, STAGES, TASK_STATUSES, timeZoneSchema, tripCardSchema, type DestinationRecord, type TripCard } from './schema.ts';
 
 /** Trip commands run against the trip doc's own parts, typed as such (#10: no BoardParts stand-in). */
 export interface TripCommandContext { doc: Y.Doc; parts: TripParts; actor: CommandContext['actor']; newId: () => string; destinations?: readonly DestinationRecord[]; }
@@ -34,8 +39,11 @@ const now = () => new Date().toISOString();
 
 /** Referencing media is a read/sharing operation even when no existing card is being edited. */
 export function assertAgentMediaAccess(parts:TripParts,assetIds:readonly string[]):void {
-  const wanted=new Set(assetIds);
-  if(readAllCards(parts).some(card=>card.scope==='private'&&card.assetIds.some(id=>wanted.has(id))) || readPresentations(parts).some(p=>p.assetId&&wanted.has(p.assetId)&&presentationScope(parts,p)==='private'))throw new CommandError('scope','Agents cannot reference private media');
+  if(!assetIds.length)return;
+  const privateRoots=[...readAllCards(parts).filter(card=>card.scope==='private').flatMap(card=>card.assetIds),...readPresentations(parts).filter(p=>presentationScope(parts,p)==='private').flatMap(p=>p.assetId?[p.assetId]:[])];
+  const protectedIds=new Set([...privateRoots,...selectedAssetClosure(parts,privateRoots).map(a=>a.id)]);
+  const wanted=new Set([...assetIds,...selectedAssetClosure(parts,assetIds.filter(id=>parts.assets.has(id))).map(a=>a.id)]);
+  if([...wanted].some(id=>protectedIds.has(id)))throw new CommandError('scope','Agents cannot reference private media or its original/source ancestors');
 }
 
 export const tripCardCreate = defineTripCommand({
@@ -45,13 +53,14 @@ export const tripCardCreate = defineTripCommand({
     kind: z.enum(CARD_KINDS), title: z.string().max(500).default(''), body: z.string().max(20000).default(''),
     stage: z.enum(STAGES).default('plan'), status: opt(z.enum(TASK_STATUSES)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
     time: opt(z.string().regex(/^\d{2}:\d{2}$/)), placeId: opt(id),
-    location: opt(z.object({ lat: z.number().min(-90).max(90), lng: z.number().min(-180).max(180), source: z.enum(['catalog', 'traveler']) })),
+    location: opt(locationSchema), address: opt(z.string().max(1000)), mapUrl: opt(mapUrlSchema),
     booking:opt(bookingSchema), scope: opt(z.enum(SCOPES)), provenance: z.enum(PROVENANCES).default('traveler'),
     source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)),
-    assetIds: z.array(id).max(100).default([]), x: z.number().finite().default(0), y: z.number().finite().default(0),
+    assetIds: z.array(id).max(100).default([]), x: z.number().finite().default(0), y: z.number().finite().default(0), boardWidth: opt(z.number().finite().min(400).max(5000)), boardHeight: opt(z.number().finite().min(300).max(5000)), boardStack: opt(z.number().int().min(-1000000).max(1000000)),
   }).strict(),
   run: (ctx, input) => {
     if (input.status !== undefined && input.kind !== 'task') throw new CommandError('invalid_input', 'status is only for kind task');
+    if(ctx.actor.kind==='agent'&&(input.address!==undefined||input.mapUrl!==undefined))throw new CommandError('scope','Only a person records a manual address or map link');
     if(ctx.actor.kind==='agent'&&input.booking!==undefined)throw new CommandError('scope','Only a person records booking status');
     if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,input.assetIds);
     const cardId = ctx.newId();
@@ -65,13 +74,14 @@ export const tripCardCreate = defineTripCommand({
 export const tripCardUpdate = defineTripCommand({
   name: 'trip_card_update', title: 'Update a trip card', description: 'Changes title, body, day, time or scope after validating. null clears day or time.',
   access: 'write',
-  input: z.object({ id, booking:opt(bookingSchema), title: opt(z.string().max(500)), body: opt(z.string().max(20000)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()), time: opt(z.string().regex(/^\d{2}:\d{2}$/).nullable()), scope: opt(z.enum(SCOPES)), source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)) }).strict(),
+  input: z.object({ id, booking:opt(bookingSchema), title: opt(z.string().max(500)), body: opt(z.string().max(20000)), day: opt(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable()), time: opt(z.string().regex(/^\d{2}:\d{2}$/).nullable()), location: opt(locationSchema.nullable()), address: opt(z.string().max(1000).nullable()), mapUrl: opt(mapUrlSchema.nullable()), scope: opt(z.enum(SCOPES)), source: opt(sourceRefSchema), sourceText: opt(z.string().max(100000)), travelerNote: opt(z.string().max(20000)), currentFacts: opt(z.array(currentFactSchema).max(100)) }).strict(),
   run: (ctx, input) => {
     if(ctx.actor.kind==='agent'&&input.booking!==undefined)throw new CommandError('scope','Only a person records booking status');
+    if(ctx.actor.kind==='agent'&&(input.location!==undefined||input.address!==undefined||input.mapUrl!==undefined))throw new CommandError('scope','Only a person edits a manual location');
     const card = find(ctx.parts, input.id);
     const day = input.day === null ? undefined : input.day ?? card.day;
     const time = input.time === null ? undefined : input.time ?? card.time;
-    writeCard(ctx.parts, { ...card, booking:input.booking??card.booking, title: input.title ?? card.title, body: input.body ?? card.body, day, time, scope: input.scope ?? card.scope, source: input.source ?? card.source, sourceText: input.sourceText ?? card.sourceText, travelerNote: input.travelerNote ?? card.travelerNote, currentFacts: input.currentFacts ?? card.currentFacts, updatedAt: now() });
+    writeCard(ctx.parts, { ...card, booking:input.booking??card.booking, title: input.title ?? card.title, body: input.body ?? card.body, day, time, location: input.location === null ? undefined : input.location ?? card.location, address: input.address === null ? undefined : input.address ?? card.address, mapUrl: input.mapUrl === null ? undefined : input.mapUrl ?? card.mapUrl, scope: input.scope ?? card.scope, source: input.source ?? card.source, sourceText: input.sourceText ?? card.sourceText, travelerNote: input.travelerNote ?? card.travelerNote, currentFacts: input.currentFacts ?? card.currentFacts, updatedAt: now() });
     return { id: input.id };
   },
 });
@@ -79,10 +89,10 @@ export const tripCardUpdate = defineTripCommand({
 export const tripCardMove = defineTripCommand({
   name: 'trip_card_move', title: 'Move a trip card', description: 'Moves a card between stages and/or to x,y.',
   access: 'write',
-  input: z.object({ id, stage: opt(z.enum(STAGES)), x: opt(z.number().finite()), y: opt(z.number().finite()) }).strict(),
+  input: z.object({ id, stage: opt(z.enum(STAGES)), x: opt(z.number().finite()), y: opt(z.number().finite()), boardWidth: opt(z.number().finite().min(400).max(5000)), boardHeight: opt(z.number().finite().min(300).max(5000)), boardStack: opt(z.number().int().min(-1000000).max(1000000)) }).strict(),
   run: (ctx, input) => {
     const card = find(ctx.parts, input.id);
-    writeCard(ctx.parts, { ...card, stage: input.stage ?? card.stage, x: input.x ?? card.x, y: input.y ?? card.y, updatedAt: now() });
+    writeCard(ctx.parts, { ...card, stage: input.stage ?? card.stage, x: input.x ?? card.x, y: input.y ?? card.y, boardWidth: input.boardWidth ?? card.boardWidth, boardHeight: input.boardHeight ?? card.boardHeight, boardStack: input.boardStack ?? card.boardStack, updatedAt: now() });
     return { id: input.id };
   },
 });
@@ -105,7 +115,7 @@ export const tripAssetAttach = defineTripCommand({
   input: z.object({ cardId: id, asset: assetSchema }).strict(),
   run: (ctx, input) => {
     const card = find(ctx.parts, input.cardId);
-    if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id]);
+    if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id,...(input.asset.derivedFrom?[input.asset.derivedFrom]:[])]);
     writeAsset(ctx.parts, input.asset);
     if (!card.assetIds.includes(input.asset.id)) writeCard(ctx.parts, { ...card, assetIds: [...card.assetIds, input.asset.id], updatedAt: now() });
     return { id: input.asset.id };
@@ -126,7 +136,8 @@ export const tripLineageSync = defineTripCommand({
   input: z.object({ id, card: tripCardSchema }).strict(),
   run: (ctx, input) => {
     const existing = find(ctx.parts, input.id);
-    writeCard(ctx.parts, { ...input.card, id: existing.id, x: existing.x, y: existing.y, status: existing.status, travelerNote: existing.travelerNote, scope: 'guide', lineage: input.card.lineage, updatedAt: now() });
+    const keepsakes = existing.assetIds.at(-1) === input.card.assetIds.at(-1) ? existing.keepsakes : existing.keepsakes && Object.fromEntries(Object.entries(existing.keepsakes).map(([format, draft]) => [format, { ...draft, photoChanged: true as const }]));
+    writeCard(ctx.parts, { ...input.card, id: existing.id, x: existing.x, y: existing.y, boardWidth: existing.boardWidth, boardHeight: existing.boardHeight, boardStack: existing.boardStack, status: existing.status, travelerNote: existing.travelerNote, keepsakes, scope: 'guide', lineage: input.card.lineage, updatedAt: now() });
     return { id: input.id };
   },
 });
@@ -158,14 +169,20 @@ export const tripMetaUpdate = defineTripCommand({
     ctx.parts.meta.set('city',input.city);ctx.parts.meta.set('timeZone',input.timeZone);
     for (const key of ['cityId','countryCode'] as const) if (input[key] === undefined) ctx.parts.meta.delete(key); else ctx.parts.meta.set(key,input[key]);
     if (input.dates) ctx.parts.meta.set('dates',input.dates);
-    const {groupPreferences,groupBallots,groupWorkspace,memoryWorkflow,...publicMeta}=readTripMeta(ctx.doc);
-    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{}),...(groupWorkspace?{groupWorkspace}:{}),...(memoryWorkflow?{memoryWorkflow}:{})};
+    const {groupPreferences,groupBallots,groupWorkspace,groupVotingVersion,memoryWorkflow,keepsakeSelection,...publicMeta}=readTripMeta(ctx.doc);
+    return ctx.actor.kind==='agent'?publicMeta:{...publicMeta,...(groupPreferences?{groupPreferences}:{}),...(groupBallots?{groupBallots}:{}),...(groupWorkspace?{groupWorkspace}:{}),...(groupVotingVersion?{groupVotingVersion}:{}),...(memoryWorkflow?{memoryWorkflow}:{}),...(keepsakeSelection?{keepsakeSelection}:{})};
   },
+});
+
+export const tripRename = defineTripCommand({
+  name: 'trip_rename', title: 'Rename trip', description: 'Changes the trip title shown on the board and magazine cover.', access: 'write',
+  input: z.object({title:z.string().trim().min(1).max(120)}).strict(),
+  run: (ctx,input) => {ctx.parts.meta.set('title',input.title);return {title:input.title};},
 });
 
 export const tripAssetRegister = defineTripCommand({
   name:'trip_asset_register',title:'Register trip media',description:'Registers media for a native decoration.',access:'write',input:z.object({asset:assetSchema}).strict(),
-  run:(ctx,input)=>{if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id]);writeAsset(ctx.parts,input.asset);return{id:input.asset.id};},
+  run:(ctx,input)=>{if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id,...(input.asset.derivedFrom?[input.asset.derivedFrom]:[])]);writeAsset(ctx.parts,input.asset);return{id:input.asset.id};},
 });
 
 export const tripMagazineTeeSelect=defineTripCommand({
@@ -227,7 +244,7 @@ export const tripBallotUpdate=defineTripCommand({
   name:'trip_ballot_update',title:'Save household shortlist',description:'Person-only local response. Rank, stamp and optional shared note stay independent; never books or shares anything.',access:'write',humanOnly:true,input:groupBallotSchema,
   run:(ctx,input)=>{
     const meta=readTripMeta(ctx.doc);
-    try{validateLocalBallot(input,meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+    try{assertVotingHousehold(ctx.doc,input);validateLocalBallot(input,meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
     const ballots=meta.groupBallots??[],index=ballots.findIndex(b=>ballotKey(b)===ballotKey(input));
     if(index<0)ballots.push(input);else ballots[index]=input;
     ctx.parts.meta.set('groupBallots',ballots);return structuredClone(input);
@@ -236,7 +253,7 @@ export const tripBallotUpdate=defineTripCommand({
 export const tripBallotRead=defineTripCommand({name:'trip_ballot_read',title:'Read local household responses',description:'Person-only local responses; no response is distinct from an empty shortlist.',access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupBallots??[]});
 export const tripBallotClear=defineTripCommand({name:'trip_ballot_clear',title:'Remove local household response',description:'Return a household and round to no response; Undo is available.',access:'write',humanOnly:true,input:groupBallotKeySchema,run:(ctx,input)=>{
   const meta=readTripMeta(ctx.doc);
-  try{validateLocalBallot({...input,rankings:[],stamps:[],shared_note:''},meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
+  try{assertVotingHousehold(ctx.doc,input);validateLocalBallot({...input,rankings:[],stamps:[],shared_note:''},meta.groupPreferences);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid ballot');}
   ctx.parts.meta.set('groupBallots',(meta.groupBallots??[]).filter(b=>ballotKey(b)!==ballotKey(input)));return structuredClone(input);
 }});
 
@@ -245,7 +262,7 @@ export const tripGroupConfigure = defineTripCommand({
   access:'write',humanOnly:true,input:groupPreferencesSchema,
   run:(ctx,input)=>{
     const meta=readTripMeta(ctx.doc);
-    try{validateGroupUpdate(meta.groupPreferences,input,meta.boardId);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid group declaration');}
+    try{assertLegacyVotingConfiguration(ctx.doc,input);validateGroupUpdate(meta.groupPreferences,input,meta.boardId);}catch(error){throw new CommandError('invalid_input',error instanceof Error?error.message:'Invalid group declaration');}
     ctx.parts.meta.set('groupPreferences',input);return structuredClone(input);
   },
 });
@@ -254,4 +271,8 @@ export const tripGroupRead = defineTripCommand({
   access:'read',humanOnly:true,input:z.object({}).strict(),run:ctx=>readTripMeta(ctx.doc).groupPreferences??null,
 });
 
-export const TRIP_COMMANDS: TripCommand[] = [tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect];
+export const tripVotingDeclare=defineTripCommand({name:'trip_voting_declare',title:'Declare a managed voting round',description:'Person-only explicit positional method, frozen roster and fresh proposal. Does not open voting.',access:'write',humanOnly:true,input:groupPreferencesSchema,run:(ctx,input)=>commitManagedDeclaration(ctx.doc,input)});
+export const tripVotingOpen=defineTripCommand({name:'trip_voting_open',title:'Open a declared voting round',description:'Person-only opening; responses delivered before opening remain uncounted.',access:'write',humanOnly:true,input:preferenceRoundSchema,run:(ctx,input)=>commitVotingOpen(ctx.doc,input)});
+export const tripVotingClose=defineTripCommand({name:'trip_voting_close',title:'Seal a confirmed voting result',description:'Person-only prepared close. A readable sealed result survives ordinary Undo; revising needs a fresh round.',access:'write',humanOnly:true,input:z.object({prepared:preparedVotingCloseSchema}).strict(),run:(ctx,input)=>commitPreparedVotingClose(ctx.doc,ctx.actor,input.prepared)});
+
+export const TRIP_COMMANDS: TripCommand[] = [tripAssetReplace,tripKeepsakeCaption,tripKeepsakeSelect,tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripRename, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate,tripBoardPaste];

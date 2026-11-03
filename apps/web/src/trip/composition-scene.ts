@@ -1,4 +1,4 @@
-import {readAsset,readAllCards,readPresentation,type MagazinePage,type Presentation,type TripSession} from '@writers-board/core';
+import {readAsset,readAllCards,readPresentation,type MagazinePage,type Presentation,type TripSession} from '@mot/core';
 import type {EditBox} from './composition-geometry';
 export const DEFAULT_LAYOUT={dx:0,dy:0,scaleX:1,scaleY:1};
 export type SceneObject={key:string;paintGroup:string;pageId:string;pageIndex:number;presentation:Presentation;box:EditBox;local:EditBox;parent:DOMMatrix;label:string;origin?:string;credit?:string;sourceUrl?:string;retrievedAt?:string;fit:string;sourceWidth:number;sourceHeight:number};

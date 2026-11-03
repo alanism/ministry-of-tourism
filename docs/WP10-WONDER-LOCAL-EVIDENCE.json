@@ -1,0 +1,306 @@
+{
+  "date": "2026-10-31",
+  "implementationModel": "muse-wonder-1.0",
+  "orchestrator": "Muse Wonder",
+  "sourceCommit": "e269e851721fbed728e9ccdbc02b7fedc7e4b7b9",
+  "baseline": "22e35fe9fae990af906cd651179de038af81fb95",
+  "actualModelCalls": [
+    {
+      "phase": "final-repair",
+      "id": "chatcmpl-01a18f0a-ad5f-703f-bc63-79357484b677",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 8363,
+        "prompt_tokens": 16919,
+        "total_tokens": 25282,
+        "completion_tokens_details": {
+          "reasoning_tokens": 5746
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 50.97,
+      "finishReason": "stop"
+    },
+    {
+      "phase": "implementation",
+      "id": "chatcmpl-01a18f02-9a51-7452-9f90-cbb3513ef774",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 20159,
+        "prompt_tokens": 12526,
+        "total_tokens": 32685,
+        "completion_tokens_details": {
+          "reasoning_tokens": 8045
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 125.64,
+      "finishReason": "stop"
+    },
+    {
+      "phase": "repair-implementation",
+      "id": "chatcmpl-01a18f07-5cd8-7608-8539-f3301fe03864",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 24000,
+        "prompt_tokens": 25134,
+        "total_tokens": 49134,
+        "completion_tokens_details": {
+          "reasoning_tokens": 6920
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 131.6,
+      "finishReason": "length"
+    },
+    {
+      "phase": "repair-tests",
+      "id": "chatcmpl-01a18efc-29a3-7220-9bd2-11c0ec4c0b88",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 16931,
+        "prompt_tokens": 12783,
+        "total_tokens": 29714,
+        "completion_tokens_details": {
+          "reasoning_tokens": 4156
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 80.66,
+      "finishReason": "stop"
+    },
+    {
+      "phase": "report-repair",
+      "id": "chatcmpl-01a18f10-49bf-7753-8dd8-a9dcfbebfb97",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 5817,
+        "prompt_tokens": 17240,
+        "total_tokens": 23057,
+        "completion_tokens_details": {
+          "reasoning_tokens": 3981
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 31.18,
+      "finishReason": "stop"
+    },
+    {
+      "phase": "source-slots",
+      "id": "chatcmpl-01a18f0c-e2d6-76b3-aadf-9299d16b3162",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 5420,
+        "prompt_tokens": 16861,
+        "total_tokens": 22281,
+        "completion_tokens_details": {
+          "reasoning_tokens": 4488
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 29.03,
+      "finishReason": "stop"
+    },
+    {
+      "phase": "test",
+      "id": "chatcmpl-01a18ef9-3449-716b-9656-98afaf5611e7",
+      "model": "muse-wonder-1.0",
+      "requestedModel": "muse-wonder-1.0",
+      "usage": {
+        "completion_tokens": 15594,
+        "prompt_tokens": 2117,
+        "total_tokens": 17711,
+        "completion_tokens_details": {
+          "reasoning_tokens": 6387
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        }
+      },
+      "seconds": 98.79,
+      "finishReason": "stop"
+    }
+  ],
+  "verification": {
+    "sourceCommit": "e269e851721fbed728e9ccdbc02b7fedc7e4b7b9",
+    "runs": [
+      {
+        "name": "candidate-audit-tests",
+        "exitCode": 0,
+        "seconds": 1.149
+      },
+      {
+        "name": "candidate-artrefs",
+        "exitCode": 0,
+        "seconds": 0.933
+      },
+      {
+        "name": "candidate-audit",
+        "exitCode": 2,
+        "seconds": 4.951
+      }
+    ],
+    "exactCandidateAuditByteIdentical": true,
+    "existingArtworkPublicationUnchanged": "b6164f92449667fea5f371fb2e85d47d285897167a1277994ced2da162c2717e",
+    "onlyFourNewFiles": [
+      "A\tdocs/FCC-COVERAGE-AUDIT.md",
+      "A\tdocs/WP10-LAUNCH-EVIDENCE-CONTRACT.md",
+      "A\tscripts/audit-mot-fcc-coverage.mjs",
+      "A\tscripts/audit-mot-fcc-coverage.test.mjs"
+    ],
+    "allExistingFilesUnchanged": true,
+    "defaultCheck": {
+      "exitCode": 0,
+      "seconds": 36.389
+    },
+    "build": {
+      "exitCode": 0,
+      "seconds": 6.005
+    }
+  },
+  "audit": {
+    "summary": {
+      "sourceRows": 8507,
+      "motItems": 5203,
+      "matched": 5010,
+      "missing": 2664,
+      "unresolved": 833,
+      "extra": 193,
+      "duplicates": 0
+    },
+    "reportSha256": "bdc59a850bdecd7883540142628c8236db3495bf44a24065385526f8fbb53a40",
+    "reportBytes": 24271935,
+    "inputs": 2422,
+    "inputBytes": 72254242,
+    "fullRepeatByteIdentical": true,
+    "sourceMetadataFilesUnchanged": 611,
+    "sourceVersions": {
+      "registryReleaseVersion": "9f3d017515cfc341",
+      "optimizedContentVersion": "9c36fe186ebe8d38",
+      "snapshotDate": "2026-10-29"
+    },
+    "limitations": [
+      "Inline locators encountered in metadata are hashed as text, not decoded or copied; no separate image files were fetched or read.",
+      "Journal runtime collections retained as provenance: 202 collections and 3432 declared derivatives, including empty universal/special collections; no city was manufactured for non-city collections.",
+      "Offline metadata audit only: registry availability is release-declared, not freshly verified live; no URLs were fetched and no image bytes were read.",
+      "Optional per-collection art JSON absent/not present for 2 collection(s) in the supplied snapshot; absence was not treated as additional provenance.",
+      "Shop route is unverified unless explicit source metadata proves it; discover/preview/insert are catalog-present/needs-product-check, not proven product behaviour.",
+      "Source registry releaseVersion (9f3d017515cfc341) differs from optimized contentVersion (9c36fe186ebe8d38); both versions are recorded as supplied and neither was live-verified.",
+      "Standalone HTML embedding permission remains unresolved; this audit does not invent a license and does not change the existing credited unknown/restricted sharing policy."
+    ],
+    "derivativeRowsByStatus": {
+      "matched": 3228,
+      "missing": 188,
+      "unresolved": 16
+    },
+    "categoryStatusCounts": {
+      "artwork": {
+        "unresolved": 1
+      },
+      "activities": {
+        "matched": 177,
+        "missing": 15
+      },
+      "apparel": {
+        "matched": 649
+      },
+      "cafe": {
+        "matched": 198,
+        "missing": 3
+      },
+      "city-illustrations": {
+        "missing": 2034,
+        "matched": 396
+      },
+      "city-ink": {
+        "matched": 196,
+        "missing": 2,
+        "unresolved": 2
+      },
+      "hotels": {
+        "matched": 318
+      },
+      "journal": {
+        "unresolved": 745
+      },
+      "objects": {
+        "matched": 632,
+        "missing": 8
+      },
+      "people": {
+        "matched": 632,
+        "missing": 8
+      },
+      "portraits": {
+        "missing": 416,
+        "matched": 1568,
+        "unresolved": 16
+      },
+      "restaurants": {
+        "matched": 244
+      },
+      "stickers": {
+        "missing": 152
+      },
+      "catalog": {
+        "unresolved": 69
+      },
+      "itineraries": {
+        "missing": 4
+      },
+      "thesis": {
+        "missing": 4
+      },
+      "feature-two": {
+        "missing": 3
+      },
+      "neighborhoods": {
+        "missing": 4
+      },
+      "feature-one": {
+        "missing": 2
+      },
+      "food": {
+        "missing": 8
+      },
+      "costs": {
+        "missing": 1
+      }
+    },
+    "issueCounts": {
+      "origin-role-mismatch": 342,
+      "registry-unaccounted-use": 814
+    }
+  },
+  "newTests": 22,
+  "existingTests": 902,
+  "existingTestFiles": 162,
+  "typescriptProjects": 4,
+  "reviewStatus": "Author/orchestrator checks only; requested Muse Wonder review and owner approvals pending",
+  "taskDisposition": {
+    "MOT-121": "Audit tool implemented locally; full coverage/discovery and disposition remain in progress",
+    "MOT-132": "Concrete proposal delivered; owner decision and requested review remain pending"
+  },
+  "noPushOrDeploy": true,
+  "harnessUnchanged": true,
+  "productionDeviceAndPdfHoldsPreserved": true,
+  "evidenceDirectory": "Design Sprints/WP10-Wonder-Easy-2026-10-31"
+}

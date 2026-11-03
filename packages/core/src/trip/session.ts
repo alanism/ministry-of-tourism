@@ -105,7 +105,7 @@ export class TripSession {
     let s = this.actors.get(key);
     if (!s) {
       const origin = { actorId: key };
-      s = { actor, origin, undo: new Y.UndoManager(tripUndoScopes(this.parts), { trackedOrigins: new Set([origin]), captureTimeout: Number.MAX_SAFE_INTEGER }), inRun: false };
+      s = { actor, origin, undo: new Y.UndoManager(tripUndoScopes(this.parts), { trackedOrigins: new Set([origin]), captureTimeout: Number.MAX_SAFE_INTEGER, deleteFilter: item => !(item.parent === this.parts.meta && item.parentSub === 'groupVotingVersion') }), inRun: false };
       this.actors.set(key, s);
     }
     return s;

@@ -1,4 +1,4 @@
-import {apparelArtRefSchema,readAsset,readTripMeta,TRIP_PACKAGE_LIMITS,type Actor,type ApparelArtRef,type Asset,type TripSession} from '@writers-board/core';
+import {apparelArtRefSchema,readAsset,readTripMeta,TRIP_PACKAGE_LIMITS,type Actor,type ApparelArtRef,type Asset,type TripSession} from '@mot/core';
 import {commitTripBlobs,getTripBlob} from './trip-assets';
 
 /** Only an explicit FCC apparel choice may become the persisted worn tee. Preview never calls this. */

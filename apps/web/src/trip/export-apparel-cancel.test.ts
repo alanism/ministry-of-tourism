@@ -1,15 +1,16 @@
 import {afterEach,expect,it,vi} from 'vitest';
-import {createTrip,encodeTrip,loadCityApparel,sha256Hex,TripSession,type ApparelArtRef} from '@writers-board/core';
+import {createTrip,encodeTrip,loadCityApparel,sha256Hex,TripSession,type ApparelArtRef} from '@mot/core';
 import {prepareMagazine} from './artifacts';
 
-vi.mock('@writers-board/core',async original=>({...await original<typeof import('@writers-board/core')>(),loadCityApparel:vi.fn()}));
+vi.mock('@mot/core',async original=>({...await original<typeof import('@mot/core')>(),loadCityApparel:vi.fn()}));
 afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
 
 async function fixture(){
   const blob=new Blob(['synthetic FCC garment decoder control'],{type:'image/png'}),hash=await sha256Hex(new Uint8Array(await blob.arrayBuffer()));
   const art:ApparelArtRef={assetId:'fcc:bangkok:tee-control',kind:'apparel-mockup',category:'apparel',originCityId:'bangkok',role:'apparel-brush',width:800,height:1200,mimeType:'image/png',hash,thumbnailUrl:'https://foreignclubberscorespondence.web.app/tee-thumb.png',renditionUrl:'https://foreignclubberscorespondence.web.app/tee.png',credit:'FCC decoder control',rightsStatus:'unknown',source:{provider:'fcc',sourceId:'tee-control',canonicalUrl:'https://foreignclubberscorespondence.web.app/bangkok.html',cityId:'bangkok',kind:'artwork',retrievedAt:'2026-10-30',origin:'artwork',contentHash:hash}};
   vi.mocked(loadCityApparel).mockResolvedValue([art]);
-  const fetcher=vi.fn<typeof fetch>(async()=>new Response(blob));vi.stubGlobal('fetch',fetcher);
+  // City art catalogues are absent here; only the garment request is under test.
+  const fetcher=vi.fn<typeof fetch>(async input=>String(input).startsWith('/artwork/')?new Response('',{status:404}):new Response(blob));vi.stubGlobal('fetch',fetcher);
   const doc=createTrip({title:'Garment cancellation control',city:'Bangkok',cityId:'bangkok',timeZone:null}),session=new TripSession(doc);
   session.execute({kind:'human',id:'qa',name:'QA'},'trip_card_create',{kind:'note',title:'Keep the note unchanged',scope:'guide'});
   return{blob,art,fetcher,doc,session,before:encodeTrip(doc)};
@@ -24,7 +25,7 @@ it('settles a stalled FCC garment decode on Cancel, preserves the reason and clo
     await started;controller.abort(reason);
     expect(await Promise.race([pending,new Promise(resolve=>setTimeout(()=>resolve('still decoding'),30))])).toEqual({error:reason});
     release({width:800,height:1200,close} as unknown as ImageBitmap);await Promise.resolve();await Promise.resolve();
-    expect(close).toHaveBeenCalledOnce();expect(prepared).not.toHaveBeenCalled();expect(f.fetcher).toHaveBeenCalledOnce();expect(encodeTrip(f.doc)).toEqual(f.before);
+    expect(close).toHaveBeenCalledOnce();expect(prepared).not.toHaveBeenCalled();expect(f.fetcher.mock.calls.filter(([input])=>!String(input).startsWith('/artwork/'))).toHaveLength(1);expect(encodeTrip(f.doc)).toEqual(f.before);
   }finally{release?.({width:800,height:1200,close} as unknown as ImageBitmap);await pending;f.session.destroy();f.doc.destroy();}
 });
 
@@ -38,6 +39,6 @@ it('does not start a garment decoder if cancellation arrives while its checksum 
 
 it('still omits a garment whose decoded dimensions conflict with its declared original',async()=>{
   const f=await fixture(),close=vi.fn();vi.stubGlobal('createImageBitmap',vi.fn(async()=>({width:1200,height:800,close})));
-  try{const magazine=await prepareMagazine(f.session,undefined,false);expect(magazine.warnings).toContain('1 FCC tee photo is unavailable; the remaining trip pages are kept.');expect(magazine.pages.every(page=>!page.assetIds.includes(f.art.assetId))).toBe(true);expect(close).toHaveBeenCalledOnce();expect(encodeTrip(f.doc)).toEqual(f.before);}
+  try{const magazine=await prepareMagazine(f.session,undefined,false);expect(magazine.warnings.some(w=>/^1 FCC tee photo is unavailable \(.+ on the style and advertisement page\); the remaining trip pages are kept\.$/.test(w))).toBe(true);expect(magazine.pages.every(page=>!page.assetIds.includes(f.art.assetId))).toBe(true);expect(close).toHaveBeenCalledOnce();expect(encodeTrip(f.doc)).toEqual(f.before);}
   finally{f.session.destroy();f.doc.destroy();}
 });

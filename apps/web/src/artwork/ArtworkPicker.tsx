@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { z } from 'zod';
-import { useUi } from '../state/ui';
 import { artworkSchema, catalogSchema, manifestSchema, registrySchema, readCatalog, type Artwork, type Manifest, type StylePack } from './catalog';
-import { placeArtwork } from './place-artwork';
 import './artwork.css';
 import CountryArtworkBrowser from './CountryArtworkBrowser';
 import type { ArtDestination } from './country-art';
@@ -10,7 +8,8 @@ import ArtworkPreview from './ArtworkPreview';
 import ArtworkThumbnail from './ArtworkThumbnail';
 import TripArtworkBrowser from './TripArtworkBrowser';
 import {decorativeArtwork} from './art-preview';
-interface TripArtContext {destination:{cityId?:string;city:string;countryCode?:string};destinations:readonly ArtDestination[];}
+const PublicCatalogueBrowser=lazy(()=>import('./PublicCatalogueBrowser'));
+interface TripArtContext {destination:{cityId?:string;city:string;countryCode?:string;kind?:'host_guide'|'guest'|'traveler'};destinations:readonly ArtDestination[];insertionTarget?:'board'|'magazine';}
 const normalizedCity=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 
 const PAGE_SIZE = 12;
@@ -96,7 +95,7 @@ function CatalogBrowser({ manifest, onPick, busy,trip }: { manifest: Manifest; o
   </>;
   if(!trip)return browse;
   const ownId=trip.destination.cityId??trip.destinations.find(city=>[city.name,city.id,...(city.aliases??[])].some(name=>normalizedCity(name)===normalizedCity(trip.destination.city)))?.id;
-  return <div className={'trip-art-panes'+(selected?' has-preview':'')}><div className="trip-art-browse">{browse}</div>{selected?<ArtworkPreview key={selected.id} artwork={selected} origin={trip.destinations.find(city=>city.id===selected.city)?.name??manifest.cities.find(city=>city.id===selected.city)?.label??selected.city??'Origin unknown'} away={!!selected.city&&selected.city!==ownId} busy={busy} onBack={back} onAdd={()=>onPick(selected)}/>:<aside className="trip-art-preview art-preview-empty"><h3>Pick a picture to preview it</h3><p>See who drew it, where it’s from and how large its pixels print.</p></aside>}</div>;
+  return <div className={'trip-art-panes'+(selected?' has-preview':'')}><div className="trip-art-browse">{browse}</div>{selected?<ArtworkPreview destination={trip.insertionTarget} key={selected.id} artwork={selected} origin={trip.destinations.find(city=>city.id===selected.city)?.name??manifest.cities.find(city=>city.id===selected.city)?.label??selected.city??'Origin unknown'} away={!!selected.city&&selected.city!==ownId} busy={busy} onBack={back} onAdd={()=>onPick(selected)}/>:<aside className="trip-art-preview art-preview-empty"><h3>Pick a picture to preview it</h3><p>See who drew it, where it’s from and how large its pixels print.</p></aside>}</div>;
 }
 
 function PackBrowser({ pack, onPick, busy,trip,onUpload }: { pack: StylePack; onPick: (artwork: Artwork) => void; busy: boolean;trip?:TripArtContext;onUpload?:()=>void }) {
@@ -106,15 +105,20 @@ function PackBrowser({ pack, onPick, busy,trip,onUpload }: { pack: StylePack; on
   return <>{resource.cachedAt&&<p className="artwork-count">Saved catalogue · {new Date(resource.cachedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} · couldn’t refresh. Artwork copies keep their own dates.</p>}{trip&&pack.id==='fcc-editorial'?<TripArtworkBrowser manifest={resource.data} trip={trip} onPick={onPick} busy={busy} onUpload={onUpload}/>:<CatalogBrowser key={pack.id} manifest={resource.data} onPick={onPick} busy={busy} trip={trip}/>}</>;
 }
 
-export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload?:(file:File,signal:AbortSignal)=>Promise<void>;onInsert?:(artwork:Artwork,signal:AbortSignal)=>Promise<void>;onClose?:()=>void;trip?:TripArtContext}={}) {
+export default function ArtworkPicker({onInsert,onUpload,onClose,trip,initialCollection}:{onUpload?:(file:File,signal:AbortSignal)=>Promise<void>;onInsert?:(artwork:Artwork,signal:AbortSignal,onCommitted?:()=>void)=>Promise<void>;onClose?:()=>void;trip?:TripArtContext;initialCollection?:'shirt'}={}) {
   const registry = useCatalog('/artwork/index.json', registrySchema);
   const [styleId, setStyleId] = useState('');
+  const [fullCollection,setFullCollection]=useState(!!initialCollection);
   const [busy, setBusy] = useState('');
+  const [committed, setCommitted] = useState(false);
+  const committedRef = useRef(false);
+  const liveRef = useRef(true);
   const [error, setError] = useState('');
   const section = useRef<HTMLElement>(null);
   const fileInput=useRef<HTMLInputElement>(null);
   const insertion = useRef<AbortController | null>(null);
-  const close = onClose??(()=>useUi.getState().setDialog(null));
+  const close = onClose ?? (() => {});
+  useEffect(()=>{liveRef.current=true;return()=>{liveRef.current=false;};},[]);
   useEffect(()=>{
     // Disabling a download button can move focus to body; Escape must still cancel the sheet.
     const escape=(event:KeyboardEvent)=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close();}};
@@ -126,20 +130,22 @@ export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload
     const previous=document.activeElement as HTMLElement|null;
     const trigger=document.querySelector<HTMLButtonElement>('.mot-header button[aria-label="Add"]');
     section.current?.querySelector<HTMLButtonElement>('button')?.focus();
-    return () => { insertion.current?.abort(); if(previous?.isConnected&&previous!==document.body)previous.focus();else trigger?.focus(); };
+    return () => { if(!committedRef.current)insertion.current?.abort(); if(previous?.isConnected&&previous!==document.body)previous.focus();else trigger?.focus(); };
   }, []);
   const pick = async (artwork: Artwork|File) => {
     if (insertion.current) return;
     const controller = new AbortController();
     insertion.current = controller;
     const timer = setTimeout(() => controller.abort(new Error('Download took too long. Please try again.')), 30000);
+    committedRef.current=false; setCommitted(false);
+    const onCommitted=()=>{committedRef.current=true;clearTimeout(timer);if(liveRef.current)setCommitted(true);};
     setBusy(artwork instanceof File?artwork.name:artwork.label); setError('');
-    try { if(artwork instanceof File){if(!onUpload)throw Error('Photo uploads are unavailable here.');await onUpload(artwork,controller.signal);}else await (onInsert??placeArtwork)(artwork, controller.signal); close(); }
+    try { if(artwork instanceof File){if(!onUpload)throw Error('Photo uploads are unavailable here.');await onUpload(artwork,controller.signal);}else if(onInsert)await onInsert(artwork,controller.signal,onCommitted);else throw Error('Artwork can only be added to a trip board here.'); if(liveRef.current)close(); }
     catch (cause) {
-      if (!controller.signal.aborted || cause instanceof Error && cause.name !== 'AbortError') {
+      if (liveRef.current && (!controller.signal.aborted || cause instanceof Error && cause.name !== 'AbortError')) {
         setError(controller.signal.aborted ? 'Download took too long. Please try again.' : cause instanceof Error ? cause.message : 'Could not add artwork. Please try again.');
       }
-    } finally { clearTimeout(timer); insertion.current = null; setBusy(''); }
+    } finally { clearTimeout(timer); insertion.current = null; if(liveRef.current)setBusy(''); }
   };
   return <div className={'dialog-backdrop'+(trip?' trip-art-backdrop':'')} onMouseDown={event => event.target === event.currentTarget && close()} onKeyDown={event => {
     event.stopPropagation();
@@ -153,11 +159,12 @@ export default function ArtworkPicker({onInsert,onUpload,onClose,trip}:{onUpload
   }}>
     <section ref={section} className={'dialog artwork-picker'+(trip?' trip-artwork':'')} role="dialog" aria-modal="true" aria-labelledby="artwork-title" aria-busy={!!busy}>
       <div className="artwork-heading"><h2 id="artwork-title">{trip?'Add FCC art':'Artwork'}</h2><button type="button" onClick={close} aria-label="Close artwork">Close</button></div>
-      <p className="dialog-note">{trip?'Drawings for your trip. Choose a picture, then add its original.':'People, places and objects for your ideas. Images load as you browse.'}</p>
-      {busy && <p className="artwork-notice" role="status">Adding {busy}…</p>}
+      <p className="dialog-note">{trip?'Drawings for your trip. Preview a picture and its source before adding it.':'People, places and objects for your ideas. Images load as you browse.'}</p>
+      {trip&&<div className="artwork-filters"><button type="button" className="m-btn" disabled={!!busy} aria-pressed={fullCollection} onClick={()=>setFullCollection(value=>!value)}>{fullCollection?'Back to city art':'Browse full FCC collection'}</button>{fullCollection&&onUpload&&<button type="button" className="m-btn" disabled={!!busy} onClick={()=>fileInput.current?.click()}>Upload your photos</button>}<span className="art-meta">Images add to your {trip.insertionTarget??'board'}. T-shirts open the city’s FCC shop.</span></div>}
+      {busy && <p className="artwork-notice" role="status">{committed?'Saving image bytes…':`Adding ${busy}…`}</p>}
       {error && <p className="dialog-error" role="alert">{error}</p>}
       {onUpload&&<input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif" hidden onChange={event=>{const file=event.target.files?.[0];event.target.value='';if(file)void pick(file);}}/>}
-      {!registry.data ? <LoadState error={registry.error} retry={registry.retry} /> : <>
+      {fullCollection&&trip?<Suspense fallback={<p role="status">Opening the full FCC collection…</p>}><PublicCatalogueBrowser purpose={trip.destination.kind==='host_guide'?'host-guide':'personal-trip'} cityId={trip.destination.cityId} destination={trip.insertionTarget} initialType={initialCollection} busy={!!busy} onPick={artwork=>void pick(artwork)}/></Suspense>:!registry.data ? <LoadState error={registry.error} retry={registry.retry} /> : <>
         {registry.cachedAt&&<p className="artwork-count">Saved style list · {new Date(registry.cachedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</p>}
         <label className="field artwork-style"><span>Style</span><select value={pack?.id} disabled={!!busy} onChange={event => { setStyleId(event.target.value); setError(''); }}>
           {registry.data.styles.map(value => <option key={value.id} value={value.id}>{value.label}</option>)}

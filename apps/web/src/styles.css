@@ -31,10 +31,9 @@
   --accent: var(--deep-red);
   --paper: var(--white);
   --shadow: rgba(0, 0, 0, 0.08);
-  /* Writing type: set from the writer's chosen pairing (writing/fonts.ts). */
   --hand: 'Kalam', cursive;
   --draft: 'IBM Plex Serif', Georgia, serif;
-  --typewriter: 'IBM Plex Mono', monospace;
+  --plex-mono: 'IBM Plex Mono', monospace;
   --ui: 'IBM Plex Sans', system-ui, sans-serif;
   --serif: 'IBM Plex Serif', Georgia, serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -149,8 +148,7 @@ select {
 }
 
 /* Side trays */
-.palette,
-.coach-deck {
+.palette {
   position: absolute;
   top: calc(var(--toolbar-bottom, 120px) + 10px);
   bottom: 16px;
@@ -166,18 +164,11 @@ select {
   align-items: flex-start;
 }
 
-.coach-deck {
-  right: 16px;
-  align-items: flex-end;
-}
-
-.palette > *,
-.coach-deck > * {
+.palette > * {
   pointer-events: auto;
 }
 
-.palette-toggle,
-.coach-toggle {
+.palette-toggle {
   padding: 6px 12px;
   background: var(--panel);
   border: 1px solid var(--line);
@@ -186,8 +177,7 @@ select {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
-.palette-body,
-.coach-list {
+.palette-body {
   width: 220px;
   max-height: 100%;
   overflow: auto;
@@ -229,49 +219,6 @@ select {
 
 .palette-group button:hover {
   background: var(--wash);
-}
-
-.coach-list {
-  width: 260px;
-  list-style: none;
-  display: grid;
-  gap: 8px;
-}
-
-.coach-card {
-  display: grid;
-  gap: 4px;
-  width: 100%;
-  min-height: 110px;
-  padding: 12px;
-  text-align: left;
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  cursor: pointer;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
-}
-
-.coach-role {
-  font: 500 18px/1.15 var(--serif);
-}
-
-.coach-question {
-  font: italic 15px/1.35 var(--serif);
-  color: var(--ink);
-}
-
-.coach-dimension {
-  font-size: 12px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.coach-checks {
-  margin: 0;
-  padding-left: 18px;
-  font-size: 12.5px;
 }
 
 /* Card editor overlay */
@@ -317,9 +264,6 @@ select {
   }
   .palette-body {
     width: min(220px, calc(100vw - 32px));
-  }
-  .coach-list {
-    width: min(260px, calc(100vw - 32px));
   }
 }
 

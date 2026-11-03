@@ -52,4 +52,4 @@ Catalog reads now settle cancellation even if fetch or JSON decoding ignores abo
 
 The external Art-Catalog-Cancellation-2026-10-30 browser helper holds completion of actual catalog JSON after parsing its real bytes. It checks the real root deadline, Stop, virtual-clock country deadline, Retry and explicit dated-copy fallback without changing production timers. Late completions must not replace either saved copy or the trip. Set `MOT_SOURCE_ROOT`, `MOT_TEST_ORIGIN` and `MOT_EVIDENCE_DIR`; local public image routes read FCC without modifying it. This is preloaded Chromium evidence, not deployed CORS or physical-device certification.
 
-The guide's destination/export scenarios have separate acceptance. None of these builder checks supplies Opus design sign-off. Browser-plugin support was unavailable; sandboxed Playwright was used.
+The guide's destination/export scenarios have separate acceptance. None of these builder checks supplies Muse Wonder design sign-off. Browser-plugin support was unavailable; sandboxed Playwright was used.

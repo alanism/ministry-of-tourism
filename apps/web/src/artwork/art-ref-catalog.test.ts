@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {artworkSchema} from './catalog';
-import {selectCityApparel} from '@writers-board/core';
+import {selectCityApparel} from '@mot/core';
 const ref={assetId:'fcc:bangkok:tee-1',category:'apparel',kind:'apparel-mockup',variant:'mono',role:'apparel-map-mono',originCityId:'bangkok',countryCode:'TH',thumbnailUrl:'https://foreignclubberscorespondence.web.app/tee-480.webp',renditionUrl:'https://foreignclubberscorespondence.web.app/tee-800.webp',originalUrl:'https://foreignclubberscorespondence.web.app/tee.png',width:1024,height:1536,mimeType:'image/png',credit:'FCC source credit',rightsStatus:'unknown',source:{provider:'fcc',sourceId:'tee-1',canonicalUrl:'https://foreignclubberscorespondence.web.app/bangkok.html',cityId:'bangkok',countryCode:'TH',kind:'artwork',retrievedAt:'2026-10-26',origin:'artwork'}};
 const entry={id:ref.assetId,styleId:'fcc-editorial',label:'A map tee',subject:'apparel',city:'bangkok',thumb:ref.thumbnailUrl,src:ref.renditionUrl,original:ref.originalUrl,width:ref.width,height:ref.height,artRef:ref};
 describe('MOT-84 ArtRefs survive legacy catalog decoding',()=>{

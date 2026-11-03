@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import '@fontsource/ibm-plex-sans/600.css';
-import {readAllCards,type Actor,type CityFetchOptions,type FccAlmanacSnapshot,type FccResult,type TripSession} from '@writers-board/core';
+import {readAllCards,type Actor,type CityFetchOptions,type FccAlmanacSnapshot,type FccResult,type TripSession} from '@mot/core';
 import {almanacPin,almanacRows} from './almanac-facts';
 import {loadDestinations,type DestinationRow} from './destination';
 import {sourceDate} from './source-card';

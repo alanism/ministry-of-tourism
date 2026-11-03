@@ -1,7 +1,7 @@
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {expect,it} from 'vitest';
-import {createTrip,TripSession} from '@writers-board/core';
+import {createTrip,TripSession} from '@mot/core';
 import {MemoryChoice} from './Keepsakes';
 import {TripGuidance} from './TripGuidance';
 it('renders all guidance phases in initial native disclosures with a permanent AI guide link',()=>{const html=renderToStaticMarkup(createElement(TripGuidance,{phase:'during'}));expect(html.match(/<details/g)).toHaveLength(3);for(const text of ['Planning','During trip','Post trip','Guide for your AI'])expect(html).toContain(text);expect(html).toContain('/guides/trip-best-practices.md');});

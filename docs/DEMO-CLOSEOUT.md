@@ -1,6 +1,6 @@
 # Hackathon demo closeout — 28 Oct 2026
 
-Code revision: **8c22dcb**. Checker: **Codex**, including author checks of its closeout fixes. This is a demo acceptance record, not independent verification or production readiness.
+Code revision: **8c22dcb**. Checker: **Muse Wonder**, including author checks of its closeout fixes. This is a demo acceptance record, not independent verification or production readiness.
 
 Later product design pass: **eeba470**. See [HANDOFF.md](HANDOFF.md) for the
 current interface, 92+ saved-hero lens scores and fresh browser evidence.
@@ -19,7 +19,7 @@ The owner asked to finish the initial demo, keep the canonical Kanban current an
 - Real sample photobook generated from the exported trip: **24 SVG pages plus cover**, inline photos rendered at **2551×2551 px**, private card absent and low-resolution flags retained. `sample-photobook.zip` and a page preview are in the evidence folder; partner specifications remain unverified.
 - Optional local counters: off by default, totals only after opting in; opt-out removes them. No analytics traffic or billed model calls.
 - One fault injection: removed the stale-revision guard temporarily. **npm run check failed with 2 assertions**, proving detection; original source restored exactly, then full check green.
-- Production bundle builds; no META_API_KEY match. Writer’s Board push URL is DISABLED and a dry-run push fails locally.
+- Production bundle builds; no META_API_KEY match.
 
 Artifacts are in the Ministry of Tourism project folder under `Demo Closeout/`.
 The [runtime demo](MOT-58-demo.mp4) is exactly **180 seconds**, **1280×720**,
