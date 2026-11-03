@@ -24,4 +24,4 @@ The public source includes catalogue metadata pointing to FCC's public HTTPS end
 
 Restricted local sample JPGs, personal trip files, internal planning/account documents, deployment bindings, build outputs and local history are excluded from this public checkpoint. The default landing and sample trip work with labeled notes and no sample-photo requests. To install your own appropriately licensed sample media, supply `river.jpg`, `street-art.jpg`, `doorway.jpg` and `room.jpg` under `apps/web/public/sample/`, then explicitly set `VITE_MOT_SAMPLE_MEDIA=enabled` at dev/build time. Do not enable that setting with uncleared assets.
 
-MoT reuses the board engine from [Writer's Board](https://github.com/alanism/ucc-writers-board-notebook). The public checkpoint preserves relevant component attribution while keeping FCC's repository and internal project material separate. The app name does not imply government, Airbnb or Meta endorsement.
+The public checkpoint preserves relevant component attribution while keeping FCC's repository and internal project material separate. The app name does not imply government, Airbnb or Meta endorsement.
