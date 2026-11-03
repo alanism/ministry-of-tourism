@@ -34,21 +34,26 @@ export function checkedPixels(size:{width:number;height:number}):number{
 }
 let rasterQueue:Promise<unknown>=Promise.resolve();
 /** Preview restarts and exports share a slot, held until unabortable browser work actually settles. */
-export function sanitizedRaster(blob:Blob,size:{width:number;height:number},signal?:AbortSignal):Promise<Blob>{
-  const operation=rasterQueue.then(()=>sanitize(blob,size,signal));
+/** Shareable HTML: opaque rasters become JPEG and long sides are capped; transparent art stays lossless PNG. */
+export interface RasterOptions {maxSide?:number;jpegQuality?:number;}
+export function sanitizedRaster(blob:Blob,size:{width:number;height:number},signal?:AbortSignal,options:RasterOptions={}):Promise<Blob>{
+  const operation=rasterQueue.then(()=>sanitize(blob,size,signal,options));
   rasterQueue=operation.catch(()=>{});return operation;
 }
-async function sanitize(blob:Blob,size:{width:number;height:number},signal?:AbortSignal):Promise<Blob>{
+async function sanitize(blob:Blob,size:{width:number;height:number},signal?:AbortSignal,options:RasterOptions={}):Promise<Blob>{
   signal?.throwIfAborted();
   // Browser decoding honors EXIF orientation; the PNG contains only that visible raster.
   const image=await createImageBitmap(blob);
   try{
     signal?.throwIfAborted();checkedPixels(image);
     if(!((image.width===size.width&&image.height===size.height)||(image.width===size.height&&image.height===size.width)))throw new Error('The decoded image dimensions differ from its header.');
-    const canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
+    const scale=options.maxSide?Math.min(1,options.maxSide/Math.max(image.width,image.height)):1;
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));
     try{
-      const context=canvas.getContext('2d');if(!context)throw new Error('Image privacy sanitation is unavailable.');context.drawImage(image,0,0);
-      const png=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('Image privacy sanitation failed.')),'image/png'));
+      const context=canvas.getContext('2d');if(!context)throw new Error('Image privacy sanitation is unavailable.');context.drawImage(image,0,0,canvas.width,canvas.height);
+      let type='image/png';
+      if(options.jpegQuality){const alpha=context.getImageData(0,0,canvas.width,canvas.height).data;let opaque=true;for(let i=3;i<alpha.length;i+=4)if(alpha[i]!==255){opaque=false;break;}if(opaque)type='image/jpeg';}
+      const png=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('Image privacy sanitation failed.')),type,options.jpegQuality));
       signal?.throwIfAborted();return png;
     }finally{canvas.width=canvas.height=0;}
   }finally{image.close();}

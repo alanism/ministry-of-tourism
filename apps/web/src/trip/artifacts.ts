@@ -13,6 +13,8 @@ async function citySnapshot(doc:import('yjs').Doc,signal?:AbortSignal):Promise<C
 const snapshotArtwork=(snapshot:CityArtSnapshot|undefined,saved:readonly NonNullable<ReturnType<typeof readMagazineApparel>[number]['apparel']>[]):unknown[]=>[...saved,...(snapshot?.tees??[]).filter(tee=>!saved.some(s=>s.assetId===tee.assetId))].slice(0,3).concat(snapshot?.art as never[]??[]);
 
 export const diagnostics=new DiagnosticLog();
+/** Longest magazine page side; larger originals stay in the editable ZIP. */
+const HTML_RASTER={maxSide:1680,jpegQuality:0.86};
 let lastOperation:OperationState|undefined;
 export const currentTripOperation=()=>lastOperation;
 const dataUrl=(blob:Blob)=>new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('The image could not be read.'));reader.readAsDataURL(blob);});
@@ -62,17 +64,17 @@ export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSigna
       try{
         const original=new Uint8Array(await blob.arrayBuffer()),size=rasterDimensions(original,blob.type);
         if(pixels+checkedPixels(size)>HTML_LIMITS.totalPixels)throw new Error('over the HTML pixel budget');
-        const png=await sanitizedRaster(blob,size,signal);if(embeddedBytes+png.size>HTML_LIMITS.sourceBytes)throw new Error('over the HTML size budget');
-        pixels+=size.width*size.height;embeddedBytes+=png.size;urls.set(id,await dataUrl(png));dimensions.set(id,size);
+        const png=await sanitizedRaster(blob,size,signal,HTML_RASTER);if(embeddedBytes+png.size>HTML_LIMITS.sourceBytes)throw new Error('over the HTML size budget');
+        pixels+=size.width*size.height;embeddedBytes+=png.size;urls.set(id,await dataUrl(png));dimensions.set(id,rasterDimensions(new Uint8Array(await png.arrayBuffer()),png.type));
         media.push({assetId:id,sourceSha256:await artifactSha256(blob),embeddedSha256:await artifactSha256(png),...size});
       }catch(error){signal?.throwIfAborted();warnings.push(`City art ${id} was left out: ${error instanceof Error?error.message:'it could not be embedded'}.`);}
     }
     for(const [id,original] of bytes){
       signal?.throwIfAborted();const asset=readAsset(selected.parts,id)!;
       try{
-        const png=await sanitizedRaster(new Blob([original as BlobPart],{type:asset.mime}),sizes.get(id)!,signal);embeddedBytes+=png.size;
+        const png=await sanitizedRaster(new Blob([original as BlobPart],{type:asset.mime}),sizes.get(id)!,signal,HTML_RASTER);embeddedBytes+=png.size;
         if(embeddedBytes>HTML_LIMITS.sourceBytes)throw new Error('Sanitized images exceed 50 MiB. Keep the originals in an editable ZIP.');
-        const data=await dataUrl(png),size=rasterDimensions(new Uint8Array(await png.arrayBuffer()),'image/png');urls.set(id,data);dimensions.set(id,size);
+        const data=await dataUrl(png),size=rasterDimensions(new Uint8Array(await png.arrayBuffer()),png.type);urls.set(id,data);dimensions.set(id,size);
         media.push({assetId:id,sourceSha256:asset.hash,embeddedSha256:await artifactSha256(png),...size});
       }catch(error){signal?.throwIfAborted();throw new Error(`Image ${id}: ${error instanceof Error?error.message:'Privacy sanitation failed.'}`);}
     }

@@ -123,7 +123,7 @@ export function buildApparelPages(options:ApparelPageOptions):ApparelPage[]{
       +'<rect x="'+M+'" y="1230" width="1018" height="250" fill="'+PAPER+'"/>'
       +rows(wrap(title,35),M+24,1320,4.05*PU,L,'IBM Plex Serif',600)
       +(advert?'':rows(wrap(magazineLabel(art.label??art.category),65).slice(0,1),M+24,1380,2.1*PU,L))
-      +'<a href="'+esc(shop)+'" target="_blank" rel="noopener noreferrer">'+kicker('Order on FCC →',M+24,1430)+'</a>'
+      +'<a href="'+esc(shop)+'" target="_blank" rel="noopener noreferrer">'+kicker('Order on FCC ›',M+24,1430)+'</a>'
       +rows(creditLines,M,1510,1.9*PU,26,'IBM Plex Mono');
     return {id:(advert?'tee-advert:':'merch:')+options.cityId+':'+art.assetId,pattern:advert?'tee-advert' as const:'merch' as const,folio,svg:shell(content,cityName,advert?undefined:folio).replace('width="1184" height="1680"','width="'+w+'" height="'+h+'"'),assetIds:[art.assetId],credits};
   });

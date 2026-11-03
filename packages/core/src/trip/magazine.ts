@@ -268,7 +268,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const fade=`<defs><linearGradient id="portrait-fade" x1="0" y1="0" x2="0" y2="1"><stop offset=".66" stop-color="#FFFFFF"/><stop offset=".98" stop-color="#000000"/></linearGradient><mask id="portrait-paper"><rect width="1184" height="1176" fill="url(#portrait-fade)"/></mask></defs>`;
     if(portrait)page('left','city-feature',fade+`<g mask="url(#portrait-paper)">${picture(portrait,{x:0,y:0,width:1184,height:1176},0,false,'slice')}</g>`+arrow+kicker(`Style · ${meta.city}`,M,1245,RED)+head('The brush portrait',M,1330,1018,6.55*PU,2),[portrait]);
     const shop=meta.cityId?fccShopUrl(meta.cityId):undefined;
-    const order=shop?`<a href="${esc(shop)}">${kicker('Order on FCC →',M+30,1430)}</a>`:'';
+    const order=shop?`<a href="${esc(shop)}">${kicker('Order on FCC ›',M+30,1430)}</a>`:'';
     if(tee)page('right','merch',picture(tee,{x:0,y:0,width:1184,height:1680},0,false,'slice')+`<g transform="translate(-1184 0)">${arrow}</g>`+`<rect x="${M}" y="1250" width="1018" height="300" fill="${PAPER}"/>`+head('Wear the trip',M+30,1330,958,4.05*PU,2)+order,[tee],[],PAPER,'Wear the trip',shop?[{url:shop,x:M,y:1380,width:1018,height:95}]:undefined);
   }
 
@@ -344,7 +344,7 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
   spread('back-cover',backTee?'Advertisement':meta.city);
   if(backTee&&backSlot)current.usedSlots.push(backSlot);else current.droppedSlots.push('back-cover-tee');
   const shop=backTee&&meta.cityId?fccShopUrl(meta.cityId):undefined;
-  page('single',backTee?'tee-advert':'back-cover',(backTee?picture(backTee,{x:0,y:0,width:1184,height:1680},0,false,'slice')+`<rect x="${M}" y="1230" width="1018" height="320" fill="${PAPER}"/>`+kicker('FCC · Advertisement',M,2*L)+head(`Take ${meta.city} with you.`,M+24,1320,970,4.05*PU,2)+(shop?`<a href="${esc(shop)}">${kicker('Order on FCC →',M+24,1430)}</a>`:''):kicker('Ministry of Tourism')+head(meta.city,M,7*L,1018,10.6*PU,4)+(dates?text(dates,M,13*L):'')+text(cards.map(c=>c.title).join('\n'),M,18*L,1018,2.5*PU,10))+jacketSpine('back'),[backTee,tag],[],PAPER,backTee?'Advertisement':meta.city,shop?[{url:shop,x:M,y:1380,width:1018,height:95}]:undefined);
+  page('single',backTee?'tee-advert':'back-cover',(backTee?picture(backTee,{x:0,y:0,width:1184,height:1680},0,false,'slice')+`<rect x="${M}" y="1230" width="1018" height="320" fill="${PAPER}"/>`+kicker('FCC · Advertisement',M,2*L)+head(`Take ${meta.city} with you.`,M+24,1320,970,4.05*PU,2)+(shop?`<a href="${esc(shop)}">${kicker('Order on FCC ›',M+24,1430)}</a>`:''):kicker('Ministry of Tourism')+head(meta.city,M,7*L,1018,10.6*PU,4)+(dates?text(dates,M,13*L):'')+text(cards.map(c=>c.title).join('\n'),M,18*L,1018,2.5*PU,10))+jacketSpine('back'),[backTee,tag],[],PAPER,backTee?'Advertisement':meta.city,shop?[{url:shop,x:M,y:1380,width:1018,height:95}]:undefined);
   if(contentsPage&&contentsSpread){
     const firstCapacity=Math.max(1,Math.floor(((cards.some(c=>c.source?.kind==='almanac')?1210:1450)-contentsY)/L));
     let estimate=spreads.map((item,i)=>`${i+1}. ${item.title} · p 999`).join('\n'),capacity=firstCapacity,columns=Math.floor(contentsWidth/(2.5*PU*.57));

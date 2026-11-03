@@ -2,6 +2,7 @@
 import { loadCityApparel, TRIP_PACKAGE_LIMITS, type ApparelArtRef, type TripMeta } from '@writers-board/core';
 import { catalogSchema, manifestSchema, readCatalog, type Artwork, type Manifest } from '../artwork/catalog';
 import { artifactSha256 } from './artifact-store';
+import fontCoverage from './standalone-fonts.json';
 
 export interface ExportArtCredit { assetId:string; label:string; credit:string; rightsStatus:string; sourceUrl?:string; kind:string; }
 export interface ExportArtGap { assetId?:string; label:string; slot:string; reason:string; }
@@ -36,6 +37,10 @@ const ART_SLOTS: readonly ArtSlot[] = [
   { subject:'objects', role:'stamp', count:1 },
 ];
 const TEE_COUNT = 3;
+
+const FACES = Object.values(fontCoverage.fonts as Record<string,{ ranges:number[][] }>);
+/** Standalone HTML refuses text its embedded fonts cannot draw, so city art whose label or credit needs another glyph is skipped. */
+const drawable = (text:string) => [...text].every(character => { const point = character.codePointAt(0)!; return FACES.every(face => face.ranges.some(([start, end]) => point >= start! && point <= end!)); });
 
 export const tripCityId = (meta:Pick<TripMeta,'cityId'|'city'>) => meta.cityId ?? meta.city.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -81,7 +86,7 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
   for (const slot of manifest ? ART_SLOTS : []) {
     const have = plan.filter(p => p.role === slot.role).length;
     if (have >= slot.count) continue;
-    let pool = (bySubject.get(slot.subject) ?? []).filter(a => !picked.has(a.id) && (a.artRef!.role ? a.artRef!.role === slot.role : true));
+    let pool = (bySubject.get(slot.subject) ?? []).filter(a => !picked.has(a.id) && (a.artRef!.role ? a.artRef!.role === slot.role : true) && drawable(a.artRef!.label ?? a.label) && drawable(a.artRef!.credit ?? ''));
     if (slot.prefer) { const hit = pool.filter(a => slot.prefer!.test(a.label)); pool = slot.only ? hit : [...hit, ...pool.filter(a => !hit.includes(a))]; }
     if (!pool.length) { gaps.push({ label:`${cityId} ${slot.role}`, slot:slot.role, reason:'FCC has no credited art for this slot' }); continue; }
     for (const item of pool.slice(0, slot.count - have)) { picked.add(item.id); plan.push({ item, role:slot.role }); }
@@ -108,6 +113,7 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
     // Only the first three variants are candidates; a failed one is dropped, never replaced by a fourth style.
     for (const tee of variants.slice(0, TEE_COUNT)) {
       try {
+        if (!drawable(tee.label ?? '') || !drawable(tee.credit ?? '')) throw new Error('its label needs a glyph the HTML fonts lack');
         signal.throwIfAborted();
         const blob = await fetchBlob(tee.originalUrl ?? tee.renditionUrl, fetcher, signal);
         if (blob.type !== tee.mimeType) throw new Error('does not match its declared raster');
