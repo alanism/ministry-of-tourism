@@ -294,7 +294,9 @@ export function buildMagazine(doc:Y.Doc,options:MagazineOptions={}):MagazineDocu
     const savedHash=parts.assets.get(c.assetId)?.get('hash');if(typeof savedHash==='string'&&representedHashes.has(savedHash))continue;
     spread('plate','Your pictures');current.id=`pictures-${index+1}`;c.identities.forEach(id=>used.add(id));current.usedSlots.push({name:'saved-picture',assetId:c.assetId,identity:c.identity});
     const chunk=flowText(c.label,70,10),linked=cards.filter(card=>card.assetIds.includes(c.assetId));
-    page('single','food-culture',kicker('Your pictures')+picture(c,{x:M,y:200,width:1018,height:650})+rows(chunk.lines,M,920,2.5*PU,L,'IBM Plex Sans',400,INK,false,1018,c.label.slice(0,c.label.length-chunk.rest.length)),[c],linked);
+    // Fit the picture to its own aspect (up to most of the page) and name the place it belongs to.
+    const title=linked[0]?.title,top=title?6*L:200,maxHeight=title?1000:1100,ratio=c.height/c.width,box=ratio>maxHeight/1018?{width:maxHeight/ratio,height:maxHeight}:{width:1018,height:1018*ratio};
+    page('single','food-culture',kicker('Your pictures')+(title?head(title,M,4*L):'')+picture(c,{x:M,y:top,...box})+rows(chunk.lines,M,top+box.height+70,2.5*PU,L,'IBM Plex Sans',400,INK,false,1018,c.label.slice(0,c.label.length-chunk.rest.length)),[c],linked);
     represented.add(c.assetId);const hash=parts.assets.get(c.assetId)?.get('hash');if(typeof hash==='string')representedHashes.add(hash);
     let rest=chunk.rest;
     while(rest){const next=flowText(rest,60,25);page('single','correspondence',kicker('Picture caption · continued')+rows(next.lines,M,4*L,2.5*PU,L,'IBM Plex Sans',400,INK,false,1018,rest.slice(0,rest.length-next.rest.length)),[],linked);rest=next.rest;}
