@@ -1,4 +1,4 @@
-import { selectedAssetClosure, buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, rgbPdfImage, TRIP_PACKAGE_LIMITS, tripParts, type DiagnosticReceipt, type DiagnosticStep, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
+import { selectedAssetClosure, buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, TRIP_PACKAGE_LIMITS, tripParts, type DiagnosticReceipt, type DiagnosticStep, type MagazineDocument, type OperationState, type TripSession } from '@writers-board/core';
 import { getTripBlob } from './trip-assets';
 import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
@@ -121,6 +121,8 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
   } finally {doc.destroy();}
 }
 
+const PDF_JPEG_QUALITY=0.84;
+
 export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress']):Promise<Uint8Array> {
   if(!magazine.pages.length)throw new Error('Add a card or artwork before exporting a magazine.');
   const pages=[];
@@ -138,10 +140,12 @@ export async function magazinePdf(magazine:MagazineDocument,signal?:AbortSignal,
       });
       const canvas=document.createElement('canvas');canvas.width=MAGAZINE.widthPx;canvas.height=MAGAZINE.heightPx;
       const context=canvas.getContext('2d');if(!context)throw new Error('This browser could not render the PDF.');
-      context.drawImage(image,0,0);
-      const pixels=context.getImageData(0,0,canvas.width,canvas.height);
+      context.fillStyle='#fff';context.fillRect(0,0,canvas.width,canvas.height);context.drawImage(image,0,0);
+      // Screen PDF: one JPEG per page at the reader's pixel size; the invisible text layer keeps words selectable.
+      const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob(value=>value?resolve(value):reject(new Error('This browser could not render the PDF.')),'image/jpeg',PDF_JPEG_QUALITY));
+      const jpeg=new Uint8Array(await blob.arrayBuffer());canvas.width=0;canvas.height=0;signal?.throwIfAborted();
       const textLayer=await svgPdfTextLayer(page.svg,signal);
-      pages.push({...rgbPdfImage(pixels.data,canvas.width,canvas.height),pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links,label:page.pattern,textLayer});
+      pages.push({kind:'image' as const,jpeg,width:MAGAZINE.widthPx,height:MAGAZINE.heightPx,pageSize:MAGAZINE.pageSize,fullBleed:true,links:page.links,label:page.pattern,textLayer});
       onProgress?.({stage:'write',completed:pages.length,total:magazine.pages.length,unit:'pages',done:false});
     }finally{URL.revokeObjectURL(url);}
   }

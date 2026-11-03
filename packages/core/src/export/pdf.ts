@@ -1,6 +1,6 @@
 // A small PDF writer: the board as a picture on a landscape page, and the
 // draft in standard manuscript form (Courier 12, one-inch margins, double
-// spaced). JPEGs pass through; magazine canvas pixels use lossless RGB/Flate.
+// spaced). JPEGs pass through (magazine screen pages); raw canvas pixels use lossless RGB/Flate.
 import { zlibSync } from 'fflate';
 
 export interface PdfLink {url:string;x:number;y:number;width:number;height:number;}
