@@ -17,9 +17,23 @@ export interface CityArtSnapshot {
 }
 
 const MANIFEST = '/artwork/fcc/manifest.json';
-/** Magazine slots that city art fills when the trip has nothing of its own for them. */
-const ART_SLOTS: readonly (readonly [subject:string, role:string, count:number])[] = [
-  ['city-ink', 'city-ink', 1], ['city-illustrations', 'backdrop', 1], ['city-illustrations', 'foreground', 1], ['stickers', 'tag', 1], ['portraits', 'portrait', 2],
+interface ArtSlot { subject:string; role:string; count:number; prefer?:RegExp; only?:boolean; }
+/** Magazine slots that city art fills when the trip has nothing of its own for them, in pick order.
+ * Catalogue art without a role is matched by label so the route, plate and letters spreads are not left blank. */
+const ART_SLOTS: readonly ArtSlot[] = [
+  { subject:'city-ink', role:'city-ink', count:1 },
+  { subject:'city-illustrations', role:'backdrop', count:1 },
+  { subject:'city-illustrations', role:'foreground', count:1 },
+  { subject:'stickers', role:'tag', count:1 },
+  { subject:'portraits', role:'portrait', count:2 },
+  { subject:'objects', role:'vehicle', count:1, prefer:/tuk|boat|ferry|tram|train|bus|taxi|cyclo|scooter|vespa|bike|bicycle|car|plane|rickshaw|gondola|cable|jeep|moto/i, only:true },
+  { subject:'restaurants', role:'facade', count:1, prefer:/facade|exterior|storefront|shopfront/i, only:true },
+  { subject:'restaurants', role:'interior', count:1, prefer:/interior|atmosphere|inside|dining room/i, only:true },
+  { subject:'hotels', role:'interior', count:1, prefer:/lobby|interior|lounge|reception/i, only:true },
+  { subject:'objects', role:'specimen', count:2 },
+  { subject:'people', role:'vignette', count:2, prefer:/family|kid|child|mother|mom|parent|picnic|couple|friends|cafe|beach|stroll|shopping/i },
+  { subject:'activities', role:'postcard', count:1, prefer:/cruise|canal|boat|river|market|garden|park|beach|tour|family|picnic/i },
+  { subject:'objects', role:'stamp', count:1 },
 ];
 const TEE_COUNT = 3;
 
@@ -55,31 +69,37 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
   try { manifest = await readCatalog(MANIFEST, manifestSchema, signal, fetcher, { cache:true }); }
   catch { gaps.push({ label:'FCC city art', slot:'all art slots', reason:'the artwork manifest could not be loaded' }); }
   const bySubject = new Map<string,Artwork[]>();
-  for (const [subject] of ART_SLOTS) {
+  for (const { subject } of ART_SLOTS) {
     if (!manifest || bySubject.has(subject)) continue;
     const entry = manifest.catalogs.find(c => c.subject === subject && c.city === cityId);
     if (!entry) { bySubject.set(subject, []); continue; }
     try { bySubject.set(subject, (await readCatalog(entry.url, catalogSchema, signal, fetcher, { cache:true })).items.filter(a => a.artRef && a.artRef.kind !== 'apparel-mockup').sort((a, b) => a.id.localeCompare(b.id))); }
     catch { bySubject.set(subject, []); gaps.push({ label:`${cityId} ${subject}`, slot:subject, reason:'the city catalogue could not be loaded' }); }
   }
-  for (const [subject, role, count] of manifest ? ART_SLOTS : []) {
-    const pool = (bySubject.get(subject) ?? []).filter(a => a.artRef!.role === role && !blobs.has(a.id));
-    if (!pool.length) { gaps.push({ label:`${cityId} ${role}`, slot:role, reason:'FCC has no credited art for this slot' }); continue; }
-    let placed = 0;
-    for (const item of pool) {
-      if (placed >= count) break;
-      const ref = item.artRef!;
-      try {
-        const blob = await fetchBlob(item.src, fetcher, signal);
-        if (!/^image\/(png|jpeg|webp)$/.test(blob.type)) throw new Error('not a supported still image');
-        const image = { blob, ...await decodedSize(blob, signal) };
-        blobs.set(item.id, image.blob); dimensions.set(item.id, { width:image.width, height:image.height });
-        art.push({ ...ref, width:image.width, height:image.height, mimeType:image.blob.type, role });
-        credits.push({ assetId:item.id, label:ref.label ?? item.label, credit:ref.credit ?? 'unknown', rightsStatus:ref.rightsStatus ?? 'unknown', sourceUrl:ref.source?.canonicalUrl, kind:ref.kind });
-        placed++;
-      } catch (error) { if (signal.aborted) throw error; gaps.push({ assetId:item.id, label:ref.label ?? item.label, slot:role, reason:`image unavailable (${error instanceof Error ? error.message : 'load failed'})` }); }
-    }
+  // Plan every pick first (deterministic), then fetch in parallel; a failed image leaves its slot empty rather than shifting picks.
+  const plan:{ item:Artwork; role:string }[] = [], picked = new Set<string>();
+  for (const slot of manifest ? ART_SLOTS : []) {
+    const have = plan.filter(p => p.role === slot.role).length;
+    if (have >= slot.count) continue;
+    let pool = (bySubject.get(slot.subject) ?? []).filter(a => !picked.has(a.id) && (a.artRef!.role ? a.artRef!.role === slot.role : true));
+    if (slot.prefer) { const hit = pool.filter(a => slot.prefer!.test(a.label)); pool = slot.only ? hit : [...hit, ...pool.filter(a => !hit.includes(a))]; }
+    if (!pool.length) { gaps.push({ label:`${cityId} ${slot.role}`, slot:slot.role, reason:'FCC has no credited art for this slot' }); continue; }
+    for (const item of pool.slice(0, slot.count - have)) { picked.add(item.id); plan.push({ item, role:slot.role }); }
   }
+  const loaded = await Promise.allSettled(plan.map(async ({ item }) => {
+    const blob = await fetchBlob(item.src, fetcher, signal);
+    if (!/^image\/(png|jpeg|webp)$/.test(blob.type)) throw new Error('not a supported still image');
+    return { blob, ...await decodedSize(blob, signal) };
+  }));
+  signal.throwIfAborted();
+  plan.forEach(({ item, role }, index) => {
+    const ref = item.artRef!, result = loaded[index]!;
+    if (result.status === 'rejected') { gaps.push({ assetId:item.id, label:ref.label ?? item.label, slot:role, reason:`image unavailable (${result.reason instanceof Error ? result.reason.message : 'load failed'})` }); return; }
+    const image = result.value;
+    blobs.set(item.id, image.blob); dimensions.set(item.id, { width:image.width, height:image.height });
+    art.push({ ...ref, label:ref.label ?? item.label, width:image.width, height:image.height, mimeType:image.blob.type, role });
+    credits.push({ assetId:item.id, label:ref.label ?? item.label, credit:ref.credit ?? 'unknown', rightsStatus:ref.rightsStatus ?? 'unknown', sourceUrl:ref.source?.canonicalUrl, kind:ref.kind });
+  });
 
   // FCC tee-on-model photography: same checks as the former preview-only path, now shared by every export.
   try {
@@ -119,7 +139,7 @@ export function cityArtSnapshot(cityId:string, options:{ signal?:AbortSignal; fe
 export const resetCityArtSnapshots = () => { caches = new WeakMap(); };
 
 export function snapshotWarnings(snapshot:CityArtSnapshot):string[] {
-  const tees = snapshot.gaps.filter(g => g.slot === 'tee' && g.assetId).length, art = snapshot.gaps.filter(g => g.slot !== 'tee');
+  const tees = snapshot.gaps.filter(g => g.slot === 'tee' && g.assetId).length, art = snapshot.gaps.filter(g => g.slot !== 'tee' && !g.reason.startsWith('FCC has no'));
   return [
     ...(tees ? [`${tees} FCC tee photo${tees === 1 ? ' is' : 's are'} unavailable; the remaining trip pages are kept.`] : []),
     ...snapshot.gaps.filter(g => g.slot === 'tee' && !g.assetId).map(() => 'FCC tee pages are unavailable; your trip pages are kept.'),
