@@ -6,7 +6,7 @@
 .mot-export-privacy input { width:18px;height:18px;accent-color:var(--m-ink); }
 .mot-export-privacy select { background:var(--m-surface);border:1px solid var(--m-line-2);border-radius:8px;min-height:44px;padding:0 10px; }
 .mot-export-privacy p { flex:1 1 300px;color:var(--m-ink-2);font-size:12px;max-width:60ch; }
-.mot-export-outputs { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start; }
+.mot-export-outputs { display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;align-items:start; }
 .mot-export-output { background:var(--m-surface);border:1px solid var(--m-line);border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.05),0 12px 32px -10px rgba(0,0,0,.16);overflow:hidden;min-width:0;display:grid;grid-template-rows:auto auto 1fr; }
 .mot-export-object { height:232px;background:var(--m-paper);border-bottom:1px solid var(--m-line);display:grid;place-items:center;overflow:hidden; }
 .mot-export-magstack { position:relative;isolation:isolate; }

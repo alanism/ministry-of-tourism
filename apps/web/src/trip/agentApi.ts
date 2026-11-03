@@ -9,7 +9,7 @@ const groupRouteExtraSchema=routeExtraSchema.extend({ledger:z.unknown().optional
 const reactionsSchema=z.record(z.string().min(1).max(200),z.enum(['keep','maybe','skip']));
 const parse=<T,>(schema:z.ZodType<T>,raw:unknown,what:string):T=>{const parsed=schema.safeParse(raw);if(!parsed.success)throw new CommandError('invalid_input',`Invalid ${what}. Nothing changed.`);return parsed.data;};
 export interface TripArtifact {filename:string;mime:string;byteCount:number;boardId:string;revision:number;url:string;id?:string;createdAt?:string;sha256?:string;kept?:boolean;scope?:'guide'|'stay'|'personal';urlExpiresAt?:string|null;embeddedMedia?:import('./standalone-media').EmbeddedMedia[];selection?:import('@writers-board/core').MagazineDocument['selection'];}
-export interface TripApiOptions {onChange?:()=>void;providers?:()=>{fcc:boolean;muse:boolean};whenSaved?:()=>Promise<void>;onDiagnostic?:(receipt:DiagnosticReceipt)=>void;exportState?:()=>OperationState|undefined;exportArtifact?:(format:'html'|'zip',signal?:AbortSignal)=>Promise<TripArtifact>;}
+export interface TripApiOptions {onChange?:()=>void;providers?:()=>{fcc:boolean;muse:boolean};whenSaved?:()=>Promise<void>;onDiagnostic?:(receipt:DiagnosticReceipt)=>void;exportState?:()=>OperationState|undefined;exportArtifact?:(format:'html'|'pdf'|'zip',signal?:AbortSignal)=>Promise<TripArtifact>;}
 
 export function createTripApi(session:TripSession,options:TripApiOptions={}) {
   let tracker:OperationTracker|undefined;
@@ -60,8 +60,8 @@ export function createTripApi(session:TripSession,options:TripApiOptions={}) {
       await tracker.run('persisting','persisted',options.whenSaved);
       return tracker.state;
     },
-    exportArtifact:(format:'html'|'zip',signal?:AbortSignal)=>{
-      if(!['html','zip'].includes(format))throw new CommandError('invalid_input','Choose html for an offline magazine or zip for an editable trip.');
+    exportArtifact:(format:'html'|'pdf'|'zip',signal?:AbortSignal)=>{
+      if(!['html','pdf','zip'].includes(format))throw new CommandError('invalid_input','Choose html for an offline magazine, pdf for a light screen PDF or zip for an editable trip.');
       if(!options.exportArtifact)throw new CommandError('unavailable','Artifact export is unavailable until a trip is open.');
       return options.exportArtifact(format,signal);
     },

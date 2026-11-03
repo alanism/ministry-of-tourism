@@ -174,6 +174,12 @@ export const tripMetaUpdate = defineTripCommand({
   },
 });
 
+export const tripRename = defineTripCommand({
+  name: 'trip_rename', title: 'Rename trip', description: 'Changes the trip title shown on the board and magazine cover.', access: 'write',
+  input: z.object({title:z.string().trim().min(1).max(120)}).strict(),
+  run: (ctx,input) => {ctx.parts.meta.set('title',input.title);return {title:input.title};},
+});
+
 export const tripAssetRegister = defineTripCommand({
   name:'trip_asset_register',title:'Register trip media',description:'Registers media for a native decoration.',access:'write',input:z.object({asset:assetSchema}).strict(),
   run:(ctx,input)=>{if(ctx.actor.kind==='agent')assertAgentMediaAccess(ctx.parts,[input.asset.id,...(input.asset.derivedFrom?[input.asset.derivedFrom]:[])]);writeAsset(ctx.parts,input.asset);return{id:input.asset.id};},
@@ -269,4 +275,4 @@ export const tripVotingDeclare=defineTripCommand({name:'trip_voting_declare',tit
 export const tripVotingOpen=defineTripCommand({name:'trip_voting_open',title:'Open a declared voting round',description:'Person-only opening; responses delivered before opening remain uncounted.',access:'write',humanOnly:true,input:preferenceRoundSchema,run:(ctx,input)=>commitVotingOpen(ctx.doc,input)});
 export const tripVotingClose=defineTripCommand({name:'trip_voting_close',title:'Seal a confirmed voting result',description:'Person-only prepared close. A readable sealed result survives ordinary Undo; revising needs a fresh round.',access:'write',humanOnly:true,input:z.object({prepared:preparedVotingCloseSchema}).strict(),run:(ctx,input)=>commitPreparedVotingClose(ctx.doc,ctx.actor,input.prepared)});
 
-export const TRIP_COMMANDS: TripCommand[] = [tripAssetReplace,tripKeepsakeCaption,tripKeepsakeSelect,tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate,tripBoardPaste];
+export const TRIP_COMMANDS: TripCommand[] = [tripAssetReplace,tripKeepsakeCaption,tripKeepsakeSelect,tripVotingDeclare,tripVotingOpen,tripVotingClose,tripMemoryReact,tripGroupPlan,tripGroupFeasibility,tripBookingAttention,tripGroupCommit,tripGroupPlanningSet,tripBookingAttentionAdd,tripPreferenceTally,tripBallotUpdate,tripBallotRead,tripBallotClear,tripGroupConfigure, tripGroupRead, tripCardCreate, tripCardUpdate, tripCardMove, tripTaskSetStatus, tripAssetAttach, tripCardDelete, tripLineageSync, tripRead, tripMetaUpdate, tripRename, tripAssetRegister,tripPresentationCreate,tripPresentationUpdate,tripPresentationDelete,tripMagazineTeeSelect,tripBoardDuplicate,tripBoardPaste];

@@ -33,7 +33,7 @@ function selection(doc:import('yjs').Doc,scope:ArtifactScope,html=false,ancestor
 }
 export function artifactInventory(doc:import('yjs').Doc,scope:ArtifactScope='stay',format:'html'|'pdf'|'zip'='zip'):ArtifactInventory{
   const selected=selection(doc,scope,format==='html',format==='zip');
-  return {cards:selected.cards.length,placements:selected.placements.length,assets:selected.assets.length,notes:selected.cards.filter(card=>card.kind==='note'||card.kind==='brief'||!!card.travelerNote).length,credits:selected.assets.filter(id=>readAsset(selected.parts,id)?.credit?.trim()).length};
+  return {cards:selected.cards.length,placements:selected.placements.length,assets:selected.assets.length,notes:selected.cards.filter(card=>card.kind==='note'||card.kind==='brief'||!!card.travelerNote||!!card.body?.trim()).length,credits:selected.assets.filter(id=>readAsset(selected.parts,id)?.credit?.trim()).length};
 }
 async function collectAssets(doc:import('yjs').Doc,scope:ArtifactScope,signal?:AbortSignal,onProgress?:ArtifactOptions['onProgress'],stage:ArtifactProgress['stage']='collect',classifyErrors=false,html=false,ancestors=false){
   const selected=selection(doc,scope,html,ancestors),bytes=new Map<string,Uint8Array>();

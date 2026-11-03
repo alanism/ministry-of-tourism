@@ -99,6 +99,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
   const [session, setSession] = useState<TripSession | null>(null);
   const [booting, setBooting] = useState(true);
   const [tab, setTab] = useState<Tab>('board');
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [keepsakeFormat,setKeepsakeFormat]=useState<'magazine'|'postcard'|'memories'>('memories');
   const [tick, setTick] = useState(0);
   const [toast, setToast] = useState<{ message: string; action?: { label: string; run: () => void } } | null>(null);
@@ -295,7 +296,8 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
     </aside>
   ) : (
     <aside className="m-panel mot-side" aria-label="Trip">
-      <h1>{meta.title}</h1>
+      {renaming!==null?<form className="mot-rename" onSubmit={event=>{event.preventDefault();try{session.execute(YOU,'trip_rename',{title:renaming});setRenaming(null);refresh();}catch(error){notify(error instanceof Error?error.message:'The trip could not be renamed.');}}}><input aria-label="Trip name" value={renaming} maxLength={120} autoFocus onChange={event=>setRenaming(event.target.value)} /><button type="submit" className="m-btn small primary">Save name</button><button type="button" className="m-btn small ghost" onClick={()=>setRenaming(null)}>Cancel</button></form>
+        :<h1>{meta.title} <button type="button" className="m-btn small ghost mot-rename-btn" onClick={()=>setRenaming(meta.title)}>Rename</button></h1>}
       <div className="mot-trip-meta"><p className="sub">{tripSubtitle(meta) || cityLabel(meta.city)}</p><Saved status={saved} exportedAt={open.lastExportedAt()} /></div>
       <div className="mot-phone-actions">
         <button type="button" className="m-btn small" aria-expanded={briefOpen} aria-controls="mot-brief-body" onClick={() => setBriefOpen(!briefOpen)}>Trip brief <Icon name={briefOpen ? 'chevronUp' : 'chevronDown'} /></button>
