@@ -60,7 +60,10 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
     catch (e) { notify(e instanceof Error ? e.message : 'That did not work. Nothing changed.');return false; }
   };
   const edit = () => { setDraft(cardDraft()); setEditing(true); };
+  const dayInput=useRef<HTMLInputElement>(null),timeInput=useRef<HTMLInputElement>(null);
   const save = () => {
+    // A half-typed native date or time reads as '' and would silently clear the field.
+    if(dayInput.current?.validity.badInput||timeInput.current?.validity.badInput){notify('The day or time is not complete. Fill in every part, or clear it. Nothing changed.');return;}
     const lat=draft.lat.trim(),lng=draft.lng.trim();
     if(!!lat!==!!lng){notify('Enter both latitude and longitude, or clear both to remove the pin. Nothing changed.');return;}
     if(lat&&(!Number.isFinite(Number(lat))||!Number.isFinite(Number(lng))||Number(lat)<-90||Number(lat)>90||Number(lng)<-180||Number(lng)>180)){notify('Use latitude −90 to 90 and longitude −180 to 180. Nothing changed.');return;}
@@ -118,8 +121,8 @@ export function TripCardView({ card, session, actor, kind, refresh, notify, auto
 
           onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) save(); if (e.key === 'Escape') setEditing(false); }} />
         <div className="m-edit-grid">
-          <label>Day<input type="date" value={draft.day} onChange={(e) => setDraft({ ...draft, day: e.target.value })} /></label>
-          <label>Time<input type="time" value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} /></label>
+          <label>Day<input ref={dayInput} type="date" value={draft.day} onChange={(e) => setDraft({ ...draft, day: e.target.value })} /></label>
+          <label>Time<input ref={timeInput} type="time" value={draft.time} onChange={(e) => setDraft({ ...draft, time: e.target.value })} /></label>
         </div>
         <fieldset className="m-edit-scope">
           <legend>Location</legend>
