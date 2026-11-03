@@ -58,7 +58,7 @@ export async function prepareHtmlMagazine(session:TripSession,signal?:AbortSigna
     }
     const urls=new Map<string,string>(),dimensions=new Map<string,{width:number;height:number}>(),media:EmbeddedMedia[]=[];
     let embeddedBytes=0;
-    const snapshot=await citySnapshot(doc,signal),warnings=snapshot?snapshotWarnings(snapshot):[];
+    const snapshot=await citySnapshot(doc,signal),warnings=snapshot?snapshotWarnings(snapshot):['City art and FCC tee pages are unavailable; your trip pages are kept.'];
     for(const [id,blob] of snapshot?.blobs??[]){
       signal?.throwIfAborted();if(bytes.has(id))continue;
       try{

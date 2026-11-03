@@ -210,7 +210,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
       if (op !== opRef.current) return;
       const err = e as Error & { storeName?: string; original?: Uint8Array; bytes?: Uint8Array; originalUpdates?: Uint8Array[] };
       // Nothing stored to repair: forget the pointer and say so on the first screen instead of opening Recovery.
-      if (!err.original && !err.bytes && !err.originalUpdates && !err.storeName) { forgetMissingBoard(id); setLost(true); return; }
+      if (err.message === 'Trip not found in this browser.' && !err.original && !err.bytes && !err.originalUpdates && !err.storeName) { forgetMissingBoard(id); setLost(true); return; }
       setRecovery({ bytes: err.original ?? err.bytes, originalUpdates: err.originalUpdates, boardId: id, storeName: err.storeName, context: 'Restore last board', error: err instanceof Error ? err.message : 'Could not open the last board.', autoInspect: Boolean(err.original ?? err.bytes ?? err.storeName) });
     }).finally(() => { if (op === opRef.current) setBooting(false); });
     return () => { if (opRef.current === op) opRef.current += 1; };

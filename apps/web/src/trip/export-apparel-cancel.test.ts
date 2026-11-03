@@ -39,6 +39,6 @@ it('does not start a garment decoder if cancellation arrives while its checksum 
 
 it('still omits a garment whose decoded dimensions conflict with its declared original',async()=>{
   const f=await fixture(),close=vi.fn();vi.stubGlobal('createImageBitmap',vi.fn(async()=>({width:1200,height:800,close})));
-  try{const magazine=await prepareMagazine(f.session,undefined,false);expect(magazine.warnings).toContain('1 FCC tee photo is unavailable; the remaining trip pages are kept.');expect(magazine.pages.every(page=>!page.assetIds.includes(f.art.assetId))).toBe(true);expect(close).toHaveBeenCalledOnce();expect(encodeTrip(f.doc)).toEqual(f.before);}
+  try{const magazine=await prepareMagazine(f.session,undefined,false);expect(magazine.warnings.some(w=>/^1 FCC tee photo is unavailable \(.+ on the style and advertisement page\); the remaining trip pages are kept\.$/.test(w))).toBe(true);expect(magazine.pages.every(page=>!page.assetIds.includes(f.art.assetId))).toBe(true);expect(close).toHaveBeenCalledOnce();expect(encodeTrip(f.doc)).toEqual(f.before);}
   finally{f.session.destroy();f.doc.destroy();}
 });

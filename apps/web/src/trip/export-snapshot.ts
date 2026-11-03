@@ -30,6 +30,7 @@ const ART_SLOTS: readonly ArtSlot[] = [
   { subject:'objects', role:'vehicle', count:1, prefer:/tuk|boat|ferry|tram|train|bus|taxi|cyclo|scooter|vespa|bike|bicycle|car|plane|rickshaw|gondola|cable|jeep|moto/i, only:true },
   { subject:'restaurants', role:'facade', count:1, prefer:/facade|exterior|storefront|shopfront/i, only:true },
   { subject:'restaurants', role:'interior', count:1, prefer:/interior|atmosphere|inside|dining room/i, only:true },
+  // Fallback only: a hotel interior fills the one interior plate when the city has no restaurant interior.
   { subject:'hotels', role:'interior', count:1, prefer:/lobby|interior|lounge|reception/i, only:true },
   { subject:'objects', role:'specimen', count:2 },
   { subject:'people', role:'vignette', count:2, prefer:/family|kid|child|mother|mom|parent|picnic|couple|friends|cafe|beach|stroll|shopping/i },
@@ -88,7 +89,8 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
     if (have >= slot.count) continue;
     let pool = (bySubject.get(slot.subject) ?? []).filter(a => !picked.has(a.id) && (a.artRef!.role ? a.artRef!.role === slot.role : true) && drawable(a.artRef!.label ?? a.label) && drawable(a.artRef!.credit ?? ''));
     if (slot.prefer) { const hit = pool.filter(a => slot.prefer!.test(a.label)); pool = slot.only ? hit : [...hit, ...pool.filter(a => !hit.includes(a))]; }
-    if (!pool.length) { gaps.push({ label:`${cityId} ${slot.role}`, slot:slot.role, reason:'FCC has no credited art for this slot' }); continue; }
+    if (!pool.length) { if (!(slot.role === 'interior' && slot.subject === 'restaurants')) gaps.push({ label:`${cityId} ${slot.role}`, slot:slot.role, reason:'FCC has no credited art for this slot' }); continue; }
+    if (pool.length < slot.count - have) gaps.push({ label:`${cityId} ${slot.role}`, slot:slot.role, reason:`FCC has only ${pool.length} of ${slot.count - have} credited images for this slot` });
     for (const item of pool.slice(0, slot.count - have)) { picked.add(item.id); plan.push({ item, role:slot.role }); }
   }
   const loaded = await Promise.allSettled(plan.map(async ({ item }) => {
@@ -144,11 +146,16 @@ export function cityArtSnapshot(cityId:string, options:{ signal?:AbortSignal; fe
 }
 export const resetCityArtSnapshots = () => { caches = new WeakMap(); };
 
+/** Where each art role appears in the magazine, so an unavailable image is named with its place. */
+const ROLE_PAGE:Record<string,string> = { 'city-ink':'feature opener', backdrop:'cover', foreground:'cover', tag:'route', portrait:'style spread', vehicle:'route', facade:'food and culture', interior:'food and culture', specimen:'eat and look', vignette:'route and letters', postcard:'correspondence', stamp:'correspondence', tee:'style and advertisement' };
+const where = (gap:ExportArtGap) => ROLE_PAGE[gap.slot] ? ` on the ${ROLE_PAGE[gap.slot]} page` : '';
+
 export function snapshotWarnings(snapshot:CityArtSnapshot):string[] {
-  const tees = snapshot.gaps.filter(g => g.slot === 'tee' && g.assetId).length, art = snapshot.gaps.filter(g => g.slot !== 'tee' && !g.reason.startsWith('FCC has no'));
+  const tees = snapshot.gaps.filter(g => g.slot === 'tee' && g.assetId), failed = snapshot.gaps.filter(g => g.slot !== 'tee' && !g.reason.startsWith('FCC has')), absent = snapshot.gaps.filter(g => g.slot !== 'tee' && g.reason.startsWith('FCC has'));
   return [
-    ...(tees ? [`${tees} FCC tee photo${tees === 1 ? ' is' : 's are'} unavailable; the remaining trip pages are kept.`] : []),
+    ...(tees.length ? [`${tees.length} FCC tee photo${tees.length === 1 ? ' is' : 's are'} unavailable (${tees.map(g => `${g.label}${where(g)}`).join('; ')}); the remaining trip pages are kept.`] : []),
     ...snapshot.gaps.filter(g => g.slot === 'tee' && !g.assetId).map(() => 'FCC tee pages are unavailable; your trip pages are kept.'),
-    ...(art.length ? [`City art left empty: ${art.map(g => `${g.label} (${g.reason})`).join('; ')}.`] : []),
+    ...(failed.length ? [`City art left empty: ${failed.map(g => `${g.label}${where(g)} (${g.reason})`).join('; ')}.`] : []),
+    ...(absent.length ? [`No FCC art for: ${absent.map(g => `${g.label}${where(g)}${g.reason.startsWith('FCC has only') ? ` (${g.reason.replace('FCC has ', '').replace(' for this slot', '')})` : ''}`).join('; ')}. Those places stay plain.`] : []),
   ];
 }
