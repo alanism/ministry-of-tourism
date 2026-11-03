@@ -33,15 +33,21 @@ MoT gives that work a more playful home. Places, bookings, pictures and notes be
 
 The ambition is simple: **less trip administration, more anticipation.**
 
+**Start wherever you are.** These are four entry points, not steps you must complete in order.
+
 ```mermaid
-flowchart LR
-    A[Bookings, places, photos and notes] --> B[Your trip board]
-    C[City stories, art and stickers] --> B
-    B --> D[Plan the trip]
-    D --> E[Live the trip]
-    E --> F[Keep the trip]
-    F --> G[Magazine to share]
-    F --> H[Editable trip package]
+flowchart TB
+    A["Destination unknown"] --> A1["Explore destinations and itinerary options"]
+    B["Destination known"] --> B1["Plan with or without flights, accommodation or existing plans"]
+    C["On the trip"] --> C1["Journal the day or find something to do"]
+    D["Trip completed"] --> D1["Create a journal and memorabilia"]
+    A1 --> Board["Your trip board"]
+    B1 --> Board
+    C1 --> Board
+    D1 --> Board
+    FCC["City stories, art and stickers"] --> Board
+    Board --> Magazine["Magazine to share or keep"]
+    Board --> Package["Editable trip package"]
 ```
 
 ![Bangkok food and culture spread with city illustrations and credited images](docs/images/02-magazine-food-culture.jpg)
@@ -61,11 +67,20 @@ sequenceDiagram
     participant You
     participant Muse
     participant Board as MoT board
-    You->>Muse: Here are my plans. Help with the open slots.
-    Muse->>Board: Read the trip and available actions
-    Muse->>Board: Add requested suggestions
+    alt Destination unknown
+        You->>Muse: Help me explore where to go and itinerary options.
+    else Destination known
+        You->>Muse: Help me plan here. Use any bookings or plans I have.
+        Note over You,Muse: Flights, accommodation and existing plans are optional.
+    else On the trip
+        You->>Muse: Help me journal or find something to do now.
+    else Trip completed
+        You->>Muse: Help me make a journal and memorabilia.
+    end
+    Muse->>Board: Read available actions and any existing trip
+    Muse->>Board: Add only the help requested for this starting point
     Muse->>Board: Save, reload and read back
-    Board-->>You: Editable plans and magazine export
+    Board-->>You: Updated trip, with magazine or package when requested
     You->>Board: Keep, change or undo
 ```
 
