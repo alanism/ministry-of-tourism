@@ -158,10 +158,6 @@ npm --prefix apps/web run build
 
 The board and manual workflows need no model key. For the optional local model connection, follow [docs/MUSE-RUNTIME.md](docs/MUSE-RUNTIME.md). Keep credentials on the server. The public source and hosted deployment are versioned separately. See [Git workflow](docs/GIT-WORKFLOW.md) for contribution and release instructions.
 
-## Built on
-
-MoT builds on the existing [Writer's Board](https://github.com/alanism/ucc-writers-board-notebook) engine and FCC content. The travel workspace connects those foundations to agent-assisted planning and a personal magazine; see [source provenance](docs/GIT-WORKFLOW.md).
-
 ## License
 
 MoT-owned code: [MIT](LICENSE). [Content and asset terms](docs/CONTENT-AND-ASSETS.md) · [Third-party notices](THIRD_PARTY_NOTICES.md).
