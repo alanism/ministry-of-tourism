@@ -12,13 +12,12 @@ import { MUSE_IMAGE_CREDIT, addGeneratedImage } from './muse-image-board';
 const CANARY = 'sk-TEST-CANARY-7f3a9c2e1b';
 const actor = { kind: 'human' as const, id: 'owner', name: 'Owner' };
 function pngBytes(width: number, height: number): Uint8Array {
-  const bytes = new Uint8Array(45);
-  bytes.set([137, 80, 78, 71, 13, 10, 26, 10]);
-  const view = new DataView(bytes.buffer);
-  view.setUint32(8, 13); bytes.set(new TextEncoder().encode('IHDR'), 12);
-  view.setUint32(16, width); view.setUint32(20, height); bytes[24] = 8; bytes[25] = 2;
-  bytes.set(new TextEncoder().encode('FIXTURE'), 33);
-  return bytes;
+  // Structurally complete fixture PNG (IHDR, IDAT, IEND); CRCs are not checked by the header reader.
+  const chunk = (kind: string, data: Uint8Array) => { const out = new Uint8Array(12 + data.length), view = new DataView(out.buffer); view.setUint32(0, data.length); out.set(new TextEncoder().encode(kind), 4); out.set(data, 8); return out; };
+  const ihdr = new Uint8Array(13), v = new DataView(ihdr.buffer); v.setUint32(0, width); v.setUint32(4, height); ihdr[8] = 8; ihdr[9] = 2;
+  const parts = [new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', new TextEncoder().encode('FIXTURE')), chunk('IEND', new Uint8Array())];
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0)); let at = 0; for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
 }
 const b64 = (bytes: Uint8Array) => Buffer.from(bytes).toString('base64');
 const fixtureOk = (width = 1536, height = 1024) => new Response(JSON.stringify({ created: 1, data: [{ b64_json: b64(pngBytes(width, height)) }], output_format: 'png', background: 'opaque' }), { status: 200 });
@@ -55,6 +54,12 @@ it.each([
   expect(error).toMatchObject({ kind, uncertain });
   expect(error.message).not.toContain(CANARY);
   expect(error.message).not.toContain('provider text');
+});
+
+it('refuses an image whose header declares more pixels than the board accepts, before decoding it', async () => {
+  const decodeSpy = vi.fn(decode);
+  await expect(generateMuseImage(request(), { fetcher: async () => fixtureOk(20000, 20000), decode: decodeSpy })).rejects.toMatchObject({ kind: 'malformed' });
+  expect(decodeSpy).not.toHaveBeenCalled();
 });
 
 it('reports network failure, undecodable pixels and a missing key separately', async () => {

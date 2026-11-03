@@ -87,6 +87,7 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
   for (const slot of manifest ? ART_SLOTS : []) {
     const have = plan.filter(p => p.role === slot.role).length;
     if (have >= slot.count) continue;
+    if (gaps.some(g => g.slot === slot.subject && g.reason === 'the city catalogue could not be loaded')) continue;
     let pool = (bySubject.get(slot.subject) ?? []).filter(a => !picked.has(a.id) && (a.artRef!.role ? a.artRef!.role === slot.role : true) && drawable(a.artRef!.label ?? a.label) && drawable(a.artRef!.credit ?? ''));
     if (slot.prefer) { const hit = pool.filter(a => slot.prefer!.test(a.label)); pool = slot.only ? hit : [...hit, ...pool.filter(a => !hit.includes(a))]; }
     if (!pool.length) { if (!(slot.role === 'interior' && slot.subject === 'restaurants')) gaps.push({ label:`${cityId} ${slot.role}`, slot:slot.role, reason:'FCC has no credited art for this slot' }); continue; }
@@ -104,7 +105,8 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
     if (result.status === 'rejected') { gaps.push({ assetId:item.id, label:ref.label ?? item.label, slot:role, reason:`image unavailable (${result.reason instanceof Error ? result.reason.message : 'load failed'})` }); return; }
     const image = result.value;
     blobs.set(item.id, image.blob); dimensions.set(item.id, { width:image.width, height:image.height });
-    art.push({ ...ref, label:ref.label ?? item.label, width:image.width, height:image.height, mimeType:image.blob.type, role });
+    // Unknown stays unknown in the export itself: a missing rights status becomes 'unknown', never 'approved'.
+    art.push({ ...ref, label:ref.label ?? item.label, rightsStatus:ref.rightsStatus ?? 'unknown', width:image.width, height:image.height, mimeType:image.blob.type, role });
     credits.push({ assetId:item.id, label:ref.label ?? item.label, credit:ref.credit ?? 'unknown', rightsStatus:ref.rightsStatus ?? 'unknown', sourceUrl:ref.source?.canonicalUrl, kind:ref.kind });
   });
 
@@ -147,7 +149,7 @@ export function cityArtSnapshot(cityId:string, options:{ signal?:AbortSignal; fe
 export const resetCityArtSnapshots = () => { caches = new WeakMap(); };
 
 /** Where each art role appears in the magazine, so an unavailable image is named with its place. */
-const ROLE_PAGE:Record<string,string> = { 'city-ink':'feature opener', backdrop:'cover', foreground:'cover', tag:'route', portrait:'style spread', vehicle:'route', facade:'food and culture', interior:'food and culture', specimen:'eat and look', vignette:'route and letters', postcard:'correspondence', stamp:'correspondence', tee:'style and advertisement' };
+const ROLE_PAGE:Record<string,string> = { 'all art slots':'cover, feature, plate, route, style and letters', 'city-illustrations':'cover', stickers:'route', portraits:'style spread', objects:'eat and look and route', restaurants:'food and culture', hotels:'food and culture', people:'route and letters', activities:'correspondence', 'city-ink':'feature opener', backdrop:'cover', foreground:'cover', tag:'route', portrait:'style spread', vehicle:'route', facade:'food and culture', interior:'food and culture', specimen:'eat and look', vignette:'route and letters', postcard:'correspondence', stamp:'correspondence', tee:'style and advertisement' };
 const where = (gap:ExportArtGap) => ROLE_PAGE[gap.slot] ? ` on the ${ROLE_PAGE[gap.slot]} page` : '';
 
 export function snapshotWarnings(snapshot:CityArtSnapshot):string[] {
@@ -156,6 +158,6 @@ export function snapshotWarnings(snapshot:CityArtSnapshot):string[] {
     ...(tees.length ? [`${tees.length} FCC tee photo${tees.length === 1 ? ' is' : 's are'} unavailable (${tees.map(g => `${g.label}${where(g)}`).join('; ')}); the remaining trip pages are kept.`] : []),
     ...snapshot.gaps.filter(g => g.slot === 'tee' && !g.assetId).map(() => 'FCC tee pages are unavailable; your trip pages are kept.'),
     ...(failed.length ? [`City art left empty: ${failed.map(g => `${g.label}${where(g)} (${g.reason})`).join('; ')}.`] : []),
-    ...(absent.length ? [`No FCC art for: ${absent.map(g => `${g.label}${where(g)}${g.reason.startsWith('FCC has only') ? ` (${g.reason.replace('FCC has ', '').replace(' for this slot', '')})` : ''}`).join('; ')}. Those places stay plain.`] : []),
+    ...(absent.length && !snapshot.art.length ? [`No FCC city art for ${snapshot.cityId} yet: the cover, feature, plate, route, style and letters pages stay plain.`] : absent.length ? [`No FCC art for: ${absent.map(g => `${g.label}${where(g)}${g.reason.startsWith('FCC has only') ? ` (${g.reason.replace('FCC has ', '').replace(' for this slot', '')})` : ''}`).join('; ')}. Those places stay plain.`] : []),
   ];
 }

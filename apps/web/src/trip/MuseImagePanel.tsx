@@ -3,7 +3,7 @@ import { MUSE_IMAGE_PRESETS, composeMusePrompt, readAllCards, readTripMeta, type
 import { MUSE_IMAGE_ENDPOINT, MUSE_IMAGE_PRICE_NOTE, MUSE_IMAGE_PRICING_URL, MuseImageError, generateMuseImage, type MuseImageResult } from './muse-image';
 import { MUSE_IMAGE_CREDIT, addGeneratedImage } from './muse-image-board';
 
-type Status = { kind: 'idle' } | { kind: 'running'; started: number } | { kind: 'done'; result: MuseImageResult; url: string; prompt: string } | { kind: 'failed'; message: string; uncertain: boolean };
+type Status = { kind: 'idle' } | { kind: 'running'; started: number } | { kind: 'done'; result: MuseImageResult; url: string; prompt: string; presetId: string; caption: string; venueId?: string; venueTitle?: string } | { kind: 'failed'; message: string; uncertain: boolean };
 
 export interface MuseImagePanelProps { session: TripSession; actor: Actor; refresh: () => void; notify: (message: string) => void; onClose: () => void; origin?: () => { x: number; y: number } }
 
@@ -33,15 +33,16 @@ export function MuseImagePanel({ session, actor, refresh, notify, onClose, origi
   useEffect(() => () => { run.current += 1; controller.current?.abort(); }, []);
   useEffect(() => () => { if (status.kind === 'done') URL.revokeObjectURL(status.url); }, [status]);
 
+  const caption = mode === 'venue' ? `${effectiveSubject}${meta.city ? `, ${meta.city}` : ''}, Muse Image illustration` : `${effectiveSubject}, ${city}, Muse Image illustration`;
   const generate = async () => {
     if (status.kind === 'running') return;
     const id = ++run.current, abort = new AbortController(); controller.current = abort;
-    const sent = prompt.trim();
+    const sent = prompt.trim(), madeCaption = caption;
     setStatus({ kind: 'running', started: Date.now() }); setElapsed(0);
     try {
       const result = await generateMuseImage({ key, prompt: sent, aspect, signal: abort.signal });
       if (id !== run.current) return; // Stopped or closed: a late image is ignored.
-      setStatus({ kind: 'done', result, url: URL.createObjectURL(result.blob), prompt: sent });
+      setStatus({ kind: 'done', result, url: URL.createObjectURL(result.blob), prompt: sent, presetId: preset.id, caption: madeCaption, venueId: mode === 'venue' ? venue?.id : undefined, venueTitle: mode === 'venue' ? venue?.title : undefined });
     } catch (error) {
       if (id !== run.current) return;
       const e = error instanceof MuseImageError ? error : new MuseImageError('provider', 'Generation failed. Nothing was added.', true);
@@ -49,19 +50,20 @@ export function MuseImagePanel({ session, actor, refresh, notify, onClose, origi
     } finally { if (controller.current === abort) controller.current = null; }
   };
   const stop = () => { controller.current?.abort(); run.current += 1; setStatus({ kind: 'failed', message: 'Stopped. Meta may still have generated and billed the image; a late result is ignored.', uncertain: true }); };
-  const caption = mode === 'venue' ? `${effectiveSubject}${meta.city ? `, ${meta.city}` : ''}, Muse Image illustration` : `${effectiveSubject}, ${city}, Muse Image illustration`;
   const add = async (destination: 'board' | 'card') => {
     if (status.kind !== 'done' || adding) return;
     setAdding(true);
     try {
       const abort = new AbortController();
-      const { persisted } = await addGeneratedImage(session, actor, status.result, preset, caption, { boardId }, destination === 'card' && venue ? { kind: 'card', cardId: venue.id } : { kind: 'board', origin: origin?.() }, abort.signal);
-      refresh(); notify(persisted ? (destination === 'card' ? `Illustration attached to ${venue?.title}` : 'Illustration added to the board') : 'Illustration is in this tab only. Download a ZIP backup before closing.');
+      // Add exactly what was generated: its preset, caption and venue, even if the controls changed since.
+      const made = MUSE_IMAGE_PRESETS.find(p => p.id === status.presetId)!;
+      const { persisted } = await addGeneratedImage(session, actor, status.result, made, status.caption, { boardId }, destination === 'card' && status.venueId ? { kind: 'card', cardId: status.venueId } : { kind: 'board', origin: origin?.() }, abort.signal);
+      refresh(); notify(persisted ? (destination === 'card' ? `Illustration attached to ${status.venueTitle}` : 'Illustration added to the board') : 'Illustration is in this tab only. Download a ZIP backup before closing.');
       onClose();
     } catch (error) { notify(error instanceof Error ? error.message : 'The illustration could not be added. Nothing changed.'); }
     finally { setAdding(false); }
   };
-  const download = () => { if (status.kind !== 'done') return; const a = document.createElement('a'); a.href = status.url; a.download = `${caption.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'muse-image'}.${status.result.mime.split('/')[1]}`; a.click(); };
+  const download = () => { if (status.kind !== 'done') return; const a = document.createElement('a'); a.href = status.url; a.download = `${status.caption.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'muse-image'}.${status.result.mime.split('/')[1]}`; a.click(); };
   const running = status.kind === 'running', ready = !!key.trim() && ack && !!prompt.trim() && !running;
 
   return <section className="mot-muse-image" aria-label="Create with Muse Image">
@@ -93,11 +95,11 @@ export function MuseImagePanel({ session, actor, refresh, notify, onClose, origi
     </div>
     {status.kind === 'failed' && <p role="alert" className="mot-muse-image-error">{status.message}{status.uncertain ? ' Trying again is a new request and may be a new charge.' : ''}</p>}
     {status.kind === 'done' && <figure className="mot-muse-image-result">
-      <img src={status.url} alt={caption} />
+      <img src={status.url} alt={status.caption} />
       <figcaption><strong>AI-generated illustration</strong> · {status.result.width} × {status.result.height} px · {status.result.mime.replace('image/', '').toUpperCase()} · {Math.round(status.result.elapsedMs / 1000)}s<br /><small>{MUSE_IMAGE_CREDIT}. An illustration, not a photograph or a record of how a place looks.</small></figcaption>
       <div className="mot-muse-image-actions">
-        {mode === 'venue' && venue && <button type="button" className="m-btn primary" disabled={adding} onClick={() => void add('card')}>Attach to {venue.title}</button>}
-        <button type="button" className={`m-btn${mode === 'venue' && venue ? '' : ' primary'}`} disabled={adding} onClick={() => void add('board')}>Add to board</button>
+        {status.venueId && <button type="button" className="m-btn primary" disabled={adding} onClick={() => void add('card')}>Attach to {status.venueTitle}</button>}
+        <button type="button" className={`m-btn${status.venueId ? '' : ' primary'}`} disabled={adding} onClick={() => void add('board')}>Add to board</button>
         <button type="button" className="m-btn" onClick={download}>Download</button>
         <button type="button" className="m-btn ghost" disabled={adding} onClick={() => setStatus({ kind: 'idle' })}>Discard</button>
       </div>

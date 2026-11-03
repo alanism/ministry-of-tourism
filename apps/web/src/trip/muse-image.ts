@@ -3,6 +3,7 @@
 // which answers CORS preflight for any origin (checked 3 Nov 2026). Nothing here stores,
 // logs or exports the key, and nothing calls the provider except an explicit Generate.
 import { MUSE_IMAGE_ASPECTS, MUSE_IMAGE_MODEL, type MuseImageAspect } from '@writers-board/core';
+import { rasterDimensions } from './standalone-media';
 
 export const MUSE_IMAGE_ENDPOINT = 'https://api.meta.ai/v1/images/generations';
 /** Generation with grounding can take minutes; past this the outcome (and any charge) is uncertain. */
@@ -89,8 +90,10 @@ export async function generateMuseImage(request: MuseImageRequest, deps: MuseIma
     try { const raw = atob(b64.replace(/^data:[^,]*,/, '')); bytes = Uint8Array.from(raw, ch => ch.charCodeAt(0)); } catch { throw new MuseImageError('malformed', 'Meta returned image data that does not decode. Nothing was added.', true); }
     const mime = sniff(bytes);
     if (!mime) throw new MuseImageError('malformed', 'Meta returned bytes that are not a PNG, JPEG or WebP image. Nothing was added.', true);
-    // Refuse a declared PNG size beyond the board's limits before asking the browser to decode it.
-    if (mime === 'image/png' && bytes.length >= 24) { const v = new DataView(bytes.buffer, bytes.byteOffset), w = v.getUint32(16), h = v.getUint32(20); if (w > 8192 || h > 8192 || w * h > 16_777_216) throw new MuseImageError('malformed', 'Meta returned an image larger than the board accepts. Nothing was added.', true); }
+    // Read the declared size from the image header and refuse anything beyond the board's limits before decoding it.
+    let declared: { width: number; height: number };
+    try { declared = rasterDimensions(bytes, mime); } catch { throw new MuseImageError('malformed', 'Meta returned image data with an incomplete or unsupported structure. Nothing was added.', true); }
+    if (declared.width > 8192 || declared.height > 8192 || declared.width * declared.height > 16_777_216) throw new MuseImageError('malformed', 'Meta returned an image larger than the board accepts. Nothing was added.', true);
     const blob = new Blob([bytes as BlobPart], { type: mime });
     let size: { width: number; height: number };
     try { size = await (deps.decode ?? decodeBitmap)(blob); } catch { throw new MuseImageError('malformed', 'The returned image could not be decoded. Nothing was added.', true); }
