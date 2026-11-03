@@ -1,7 +1,7 @@
 import{expect,it}from'vitest';
 import{agentGuidance,guidanceMarkdown,GUIDE_VERSION,startHereMarkdown}from'./guidance';
 it('distinguishes implemented local room recovery from unavailable production and external-agent authority',()=>{
- const text=guidanceMarkdown();expect(GUIDE_VERSION).toBe('0.3.2');
+ const text=guidanceMarkdown();expect(GUIDE_VERSION).toBe('0.3.3');
  for(const phrase of ['local development','Production sharing remains unavailable','same operation','assigned household','prior PNG','protected household replies'])expect(text).toContain(phrase);
  expect(text).toContain('Files do not grant room membership');expect(text).not.toContain('Authenticated shared rooms and live sync are unavailable here.');
 });

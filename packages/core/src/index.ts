@@ -53,6 +53,7 @@ export * from './trip/png.ts';
 export * from './trip/merch.ts';
 export * from './trip/art-ref.ts';
 export * from './trip/muse-image-presets.ts';
+export * from './trip/instant-runoff.ts';
 export * from './trip/magazine-audit.ts';
 export * from './trip/fcc-journal.ts';
 export * from './trip/group-preferences.ts';

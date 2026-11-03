@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
-import {cancelVotingClose,commitVotingClose,getVotingRoundView,openVotingRound,prepareVotingClose,readAllCards,readTripMeta,readVotingSeals,startNextVotingRound,votingRoundState,type Actor,type TripSession} from '@writers-board/core';
+import {cancelVotingClose,commitVotingClose,getVotingRoundView,openVotingRound,prepareVotingClose,readAllCards,readTripMeta,readVotingSeals,sealedInstantRunoff,startNextVotingRound,votingRoundState,type Actor,type InstantRunoffResult,type TripSession} from '@writers-board/core';
 import {VotingMethodNotice} from './VotingMethodNotice';
+import {RunoffRounds} from './RunoffRounds';
 
 export type VotingKey={proposal_version:number;round_id:string};
 export type VotingView=Awaited<ReturnType<typeof getVotingRoundView>>;
@@ -21,6 +22,22 @@ export function useVotingRound(session:TripSession,round:VotingKey|undefined){
 function TallyTable({tally,session}:{tally:NonNullable<VotingView['tally']>;session:TripSession}){
  const cards=new Map(readAllCards(session.parts).filter(card=>card.scope!=='private').map(card=>[card.id,card]));
  return <div className="mot-group-table" tabIndex={0}><table><caption>Positional points · advisory result</caption><thead><tr><th>Option</th><th>Points</th><th>Approved</th><th>Maybe</th><th>Denied</th></tr></thead><tbody>{tally.options.map(option=><tr key={option.option_id}><th title={option.option_id}>{cards.get(option.option_id)?.title||option.option_id}</th><td>{option.points}</td><td>{option.stamps.approved.length}</td><td>{option.stamps.maybe.length}</td><td>{option.stamps.denied.length}</td></tr>)}</tbody></table></div>;
+}
+
+/** The organizer reads the same ranked replies either way; neither count chooses or books anything. */
+function ResultBy({tally,runoff,session}:{tally:NonNullable<VotingView['tally']>;runoff:InstantRunoffResult|null|undefined;session:TripSession}){
+ const [by,setBy]=useState<'points'|'runoff'>('points');
+ const cards=new Map(readAllCards(session.parts).filter(card=>card.scope!=='private').map(card=>[card.id,card])),name=(id:string)=>cards.get(id)?.title||id;
+ return <section className="mot-result-by" aria-label="Read the result by">
+  <div className="m-seg" role="group" aria-label="Read the result by"><button type="button" aria-pressed={by==='points'} onClick={()=>setBy('points')}>Points</button><button type="button" aria-pressed={by==='runoff'} disabled={!runoff} onClick={()=>setBy('runoff')}>Instant-runoff</button></div>
+  {by==='points'||!runoff?<TallyTable tally={tally} session={session} />:<RunoffRounds result={runoff} name={name} />}
+ </section>;
+}
+
+function SealedResult({seal,session}:{seal:Awaited<ReturnType<typeof readVotingSeals>>[number];session:TripSession}){
+ const [runoff,setRunoff]=useState<InstantRunoffResult|null>(null);
+ useEffect(()=>{let current=true;void sealedInstantRunoff(seal).then(result=>{if(current)setRunoff(result);},()=>{if(current)setRunoff(null);});return()=>{current=false;};},[seal]);
+ return <ResultBy tally={seal.tally} runoff={runoff} session={session} />;
 }
 
 export function VotingRoundControls({session,actor,round,refresh,notify,onRoundChange}:Props){
@@ -53,7 +70,8 @@ export function VotingRoundControls({session,actor,round,refresh,notify,onRoundC
   {!!view?.lateCount&&<p role="alert">{view.lateCount} late repl{view.lateCount===1?'y is':'ies are'} retained but uncounted. Review any new concerns in a fresh round before making a plan; the sealed result does not grant attendance or consent.</p>}
   {view?.lateHasDenied&&<p role="alert">A late reply includes Denied. Do not assume attendance; review this concern in a fresh round.</p>}
   {view?.seal&&<p>Closed by local actor {view.seal.closedBy} at {view.seal.closedAt}. This records closure in the document; check the device-save status.</p>}
-  {preview&&<section aria-label="Close round preview"><h3>Confirm the final tally</h3><p>Closed results are retained. Ordinary Undo cannot erase or reopen them. Pending, partial and conflicting replies remain explicit; closing does not create agreement.</p><p>{preview.tally.coverage.responding} responding · {preview.tally.coverage.pending} pending · {preview.tally.coverage.conflicting} conflicting · {preview.tally.coverage.needs_resolution} needing resolution</p><TallyTable tally={preview.tally} session={session} /><div className="mot-ballot-actions"><button type="button" className="m-btn primary" onClick={close}>Close this round</button><button type="button" className="m-btn" onClick={cancel}>Cancel closing</button></div></section>}
+  {view?.tally&&!preview&&<ResultBy tally={view.tally} runoff={view.instantRunoff} session={session} />}
+  {preview&&<section aria-label="Close round preview"><h3>Confirm the final tally</h3><p>Closed results are retained. Ordinary Undo cannot erase or reopen them. Pending, partial and conflicting replies remain explicit; closing does not create agreement.</p><p>{preview.tally.coverage.responding} responding · {preview.tally.coverage.pending} pending · {preview.tally.coverage.conflicting} conflicting · {preview.tally.coverage.needs_resolution} needing resolution</p><ResultBy tally={preview.tally} runoff={view?.instantRunoff} session={session} /><div className="mot-ballot-actions"><button type="button" className="m-btn primary" onClick={close}>Close this round</button><button type="button" className="m-btn" onClick={cancel}>Cancel closing</button></div></section>}
   {(status==='legacy'||status==='closed'||status==='open')&&!preview&&<button type="button" className="m-btn" onClick={()=>setNewRound(true)}>{status==='legacy'?'Start a declared round':'Start a new round'}</button>}
   {newRound&&<section aria-label="New voting proposal"><p>This starts a new proposal version. All earlier-version rounds become historical, including other city rounds. No prior responses are copied or counted. The selected options and rank scale are retained in a new draft for fresh responses.</p><button type="button" className="m-btn primary" onClick={()=>run(()=>{const next=startNextVotingRound(session,actor,key);onRoundChange?.(next);setNewRound(false);},'New proposal draft created in this tab. Open it explicitly before responding.')}>Create new proposal draft</button><button type="button" className="m-btn" onClick={()=>setNewRound(false)}>Cancel new round</button></section>}
  </section>;
@@ -66,5 +84,5 @@ export function VotingHistory({session,actor,refresh,notify,onRoundChange}:Omit<
  if(error)return <p role="alert">{error}</p>;
  if(!seals.length)return null;
  const rounds=readTripMeta(session.doc).groupPreferences?.rounds??[];
- return <section aria-label="Closed voting history"><h3>Closed voting history</h3>{seals.map(seal=><details key={`${seal.trip_id}:${seal.proposal_version}:${seal.round_id}`}><summary>Proposal {seal.proposal_version} · {seal.round_id} · sealed result</summary><p>Closed by local actor {seal.closedBy} at {seal.closedAt}.</p><p>{seal.tally.coverage.responding} responding · {seal.tally.coverage.pending} pending · {seal.tally.coverage.conflicting} conflicting · {seal.tally.coverage.needs_resolution} needing resolution</p><TallyTable tally={seal.tally} session={session} />{!rounds.some(round=>round.round_id===seal.round_id&&round.proposal_version===seal.proposal_version)&&<VotingRoundControls session={session} actor={actor} round={seal} refresh={refresh} notify={notify} onRoundChange={onRoundChange} />}</details>)}</section>;
+ return <section aria-label="Closed voting history"><h3>Closed voting history</h3>{seals.map(seal=><details key={`${seal.trip_id}:${seal.proposal_version}:${seal.round_id}`}><summary>Proposal {seal.proposal_version} · {seal.round_id} · sealed result</summary><p>Closed by local actor {seal.closedBy} at {seal.closedAt}.</p><p>{seal.tally.coverage.responding} responding · {seal.tally.coverage.pending} pending · {seal.tally.coverage.conflicting} conflicting · {seal.tally.coverage.needs_resolution} needing resolution</p><SealedResult seal={seal} session={session} />{!rounds.some(round=>round.round_id===seal.round_id&&round.proposal_version===seal.proposal_version)&&<VotingRoundControls session={session} actor={actor} round={seal} refresh={refresh} notify={notify} onRoundChange={onRoundChange} />}</details>)}</section>;
 }

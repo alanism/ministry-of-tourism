@@ -21,7 +21,8 @@ describe('declared voting method before response entry',()=>{
   const html=render();
   expect(html).toContain('Positional points');
   expect(html).toContain('mot-household-sticker-points@1');
-  expect(html).toContain('not instant-runoff voting');
+  expect(html).toContain('mot-household-instant-runoff@1');
+  expect(html).toContain('Instant-runoff');
  });
  it('labels old rounds without inventing historical open or close events',()=>{
   const html=render(group);

@@ -583,3 +583,6 @@ textarea.m-field { resize: vertical; line-height: var(--lh-2); }
 
 /* Explore FCC: one obvious place for people to search the collection. */
 .mot-fcc-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;margin:8px 0 4px;}.mot-fcc-search{display:grid;gap:4px;font-size:var(--t-2);}.mot-fcc-search input{font-size:16px;padding:10px 12px;}.mot-fcc-collections{display:flex;flex-wrap:wrap;gap:8px;}@media(max-width:760px){.mot-fcc-entry{grid-template-columns:minmax(0,1fr);}}
+
+/* MOT-152: read a vote by points or instant-runoff. */
+.mot-result-by{display:grid;gap:10px;margin:8px 0;}.mot-runoff p{margin:0 0 6px;}.mot-runoff-out{text-decoration:line-through;color:var(--m-ink-3);}

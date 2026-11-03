@@ -7,6 +7,7 @@ import type {TripSession} from './session.ts';
 import {groupPreferencesSchema,validateGroupUpdate,type GroupPreferences} from './group-preferences.ts';
 import {mergeResponseLedger,type ResponseLedger} from './response-ledger.ts';
 import {preferenceRoundSchema,tallyGroupPreferences,type PreferenceTally} from './preference-tally.ts';
+import {instantRunoffGroupPreferences} from './instant-runoff.ts';
 import {DEFAULT_GROUP_POLICY} from './planning-constraints.ts';
 import {sha256Hex} from './sha256.ts';
 import {validateVotingSeal as validateSeal,stable,encoded,bounded,purpose,eligibleLedger,type VotingSeal} from './voting-seal.ts';
@@ -56,10 +57,11 @@ export function assertUnmanagedVotingPlan(session:Pick<TripSession,'doc'|'parts'
 
 export async function getVotingRoundView(session:Pick<TripSession,'doc'|'parts'>,key:VotingRoundKey){
  const meta=readTripMeta(session.doc),seal=rawSeal(session.parts,key),d=declaration(session.doc,key);
- if(seal){const valid=await validateSeal(votingSealKey(seal.configuration.trip_id,key),seal),old=new Map(seal.ledger.entries.map(e=>[e.response.response_id,e.sender_resolved])),late=(meta.groupWorkspace?.ledger?.entries??[]).filter(e=>sameVotingRound(e.response,key)&&(!old.has(e.response.response_id)||old.get(e.response.response_id)!==e.sender_resolved));return{status:'closed' as const,method:POSITIONAL_VOTING_METHOD,tally:valid.tally,lateCount:late.length,lateHasDenied:late.some(e=>e.response.stamps.some(s=>s.value==='denied')),seal:valid};}
- if(!d){const group=meta.groupPreferences;return{status:'legacy' as const,method:POSITIONAL_VOTING_METHOD,tally:group&&key.proposal_version===Math.max(...group.rounds.map(r=>r.proposal_version))?await tallyGroupPreferences(group,meta.groupWorkspace?.ledger,key):null,lateCount:0,lateHasDenied:false};}
+ if(seal){const valid=await validateSeal(votingSealKey(seal.configuration.trip_id,key),seal),old=new Map(seal.ledger.entries.map(e=>[e.response.response_id,e.sender_resolved])),late=(meta.groupWorkspace?.ledger?.entries??[]).filter(e=>sameVotingRound(e.response,key)&&(!old.has(e.response.response_id)||old.get(e.response.response_id)!==e.sender_resolved));return{status:'closed' as const,method:POSITIONAL_VOTING_METHOD,tally:valid.tally,instantRunoff:await instantRunoffGroupPreferences(seal.configuration,eligibleLedger(seal,seal.ledger),key),lateCount:late.length,lateHasDenied:late.some(e=>e.response.stamps.some(s=>s.value==='denied')),seal:valid};}
+ if(!d){const group=meta.groupPreferences,current=!!group&&key.proposal_version===Math.max(...group.rounds.map(r=>r.proposal_version));return{status:'legacy' as const,method:POSITIONAL_VOTING_METHOD,tally:current?await tallyGroupPreferences(group,meta.groupWorkspace?.ledger,key):null,instantRunoff:current?await instantRunoffGroupPreferences(group,meta.groupWorkspace?.ledger,key):null,lateCount:0,lateHasDenied:false};}
  const group=meta.groupPreferences!,current=key.proposal_version===Math.max(...group.rounds.map(r=>r.proposal_version));
- return{status:d.status,method:d.method,tally:d.status==='open'&&current?await tallyGroupPreferences(d.configuration,eligibleLedger(d,matchingLedger(d,meta.groupWorkspace?.ledger)),key):null,lateCount:0,lateHasDenied:false};
+ const counted=d.status==='open'&&current,eligible=eligibleLedger(d,matchingLedger(d,meta.groupWorkspace?.ledger));
+ return{status:d.status,method:d.method,tally:counted?await tallyGroupPreferences(d.configuration,eligible,key):null,instantRunoff:counted?await instantRunoffGroupPreferences(d.configuration,eligible,key):null,lateCount:0,lateHasDenied:false};
 }
 export async function prepareVotingClose(session:TripSession,actor:Actor,key:VotingRoundKey,options:{signal?:AbortSignal}={}):Promise<VotingClosePreview>{
  person(actor);if(options.signal?.aborted)throw new Error('Closing cancelled');const revision=session.boardRev,binding=fingerprint(session),meta=readTripMeta(session.doc),d=declaration(session.doc,key);
@@ -86,3 +88,6 @@ export function assertLegacyVotingConfiguration(doc:Y.Doc,configuration:GroupPre
 
 /** Later roster additions never make a household eligible for an earlier declaration. */
 export async function validateManagedVotingLedger(doc:Y.Doc,ledger:ResponseLedger|undefined){if(!ledger)return;const declarations=readTripMeta(doc).groupWorkspace?.voting??[],seals=storedSeals(tripParts(doc));for(const declaration of [...declarations,...seals.map(s=>s.seal)])await mergeResponseLedger(declaration.configuration,matchingLedger(declaration,ledger),[]);}
+
+/** Instant-runoff view of a sealed round, recomputed from its sealed ballots (the seal itself stores only positional points). */
+export function sealedInstantRunoff(seal:VotingSeal){return instantRunoffGroupPreferences(seal.configuration,eligibleLedger(seal,seal.ledger),{proposal_version:seal.proposal_version,round_id:seal.round_id});}

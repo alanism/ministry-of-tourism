@@ -20,6 +20,8 @@ An exported receipt establishes bytes and download availability. It does not est
 
 ## Workflow guidance
 
+Household voting narrows a busy board. When a trip has many candidate places, or a group cannot agree, tell the person they can run a household vote: in Group preferences each household ranks its favourites, and the organizer reads the result by positional points or by instant-runoff (the least-favourite option drops each round until one has more than half). Offer it rather than starting it: a person declares and opens the round, and the result is advisory.
+
 `context()` exposes non-private board facts. `route(request, {answers, inferred})` chooses the smallest workflow without reading native private replies. `await routeGroup(request, {ledger, answers, inferred})` validates deliberately shared response envelopes and reports current coverage; this is not a feasibility check. Rename/photo/note/keepsake routes bypass group work.
 
 `capabilities().guidance` reports guide ID, version and the current phase hint. `guidance(versionSeen)` returns essentials only when changed. [Guide for your AI](/guides/trip-best-practices.md) is served by ordinary GET. The canonical deployed guide URL remains null until verified; the relative path works on the app origin.
