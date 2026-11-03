@@ -245,6 +245,7 @@ function NextUp({ card, session, onOpenDay }: { card: RevCard; session: TripSess
   );
 }
 
+export function dayOrder<T extends {title:string}>(cards:T[]):T[]{const re=/^Day\s+(\d+)\s*[·\-–—:]\s*Option\s+([A-Z])/i;const slots=cards.map((c,i)=>re.test(c.title)?i:-1).filter((i)=>i>=0);const sorted=slots.map((i)=>cards[i]!).sort((a,b)=>{const x=a.title.match(re)!,y=b.title.match(re)!;return Number(x[1])-Number(y[1])||x[2]!.toUpperCase().localeCompare(y[2]!.toUpperCase());});const out=[...cards];slots.forEach((slot,i)=>{out[slot]=sorted[i]!;});return out;}
 export function BoardView({ session, actor, tick, refresh, notify, header, top, onOpenDay, ghosts = [], onReview,updatedSources,whenSaved }: ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void }) {
   void tick;
   const meta = readTripMeta(session.doc);
@@ -273,7 +274,7 @@ export function BoardView({ session, actor, tick, refresh, notify, header, top, 
       {(next || top) && <div className={`mot-top${next ? ' has-next' : ''}`}>{next && <NextUp card={next} session={session} onOpenDay={onOpenDay} />}{top}</div>}
       <div className={`mot-lanes${kind === 'host_guide' ? ' host-lanes' : ''}`}>
         {lanes.map(({ stage, name }) => {
-          const cards = board[stage].filter((c) => c.kind !== 'brief');
+          const cards = dayOrder(board[stage].filter((c) => c.kind !== 'brief'));
           const waiting = ghosts.filter((g) => g.stage === stage);
           return (
             <section key={stage} aria-label={name} className={`m-panel mot-lane${over === stage ? ' drop' : ''}`}

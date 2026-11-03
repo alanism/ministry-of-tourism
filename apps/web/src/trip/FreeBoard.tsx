@@ -14,7 +14,7 @@ const ArtworkPicker = lazy(() => import('../artwork/ArtworkPicker'));
 const MuseImagePanel = lazy(() => import('./MuseImagePanel').then(m => ({ default: m.MuseImagePanel })));
 import './free-board.css';
 import type { Ghost } from './ProposalReview';
-type Props = ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void; destinations?: readonly ArtDestination[] };
+type Props = ViewProps & { header?: ReactNode; top?: ReactNode; onOpenDay?: () => void; ghosts?: Ghost[]; onReview?: (index: number) => void; destinations?: readonly ArtDestination[]; initialView?: 'free' | 'lanes' };
 export function GhostReviewButton({ghost,onReview}:{ghost:Ghost;onReview?:(index:number)=>void}){return <button type="button" className="m-btn small" onClick={()=>{if(ghost.review)ghost.review();else onReview?.(ghost.index);}}>Review suggestion: {ghost.title}</button>;}
 interface Obj { ref: BoardObjectRef; rect: BoardRect; card?: RevCard; presentation?: Presentation }
 const CARD_LIMITS = { minWidth: 400, minHeight: 300, maxWidth: 5000, maxHeight: 5000 };
@@ -34,7 +34,7 @@ function FreeCardPhoto({ session, card }: { session: TripSession; card: RevCard 
 }
 export function FreeBoard(props: Props) {
   const { session, actor, refresh, notify, header, top, ghosts = [], onReview, destinations = [] } = props;
-  const [view, setView] = useState<'free' | 'lanes'>('free');
+  const [view, setView] = useState<'free' | 'lanes'>(props.initialView ?? 'free');
   const [zoom, setZoom] = useState(0.2);
   const [selected, setSelected] = useState<BoardObjectRef | null>(null);
   const [preview, setPreview] = useState<{ ref: BoardObjectRef; rect: BoardRect } | null>(null);
@@ -44,7 +44,7 @@ export function FreeBoard(props: Props) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [artOpen, setArtOpen] = useState(false);
   const [museOpen, setMuseOpen] = useState(false), museImage = useMemo(museImageEnabled, []);
-  const [noteText, setNoteText] = useState('');
+  const [noteText, setNoteText] = useState(''); const [noteScope, setNoteScope] = useState<'private' | 'stay'>('private'); const [noteAbout, setNoteAbout] = useState(true);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
   const [gestureLabel, setGestureLabel] = useState<string | null>(null);
@@ -148,9 +148,9 @@ export function FreeBoard(props: Props) {
       notify(result.persisted ? 'Artwork added to the board' : 'Artwork is available in this tab only. Download a ZIP backup before closing.');
     }
   };
-  const addText = (text: string) => {
+  const addText = (text: string, fromNote = false) => {
     if (crossClipboard.handleText(text)) { setPasteOpen(false); setPasteText(''); return; }
-    try { const input = textNoteInput(text, origin()); session.execute(actor, 'trip_card_create', input); setNoteText(''); setPasteText(''); setNoteOpen(false); setPasteOpen(false); refresh(); setError(null); notify('Private note added'); } catch (e) { fail(e); }
+    try { const aboutCard = fromNote && noteAbout ? selectedObj?.card : undefined; const input = textNoteInput(text, aboutCard && selectedObj ? { x: selectedObj.rect.x + selectedObj.rect.width + 40, y: selectedObj.rect.y } : origin(), fromNote ? { scope: noteScope, ...(aboutCard ? { aboutTitle: aboutCard.title || 'Untitled' } : {}) } : undefined); session.execute(actor, 'trip_card_create', input); setNoteText(''); setPasteText(''); setNoteOpen(false); setPasteOpen(false); refresh(); setError(null); notify(fromNote && noteScope === 'stay' ? 'Note added for the trip' : 'Private note added'); } catch (e) { fail(e); }
   };
   const handlePasteText = (planText: string, html = '', uriList = '') => {
     if (crossClipboard.handleText(planText)) { setPasteOpen(false); return; }
@@ -213,7 +213,7 @@ export function FreeBoard(props: Props) {
         <button type="button" className="m-btn ink" aria-pressed="true">Free board</button>
         <button type="button" className="m-btn" onClick={() => setView('lanes')}>Lanes</button>
         <label className="m-free-item-picker">Item <select aria-label="Board item" value={selectedObj ? `${selectedObj.ref.kind}:${selectedObj.ref.id}` : ''} onChange={(e) => { const key = e.target.value; if (!key) return; const obj = objects.find((o) => `${o.ref.kind}:${o.ref.id}` === key); if (!obj) return; setSelected(obj.ref); const el = Array.from(viewportRef.current?.querySelectorAll('[data-board-item]') ?? []).find((node) => (node as HTMLElement).dataset.boardItem === key); el?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }}><option value="">Select an item</option>{objects.map((obj) => { const key = `${obj.ref.kind}:${obj.ref.id}`; const asset = obj.presentation?.assetId ? readAsset(session.parts, obj.presentation.assetId) : undefined; const label = obj.card ? (obj.card.title || 'Untitled') : (asset?.caption || 'Image'); return <option key={key} value={key}>{label}</option>; })}</select></label>
-        <button type="button" className="m-btn" onClick={() => { setNoteOpen(!noteOpen); setPasteOpen(false); }}>New note</button>
+        <button type="button" className="m-btn" onClick={() => { if (!noteOpen) setNoteAbout(true); setNoteOpen(!noteOpen); setPasteOpen(false); }}>New note</button>
         <button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Add images</button>
         <button type="button" className="m-btn" disabled={busy} onClick={(e) => { artTriggerRef.current = e.currentTarget; setArtOpen(true); }}>Add FCC art</button>
         {museImage && <button type="button" className="m-btn" disabled={busy} onClick={() => setMuseOpen(true)}>Create with Muse Image</button>}
@@ -230,7 +230,7 @@ export function FreeBoard(props: Props) {
       <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" multiple hidden onChange={(e) => { const files = Array.from(e.target.files ?? []); e.target.value = ''; void ingest(files); }} />
       {error && <p className="m-free-error" role="alert">{error}</p>}
       {crossClipboard.panels}
-      {noteOpen && <div className="m-free-panel"><label htmlFor="m-free-note-text">New private note</label><textarea id="m-free-note-text" value={noteText} onChange={(e) => setNoteText(e.target.value)} /><button type="button" className="m-btn primary" onClick={() => addText(noteText)}>Add note</button><button type="button" className="m-btn" onClick={() => setNoteOpen(false)}>Cancel</button></div>}
+      {noteOpen && <div className="m-free-panel"><label htmlFor="m-free-note-text">New note</label><textarea id="m-free-note-text" value={noteText} onChange={(e) => setNoteText(e.target.value)} /><fieldset><legend>Who sees it</legend><label><input type="radio" name="m-free-note-scope" value="private" checked={noteScope === 'private'} onChange={() => setNoteScope('private')} /> Just me</label><label><input type="radio" name="m-free-note-scope" value="stay" checked={noteScope === 'stay'} onChange={() => setNoteScope('stay')} /> Trip</label></fieldset>{selectedObj?.card && <label><input type="checkbox" checked={noteAbout} onChange={(e) => setNoteAbout(e.target.checked)} /> About “{selectedObj.card.title || 'Untitled'}”</label>}<button type="button" className="m-btn primary" onClick={() => addText(noteText, true)}>Add note</button><button type="button" className="m-btn" onClick={() => setNoteOpen(false)}>Cancel</button></div>}
       {pasteOpen && <div className="m-free-panel" role="region" aria-label="Paste text or choose a file"><p>Paste plain text here, or choose an image file. For a board copy, read the system clipboard or use the copy kept in this app.</p>{crossClipboard.pasteControls}<label htmlFor="m-free-paste-text">Plain text</label><textarea id="m-free-paste-text" value={pasteText} onChange={(e) => setPasteText(e.target.value)} /><button type="button" className="m-btn primary" onClick={() => addText(pasteText)}>Add text</button><button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Choose image files</button><button type="button" className="m-btn" onClick={() => { crossClipboard.cancel(); setPasteOpen(false); setPasteText(''); }}>Cancel</button></div>}
       {selectedObj && <details className="m-free-selected-details"><summary>Arrange selected item</summary><div className="m-free-selectedbar" role="toolbar" aria-label="Selected item actions">
         <button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(-20, 0)}>Move left</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(20, 0)}>Move right</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(0, -20)}>Move up</button><button type="button" className="m-btn small" disabled={!!selectedObj.presentation?.locked} onClick={() => nudge(0, 20)}>Move down</button>

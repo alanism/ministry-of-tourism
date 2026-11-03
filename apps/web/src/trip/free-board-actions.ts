@@ -60,13 +60,13 @@ export function classifyPaste(input: { text?: string; html?: string; uriList?: s
   if ((input.html ?? '').trim()) return { kind: 'html-only' };
   return { kind: 'empty' };
 }
-export function textNoteInput(text: string, origin: { x: number; y: number }): Record<string, unknown> {
+export function textNoteInput(text: string, origin: { x: number; y: number }, options: { scope?: 'private' | 'stay'; aboutTitle?: string } = {}): Record<string, unknown> {
   const body = text.trim();
   if (!body) throw new Error('Write something first.');
   if (body.length > 20000) throw new Error('That note is too long. Nothing was added.');
   const rect = validateBoardRect({ x: origin.x, y: origin.y, width: 1200, height: 900, stack: 0 }, { minWidth: 400, minHeight: 300, maxWidth: 5000, maxHeight: 5000 });
-  const title = body.split(/\r?\n/)[0]!.slice(0, 80) || 'Note';
-  return { kind: 'note', title, body, stage: 'plan', provenance: 'traveler', scope: 'private', x: rect.x, y: rect.y, boardWidth: rect.width, boardHeight: rect.height };
+  const firstLine = body.split(/\r?\n/)[0]! || 'Note'; const title = (options.aboutTitle ? `On “${options.aboutTitle}” — ${firstLine}` : firstLine).slice(0, 80);
+  return { kind: 'note', title, body, stage: 'plan', provenance: 'traveler', scope: options.scope ?? 'private', x: rect.x, y: rect.y, boardWidth: rect.width, boardHeight: rect.height };
 }
 export interface IngestDeps {
   prepare?: typeof prepareBoardImages;

@@ -98,7 +98,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
   const [open, setOpen] = useState<OpenTrip | null>(null);
   const [session, setSession] = useState<TripSession | null>(null);
   const [booting, setBooting] = useState(true);
-  const [tab, setTab] = useState<Tab>('board');
+  const [tab, setTab] = useState<Tab>('board'); const [landOnLanes, setLandOnLanes] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [keepsakeFormat,setKeepsakeFormat]=useState<'magazine'|'postcard'|'memories'>('memories');
   const [tick, setTick] = useState(0);
@@ -143,7 +143,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
     const op = opRef.current + 1; opRef.current = op;
     try {
       const trip = await openTrip(id); if (op !== opRef.current) { trip.destroy(); return; }
-      if (!adopt(trip)) return; setTab('board');
+      if (!adopt(trip)) return; setLandOnLanes(false); setTab('board');
     } catch (e) {
       if (op !== opRef.current) return;
       const err = e as Error & { storeName?: string; original?: Uint8Array; bytes?: Uint8Array; originalUpdates?: Uint8Array[] };
@@ -162,7 +162,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
       const trip = await openTrip(boardId, { from: imported.doc }); if (op !== opRef.current) { trip.destroy(); return; }
       importedDoc.destroy(); importedDoc = undefined;
       if (!adopt(trip)) { setRecovery({ bytes, fileName: file.name, fileType: file.type || 'application/zip', boardId, context: 'Import', error: 'The imported board could not be saved on this device, so it has not been adopted as a saved board.', backupOnly: true, isPackage: true }); return; }
-      setRecovery(null); setTab('board'); notify('Imported as a new board', { label: 'Download original ZIP', run: () => downloadBytes(bytes, file.name || 'original.zip') });
+      setRecovery(null); setLandOnLanes(true); setTab('board'); notify('Imported as a new board · showing Lanes', { label: 'Download original ZIP', run: () => downloadBytes(bytes, file.name || 'original.zip') });
     } catch (e) {
       if (op !== opRef.current) return;
       setOpen(null); setSession(null);
@@ -177,7 +177,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
       const trip = await openTrip(crypto.randomUUID(), details); if (op !== opRef.current) { trip.destroy(); return; }
       if (!adopt(trip)) return;
       recordOutcome('board_created');
-      setCreating(null); setTab('board');
+      setCreating(null); setLandOnLanes(false); setTab('board');
     } catch (e) { if (op === opRef.current) notify(e instanceof Error ? e.message : 'Could not start the trip.'); }
     finally { startingTrip.current=false; }
   };
@@ -364,7 +364,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
         <div className={`mot-work view-${tab}`}>
           {sidebar}
           <div className="mot-main">
-            {tab === 'board' && <FreeBoard key={session.boardId} whenSaved={whenSaved} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} destinations={destinations} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
+            {tab === 'board' && <FreeBoard key={session.boardId} initialView={landOnLanes ? 'lanes' : undefined} whenSaved={whenSaved} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} destinations={destinations} updatedSources={updatedSources} header={<>{hostHead}<SourceFreshness state={sourceState?{...sourceState,pending:false}:undefined} onOpen={()=>setTab('fcc')}/></>} top={rail} onOpenDay={() => setTab('today')} ghosts={[...ghostCards(pending),...museGhosts]} onReview={review} />}
             {tab === 'today' && <div className="mot-board"><TodayView whenSaved={whenSaved} session={session} actor={YOU} tick={tick} refresh={refresh} notify={notify} updatedSources={updatedSources} /></div>}
 
             {tab === 'map' && <div className="mot-board"><MapView session={session} actor={YOU} refresh={refresh} notify={notify} whenSaved={whenSaved} tick={tick} onBack={() => setTab('board')} /></div>}
