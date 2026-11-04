@@ -342,7 +342,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
   return (
     <main className="mot" ref={shellRef}>
       <header className="mot-header">
-        <button type="button" className="mot-brand" onClick={() => setTab('board')}><Logo /></button>
+        <button type="button" className="mot-brand" aria-label="Return to landing page" onClick={newBoard}><Logo /></button>
         <nav className="mot-nav" aria-label="Trip views">
           {TABS.map((t) => <button key={t.id} type="button" aria-current={tab === t.id ? 'page' : undefined} onClick={() => setTab(t.id)}>{t.label}</button>)}
         </nav>
