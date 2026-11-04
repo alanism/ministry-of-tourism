@@ -144,6 +144,77 @@ Separate browser profiles do not automatically share a trip. Import its ZIP or r
 
 *Choose the exact cards and request for your Muse file handoff.*
 
+## Technical explainer: images and discovery
+
+The browser-agent workflow above uses your Muse account. These additional model API integrations let you turn a selected photo into magazine artwork or discover places beyond the FCC catalogue. You choose what to send, review the result and decide whether to add it to your trip.
+
+### Turn a photo into magazine art
+
+Choose **Fashion Illustration** for a person’s photo, or **City Ink** for a street or architecture photo. Both use `muse-image-1.0`, a fixed style prompt and the matching approved reference image. The browser prepares a resized, metadata-free copy; your original photo stays unchanged. Results are **opaque PNGs**, not transparent cutouts. For City Ink, MoT adds the exact **MoT** lettering locally before you review the result.
+
+**Bring your own key (BYOK).** Choose **Use my own key** and consent to sending the prepared photo and reference directly from your browser to Meta. Your key stays in the open panel’s memory; MoT’s server receives neither the key nor the photo. Your Meta account pays for these calls.
+
+```mermaid
+flowchart TB
+    Photo["Choose photo and style"] --> Prepare["Browser prepares a metadata-free copy"]
+    Prepare --> Consent["Review upload notice and consent"]
+    Key["Your Muse Image API key: panel memory only"] --> Edit
+    Reference["Approved reference and fixed style prompt"] --> Edit
+    Consent --> Edit["Browser directly to Meta images/edits: muse-image-1.0"]
+    Edit --> Candidate["Opaque PNG candidate; City Ink gets local MoT lettering"]
+    Candidate --> Quality["Optional BYOK quality scoring and bounded revisions"]
+    Quality --> Review["You select and review; nothing is saved automatically"]
+```
+
+Optional quality scoring uses **Muse Spark 1.3 Standard** to compare your source, reference and candidate against 20 criteria scored 1–5. It stops at **80/100 with all critical gates passed**, or at **three image candidates and three vision reviews**. An unavailable or incomplete judge stops automatic revisions. These are paid model estimates, not a substitute for your review; scoring is never funded by the free preview.
+
+**Free hackathon preview.** The app owner funds a limited allowance. You do not supply a provider key. After your consent, Firebase anonymous Auth identifies the browser guest and a fresh, limited-use App Check token attests the request. The image function validates both, rejects replays and reserves an attempt in the server-only Firestore usage database before calling Meta with its server-held key.
+
+```mermaid
+flowchart TB
+    Photo["Choose photo, style and explicit upload consent"] --> Browser["Prepare copy; obtain anonymous Auth and App Check tokens"]
+    Browser --> Function["Direct HTTPS request to MoT Gen2 image function"]
+    Function --> Guard{"Configured, attested and durable allowance available?"}
+    Guard -->|No| Unavailable["Fail closed: no provider call"]
+    Guard -->|Yes| Reserve["Firestore transaction reserves attempt and replay markers"]
+    Secret["Secret Manager: owner key, server access only"] --> Meta
+    Reserve --> Meta["One Muse Image edit with fixed prompt and approved reference"]
+    Meta --> Output["Validate opaque PNG; return without server image storage"]
+    Output --> Review["Browser adds City Ink MoT lettering; you review"]
+```
+
+The short availability check uses `/api/muse/images/status`; generation posts directly to the allowlisted `motFundedImages` function to avoid Hosting’s shorter proxy timeout. The strict request contains only a request ID, style, prepared photo and consent. The server supplies the prompt and reference. It keeps usage records without image content and does not persist the source or result; Meta processes the images under its own terms.
+
+The allowance is **two lifetime attempts per browser guest identity, 20 shared attempts per UTC day, 100 shared attempts overall and one concurrent request**, ending **18 November 2026 at 23:59:59 UTC**. There is **one image call per request, no funded judge, no automatic retry and no automatic switch to BYOK**. Failed, stopped or uncertain requests can consume an attempt. Clearing browser storage can create another guest, but does not reset shared limits. Free for the visitor still means provider and infrastructure costs for the owner; these controls are not a hard dollar cap.
+
+**Both paths end with the same choice:** download, discard or explicitly **Save private illustration for magazine**. Saving creates a private Remember card and local image asset. A saved confirmation waits for both the image bytes and board data; unconfirmed storage is labelled as this tab only. Private artwork stays out of agent reads and default public exports. Include it deliberately through the magazine’s private-artwork control or an export **Review copy**.
+
+Implementation: [photo review and save](apps/web/src/trip/PhotoFashionPanel.tsx) · [BYOK requests](apps/web/src/trip/muse-image.ts) · [quality rubrics](apps/web/src/trip/image-quality-rubrics.md) · [funded backend and allowance](docs/funded-images.md).
+
+### Discover more like this with Muse Spark
+
+Start with **one to three curated FCC venues in the selected city**, then choose a category. **Muse Spark 1.3 Contributor** uses **Meta web search** to look for related venues outside the catalogue, supported by readable sources mentioning both a new venue and a selected FCC place. This gives you new places to investigate, with evidence you can inspect before adding them.
+
+```mermaid
+flowchart TB
+    FCC["Selected city: choose 1–3 public FCC venues and a category"] --> Consent["Accept Contributor notice; no private trip data is sent"]
+    Consent --> Identity["Anonymous Firebase Auth and fresh limited-use App Check"]
+    Identity --> Guard["MoT discovery function: validate, reject replay, reserve durable usage"]
+    Secret["Server-held Meta key from Secret Manager"] --> Spark
+    Guard --> Spark["Muse Spark 1.3 Contributor with Meta web_search"]
+    Spark --> Sources["Readable public-web evidence, including social pages when available"]
+    Sources --> Validate["Require source excerpts; exclude FCC venues and duplicate suggestions"]
+    Validate --> Review["Show suggestion, source links, excerpts and retrieval time"]
+    Review --> Add["Traveler explicitly chooses Add to board"]
+    Add --> Magazine["Trip card retains source attribution for magazine and export"]
+```
+
+For **Instagram and Facebook**, coverage depends on what public web search can actually read. The app labels a result **Instagram mention** only when returned Instagram evidence supports it; a Facebook page, if returned with usable evidence, is a **public-web source**. This is not an authenticated social-feed integration or a verified ranking of the latest or hottest places. The Copenhagen test returned three useful public-web discoveries and **no readable Instagram results**. Review the linked sources and dates before treating a suggestion as current.
+
+Discovery sends only public city, category and FCC venue information; it does not send your private notes, bookings or photos. Contributor inputs may be used by Meta to improve its models, so the app requires explicit consent. The hosted preview keeps the provider key server-side and uses its own durable allowance: **three attempts per guest per UTC day, 20 shared per UTC day, 100 overall and two concurrent requests**. Missing configuration or failed identity, attestation or quota checks stops the request. Nothing is added automatically. These integrations do not imply an official Meta partnership.
+
+Implementation: [discovery interface](apps/web/src/trip/DiscoverMore.tsx) · [search and evidence contract](backend/discovery/src/provider.ts) · [public backend and usage controls](docs/public-discovery-backend.md).
+
 ## Run locally
 
 No install is needed to try MoT: use the hosted app above. To run the source, use Node.js **22.12 or newer** and npm.
