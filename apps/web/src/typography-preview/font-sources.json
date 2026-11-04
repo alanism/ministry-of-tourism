@@ -1,0 +1,90 @@
+{
+  "cssApi": "https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Zilla+Slab:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap",
+  "retrieved": "2026-11-04",
+  "files": [
+    {
+      "file": "fonts/nunito-italic-200-1000-latin-ext.woff2",
+      "url": "https://fonts.gstatic.com/s/nunito/v32/XRXX3I6Li01BKofIMNaNRs71cA.woff2",
+      "sha256": "1bb48a49c837d76a727223515b78eb2a14eaab783563be84b0718f338c56c846",
+      "bytes": 39072
+    },
+    {
+      "file": "fonts/nunito-italic-200-1000-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/nunito/v32/XRXX3I6Li01BKofIMNaDRs4.woff2",
+      "sha256": "6cfcc3786d5ba3b5c3a41797f95272e57f4290ccbd283a4bfd0033a3d857e64c",
+      "bytes": 41760
+    },
+    {
+      "file": "fonts/nunito-normal-200-1000-latin-ext.woff2",
+      "url": "https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofIO-aBXso.woff2",
+      "sha256": "2c8d792869818ecb253a46bc3c63c7013df7aac2f69291c3c85e5cdc94160960",
+      "bytes": 35588
+    },
+    {
+      "file": "fonts/nunito-normal-200-1000-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/nunito/v32/XRXV3I6Li01BKofINeaB.woff2",
+      "sha256": "ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793",
+      "bytes": 39128
+    },
+    {
+      "file": "fonts/zilla-slab-italic-400-latin-ext.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa4ZfeM_74wlPZtksIFaj8K8VSMZlE.woff2",
+      "sha256": "265a3c79536745ff0c0f383202e4f53eee81c9aa9c3e05ab66093aac940b8d7b",
+      "bytes": 19276
+    },
+    {
+      "file": "fonts/zilla-slab-italic-400-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa4ZfeM_74wlPZtksIFaj8K_1SM.woff2",
+      "sha256": "1285db803447f43de11d51677826b43cd0b9a4ddf76adc5a1c2514b8c0e6c00a",
+      "bytes": 27516
+    },
+    {
+      "file": "fonts/zilla-slab-normal-400-latin-ext.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa6ZfeM_74wlPZtksIFajQ6_UyI.woff2",
+      "sha256": "488c114d0cb3e6a1c8933b3546abe471a089fc9fcf106e3fc8588ba6c7c2142e",
+      "bytes": 18404
+    },
+    {
+      "file": "fonts/zilla-slab-normal-400-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa6ZfeM_74wlPZtksIFajo6_Q.woff2",
+      "sha256": "ab2607313bc04e82a53aca235853a0b83463e99b3ae88b17cc963e371f8fe91c",
+      "bytes": 26468
+    },
+    {
+      "file": "fonts/zilla-slab-normal-500-latin-ext.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa5ZfeM_74wlPZtksIFYskZ6H2pW2hz.woff2",
+      "sha256": "2870101587d2fb86efd8812e4e28ea694e4e3094cbf45c8ad940cb4ca8e18329",
+      "bytes": 18136
+    },
+    {
+      "file": "fonts/zilla-slab-normal-500-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa5ZfeM_74wlPZtksIFYskZ6HOpWw.woff2",
+      "sha256": "993eac5cf2c8439fc1d781e6de24bbac2885b089e9f170795b8bcad280ca4790",
+      "bytes": 26468
+    },
+    {
+      "file": "fonts/zilla-slab-normal-600-latin-ext.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa5ZfeM_74wlPZtksIFYuUe6H2pW2hz.woff2",
+      "sha256": "9449fbfd648e56b42035c48e534a64a1909e30ba22268e06cb32a33bac859b0d",
+      "bytes": 18420
+    },
+    {
+      "file": "fonts/zilla-slab-normal-600-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa5ZfeM_74wlPZtksIFYuUe6HOpWw.woff2",
+      "sha256": "fd78ed94061d91a141bf6be05559398e21a3d8aab8f7e21594d434573fcf3305",
+      "bytes": 26472
+    },
+    {
+      "file": "fonts/zilla-slab-normal-700-latin-ext.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa5ZfeM_74wlPZtksIFYoEf6H2pW2hz.woff2",
+      "sha256": "f0a80835a620562dd6aceeceedc98ae450f6a31c731e725192680c25c5d2d88e",
+      "bytes": 18412
+    },
+    {
+      "file": "fonts/zilla-slab-normal-700-latin.woff2",
+      "url": "https://fonts.gstatic.com/s/zillaslab/v12/dFa5ZfeM_74wlPZtksIFYoEf6HOpWw.woff2",
+      "sha256": "896b6ebb8cd10aca90bdff88a5a1b648cbc0d50751740bd5a6d012007aef9ebe",
+      "bytes": 26100
+    }
+  ]
+}
