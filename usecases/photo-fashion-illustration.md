@@ -1,8 +1,10 @@
 # Fashion Illustration: make a personal portrait for your trip
 
+**Status:** Local implementation and reference-image integration are in progress. This feature is not included in the current public app source and is not deployed.
+
 A favorite travel photo can become more than another picture in the camera roll. MoT's Fashion Illustration treatment is designed to turn a chosen photo of a person into an editorial illustration: fine ink contours, restrained color and a plain background that can sit comfortably in a personal trip magazine.
 
-Begin with a photo you are allowed to use and consider the people pictured before sending it to an image provider. Choose Create photo illustration and Fashion Illustration. Selecting the photo does not upload it. The local flow prepares a smaller re-encoded copy, removes the original file metadata from that copy and lets you inspect it first. The original file remains unchanged.
+Begin with a photo you are allowed to use and consider the people pictured before sending it to an image provider. Choose Create photo illustration and Fashion Illustration. Selecting the photo does not upload it. The local flow prepares a smaller re-encoded copy, removes embedded file metadata, including embedded location metadata, and lets you inspect it first. Visible people, landmarks and signs may still identify someone or somewhere. The original file remains unchanged.
 
 Generation is a separate, explicit decision. In the current local implementation, the user supplies a key for the session and agrees to a paid request sending the prepared photo and style instructions to Meta. No private board photo is selected automatically. Other trip cards, bookings and notes are not silently bundled into that request. The provider's processing terms still apply to the image you choose to send.
 

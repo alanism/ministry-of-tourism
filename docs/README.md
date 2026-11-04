@@ -1,6 +1,8 @@
 # Documentation
 
-Start with [development and the codebase map](DEVELOPMENT.md) for the current source tree, local commands and test suites. The repository contains three workspaces: the web app, shared core and optional server.
+For using MoT, start with the [owner's manual](../OWNER-MANUAL.md) or the [use cases and product philosophy index](../INDEX.md). Individual use cases distinguish the current browser/file workflow from local previews and future directions.
+
+For contributing, start with [development and the codebase map](DEVELOPMENT.md) for the current source tree, local commands and test suites. The repository contains three workspaces: the web app, shared core and optional server.
 
 ## Working on the app
 

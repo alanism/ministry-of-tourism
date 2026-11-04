@@ -14,6 +14,8 @@ A travel board for the solo traveler, the host making a guest guide, and the per
 
 **[Open Ministry of Tourism](https://ministryoftourism.web.app/?view=trip)** · [Guide for Muse](https://ministryoftourism.web.app/guides/trip-best-practices.md) · [Agent contract](https://ministryoftourism.web.app/trip-agents.md)
 
+Start with the [owner's manual](OWNER-MANUAL.md) for practical steps, or explore the [use cases and product philosophy](INDEX.md) to see how MoT fits your trip. Local-preview use cases state their implementation and deployment limits.
+
 ![Bangkok magazine cover in the MoT composition view](docs/images/01-magazine-cover.jpg)
 
 *Your plans become a magazine with a sense of place.*

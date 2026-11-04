@@ -1,8 +1,10 @@
 # City Ink: turn a street photograph into architecture art
 
+**Status:** Local implementation and reference-image integration are in progress. This feature is not included in the current public app source and is not deployed.
+
 A photograph can record the street you walked down; an illustration can give that memory a different place in your magazine. City Ink is MoT's locally implemented treatment for turning a chosen street or architecture photo into an opaque illustration with fine architectural lines and a restrained blue accent.
 
-Start with a photo you have permission to use. Choose Create photo illustration and the City Ink treatment. Selecting a file prepares a preview without uploading it. The local flow checks the image, makes a smaller re-encoded copy and removes the original file metadata from that prepared copy. Your original remains unchanged, and the source photo is not automatically registered as a board asset.
+Start with a photo you have permission to use. Choose Create photo illustration and the City Ink treatment. Selecting a file prepares a preview without uploading it. The local flow checks the image, makes a smaller re-encoded copy and removes embedded file metadata, including embedded location metadata, from that prepared copy. Visible buildings and street signs can still reveal where it was taken. Your original remains unchanged, and the source photo is not automatically registered as a board asset.
 
 Review what will leave the device before generating. The current local implementation requires an explicit paid request and the user's own session key; the image request sends the prepared photo and style instructions to Meta. Choosing a file is not that consent. Other board photos, notes and bookings are not added to the request automatically. Closing the panel drops its source-photo and key state, while cancellation cannot guarantee the provider has stopped charging.
 

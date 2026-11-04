@@ -1,14 +1,12 @@
-# Hosting configuration and dry run (MOT-55) — NO DEPLOY
+# Hosting configuration and historical dry run
 
-`firebase.json` in this repo describes
-only the MoT static site (hosting target `mot`, SPA rewrite to `index.html`).
-Nothing has been deployed and nothing here grants deploy approval; deploying is
-MOT-68 and needs the owner's explicit approval.
+MoT is available at [ministryoftourism.web.app](https://ministryoftourism.web.app). The current `firebase.json` describes the static web app: Hosting target `mot`, public directory `apps/web/dist`, a build predeploy hook, cache headers and an SPA rewrite to `index.html`. The existing site/target mapping is documented in the [hosting handoff](HANDOFF.md).
 
-## Dry run: exactly what would deploy
+The public source and hosted deployment are versioned separately. Publishing documentation to GitHub does not deploy the app, optional server or local-preview features. See the [Git workflow](GIT-WORKFLOW.md) and [implementation boundaries](../IMPLEMENTATION-NOTES.md). This documentation correction performed no deployment.
 
-Regenerate with `npm run build -w @mot/web`, then list
-`apps/web/dist`. Run on 2026-10-28 at commit `8c22dcb`: **759 files, 8,900,825 bytes (8.49 MiB).**
+## Historical MOT-55 dry run: 28 October 2026
+
+The following inventory was recorded before the hosted launch, at commit `8c22dcb` on 28 October 2026: **759 files, 8,900,825 bytes (8.49 MiB).** It describes that historical build, not the current source or hosted asset inventory. For a new candidate, build with `npm run build -w @mot/web` and inspect its own `apps/web/dist`.
 
 | Path in `apps/web/dist` | Files | Size | What |
 |---|---|---|---|
@@ -19,13 +17,11 @@ Regenerate with `npm run build -w @mot/web`, then list
 | `brand/` | 1 | 9,534 bytes | The MOT wordmark |
 | `agents.md`, `trip-agents.md`, `llms.txt` | 3 | — | Notes for AI agents |
 
-Would **not** deploy:
+Excluded from that historical static-site dry run:
 
 | Item | Why |
 |---|---|
-| `packages/mot-server` | Not deployed; no key; reports unavailable |
-| Any secret | `META_API_KEY` appears nowhere in `dist` (checked with rg at `8c22dcb`) |
+| `packages/mot-server` | Not part of the static-site artifact; the dry run established no live model connection |
+| Any secret | `META_API_KEY` was absent from that `dist` (checked with rg at `8c22dcb`); this is evidence for that revision |
 
-To deploy later (MOT-68), the owner must create or confirm the Firebase site
-for target `mot`, approve deployment explicitly, then run the Firebase deploy
-for hosting only. Until then this file is configuration only.
+For a future deployment, confirm the existing site and `mot` target, review the intended source and hosted versions, and use the separately authorized release process in the [hosting handoff](HANDOFF.md). The historical dry run is not approval for a new release or evidence that a local backend is publicly available.

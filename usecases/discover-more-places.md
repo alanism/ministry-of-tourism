@@ -1,5 +1,7 @@
 # Discover more places: follow a good lead beyond the guide
 
+**Status:** Local preview work is in progress. This feature is not included in the current public app source or deployed app; the secured public funded backend remains in development.
+
 You have found a café you like in the city guide. Now you want to know what else belongs in that part of your trip: another place with a similar atmosphere, an interesting gallery nearby, or somewhere appearing in a public Instagram post. MoT's discovery direction is to turn a few good starting points into a short, sourced list you can judge.
 
 Begin in Explore FCC with the selected city's public catalogue. Choose one to three places and a category, then review the disclosure before asking Muse for related suggestions. This local preview uses public catalogue inputs. It does not send your private board, bookings, photos or notes into discovery, and you do not need to provide a personal travel history to express that interest.
