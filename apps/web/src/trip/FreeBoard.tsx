@@ -8,6 +8,8 @@ import { coverAssetId, useAssetUrl } from './trip-assets';
 import { buildMoveCommand, classifyPaste, ingestBoardImages, moveRect, nextStack, rectsEqual, resizeRect, textNoteInput, validateBoardRect, type BoardObjectRef, type BoardRect } from './free-board-actions';
 import { placeBoardArtwork } from './board-artwork';
 import { museImageEnabled } from './muse-image';
+import { useBoardImageInMagazine } from './magazine-board-image';
+import { confirmImageSaved } from './image-save-confirmation';
 import type { Artwork } from '../artwork/catalog';
 import type { ArtDestination } from '../artwork/country-art';
 const ArtworkPicker = lazy(() => import('../artwork/ArtworkPicker'));
@@ -43,7 +45,7 @@ export function FreeBoard(props: Props) {
   const [openAssetId, setOpenAssetId] = useState<string | null>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [artOpen, setArtOpen] = useState(false);
-  const [museOpen, setMuseOpen] = useState(false), museImage = useMemo(museImageEnabled, []);
+  const [museOpen, setMuseOpen] = useState<false | 'text' | 'photo'>(false), museImage = useMemo(museImageEnabled, []);
   const [noteText, setNoteText] = useState(''); const [noteScope, setNoteScope] = useState<'private' | 'stay'>('private'); const [noteAbout, setNoteAbout] = useState(true);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState('');
@@ -216,7 +218,8 @@ export function FreeBoard(props: Props) {
         <button type="button" className="m-btn" onClick={() => { if (!noteOpen) setNoteAbout(true); setNoteOpen(!noteOpen); setPasteOpen(false); }}>New note</button>
         <button type="button" className="m-btn" onClick={() => fileRef.current?.click()}>Add images</button>
         <button type="button" className="m-btn" disabled={busy} onClick={(e) => { artTriggerRef.current = e.currentTarget; setArtOpen(true); }}>Add FCC art</button>
-        {museImage && <button type="button" className="m-btn" disabled={busy} onClick={() => setMuseOpen(true)}>Create with Muse Image</button>}
+        {museImage && <button type="button" className="m-btn" disabled={busy} onClick={() => setMuseOpen('text')}>Create with Muse Image</button>}
+        <button type="button" className="m-btn" disabled={busy} onClick={() => setMuseOpen('photo')}>Create photo illustration</button>
         <button type="button" className="m-btn" onClick={() => { crossClipboard.cancel(); setPasteOpen(!pasteOpen); }}>Paste</button>
         <button type="button" className="m-btn" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.05, +(z - 0.05).toFixed(2)))}>Zoom out</button>
         <span aria-live="polite">{Math.round(zoom * 100)}%</span>
@@ -258,11 +261,31 @@ export function FreeBoard(props: Props) {
         </div>
       </div>
       {artOpen && <Suspense fallback={<p role="status">Opening FCC art…</p>}><ArtworkPicker trip={{ destination: readTripMeta(session.doc), destinations }} onClose={closeArtworkPicker} onInsert={insertBoardArtwork} /></Suspense>}
-      {museOpen && <FocusSheet label="Create with Muse Image" onClose={() => setMuseOpen(false)}><Suspense fallback={<p role="status">Opening Muse Image…</p>}><MuseImagePanel session={session} actor={actor as Actor} refresh={refresh} notify={notify} origin={origin} onClose={() => setMuseOpen(false)} /></Suspense></FocusSheet>}
+      {museOpen && <FocusSheet label="Create with Muse Image" onClose={() => setMuseOpen(false)}><Suspense fallback={<p role="status">Opening Muse Image…</p>}><MuseImagePanel initialFlow={museOpen} session={session} actor={actor as Actor} refresh={refresh} notify={notify} origin={origin} whenSaved={props.whenSaved} onClose={() => setMuseOpen(false)} /></Suspense></FocusSheet>}
       {openCard && <FocusSheet label={`Card · ${openCard.title || 'Untitled'}`} onClose={() => { setOpenCardId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}><button type="button" className="m-btn" onClick={() => { setOpenCardId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}>Close</button><TripCardView whenSaved={props.whenSaved} card={openCard} session={session} actor={actor as Actor} kind={readTripMeta(session.doc).kind} refresh={refresh} notify={notify} updatedSources={props.updatedSources} /></FocusSheet>}
-      {openPresentation && <FocusSheet label="Image" onClose={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}><div><button type="button" className="m-btn" onClick={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}>Close</button>{openPresentation.assetId && <AssetLarge session={session} assetId={openPresentation.assetId} />}<p>{openAsset?.caption || 'Image'}</p>{openAsset?.credit && <p>Credit: {openAsset.credit}</p>}</div></FocusSheet>}
+      {openPresentation && <FocusSheet label="Image" onClose={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}><div><button type="button" className="m-btn" onClick={() => { setOpenAssetId(null); window.setTimeout(() => openTriggerRef.current?.focus(), 0); }}>Close</button>{openPresentation.assetId && <AssetLarge session={session} assetId={openPresentation.assetId} />}<p>{openAsset?.caption || 'Image'}</p>{openAsset?.credit && <p>Credit: {openAsset.credit}</p>}<MagazineBoardImageAction key={openPresentation.id} session={session} actor={actor as Actor} presentationId={openPresentation.id} refresh={refresh} notify={notify} whenSaved={props.whenSaved} /></div></FocusSheet>}
     </section>
   );
 }
 function AssetLarge({ session, assetId }: { session: TripSession; assetId: string }) { const url = useAssetUrl(session, assetId); return url ? <img className="m-free-open-img" src={url} alt="" /> : null; }
+function MagazineBoardImageAction({ session, actor, presentationId, refresh, notify, whenSaved }: { session: TripSession; actor: Actor; presentationId: string; refresh: () => void; notify: (message: string) => void; whenSaved?: () => Promise<void> }) {
+  const controller = useRef<AbortController | null>(null);
+  const [busy, setBusy] = useState(false), [added, setAdded] = useState(false), [message, setMessage] = useState('');
+  useEffect(() => () => { controller.current?.abort(); controller.current = null; }, [session, actor, presentationId]);
+  const add = async () => {
+    if (controller.current || added) return;
+    const abort = new AbortController(); controller.current = abort; setBusy(true); setMessage('');
+    try {
+      const result = await useBoardImageInMagazine(session, actor, presentationId, abort.signal);
+      refresh();
+      const persisted = await confirmImageSaved(result.persisted, whenSaved, abort.signal);
+      if (abort.signal.aborted) return;
+      setAdded(true); refresh();
+      const text = persisted ? 'Image saved as a private magazine photo. Open Keepsakes → Magazine and include private artwork.' : 'Image added privately in this tab only. Storage was not confirmed. Download a full editable ZIP backup before closing.';
+      setMessage(text); notify(text);
+    } catch (cause) { if (!abort.signal.aborted) setMessage(cause instanceof Error ? cause.message : 'The image could not be added.'); }
+    finally { if (!abort.signal.aborted) { controller.current = null; setBusy(false); } }
+  };
+  return <section aria-label="Use board image in magazine"><p>Use this existing local image as a private photo in Remember. It will appear in the magazine when you include private artwork. No AI request is made; the board image and its credit stay unchanged.</p><button type="button" className="m-btn" disabled={busy || added} onClick={() => void add()}>{busy ? 'Adding private photo…' : added ? 'Added to private magazine photos' : 'Use image in magazine'}</button>{message && <p role="status">{message}</p>}</section>;
+}
 export default FreeBoard;

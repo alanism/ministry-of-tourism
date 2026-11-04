@@ -9,7 +9,7 @@ import type { MuseImageResult } from './muse-image';
 export const MUSE_IMAGE_CREDIT = 'AI-generated illustration · Muse Image (muse-image-1.0)';
 
 export interface GeneratedTarget { boardId: string; revisionSeen?: number }
-export type GeneratedDestination = { kind: 'board'; origin?: { x: number; y: number } } | { kind: 'card'; cardId: string };
+export type GeneratedDestination = { kind: 'board'; origin?: { x: number; y: number } } | { kind: 'card'; cardId: string } | { kind: 'private-memory' };
 
 function generatedAsset(id: string, hash: string, image: { blob: Blob; width: number; height: number }, result: MuseImageResult, preset: MuseImagePreset, caption: string): Asset {
   return {
@@ -39,6 +39,11 @@ export async function addGeneratedImage(session: TripSession, actor: Actor, resu
     const assetId = crypto.randomUUID(), asset = generatedAsset(assetId, hash!, image, result, preset, caption);
     if (destination.kind === 'card') {
       session.execute(actor, 'trip_asset_attach', { cardId: destination.cardId, asset });
+    } else if (destination.kind === 'private-memory') {
+      session.executeAll(actor, [
+        { command: 'trip_asset_register', input: { asset } },
+        { command: 'trip_card_create', input: { kind: 'photo', title: caption.slice(0, 500), body: `AI-generated ${preset.id==='mot-photo-city-ink'?'City Ink':'fashion'} illustration from a photo explicitly chosen for this request. Opaque background; details may be redrawn. ${preset.id==='mot-photo-city-ink'?'MoT serif lettering added locally. ':''}Original photo not included.`, stage: 'remember', scope: 'private', provenance: 'traveler', assetIds: [assetId] } },
+      ]);
     } else {
       const rect = imagePlacementRect(image.width, image.height, destination.origin ?? { x: 120, y: 120 });
       const stacks = [...readAllCards(session.parts).map(card => card.boardStack ?? 0), ...readPresentations(session.parts).filter(p => p.surface === 'board').map(p => p.zIndex)];

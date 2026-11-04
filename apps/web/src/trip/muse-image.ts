@@ -4,8 +4,10 @@
 // logs or exports the key, and nothing calls the provider except an explicit Generate.
 import { MUSE_IMAGE_ASPECTS, MUSE_IMAGE_MODEL, type MuseImageAspect } from '@mot/core';
 import { rasterDimensions } from './standalone-media';
+import { FASHION_PHOTO_MAX_BYTES, FASHION_PHOTO_MAX_SIDE } from './fashion-photo';
 
 export const MUSE_IMAGE_ENDPOINT = 'https://api.meta.ai/v1/images/generations';
+export const MUSE_IMAGE_EDIT_ENDPOINT = 'https://api.meta.ai/v1/images/edits';
 /** Generation with grounding can take minutes; past this the outcome (and any charge) is uncertain. */
 export const MUSE_IMAGE_TIMEOUT_MS = 240_000;
 export const MUSE_IMAGE_MAX_BYTES = 16 * 1024 * 1024;
@@ -21,15 +23,16 @@ export class MuseImageError extends Error {
 }
 
 export interface MuseImageResult { blob: Blob; width: number; height: number; mime: string; elapsedMs: number; createdAt: string; model: string }
-export interface MuseImageRequest { key: string; prompt: string; aspect: MuseImageAspect; signal?: AbortSignal }
+export interface MuseImageRequest { key: string; prompt: string; aspect: MuseImageAspect; signal?: AbortSignal; sourcePhoto?: Blob; styleReference?: Blob; preserveSourceAspect?: boolean }
 export interface MuseImageDeps { fetcher?: typeof fetch; decode?: (blob: Blob) => Promise<{ width: number; height: number }>; timeoutMs?: number; now?: () => number }
 
 /** The exact allowlisted body; image search stays on for recognizable landmarks, web search and shell are off. */
-export function museImageBody(prompt: string, aspect: MuseImageAspect) {
+export function museImageBody(prompt: string, aspect: MuseImageAspect, sourceDataUrl?: string, sourceSize?: string, styleDataUrl?: string) {
   return {
-    model: MUSE_IMAGE_MODEL, prompt, n: 1, size: MUSE_IMAGE_ASPECTS[aspect],
+    model: MUSE_IMAGE_MODEL, prompt, n: 1, size: sourceSize ?? MUSE_IMAGE_ASPECTS[aspect],
     response_format: 'b64_json', output_format: 'png', reasoning_strength: 'high', stream: false,
-    tool_enablement: { enable_image_search: true, enable_web_search: false, enable_shell: false },
+    tool_enablement: { enable_image_search: !sourceDataUrl, enable_web_search: false, enable_shell: false },
+    ...(sourceDataUrl ? { images: [{ image_url: sourceDataUrl }, ...(styleDataUrl ? [{ image_url: styleDataUrl }] : [])] } : {}),
   } as const;
 }
 
@@ -71,12 +74,42 @@ export async function generateMuseImage(request: MuseImageRequest, deps: MuseIma
   const settled = () => { if (request.signal?.aborted) throw new MuseImageError('cancelled', 'Stopped. Meta may still have generated and billed the image.', true); if (timedOut) throw new MuseImageError('timeout', 'No image after 4 minutes. Meta may still have generated and billed it.', true); };
   try {
     if (request.signal?.aborted) throw new MuseImageError('cancelled', 'Stopped before sending. Nothing was charged.');
+    let sourceDataUrl: string | undefined;
+    let sourceSize: string | undefined;
+    let styleDataUrl: string | undefined;
+    if (request.styleReference && !request.sourcePhoto) throw new MuseImageError('rejected', 'Choose a source photo before using a style reference.');
+    if (request.sourcePhoto) {
+      const photo = request.sourcePhoto;
+      if (photo.size > FASHION_PHOTO_MAX_BYTES || !['image/jpeg', 'image/png', 'image/webp'].includes(photo.type)) throw new MuseImageError('rejected', 'Choose a prepared PNG, JPEG or simple static WebP photo within the 4 MiB limit.');
+      const bytes = new Uint8Array(await photo.arrayBuffer());
+      let dimensions: { width: number; height: number };
+      try { dimensions = rasterDimensions(bytes, photo.type); } catch { throw new MuseImageError('rejected', 'The selected photo has an unsupported image structure.'); }
+      if (!dimensions.width || !dimensions.height || dimensions.width > FASHION_PHOTO_MAX_SIDE || dimensions.height > FASHION_PHOTO_MAX_SIDE) throw new MuseImageError('rejected', 'Prepare the selected photo before sending it.');
+      if (request.preserveSourceAspect) sourceSize = `${dimensions.width}x${dimensions.height}`;
+      let binary = '';
+      for (let offset = 0; offset < bytes.length; offset += 16384) binary += String.fromCharCode(...bytes.subarray(offset, offset + 16384));
+      sourceDataUrl = `data:${photo.type};base64,${btoa(binary)}`;
+      settled();
+    }
+    if (request.styleReference) {
+      const reference = request.styleReference;
+      if (reference.type !== 'image/png' || reference.size > 1024 * 1024) throw new MuseImageError('rejected', 'Use the approved PNG style reference within the 1 MiB limit.');
+      const bytes = new Uint8Array(await reference.arrayBuffer());
+      try {
+        const size = rasterDimensions(bytes, reference.type);
+        if (size.width > FASHION_PHOTO_MAX_SIDE || size.height > FASHION_PHOTO_MAX_SIDE) throw Error();
+      } catch { throw new MuseImageError('rejected', 'The style reference has an unsupported image structure.'); }
+      let binary = '';
+      for (let offset = 0; offset < bytes.length; offset += 16384) binary += String.fromCharCode(...bytes.subarray(offset, offset + 16384));
+      styleDataUrl = `data:image/png;base64,${btoa(binary)}`;
+      settled();
+    }
     let response: Response;
     try {
-      response = await (deps.fetcher ?? fetch)(MUSE_IMAGE_ENDPOINT, {
+      response = await (deps.fetcher ?? fetch)(sourceDataUrl ? MUSE_IMAGE_EDIT_ENDPOINT : MUSE_IMAGE_ENDPOINT, {
         method: 'POST', signal: controller.signal, credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store',
         headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(museImageBody(prompt, request.aspect)),
+        body: JSON.stringify(museImageBody(prompt, request.aspect, sourceDataUrl, sourceSize, styleDataUrl)),
       });
     } catch { settled(); throw new MuseImageError('network', 'The request did not complete. Meta may or may not have generated and billed the image.', true); }
     settled();

@@ -5,6 +5,7 @@ import {SourceLink} from './SourceContent';
 import {sourceDate} from './source-card';
 import {finishSourceLoad,type SourceLoadState} from './fcc-state';
 import {Almanac} from './Almanac';
+import {DiscoverMore} from './DiscoverMore';
 
 export const citySlug=(value:string)=>value.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 let cacheDb:Promise<IDBDatabase>|undefined;
@@ -70,6 +71,7 @@ export function FccBrowser({session,actor,refresh,notify,onContent,onState,initi
     <p className="m-muted t-1">Only the city name is sent to FCC. FCC stories are editorial: check current opening hours and prices yourself.</p>
     <button type="button" className="m-btn small ghost" disabled={state.pending} onClick={()=>setAttempt(value=>value+1)}>Refresh FCC content</button>
     <Almanac cityId={id} session={session} actor={actor} refresh={refresh} notify={notify} load={browserFcc.getAlmanac}/>
+    {loaded?.city.id===id&&<DiscoverMore content={loaded} session={session} actor={actor} refresh={refresh} notify={notify}/>}
     <SourceFreshness state={{...state,boardId:session.boardId,cityId:id}}/>
     {!result&&state.pending&&<p>Loading the selected city's issue…</p>}
     {result?.status==='unavailable'&&<div><p>{result.reason}</p><button className="m-btn" type="button" disabled={state.pending} onClick={()=>setAttempt(value=>value+1)}>Retry FCC</button><p className="m-muted">Your board and artwork remain usable.</p></div>}

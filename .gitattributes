@@ -1,2 +1,4 @@
 # Generated public guide is byte-identical to guidanceMarkdown on every checkout.
 /apps/web/public/guides/trip-best-practices.md text eol=lf
+# Preserve the owner's approved rubric bytes on Windows checkouts as well.
+/apps/web/src/trip/image-quality-rubrics.md text eol=lf

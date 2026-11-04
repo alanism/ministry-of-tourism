@@ -20,6 +20,7 @@
     "@fontsource/ibm-plex-serif": "^5.1.1",
     "@mot/core": "*",
     "fflate": "^0.8.3",
+    "firebase": "^13.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "y-indexeddb": "^9.0.12",

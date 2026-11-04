@@ -1,12 +1,12 @@
 // MOT-151 fixture tests. Every provider response here is a labelled test fixture; no real Meta call is made.
 import { afterEach, expect, it, vi } from 'vitest';
-import { MUSE_IMAGE_PRESETS, composeMusePrompt, createTrip, encodeTrip, loadTrip, readAllCards, readAsset, readPresentations, tripParts, TripSession, museImagePreset } from '@mot/core';
+import { MUSE_IMAGE_PRESETS, MUSE_FASHION_PRESET, MUSE_FASHION_PROMPT, MUSE_CITY_INK_PRESET, MUSE_CITY_INK_PROMPT, buildMagazine, composeMusePrompt, createTrip, encodeTrip, loadTrip, readAllCards, readAsset, readPresentations, tripParts, TripSession, museImagePreset } from '@mot/core';
 const blobControl = vi.hoisted(() => ({ stored: new Map<string, Blob>() }));
 vi.mock('../state/blobs', () => {
   const hashBlob = async (blob: Blob) => Buffer.from(await crypto.subtle.digest('SHA-256', await blob.arrayBuffer())).toString('hex');
   return { hashBlob, getBlob: async (hash: string) => blobControl.stored.get(hash) ?? null, putBlob: async (blob: Blob) => { blobControl.stored.set(await hashBlob(blob), blob); } };
 });
-import { MUSE_IMAGE_ENDPOINT, MuseImageError, generateMuseImage, museImageBody } from './muse-image';
+import { MUSE_IMAGE_ENDPOINT, MUSE_IMAGE_EDIT_ENDPOINT, MuseImageError, generateMuseImage, museImageBody } from './muse-image';
 import { MUSE_IMAGE_CREDIT, addGeneratedImage } from './muse-image-board';
 
 const CANARY = 'sk-TEST-CANARY-7f3a9c2e1b';
@@ -149,4 +149,51 @@ it('attaches to a trip card for the magazine, and refuses a result made for a di
   await expect(addGeneratedImage(session, actor, result, preset, 'x', { boardId: 'another-board' }, { kind: 'board' }, new AbortController().signal)).rejects.toThrow(/different trip/);
   await expect(addGeneratedImage(session, actor, result, preset, 'x', { boardId: session.boardId }, { kind: 'card', cardId: 'gone' }, new AbortController().signal)).rejects.toThrow(/no longer on the board/);
   expect(encodeTrip(session.doc)).toEqual(before);
+});
+
+it('edits only one explicitly supplied photo at the fixed Meta endpoint with no external tools or board input', async () => {
+  const photo = new Blob([pngBytes(100, 150) as BlobPart], { type: 'image/png' });
+  const fetcher = vi.fn(async () => fixtureOk());
+  await generateMuseImage({ key: CANARY, prompt: MUSE_FASHION_PROMPT, aspect: 'portrait', sourcePhoto: photo }, { fetcher, decode });
+  const [url, options] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+  expect(url).toBe(MUSE_IMAGE_EDIT_ENDPOINT);
+  const body = JSON.parse(String(options.body));
+  expect(body.images).toEqual([{ image_url: `data:image/png;base64,${b64(pngBytes(100, 150))}` }]);
+  expect(body).toMatchObject({ model: 'muse-image-1.0', n: 1, prompt: MUSE_FASHION_PROMPT, tool_enablement: { enable_image_search: false, enable_web_search: false, enable_shell: false } });
+  expect(Object.keys(body).sort()).toEqual([...Object.keys(museImageBody('x', 'portrait')), 'images'].sort());
+  expect(String(options.body)).not.toContain(CANARY);
+});
+
+it('rejects malformed, oversized or unprepared edit photos before the provider', async () => {
+  const fetcher = vi.fn(async () => fixtureOk());
+  for (const sourcePhoto of [new Blob(['not a photo'], { type: 'image/png' }), new Blob([pngBytes(2000, 2000) as BlobPart], { type: 'image/png' }), new Blob([new Uint8Array(4 * 1024 * 1024 + 1)], { type: 'image/jpeg' }), new Blob(['<svg/>'], { type: 'image/svg+xml' })]) {
+    await expect(generateMuseImage({ ...request(), sourcePhoto }, { fetcher, decode })).rejects.toMatchObject({ kind: 'rejected', uncertain: false });
+  }
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it.each([MUSE_FASHION_PRESET,MUSE_CITY_INK_PRESET])('saves an approved $id edit privately, includes it only in the personal magazine, and preserves the existing photo', async (preset) => {
+  const session = setupBoard(), result = await generated();
+  session.execute(actor, 'trip_card_create', { kind: 'photo', title: 'Existing original photo', scope: 'private', stage: 'remember', body: 'Original unchanged' });
+  const original = readAllCards(session.parts)[0]!;
+  await addGeneratedImage(session, actor, result, preset, 'My fashion illustration', { boardId: session.boardId }, { kind: 'private-memory' }, new AbortController().signal);
+  expect(readAllCards(session.parts).find(card => card.id === original.id)).toEqual(original);
+  const card = readAllCards(session.parts).find(card => card.title === 'My fashion illustration')!;
+  expect(card).toMatchObject({ kind: 'photo', scope: 'private', stage: 'remember' }); expect(card.assetIds).toHaveLength(1);
+  const asset = readAsset(session.parts, card.assetIds[0]!)!;
+  expect(asset).toMatchObject({ generated: { presetId: preset.id, presetVersion: 1 }, credit: MUSE_IMAGE_CREDIT });
+  expect(asset).not.toHaveProperty('apiKey'); expect(asset.derivedFrom).toBeUndefined();
+  const shared = buildMagazine(session.doc, { variant: 'stay' });
+  expect(shared.selection!.assets.some(item => item.id === asset.id)).toBe(false);
+  const personal = buildMagazine(session.doc, { variant: 'personal', assetUrls: new Map([[asset.id, `data:image/png;base64,${b64(pngBytes(1536, 1024))}`]]), assetDimensions: new Map([[asset.id, { width: 1536, height: 1024 }]]) });
+  expect(personal.selection!.assets.find(item => item.id === asset.id)!.pageIds.length).toBeGreaterThan(0);
+  expect(personal.pages.some(page => page.credits.includes(MUSE_IMAGE_CREDIT))).toBe(true);
+});
+
+it('City Ink preserves the prepared source aspect ratio and delegates lettering to a local step', async () => {
+  const fetcher=vi.fn(async()=>fixtureOk());
+  await generateMuseImage({key:CANARY,prompt:MUSE_CITY_INK_PROMPT,aspect:'landscape',preserveSourceAspect:true,sourcePhoto:new Blob([pngBytes(1200,900) as BlobPart],{type:'image/png'})},{fetcher,decode});
+  const [,init]=fetcher.mock.calls[0] as unknown as [string,RequestInit];
+  expect(JSON.parse(String(init.body)).size).toBe('1200x900');
+  expect(MUSE_CITY_INK_PROMPT).toContain('Do not generate words');expect(MUSE_CITY_INK_PROMPT).toContain('#1f64aa');
 });

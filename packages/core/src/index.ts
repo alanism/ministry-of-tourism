@@ -62,3 +62,5 @@ export * from './trip/voting-lifecycle.ts';
 export * from './trip/public-catalogue.ts';
 export * from './trip/file-exchange.ts';
 export * from './trip/file-exchange-json.ts';
+export * from './trip/discovery.ts';
+export * from './trip/muse-fashion-preset.ts';
