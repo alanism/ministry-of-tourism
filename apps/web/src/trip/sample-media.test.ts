@@ -19,7 +19,7 @@ describe('optional sample media', () => {
     vi.stubGlobal('fetch', fetcher);
     const html = landing();
     expect(html).not.toContain('/sample/');
-    expect(html).toContain('/assets/mot-product-and-technical-demo-20261030.mp4');
+    expect(html).toContain('/assets/mot-final-3segments-2m40-20261104.mp4');
     expect(html).toContain('Make this my trip');
     const trip = session();
     await seedSample(trip, 'traveler');
@@ -49,7 +49,7 @@ describe('optional sample media', () => {
     expect(fetcher).toHaveBeenCalledTimes(4);
     expect(attachPhoto).toHaveBeenCalledTimes(2);
     expect(readAllCards(trip.parts).find(card => card.title === 'A moment on the river')?.kind).toBe('photo');
-    expect(landing()).toContain('/assets/mot-product-and-technical-demo-20261030.mp4');
+    expect(landing()).toContain('/assets/mot-final-3segments-2m40-20261104.mp4');
     expect(landing()).not.toContain('/sample/');
   });
 });

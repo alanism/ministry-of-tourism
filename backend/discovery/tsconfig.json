@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "paths": { "@mot/core": ["./src/core-shim.ts"] } },
+  "include": ["src"]
+}

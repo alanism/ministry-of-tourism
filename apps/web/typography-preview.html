@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ministry of Tourism · Local typography comparison</title>
+    <meta name="robots" content="noindex, nofollow" />
+  </head>
+  <body>
+    <aside id="typography-tools" aria-label="Local typography preview">
+      <strong>Typography preview</strong>
+      <div role="group" aria-label="Typography comparison">
+        <button type="button" data-typography-choice="a" aria-pressed="true">A · Current</button>
+        <button type="button" data-typography-choice="b" aria-pressed="false">B · Slab headings</button>
+        <button type="button" data-typography-choice="c" aria-pressed="false">C · Nunito headings</button>
+      </div>
+      <p id="typography-description" role="status" aria-live="polite"></p>
+      <span>App text only · Same sizes and spacing</span>
+    </aside>
+    <div id="root"></div>
+    <script type="module" src="/src/typography-preview.ts"></script>
+  </body>
+</html>

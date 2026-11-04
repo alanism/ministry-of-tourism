@@ -2,12 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { MUSE_IMAGE_PRESETS, composeMusePrompt, readAllCards, readTripMeta, type Actor, type MuseImageAspect, type MuseImageMode, type TripSession } from '@mot/core';
 import { MUSE_IMAGE_ENDPOINT, MUSE_IMAGE_PRICE_NOTE, MUSE_IMAGE_PRICING_URL, MuseImageError, generateMuseImage, type MuseImageResult } from './muse-image';
 import { MUSE_IMAGE_CREDIT, addGeneratedImage } from './muse-image-board';
+import { PhotoFashionPanel } from './PhotoFashionPanel';
 
 type Status = { kind: 'idle' } | { kind: 'running'; started: number } | { kind: 'done'; result: MuseImageResult; url: string; prompt: string; presetId: string; caption: string; venueId?: string; venueTitle?: string } | { kind: 'failed'; message: string; uncertain: boolean };
 
-export interface MuseImagePanelProps { session: TripSession; actor: Actor; refresh: () => void; notify: (message: string) => void; onClose: () => void; origin?: () => { x: number; y: number } }
+export interface MuseImagePanelProps { session: TripSession; actor: Actor; refresh: () => void; notify: (message: string) => void; onClose: () => void; origin?: () => { x: number; y: number }; initialFlow?: 'text' | 'photo'; whenSaved?: () => Promise<void> }
 
-export function MuseImagePanel({ session, actor, refresh, notify, onClose, origin }: MuseImagePanelProps) {
+export function MuseImagePanel(props: MuseImagePanelProps) {
+  const [flow, setFlow] = useState<'text' | 'photo'>(props.initialFlow ?? 'text');
+  // Switching flows unmounts the previous panel and drops its key, photo and pending request.
+  return flow === 'photo' ? <PhotoFashionPanel {...props} onBack={() => setFlow('text')} /> : <TextMuseImagePanel {...props} onPhoto={() => setFlow('photo')} />;
+}
+
+function TextMuseImagePanel({ session, actor, refresh, notify, onClose, origin, onPhoto }: MuseImagePanelProps & { onPhoto: () => void }) {
   const meta = readTripMeta(session.doc), boardId = session.boardId;
   const venues = useMemo(() => readAllCards(session.parts).filter(card => card.kind !== 'note' && card.kind !== 'brief' && card.title.trim()), [session]);
   const [mode, setMode] = useState<MuseImageMode>('city');
@@ -68,6 +75,7 @@ export function MuseImagePanel({ session, actor, refresh, notify, onClose, origi
 
   return <section className="mot-muse-image" aria-label="Create with Muse Image">
     <header><h2>Create with Muse Image</h2><p className="m-muted">One illustration from your own Meta API key. Everything else on the board works without it.</p></header>
+    <button type="button" className="m-btn" disabled={status.kind === 'running'} onClick={onPhoto}>Fashion illustration from your photo</button>
     <div className="m-seg" role="group" aria-label="Kind">{(['city', 'venue'] as const).map(m => <button key={m} type="button" aria-pressed={mode === m} disabled={running} onClick={() => { setMode(m); setPresetId(MUSE_IMAGE_PRESETS.find(p => p.mode === m)!.id); }}>{m === 'city' ? 'City illustration' : 'Venue sketch'}</button>)}</div>
     <div className="mot-muse-image-grid">
       {presets.length > 1 && <label>Preset<select className="m-field" value={preset.id} disabled={running} onChange={e => setPresetId(e.target.value)}>{presets.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}</select></label>}

@@ -6,7 +6,12 @@
     "predeploy": ["npm --prefix apps/web run build"],
     "headers": [
       { "source": "**", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] },
-      { "source": "assets/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] }
+      { "source": "assets/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
+      { "source": "/connectors/muse/**", "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ] }
     ],
     "rewrites": [{ "source": "**", "destination": "/index.html" }]
   }

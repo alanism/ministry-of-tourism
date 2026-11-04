@@ -1,0 +1,15 @@
+// Server-only usage database: mot-discovery-usage. No board data is stored here.
+// motDiscoveryControl/v1: version, private random salt, durable attempt/token counters,
+// halted circuit breaker, and at most two request-ID lease expirations.
+// motDiscoveryDays/{UTC-date}, motDiscoveryActors/{UTC-date}-{HMAC-UID}: attempt counters.
+// motDiscoveryRequests/{UUID}: HMAC-UID, private completion nonce, timestamps, state, usage.
+// All models and state transitions are validated in the server transaction boundary.
+// Browser access is always denied. The dedicated runtime uses database-scoped IAM.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

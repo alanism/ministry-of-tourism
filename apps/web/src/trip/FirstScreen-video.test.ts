@@ -27,7 +27,7 @@ const stylesheet = [
 ].join('\n');
 
 describe('FirstScreen product demo video', () => {
-  it('renders the original video with native controls instead of autoplay', () => {
+  it('renders the current video with native controls instead of autoplay', () => {
     expect(source).toContain('<video');
     expect(source).toMatch(/<video\b[^>]*\bcontrols\b/);
     expect(source).toMatch(/<video\b[^>]*\bplaysInline\b/);
@@ -42,19 +42,19 @@ describe('FirstScreen product demo video', () => {
     );
   });
 
-  it('uses the original mp4 as both the video source and watch link', () => {
+  it('uses the current mp4 as both the video source and watch link', () => {
     expect(source).toMatch(
-      /<source\b[^>]*src="\/assets\/mot-product-and-technical-demo-20261030\.mp4"/,
+      /<source\b[^>]*src="\/assets\/mot-final-3segments-2m40-20261104\.mp4"/,
     );
     expect(source).toMatch(/<source\b[^>]*type="video\/mp4"/);
     expect(source).toContain(
-      'href="/assets/mot-product-and-technical-demo-20261030.mp4"',
+      'href="/assets/mot-final-3segments-2m40-20261104.mp4"',
     );
   });
 
   it('shows the product demo caption', () => {
     expect(source).toContain('Watch the product demo');
-    expect(source).toContain('Product demo + how it works · 2:30');
+    expect(source).toContain('Product demo + how it works · 2:40');
   });
 
   it('does not render the old sample keepsake receipt', () => {
