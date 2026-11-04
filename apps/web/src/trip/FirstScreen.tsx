@@ -2,6 +2,7 @@
 import type { BoardKind } from '@mot/core';
 import { Logo } from './ui';
 import type { BoardEntry } from './trip-store';
+import { LandingCarousel } from './LandingCarousel';
 
 const museSetupPrompt = 'Create a personal Custom Connector named Ministry of Tourism using https://ministryoftourism.web.app/connectors/muse/openapi.json. Use no authentication. List the available cities, then retrieve Bangkok articles, places, artwork and stickers. Show one result of each type with its source and credit. Confirm whether you saved a reusable Custom Connector. If unsupported, explain the exact missing capability. This API cannot access my private trip boards.';
 
@@ -57,7 +58,8 @@ export function FirstScreen({ onStart, boards, onOpen, notice }: { onStart: (kin
             </div>
           </section>
         )}
-        <p className="m-muted" role="status" style={{ marginTop: 18 }}>Muse is not connected yet. The board, Today, keepsakes and export all work without it.</p>
+        <LandingCarousel />
+        <p className="m-muted" role="status" style={{ marginTop: 18 }}>Works with Muse AI. Ask Muse to open Ministry of Tourism and help plan your trip, or use the board yourself.</p>
       </div>
     </main>
   );
