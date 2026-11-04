@@ -117,7 +117,7 @@ function TripWorkspace({onOpenSharedRoom}:{onOpenSharedRoom:(source?:TripSession
   const [cityContent,setCityContent]=useState<FccCityContent>();
   const [fccState,setFccState]=useState<FccBrowserState>();
   const [museAvailable,setMuseAvailable]=useState(false);
-  const [museLabel,setMuseLabel]=useState('Muse · check connection');
+  const [museLabel,setMuseLabel]=useState('Muse options');
   const [museGhosts,setMuseGhosts]=useState<Ghost[]>([]);
   const providers=useRef({fcc:false,muse:false});
 
