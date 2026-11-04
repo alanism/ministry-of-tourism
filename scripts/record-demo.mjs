@@ -1,4 +1,4 @@
-// MOT-58: records docs/VERIFICATION.md's demo script from the running app as real browser video.
+// MOT-58: records docs/history/2026-10-demo/VERIFICATION.md's historical demo script.
 // Needs the dev server on 127.0.0.1:5173 and playwright-core@1.62.1 (Chromium 1234), installed outside
 // this repo: npm i playwright-core@1.62.1 in a scratch folder, then node record-demo.mjs <outDir>.
 // Convert: ffmpeg -i demo.webm -vf scale=1280:-2,fps=24 -c:v libx264 -crf 30 -pix_fmt yuv420p docs/MOT-58-demo.mp4

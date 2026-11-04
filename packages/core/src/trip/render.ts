@@ -3,7 +3,6 @@ import type * as Y from 'yjs';
 import { readAllCards, readAsset, readTripMeta, tripParts,readPresentations,presentationScope } from './model.ts';
 import { boardProjection, todayProjection } from './projections.ts';
 import { mapPins } from './keepsake.ts';
-import { PRESENTATION_PATTERNS } from './schema.ts';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 

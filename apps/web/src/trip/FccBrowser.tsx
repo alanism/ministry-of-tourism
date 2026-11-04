@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createDiagnostic, createFccAdapter, FCC_ORIGIN, readTripMeta, type Actor, type CachedCity, type CityContentCache, type FccCityContent, type FccResult, type TripSession } from '@mot/core';
+import { createDiagnostic, createFccAdapter, FCC_ORIGIN, readTripMeta, type Actor, type CachedCity, type CityContentCache, type FccCityContent, type TripSession } from '@mot/core';
 import { diagnostics } from './artifacts';
 import {SourceLink} from './SourceContent';
 import {sourceDate} from './source-card';

@@ -162,6 +162,8 @@ npm --prefix apps/web run build
 
 The board and manual workflows need no model key. For the optional local model connection, follow [docs/MUSE-RUNTIME.md](docs/MUSE-RUNTIME.md). Keep credentials on the server. The public source and hosted deployment are versioned separately. See [Git workflow](docs/GIT-WORKFLOW.md) for contribution and release instructions.
 
+For contributors: [codebase map and test commands](docs/DEVELOPMENT.md) · [documentation index](docs/README.md) · [script guide](scripts/README.md).
+
 ## License
 
 MoT-owned code: [MIT](LICENSE). [Content and asset terms](docs/CONTENT-AND-ASSETS.md) · [Third-party notices](THIRD_PARTY_NOTICES.md).

@@ -2,7 +2,7 @@
 
 Code revision: **8c22dcb**. Checker: **Muse Wonder**, including author checks of its closeout fixes. This is a demo acceptance record, not independent verification or production readiness.
 
-Later product design pass: **eeba470**. See [HANDOFF.md](HANDOFF.md) for the
+Later product design pass: **eeba470**. See [HANDOFF.md](../../HANDOFF.md) for the
 current interface, 92+ saved-hero lens scores and fresh browser evidence.
 This closeout's video and task table remain the historical `8c22dcb` record.
 
@@ -22,10 +22,10 @@ The owner asked to finish the initial demo, keep the canonical Kanban current an
 - Production bundle builds; no META_API_KEY match.
 
 Artifacts are in the Ministry of Tourism project folder under `Demo Closeout/`.
-The [runtime demo](MOT-58-demo.mp4) is exactly **180 seconds**, **1280×720**,
+The runtime demo (`MOT-58-demo.mp4`, retained with the local closeout artifacts) is exactly **180 seconds**, **1280×720**,
 **4,320 frames** and **2,158,854 bytes**; its contact sheet was visually checked.
 The caption continuously labels sample content and the disconnected test adapter.
-See the [current handoff](HANDOFF.md) for boot commands and live-service limits.
+See the [current handoff](../../HANDOFF.md) for boot commands and live-service limits.
 Browser plugin was not available; bundled Playwright was used.
 
 ## Task evidence

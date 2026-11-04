@@ -5,7 +5,7 @@ import { useBoardClipboard } from './useBoardClipboard';
 import { BoardView, TripCardView, type ViewProps } from './BoardView';
 import { FocusSheet } from './ui';
 import { coverAssetId, useAssetUrl } from './trip-assets';
-import { buildMoveCommand, classifyPaste, imagePlacementRect, ingestBoardImages, moveRect, nextStack, rectsEqual, resizeRect, textNoteInput, validateBoardRect, type BoardObjectRef, type BoardRect } from './free-board-actions';
+import { buildMoveCommand, classifyPaste, ingestBoardImages, moveRect, nextStack, rectsEqual, resizeRect, textNoteInput, validateBoardRect, type BoardObjectRef, type BoardRect } from './free-board-actions';
 import { placeBoardArtwork } from './board-artwork';
 import { museImageEnabled } from './muse-image';
 import type { Artwork } from '../artwork/catalog';

@@ -1,10 +1,11 @@
-import { selectedAssetClosure, buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadCityApparel, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, TRIP_PACKAGE_LIMITS, tripParts, type DiagnosticReceipt, type DiagnosticStep, type MagazineDocument, type OperationState, type TripSession } from '@mot/core';
+import { selectedAssetClosure, buildMagazine, buildPdf, createDiagnostic, DiagnosticLog, encodeTrip, exportTripPackage, loadTrip, MAGAZINE, OperationTracker, presentationScope, readAllCards, readAsset, readMagazineApparel, readPresentations, readTripMeta, tripParts, type DiagnosticReceipt, type DiagnosticStep, type MagazineDocument, type OperationState, type TripSession } from '@mot/core';
 import { getTripBlob } from './trip-assets';
 import type { TripArtifact } from './agentApi';
 import {artifactSha256,keepArtifact,readArtifact,removeArtifact,type ArtifactInventory,type ArtifactScope,type StoredArtifact} from './artifact-store';
 import { svgPdfTextLayer } from './pdf-text-layer';
 import {checkedPixels,HTML_LIMITS,rasterDimensions,sanitizedRaster,type EmbeddedMedia} from './standalone-media';
 import {cityArtSnapshot,snapshotWarnings,tripCityId,type CityArtSnapshot} from './export-snapshot';
+import { exportBitmapDimensions } from './export-image';
 /** Shared city art for every export; a failed or absent lookup keeps the trip's own pages. */
 async function citySnapshot(doc:import('yjs').Doc,signal?:AbortSignal):Promise<CityArtSnapshot|undefined>{
   const cityId=tripCityId(readTripMeta(doc));if(!cityId)return;
@@ -98,16 +99,7 @@ export async function prepareMagazine(session:TripSession,signal?:AbortSignal,in
       const asset=doc.getMap<import('yjs').Map<unknown>>('tripAssets').get(id)!;
       const blob=await getTripBlob(String(asset.get('hash')))??new Blob([original as BlobPart],{type:String(asset.get('mime'))});
       urls.set(id,await dataUrl(blob));
-      const image=await new Promise<ImageBitmap>((resolve,reject)=>{
-        const stop=()=>reject(signal?.reason??new DOMException('Export cancelled','AbortError'));
-        if(signal?.aborted){stop();return;}
-        signal?.addEventListener('abort',stop,{once:true});
-        Promise.resolve().then(()=>{signal?.throwIfAborted();return createImageBitmap(blob);}).then(
-          image=>{signal?.removeEventListener('abort',stop);if(signal?.aborted){image.close();stop();}else resolve(image);},
-          error=>{signal?.removeEventListener('abort',stop);reject(error);},
-        );
-      });
-      try{signal?.throwIfAborted();dimensions.set(id,{width:image.width,height:image.height});}finally{image.close();}
+      dimensions.set(id,await exportBitmapDimensions(blob,signal));
     }
     signal?.throwIfAborted();
     const cached=readMagazineApparel(tripParts(doc),scope==='personal').map(asset=>asset.apparel!);

@@ -8,7 +8,7 @@ import { recoverFccTitle } from './fcc-text.ts';
 import {magazineReadingText} from './magazine-markdown.ts';
 import {magazineContent,type MagazineReading,type MagazineSelection} from './magazine-content.ts';
 import { publicLinkUrl } from '../export/pdf.ts';
-import { MAGAZINE, PAPER, INK, RED, BLUSH, BLUE, TAUPE, PU, M, L, G, COL, column, escapeXml as esc, magazineLabel, wrap, flowText, rows, kicker, shell } from './magazine-style.ts';
+import { PAPER, INK, RED, BLUSH, BLUE, TAUPE, PU, M, L, G, COL, column, escapeXml as esc, magazineLabel, wrap, flowText, rows, kicker, shell } from './magazine-style.ts';
 export { MAGAZINE, magazineLabel } from './magazine-style.ts';
 export const SPREAD_PATTERNS=PRESENTATION_PATTERNS;
 export type SpreadPattern=(typeof SPREAD_PATTERNS)[number];

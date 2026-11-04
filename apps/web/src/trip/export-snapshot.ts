@@ -2,6 +2,7 @@
 import { loadCityApparel, TRIP_PACKAGE_LIMITS, type ApparelArtRef, type TripMeta } from '@mot/core';
 import { catalogSchema, manifestSchema, readCatalog, type Artwork, type Manifest } from '../artwork/catalog';
 import { artifactSha256 } from './artifact-store';
+import { exportBitmapDimensions } from './export-image';
 import fontCoverage from './standalone-fonts.json';
 
 export interface ExportArtCredit { assetId:string; label:string; credit:string; rightsStatus:string; sourceUrl?:string; kind:string; }
@@ -53,19 +54,6 @@ async function fetchBlob(url:string, fetcher:typeof fetch, signal:AbortSignal):P
   if (!blob.size || blob.size > TRIP_PACKAGE_LIMITS.fileBytes) throw new Error('not a usable image');
   return blob;
 }
-/** Decodes for dimensions only; a bitmap that settles after Cancel is closed exactly once. */
-function decodedSize(blob:Blob, signal:AbortSignal):Promise<{width:number;height:number}> {
-  return new Promise((ok, fail) => {
-    const stop = () => fail(signal.reason ?? new DOMException('Export cancelled', 'AbortError'));
-    if (signal.aborted) { stop(); return; }
-    signal.addEventListener('abort', stop, { once:true });
-    Promise.resolve().then(() => { signal.throwIfAborted(); return createImageBitmap(blob); }).then(
-      image => { signal.removeEventListener('abort', stop); const size = { width:image.width, height:image.height }; image.close(); if (signal.aborted) stop(); else ok(size); },
-      error => { signal.removeEventListener('abort', stop); fail(error); },
-    );
-  });
-}
-
 async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):Promise<CityArtSnapshot> {
   const blobs = new Map<string,Blob>(), dimensions = new Map<string,{width:number;height:number}>();
   const art:Record<string,unknown>[] = [], credits:ExportArtCredit[] = [], gaps:ExportArtGap[] = [], tees:ApparelArtRef[] = [];
@@ -97,7 +85,7 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
   const loaded = await Promise.allSettled(plan.map(async ({ item }) => {
     const blob = await fetchBlob(item.src, fetcher, signal);
     if (!/^image\/(png|jpeg|webp)$/.test(blob.type)) throw new Error('not a supported still image');
-    return { blob, ...await decodedSize(blob, signal) };
+    return { blob, ...await exportBitmapDimensions(blob, signal) };
   }));
   signal.throwIfAborted();
   plan.forEach(({ item, role }, index) => {
@@ -124,7 +112,7 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
         const hash = await artifactSha256(blob);
         if ((tee.hash && tee.hash !== hash) || (tee.source.contentHash && tee.source.contentHash !== hash)) throw new Error('original changed');
         signal.throwIfAborted();
-        const size = await decodedSize(blob, signal);
+        const size = await exportBitmapDimensions(blob, signal);
         if (size.width !== tee.width || size.height !== tee.height) throw new Error('dimensions changed');
         blobs.set(tee.assetId, blob); dimensions.set(tee.assetId, { width:tee.width, height:tee.height }); tees.push(tee);
         credits.push({ assetId:tee.assetId, label:tee.label ?? 'FCC tee', credit:tee.credit ?? 'unknown', rightsStatus:tee.rightsStatus, sourceUrl:tee.source.canonicalUrl, kind:'apparel-mockup' });
@@ -137,14 +125,26 @@ async function resolve(cityId:string, fetcher:typeof fetch, signal:AbortSignal):
 
 let caches = new WeakMap<typeof fetch,Map<string,Promise<CityArtSnapshot>>>();
 /** Resolved once per city and reused, so preview, HTML and PDF never pick independently.
- * The first caller's Cancel stops the lookup; another waiting caller starts it again with its own signal. */
+ * The first caller's Cancel stops the lookup; another waiting caller starts it again with its own signal.
+ * Every caller can stop waiting independently without cancelling another caller's lookup. */
 export function cityArtSnapshot(cityId:string, options:{ signal?:AbortSignal; fetcher?:typeof fetch } = {}):Promise<CityArtSnapshot> {
   const signal = options.signal ?? new AbortController().signal, fetcher = options.fetcher ?? fetch;
+  if (signal.aborted) return Promise.reject(signal.reason);
   let cache = caches.get(fetcher); if (!cache) caches.set(fetcher, cache = new Map());
   const start = () => { const pending = resolve(cityId, fetcher, signal); cache!.set(cityId, pending); pending.catch(() => { if (cache!.get(cityId) === pending) cache!.delete(cityId); }); return pending; };
   const existing = cache.get(cityId);
-  if (!existing) return start();
-  return existing.catch(error => { if (signal.aborted) throw error; const now = cache!.get(cityId); return now && now !== existing ? now : start(); });
+  const pending = existing
+    ? existing.catch(error => { if (signal.aborted) throw error; const now = cache!.get(cityId); return now && now !== existing ? now : start(); })
+    : start();
+  return new Promise((ok, fail) => {
+    const stop = () => fail(signal.reason);
+    signal.addEventListener('abort', stop, { once:true });
+    if (signal.aborted) stop();
+    pending.then(
+      snapshot => { signal.removeEventListener('abort', stop); ok(snapshot); },
+      error => { signal.removeEventListener('abort', stop); fail(error); },
+    );
+  });
 }
 export const resetCityArtSnapshots = () => { caches = new WeakMap(); };
 
